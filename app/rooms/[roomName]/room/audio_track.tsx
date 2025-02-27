@@ -1,5 +1,8 @@
-import { AudioTrack, TrackReference, useLocalParticipant, useTracks } from '@livekit/components-react';
+import { use_add_user_device } from '@/lib/hooks/store/user_choices';
+import { default_device } from '@/lib/std/device';
+import { RoomAudioRenderer, useLocalParticipant, useTracks } from '@livekit/components-react';
 import { isLocalParticipant, Track } from 'livekit-client';
+import { useEffect, useState } from 'react';
 
 export function AudioTracker() {
   // [tracks] ------------------------------------------------------------------------------
@@ -7,25 +10,25 @@ export function AudioTracker() {
     (ref) => !isLocalParticipant(ref.participant) && ref.publication.kind === Track.Kind.Audio,
   );
   // [userinfos] ------------------------------------------------------------------------------
-  const [] = use
+  const {
+    isMicrophoneEnabled,
+    isScreenShareEnabled,
+    isCameraEnabled,
+    microphoneTrack,
+    cameraTrack,
+    lastMicrophoneError,
+    lastCameraError,
+    localParticipant,
+  } = useLocalParticipant();
 
-  return <AudioRenderer tracks={tracks} />;
-}
+  const [device_settings, set_device_settings] = useState(default_device());
+  useEffect(() => {
+    if (localParticipant.name) {
+      set_device_settings(use_add_user_device(localParticipant.name));
+    }
+  }, [localParticipant.name]);
 
-/**
- * Wrapper for rendering audio tracks base on livekit::AudioTrack
- */
-function AudioRenderer({ tracks }: { tracks: TrackReference[] }) {
   return (
-    <div style={{ display: 'none' }}>
-      {tracks.map((trackRef) => (
-        <AudioTrack
-          key={trackRef.publication.trackSid}
-          trackRef={trackRef}
-          volume={volume}
-          muted={false}
-        />
-      ))}
-    </div>
+    <RoomAudioRenderer volume={device_settings.microphone.other} muted={isMicrophoneEnabled} />
   );
 }

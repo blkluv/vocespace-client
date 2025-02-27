@@ -6,6 +6,7 @@ import { RecordingIndicator } from '@/lib/RecordingIndicator';
 import { SettingsMenu } from '@/lib/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
 import {
+  AudioConference,
   AudioTrack,
   formatChatMessageLinks,
   LiveKitRoom,
@@ -211,10 +212,10 @@ function VideoConferenceComponent(props: {
         onError={handleError}
       >
         <AudioTracksContainer></AudioTracksContainer>
-        {/* <VideoConference
+        <VideoConference
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
-        /> */}
+        />
         <VideoTracksRenderer />
         <DebugMode />
         <RecordingIndicator />

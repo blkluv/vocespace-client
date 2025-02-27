@@ -1,4 +1,4 @@
-<a href="https://livekit.io/">
+<a href="https://space.voce.chat/rooms/bby6-x55t">
   <img src="./.github/assets/vocespace.svg" alt="VoceSpace logo" width="240" height="120">
 </a>
 
@@ -6,7 +6,7 @@
 
 ## Demo
 
-Give it a try at https://space.voce.chat/rooms/bby6-x55t
+Give it a try at [vocespace demo](https://space.voce.chat/rooms/bby6-x55t)
 
 ## Dev Setup
 

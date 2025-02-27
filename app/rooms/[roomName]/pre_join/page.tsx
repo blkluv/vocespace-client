@@ -18,7 +18,7 @@ import { Button, Input, Slider, Switch } from 'antd';
 import { DevicesSelector } from '@/app/api/devices/device_selector';
 import { MediaDeviceKind } from '@/lib/std/device';
 import { ScreenPreview } from '@/app/api/devices/screen_preview';
-import { use_stored_get, use_stored_set } from '@/lib/hooks/store/user_choices';
+import { use_add_user_device, use_stored_set, UserAddInfos } from '@/lib/hooks/store/user_choices';
 
 /**
  * The PreJoin Page component should use before user enter into the room.
@@ -73,11 +73,11 @@ export function PreJoin({
     return tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack;
   }, [tracks]);
   // [other settings] -------------------------------------------------------------
-  const device_settings = use_stored_get();
-  const [video_blur, set_video_blur] = useState(device_settings.device.video.blur);
-  const [screen_blur, set_screen_blur] = useState(device_settings.device.screen.blur);
-  const [volume_self, set_volume_self] = useState(device_settings.device.microphone.self);
-  const [volume_others, set_volume_others] = useState(device_settings.device.microphone.other);
+  const device_settings = use_add_user_device(username);
+  const [video_blur, set_video_blur] = useState(device_settings.video.blur);
+  const [screen_blur, set_screen_blur] = useState(device_settings.screen.blur);
+  const [volume_self, set_volume_self] = useState(device_settings.microphone.self);
+  const [volume_others, set_volume_others] = useState(device_settings.microphone.other);
   // [save user choices] ----------------------------------------------------------------
   useEffect(() => {
     saveAudioInputEnabled(audio_enabled);
@@ -135,7 +135,7 @@ export function PreJoin({
     if (username !== '') {
       // 这里除了需要跳转进入房间，还需要将用户的非livekit管理的其他信息存储到localStorage中
       // 以便下次进入时可以直接使用
-      use_stored_set({
+      use_stored_set(username, {
         device: {
           microphone: {
             enabled: audio_enabled,
