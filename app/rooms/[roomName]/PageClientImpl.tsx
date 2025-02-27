@@ -211,12 +211,12 @@ function VideoConferenceComponent(props: {
         onEncryptionError={handleEncryptionError}
         onError={handleError}
       >
-        <AudioTracksContainer></AudioTracksContainer>
+        {/* <AudioTracksContainer></AudioTracksContainer> */}
         <VideoConference
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
         />
-        <VideoTracksRenderer />
+        {/* <VideoTracksRenderer /> */}
         <DebugMode />
         <RecordingIndicator />
       </LiveKitRoom>

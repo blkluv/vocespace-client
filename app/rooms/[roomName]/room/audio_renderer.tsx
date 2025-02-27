@@ -1,14 +1,13 @@
 import { use_add_user_device } from '@/lib/hooks/store/user_choices';
 import { default_device } from '@/lib/std/device';
-import { RoomAudioRenderer, useLocalParticipant, useTracks } from '@livekit/components-react';
-import { isLocalParticipant, Track } from 'livekit-client';
+import { RoomAudioRenderer, useLocalParticipant } from '@livekit/components-react';
 import { useEffect, useState } from 'react';
 
-export function AudioTracker() {
-  // [tracks] ------------------------------------------------------------------------------
-  const tracks = useTracks([Track.Source.Microphone, Track.Source.ScreenShareAudio]).filter(
-    (ref) => !isLocalParticipant(ref.participant) && ref.publication.kind === Track.Kind.Audio,
-  );
+/**
+ * ## AudioRenderer
+ * override the default audio renderer to use the user's settings
+ */
+export function AudioRenderer() {
   // [userinfos] ------------------------------------------------------------------------------
   const {
     isMicrophoneEnabled,
