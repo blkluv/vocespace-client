@@ -9,12 +9,12 @@
 #=========================================================================#
 # name to the project for temporary directory
 TMP_NAME="tmp"
-SRC_PATH="~/vocespace-client/src"
-RELEASE_PATH="~/vocespace-client/release"
+SRC_PATH="/root/vocespace-client/src"
+RELEASE_PATH="/root/vocespace-client/release"
 PKG_NAME="vocespace_client_dev"
 NGINX_DEV_CONF="nginx.dev.conf"
 # version file
-VERSION_FILE="~/vocespace-client/src/tmp/vocespace_client/.version"
+VERSION_FILE="/root/vocespace-client/src/tmp/vocespace_client/.version"
 CLIENT_REPO_URL="https://github.com/Privoce/vocespace-client.git"
 BRANCH="dev"
 NGINX_AVA_PATH="/etc/nginx/sites-available/vocespace_dev"
