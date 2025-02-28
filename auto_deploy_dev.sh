@@ -14,7 +14,7 @@ RELEASE_PATH="/root/vocespace-client/release"
 PKG_NAME="vocespace_client_dev"
 NGINX_DEV_CONF="nginx.dev.conf"
 # version file
-VERSION_FILE="/root/vocespace-client/src/tmp/vocespace_client/.version"
+VERSION_FILE="/root/vocespace-client/src/tmp/.version"
 CLIENT_REPO_URL="https://github.com/Privoce/vocespace-client.git"
 BRANCH="dev"
 NGINX_AVA_PATH="/etc/nginx/sites-available/vocespace_dev"
@@ -39,14 +39,10 @@ if [ $? -ne 0 ]; then
     echo "Clone from github repo failed!"
     exit 1
 fi
+echo "Clone from github repo success! ----------------->"
 # - cd to the project directory
 cd $SRC_PATH/$TMP_NAME
-# check pnpm is installed
-if ! command -v pnpm &> /dev/null
-then
-    echo "pnpm could not be found, please install pnpm"
-    exit 1
-fi
+echo "Current directory: $(pwd) do pnpm install and build ----------------->"
 # - install dependencies
 pnpm install
 # - check install is success
@@ -81,7 +77,7 @@ echo "LIVEKIT_API_KEY=devkey" >> .env
 echo "LIVEKIT_API_SECRET=secret" >> .env
 echo "LIVEKIT_URL=wss://dev.space.voce.chat" >> .env
 echo "NODE_ENV=development" >> .env
-
+echo "Build environment success! ----------------->"
 #=========================================================================#
 # copy .next and rename to $VERSION/vocespace_client_dev ---------------#
 #=========================================================================#
