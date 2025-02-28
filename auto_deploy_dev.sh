@@ -40,8 +40,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 # - cd to the project directory
-cd $TMP_NAME
-# - check pnpm is installed?
+cd $SRC_PATH/$TMP_NAME
+# check pnpm is installed
 if ! command -v pnpm &> /dev/null
 then
     echo "pnpm could not be found, please install pnpm"
