@@ -50,6 +50,8 @@ if [ $? -ne 0 ]; then
     echo "Install dependencies failed!"
     exit 1
 fi
+# - set NODE_OPTIONS for build 
+export NODE_OPTIONS="--max-old-space-size=8192"
 # - build the project
 pnpm build
 # - check build is success
