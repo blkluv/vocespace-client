@@ -40,7 +40,7 @@ import {
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef } from 'react';
-import { PreJoin } from './pre_join/page';
+import { PreJoin } from './pre_join/pre_join';
 
 const CONN_DETAILS_ENDPOINT =
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
