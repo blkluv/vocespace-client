@@ -21,6 +21,13 @@ NGINX_AVA_PATH="/etc/nginx/sites-available/vocespace_dev"
 NGINX_ENABLED_PATH="/etc/nginx/sites-enabled/vocespace_dev"
 
 #=========================================================================#
+# clean up before all-----------------------------------------------------#
+#=========================================================================#
+# - remove the tmp directory
+if [ -d $SRC_PATH/$TMP_NAME ]; then
+    rm -rf $SRC_PATH/$TMP_NAME
+fi
+#=========================================================================#
 # Clone and do pkg (dev)--------------------------------------------------#
 #=========================================================================#
 # - cd to src
@@ -135,5 +142,11 @@ if [ $? -ne 0 ]; then
 fi
 # restart nginx
 systemctl restart nginx
+
+#=========================================================================#
+# clean up ---------------------------------------------------------------#
+#=========================================================================#
+# - remove the tmp directory
+rm -rf $SRC_PATH/$TMP_NAME
 # echo all done
 echo "Deploy Dev: All done!"
