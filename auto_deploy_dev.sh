@@ -89,6 +89,11 @@ if [ ! -f $VERSION_FILE ]; then
     exit 1
 fi
 VERSION=$(cat $VERSION_FILE)
+# check if exist release path or remove it
+if [ -d $RELEASE_PATH/$VERSION/$PKG_NAME ]; then
+    rm -rf $RELEASE_PATH/$VERSION/$PKG_NAME
+fi
+mkdir -p $RELEASE_PATH/$VERSION
 # - copy .next to $RELEASE_PATH/$VERSION/vocespace_client_dev
 cp -r .next $RELEASE_PATH/$VERSION/$PKG_NAME
 # - check copy is success
@@ -96,26 +101,18 @@ if [ $? -ne 0 ]; then
     echo "Copy .next -> release pkg path failed!"
     exit 1
 fi
-
 #=========================================================================#
 # enable Nginx for dev ---------------------------------------------------#
 #=========================================================================#
-# - check nginx is installed?
-if ! command -v nginx &> /dev/null
-then
-    echo "nginx could not be found, please install nginx"
-    exit 1
-fi
 # - check conf is exist?
-if [ ! -f $NGINX_CONF_PATH ]; then
+if [ ! -f $NGINX_AVA_PATH ]; then
     # copy from current dir's nginx.dev.conf as vocespace_dev
-    cp ./$NGINX_DEV_CONF $NGINX_AVA_PATH
-    exit 1
+    cp $SRC_PATH/$TMP_NAME/$NGINX_DEV_CONF $NGINX_AVA_PATH
 fi
 
-# - check $NGINX_AVA_PATH is exist? if exist remove it
-if [ -f $NGINX_AVA_PATH ]; then
-    rm $NGINX_AVA_PATH
+# - check $NGINX_ENABLED_PATH is exist? if exist remove it
+if [ -f $NGINX_ENABLED_PATH ]; then
+    rm $NGINX_ENABLED_PATH
 fi
 # ln nginx.dev.conf to sites-enabled
 ln -s $NGINX_AVA_PATH $NGINX_ENABLED_PATH
@@ -140,7 +137,7 @@ if [ $? -ne 0 ]; then
 fi
 # restart nginx
 systemctl restart nginx
-
+echo "Enable Nginx success! ----------------->"
 #=========================================================================#
 # clean up ---------------------------------------------------------------#
 #=========================================================================#
