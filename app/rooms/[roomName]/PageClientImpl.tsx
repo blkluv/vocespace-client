@@ -78,9 +78,10 @@ export function PageClientImpl(props: {
     const connectionDetailsData = await connectionDetailsResp.json();
     setConnectionDetails(connectionDetailsData);
   }, []);
-  const handlePreJoinError = React.useCallback((e: any) => alert(
-    `Voce Space issue: ${e.message}`,
-  ), []);
+  const handlePreJoinError = React.useCallback(
+    (e: any) => console.error(`Voce Space issue: ${e.message}`),
+    [],
+  );
 
   return (
     <main data-lk-theme="default" style={{ height: '100%' }}>
@@ -212,10 +213,14 @@ function VideoConferenceComponent(props: {
         onError={handleError}
       >
         {/* <AudioTracksContainer></AudioTracksContainer> */}
-        <VideoConference
+        {/* <VideoConference
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
-        />
+        /> */}
+        <VideoContainer
+          chatMessageFormatter={formatChatMessageLinks}
+          SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
+        ></VideoContainer>
         {/* <VideoTracksRenderer /> */}
         <DebugMode />
         <RecordingIndicator />
@@ -226,6 +231,7 @@ function VideoConferenceComponent(props: {
 
 import { Holistic } from '@mediapipe/holistic';
 import { Camera } from '@mediapipe/camera_utils';
+import { VideoContainer } from './room/video_container';
 
 interface VirtualAvatarProps {
   track: Track;
@@ -477,33 +483,34 @@ function VideoTracksRenderer() {
   );
 }
 
-// 创建一个新的组件来处理音频轨道
-import { TrackReference } from '@livekit/components-react';
+// // 创建一个新的组件来处理音频轨道
+// import { TrackReference } from '@livekit/components-react';
+// import { VideoContainer } from './room/video_container';
 
-function AudioTracksRenderer({ tracks }: { tracks: TrackReference[] }) {
-  return (
-    <div style={{ display: 'none' }}>
-      {tracks.map((trackRef) => (
-        <AudioTrack
-          key={trackRef.publication.trackSid}
-          trackRef={trackRef}
-          volume={0.1}
-          muted={false}
-        />
-      ))}
-    </div>
-  );
-}
+// function AudioTracksRenderer({ tracks }: { tracks: TrackReference[] }) {
+//   return (
+//     <div style={{ display: 'none' }}>
+//       {tracks.map((trackRef) => (
+//         <AudioTrack
+//           key={trackRef.publication.trackSid}
+//           trackRef={trackRef}
+//           volume={0.1}
+//           muted={false}
+//         />
+//       ))}
+//     </div>
+//   );
+// }
 
-// 创建一个容器组件来使用 useTracks
-function AudioTracksContainer() {
-  const tracks = useTracks([
-    Track.Source.Microphone,
-    Track.Source.ScreenShareAudio,
-    Track.Source.Unknown,
-  ]).filter(
-    (ref) => !isLocalParticipant(ref.participant) && ref.publication.kind === Track.Kind.Audio,
-  );
+// // 创建一个容器组件来使用 useTracks
+// function AudioTracksContainer() {
+//   const tracks = useTracks([
+//     Track.Source.Microphone,
+//     Track.Source.ScreenShareAudio,
+//     Track.Source.Unknown,
+//   ]).filter(
+//     (ref) => !isLocalParticipant(ref.participant) && ref.publication.kind === Track.Kind.Audio,
+//   );
 
-  return <AudioTracksRenderer tracks={tracks} />;
-}
+//   return <AudioTracksRenderer tracks={tracks} />;
+// }

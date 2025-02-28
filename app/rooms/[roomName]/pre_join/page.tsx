@@ -16,7 +16,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { SvgPreJoin } from './resources';
 import { Button, Input, Slider, Switch } from 'antd';
 import { DevicesSelector } from '@/app/api/devices/device_selector';
-import { MediaDeviceKind } from '@/lib/std/device';
+import { default_device, MediaDeviceKind } from '@/lib/std/device';
 import { ScreenPreview } from '@/app/api/devices/screen_preview';
 import { use_add_user_device, use_stored_set, UserAddInfos } from '@/lib/hooks/store/user_choices';
 
@@ -73,7 +73,10 @@ export function PreJoin({
     return tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack;
   }, [tracks]);
   // [other settings] -------------------------------------------------------------
-  const device_settings = use_add_user_device(username);
+  const [device_settings, set_device_settings] = useState(default_device());
+  useEffect(() => {
+    set_device_settings(use_add_user_device(username));
+  }, [username]);
   const [video_blur, set_video_blur] = useState(device_settings.video.blur);
   const [screen_blur, set_screen_blur] = useState(device_settings.screen.blur);
   const [volume_self, set_volume_self] = useState(device_settings.microphone.self);

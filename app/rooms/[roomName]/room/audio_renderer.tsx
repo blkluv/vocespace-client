@@ -9,25 +9,15 @@ import { useEffect, useState } from 'react';
  */
 export function AudioRenderer() {
   // [userinfos] ------------------------------------------------------------------------------
-  const {
-    isMicrophoneEnabled,
-    isScreenShareEnabled,
-    isCameraEnabled,
-    microphoneTrack,
-    cameraTrack,
-    lastMicrophoneError,
-    lastCameraError,
-    localParticipant,
-  } = useLocalParticipant();
-
   const [device_settings, set_device_settings] = useState(default_device());
   useEffect(() => {
-    if (localParticipant.name) {
-      set_device_settings(use_add_user_device(localParticipant.name));
-    }
-  }, [localParticipant.name]);
+    set_device_settings(use_add_user_device());
+  }, []);
 
   return (
-    <RoomAudioRenderer volume={device_settings.microphone.other} muted={isMicrophoneEnabled} />
+    <RoomAudioRenderer
+      volume={device_settings.microphone.other / 100.0}
+      muted={device_settings.microphone.enabled}
+    />
   );
 }

@@ -101,7 +101,7 @@ export function VideoContainer({
 
   //   useWarnAboutMissingStyles();
   return (
-    <div className={styles.container}>
+    <div className="lk-video-conference" {...props}>
       {is_web && (
         <LayoutContextProvider
           value={layoutContext}
