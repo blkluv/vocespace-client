@@ -120,7 +120,7 @@ pm2 stop $PKG_NAME
 # delete $PKG_NAME
 pm2 delete $PKG_NAME
 # start pm2 npm 
-NODE_ENV=production PORT=3000 pm2 start npm --name $PKG_NAME -- start
+PORT=3000 pm2 start npm --name $PKG_NAME -- start
 # save pm2
 pm2 save
 # sleep 2s for pm2 server to start
