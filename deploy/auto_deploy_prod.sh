@@ -82,6 +82,7 @@ fi
 # LIVEKIT_API_KEY=devkey
 # LIVEKIT_API_SECRET=secret
 # LIVEKIT_URL=wss://space.voce.chat
+# NODE_ENV=production
 # ```
 # - remove the old .env file and replace with new one
 if [ -f .env ]; then
@@ -90,6 +91,7 @@ fi
 echo "LIVEKIT_API_KEY=devkey" >> .env
 echo "LIVEKIT_API_SECRET=secret" >> .env
 echo "LIVEKIT_URL=wss://space.voce.chat" >> .env
+echo "NODE_ENV=production" >> .env
 #=========================================================================#
 # install dependencies and build -----------------------------------------#
 #=========================================================================#
@@ -118,7 +120,7 @@ pm2 stop $PKG_NAME
 # delete $PKG_NAME
 pm2 delete $PKG_NAME
 # start pm2 npm 
-PORT=3000 pm2 start npm --name $PKG_NAME -- start
+NODE_ENV=production PORT=3000 pm2 start npm --name $PKG_NAME -- start
 # save pm2
 pm2 save
 # sleep 2s for pm2 server to start
