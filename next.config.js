@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   basePath: process.env.NODE_ENV === "development" ? "/dev" : "",
+  assetPrefix: process.env.NODE_ENV === "development" ? "/dev" : "",
   reactStrictMode: false,
   productionBrowserSourceMaps: true,
   webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {

@@ -117,8 +117,8 @@ echo "SYSTEM: pnpm install and build success" >> $LOG_PATH
 pm2 stop $PKG_NAME
 # delete $PKG_NAME
 pm2 delete $PKG_NAME
-# start pm2 npm 
-pm2 start npm --name $PKG_NAME -- start
+# start pm2 npm with 3001 port
+PORT=3001 pm2 start npm --name $PKG_NAME -- start
 # save pm2
 pm2 save
 # netstat -tulnp | grep 3001 to check if the server is running, if have echo success

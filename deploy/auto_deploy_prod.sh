@@ -118,7 +118,7 @@ pm2 stop $PKG_NAME
 # delete $PKG_NAME
 pm2 delete $PKG_NAME
 # start pm2 npm 
-pm2 start npm --name $PKG_NAME -- start
+PORT=3000 pm2 start npm --name $PKG_NAME -- start
 # save pm2
 pm2 save
 # netstat -tulnp | grep 3001 to check if the server is running, if have echo success
