@@ -82,7 +82,7 @@ fi
 # LIVEKIT_API_KEY=devkey
 # LIVEKIT_API_SECRET=secret
 # LIVEKIT_URL=wss://space.voce.chat
-# NODE_ENV=development
+# NEXT_PUBLIC_BASE_PATH=/dev
 # ```
 # - remove the old .env file and replace with new one
 if [ -f .env ]; then
@@ -91,7 +91,7 @@ fi
 echo "LIVEKIT_API_KEY=devkey" >> .env
 echo "LIVEKIT_API_SECRET=secret" >> .env
 echo "LIVEKIT_URL=wss://space.voce.chat" >> .env
-echo "NODE_ENV=development" >> .env
+echo "NEXT_PUBLIC_BASE_PATH=/dev" >> .env
 #=========================================================================#
 # install dependencies and build -----------------------------------------#
 #=========================================================================#

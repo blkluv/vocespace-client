@@ -91,7 +91,6 @@ fi
 echo "LIVEKIT_API_KEY=devkey" >> .env
 echo "LIVEKIT_API_SECRET=secret" >> .env
 echo "LIVEKIT_URL=wss://space.voce.chat" >> .env
-echo "NODE_ENV=production" >> .env
 #=========================================================================#
 # install dependencies and build -----------------------------------------#
 #=========================================================================#
