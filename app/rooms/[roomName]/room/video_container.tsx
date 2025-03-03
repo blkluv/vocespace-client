@@ -9,6 +9,7 @@ import {
   GridLayout,
   isTrackReference,
   LayoutContextProvider,
+  ParticipantName,
   ParticipantTile,
   TrackReferenceOrPlaceholder,
   useCreateLayoutContext,
@@ -24,6 +25,7 @@ import Search from 'antd/es/input/Search';
 import { Collapse, CollapseProps } from 'antd';
 import { Controls } from './controls';
 import { Tools } from './tools/tools';
+import { UserPanel } from '../user/user_panel';
 
 /**
  * ## VideoContainer
@@ -149,10 +151,13 @@ export function VideoContainer({
                 allowClear
                 onSearch={search_room}
               />
-             <div className={styles.collapse_wrapper}> <Collapse bordered={false} items={rooms} defaultActiveKey={['1']} /></div>
+              <div className={styles.collapse_wrapper}>
+                {' '}
+                <Collapse bordered={false} items={rooms} defaultActiveKey={['1']} />
+              </div>
             </div>
             <div className={styles['container_left_members']}>
-            <Search
+              <Search
                 addonBefore="Member"
                 placeholder="search member"
                 allowClear
@@ -161,10 +166,12 @@ export function VideoContainer({
             </div>
           </div>
           <div className={styles['container_main']}>
-            <header></header>
+            <header>
+              {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
+            </header>
             <main>
               <div className="lk-video-conference-inner" style={{ height: '100%' }}>
-                {!focusTrack ? (
+                {/* {!focusTrack ? (
                   <div className="lk-grid-layout-wrapper">
                     <GridLayout tracks={tracks}>
                       <ParticipantTile />
@@ -179,17 +186,26 @@ export function VideoContainer({
                       {focusTrack && <FocusLayout trackRef={focusTrack} />}
                     </FocusLayoutContainer>
                   </div>
-                )}
-               
+                )} */}
+                <GridLayout tracks={tracks}>
+                  <ParticipantTile>
+                    <UserPanel></UserPanel>
+                  </ParticipantTile>
+                </GridLayout>
               </div>
             </main>
             <footer>
               <Controls></Controls>
-            {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
             </footer>
           </div>
           <div className={styles['container_right']}>
-            <div className={styles['container_right_participants']}></div>
+            <div className={styles['container_right_participants']}>
+              <div className="lk-grid-layout-wrapper">
+                <GridLayout tracks={tracks}>
+                  <ParticipantTile style={{height: '120px'}} />
+                </GridLayout>
+              </div>
+            </div>
             <div className={styles['container_right_tools']}>
               <Tools></Tools>
             </div>

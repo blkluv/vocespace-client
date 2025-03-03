@@ -1,3 +1,5 @@
+import { Track } from 'livekit-client';
+
 export interface Device {
   value: string;
   label: string;

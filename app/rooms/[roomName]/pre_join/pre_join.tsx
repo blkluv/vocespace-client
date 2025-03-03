@@ -13,7 +13,7 @@ import {
   TrackProcessor,
 } from 'livekit-client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { SvgPreJoin } from './resources';
+import { SvgResource } from './resources';
 import { Button, Input, Slider, Switch } from 'antd';
 import { DevicesSelector } from '@/app/api/devices/device_selector';
 import { default_device, MediaDeviceKind } from '@/lib/std/device';
@@ -225,7 +225,7 @@ export function PreJoin({
             <div>
               <header>
                 <div className={styles['pre_join_main_device_tool']}>
-                  <SvgPreJoin type="audio" />
+                  <SvgResource type="audio" />
                   <span>Audio</span>
                 </div>
                 <Switch
@@ -245,7 +245,7 @@ export function PreJoin({
                       play_sound(Play.AudioSelf);
                     }}
                   >
-                    <SvgPreJoin type="play"></SvgPreJoin>
+                    <SvgResource type="play"></SvgResource>
                   </Button>
                 </div>
 
@@ -265,7 +265,7 @@ export function PreJoin({
                       play_sound(Play.AudioOthers);
                     }}
                   >
-                    <SvgPreJoin type="play"></SvgPreJoin>
+                    <SvgResource type="play"></SvgResource>
                   </Button>
                 </div>
                 <Slider
@@ -288,7 +288,7 @@ export function PreJoin({
             <div>
               <header>
                 <div className={styles['pre_join_main_device_tool']}>
-                  <SvgPreJoin type="video" />
+                  <SvgResource type="video" />
                   <span>Video</span>
                 </div>
                 <Switch
@@ -327,7 +327,7 @@ export function PreJoin({
             <div>
               <header>
                 <div className={styles['pre_join_main_device_tool']}>
-                  <SvgPreJoin type="screen" />
+                  <SvgResource type="screen" />
                   <span>Screen share</span>
                 </div>
                 <Switch
@@ -356,7 +356,7 @@ export function PreJoin({
             <div>
               <header>
                 <div className={styles['pre_join_main_device_tool']}>
-                  <SvgPreJoin type="user" />
+                  <SvgResource type="user" />
                   <span>Username</span>
                 </div>
               </header>
