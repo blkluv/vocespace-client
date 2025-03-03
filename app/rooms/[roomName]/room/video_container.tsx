@@ -20,6 +20,10 @@ import {
 import { AudioRenderer } from './audio_renderer';
 import { useEffect, useRef, useState } from 'react';
 import { Participant, RoomEvent, Track } from 'livekit-client';
+import Search from 'antd/es/input/Search';
+import { Collapse, CollapseProps } from 'antd';
+import { Controls } from './controls';
+import { Tools } from './tools/tools';
 
 /**
  * ## VideoContainer
@@ -100,32 +104,95 @@ export function VideoContainer({
   ]);
 
   //   useWarnAboutMissingStyles();
+
+  // [search room . member] -------------------------------------------------------------------
+  const search_room = (room: string) => {
+    console.log('search_room:', room);
+  };
+
+  const search_member = (member: string) => {
+    console.log('search_member:', member);
+  };
+
+  // [room , member collapse] -------------------------------------------------------------------
+  const rooms: CollapseProps['items'] = [
+    {
+      key: '1',
+      label: 'My Chat Rooms',
+      children: <p></p>,
+    },
+    {
+      key: '2',
+      label: 'Public Rooms',
+      children: <p></p>,
+    },
+    {
+      key: '3',
+      label: 'My Conversations',
+      children: <p></p>,
+    },
+  ];
+
   return (
-    <div className="lk-video-conference" {...props}>
+    <div className={styles.container} {...props}>
       {is_web && (
         <LayoutContextProvider
           value={layoutContext}
           // onPinChange={handleFocusStateChange}
           onWidgetChange={widgetUpdate}
         >
-          <div className="lk-video-conference-inner">
-            {!focusTrack ? (
-              <div className="lk-grid-layout-wrapper">
-                <GridLayout tracks={tracks}>
-                  <ParticipantTile />
-                </GridLayout>
+          <div className={styles['container_left']}>
+            <div className={styles['container_left_rooms']}>
+              <Search
+                addonBefore="Room"
+                placeholder="search room"
+                allowClear
+                onSearch={search_room}
+              />
+             <div className={styles.collapse_wrapper}> <Collapse bordered={false} items={rooms} defaultActiveKey={['1']} /></div>
+            </div>
+            <div className={styles['container_left_members']}>
+            <Search
+                addonBefore="Member"
+                placeholder="search member"
+                allowClear
+                onSearch={search_member}
+              />
+            </div>
+          </div>
+          <div className={styles['container_main']}>
+            <header></header>
+            <main>
+              <div className="lk-video-conference-inner" style={{ height: '100%' }}>
+                {!focusTrack ? (
+                  <div className="lk-grid-layout-wrapper">
+                    <GridLayout tracks={tracks}>
+                      <ParticipantTile />
+                    </GridLayout>
+                  </div>
+                ) : (
+                  <div className="lk-focus-layout-wrapper">
+                    <FocusLayoutContainer>
+                      <CarouselLayout tracks={carouselTracks}>
+                        <ParticipantTile />
+                      </CarouselLayout>
+                      {focusTrack && <FocusLayout trackRef={focusTrack} />}
+                    </FocusLayoutContainer>
+                  </div>
+                )}
+               
               </div>
-            ) : (
-              <div className="lk-focus-layout-wrapper">
-                <FocusLayoutContainer>
-                  <CarouselLayout tracks={carouselTracks}>
-                    <ParticipantTile />
-                  </CarouselLayout>
-                  {focusTrack && <FocusLayout trackRef={focusTrack} />}
-                </FocusLayoutContainer>
-              </div>
-            )}
-            <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} />
+            </main>
+            <footer>
+              <Controls></Controls>
+            {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
+            </footer>
+          </div>
+          <div className={styles['container_right']}>
+            <div className={styles['container_right_participants']}></div>
+            <div className={styles['container_right_tools']}>
+              <Tools></Tools>
+            </div>
           </div>
           <Chat
             style={{ display: widgetState.showChat ? 'grid' : 'none' }}
