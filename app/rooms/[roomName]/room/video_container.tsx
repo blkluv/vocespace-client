@@ -28,6 +28,7 @@ import { Controls } from './controls';
 import { Tools } from './tools/tools';
 import { UserPanel } from '../user/user_panel';
 import { MainPanel } from './panel/main_panel';
+import { FlexLayout } from './layout/flex';
 
 /**
  * ## VideoContainer
@@ -136,6 +137,7 @@ export function VideoContainer({
       children: <p></p>,
     },
   ];
+  const item_size = { height: '100px', width: '48%' };
 
   return (
     <div className={styles.container} {...props}>
@@ -204,11 +206,15 @@ export function VideoContainer({
           </div>
           <div className={styles['container_right']}>
             <div className={styles['container_right_participants']}>
-              <div className="lk-grid-layout-wrapper">
+              {/* <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
                   <ParticipantTile style={{height: '120px'}} />
                 </GridLayout>
-              </div>
+                
+              </div> */}
+              <FlexLayout tracks={tracks} size={item_size}>
+                  <ParticipantTile style={item_size}/>
+                </FlexLayout>
             </div>
             <div className={styles['container_right_tools']}>
               <Tools></Tools>
