@@ -11,6 +11,7 @@ import {
   LayoutContextProvider,
   ParticipantName,
   ParticipantTile,
+  RoomName,
   TrackReferenceOrPlaceholder,
   useCreateLayoutContext,
   usePinnedTracks,
@@ -26,6 +27,7 @@ import { Collapse, CollapseProps } from 'antd';
 import { Controls } from './controls';
 import { Tools } from './tools/tools';
 import { UserPanel } from '../user/user_panel';
+import { MainPanel } from './panel/main_panel';
 
 /**
  * ## VideoContainer
@@ -167,6 +169,7 @@ export function VideoContainer({
           </div>
           <div className={styles['container_main']}>
             <header>
+              <RoomName></RoomName>
               {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
             </header>
             <main>
@@ -187,11 +190,12 @@ export function VideoContainer({
                     </FocusLayoutContainer>
                   </div>
                 )} */}
-                <GridLayout tracks={tracks}>
+                {/* <GridLayout tracks={tracks}>
                   <ParticipantTile>
                     <UserPanel></UserPanel>
                   </ParticipantTile>
-                </GridLayout>
+                </GridLayout> */}
+                <MainPanel></MainPanel>
               </div>
             </main>
             <footer>

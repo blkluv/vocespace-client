@@ -17,7 +17,7 @@ export function AudioRenderer() {
   return (
     <RoomAudioRenderer
       volume={device_settings.microphone.other / 100.0}
-      muted={device_settings.microphone.enabled}
+      muted={!device_settings.microphone.enabled}
     />
   );
 }

@@ -8,7 +8,7 @@
         width: 20%;
         min-width: 240px;
         max-width: 280px;
-        border-right: 1px solid #aaa;
+        border-right: 1px solid #ffffff26;
         box-sizing: border-box;
         &_rooms{
             padding: 8px;
@@ -20,7 +20,7 @@
             flex-direction: column;
             flex-wrap: wrap;
             gap: 12px;
-            border-bottom: 1px solid #aaa;
+            border-bottom: 1px solid #ffffff26;
             box-sizing: border-box;
         }
         &_members{
@@ -37,8 +37,12 @@
         flex-direction: column;
         header{
             height: 60px;
-            
             width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 12px;
+            border-bottom: 1px solid #ffffff26;
         }
         main{
             height: calc(100% - 120px);
@@ -55,16 +59,16 @@
         width: 30%;
         min-width: 200px;
         max-width: 300px;
-        border-left: 1px solid #aaa;
+        border-left: 1px solid #ffffff26;
         box-sizing: border-box;
         &_participants{
             padding: 8px;
-            height: 50%;
+            height: 40%;
             width: 100%;
-            border-bottom: 1px solid #aaa;
+            border-bottom: 1px solid #ffffff26;
         }
         &_tools{
-            height: 50%;
+            height: 60%;
             width: 100%;
         }
     }
