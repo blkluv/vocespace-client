@@ -26,9 +26,10 @@ import Search from 'antd/es/input/Search';
 import { Collapse, CollapseProps } from 'antd';
 import { Controls } from './controls';
 import { Tools } from './tools/tools';
-import { UserPanel } from '../user/user_panel';
 import { MainPanel } from './panel/main_panel';
 import { FlexLayout } from './layout/flex';
+import { RoomList } from './panel/room_list';
+import { UserItem, UserList } from './panel/user_list';
 
 /**
  * ## VideoContainer
@@ -124,17 +125,17 @@ export function VideoContainer({
     {
       key: '1',
       label: 'My Chat Rooms',
-      children: <p></p>,
+      children: <RoomList data={[]}></RoomList>,
     },
     {
       key: '2',
       label: 'Public Rooms',
-      children: <p></p>,
+      children: <RoomList data={[]}></RoomList>,
     },
     {
       key: '3',
       label: 'My Conversations',
-      children: <p></p>,
+      children: <RoomList data={[]}></RoomList>,
     },
   ];
   const item_size = { height: '100px', width: '48%' };
@@ -156,17 +157,36 @@ export function VideoContainer({
                 onSearch={search_room}
               />
               <div className={styles.collapse_wrapper}>
-                {' '}
                 <Collapse bordered={false} items={rooms} defaultActiveKey={['1']} />
               </div>
             </div>
             <div className={styles['container_left_members']}>
-              <Search
-                addonBefore="Member"
-                placeholder="search member"
-                allowClear
-                onSearch={search_member}
-              />
+              <header>
+                <Search
+                  addonBefore="Member"
+                  placeholder="search member"
+                  allowClear
+                  onSearch={search_member}
+                />
+              </header>
+              <main>
+                <UserList
+                  data={[
+                    {
+                      name: 'Sheng',
+                      status: 'success',
+                    },
+                  ]}
+                ></UserList>
+              </main>
+              <footer>
+                <UserItem
+                  item={{
+                    name: 'Sheng',
+                    status: 'processing',
+                  }}
+                ></UserItem>
+              </footer>
             </div>
           </div>
           <div className={styles['container_main']}>
@@ -213,8 +233,8 @@ export function VideoContainer({
                 
               </div> */}
               <FlexLayout tracks={tracks} size={item_size}>
-                  <ParticipantTile style={item_size}/>
-                </FlexLayout>
+                <ParticipantTile style={item_size} />
+              </FlexLayout>
             </div>
             <div className={styles['container_right_tools']}>
               <Tools></Tools>

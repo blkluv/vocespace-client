@@ -1,3 +1,4 @@
+import { Chat } from '@livekit/components-react';
 import { Tabs, TabsProps } from 'antd';
 
 export function Tools() {
@@ -5,7 +6,10 @@ export function Tools() {
     {
       key: '1',
       label: 'Chat',
-      children: 'Content of Tab Pane 1',
+      children: <Chat style={{
+        height: '280px',
+        width: '100%',
+      }} ></Chat>,
     },
     {
       key: '2',
@@ -24,8 +28,8 @@ export function Tools() {
   };
 
   return (
-    <div>
-      <Tabs
+    <Tabs
+        style={{height: 'fit-content'}}
         defaultActiveKey="1"
         items={tools}
         onChange={change_tabs}
@@ -34,6 +38,5 @@ export function Tools() {
             padding: '0 12px',
         }}
       />
-    </div>
   );
 }

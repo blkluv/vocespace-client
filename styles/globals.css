@@ -1,4 +1,4 @@
-@import "antd/dist/reset.css"; 
+@import 'antd/dist/reset.css';
 
 * {
   box-sizing: border-box;
@@ -21,8 +21,6 @@ body {
   display: flex;
   flex-direction: column;
 }
-
-
 
 footer {
   width: 100%;
@@ -50,14 +48,14 @@ h2 a {
 }
 
 /* basic style for <a> link */
-.basic_link{
-  color: #22CCEE;
+.basic_link {
+  color: #22ccee;
   text-decoration-line: none;
   font-weight: 400;
   transition: all 0.3s ease-in;
 }
 
-.basic_link:hover{
+.basic_link:hover {
   color: #50defa;
 }
 
@@ -82,16 +80,29 @@ h2 a {
   color: rgba(255, 255, 255, 0.6);
 }
 
-.ant-switch:hover:not(.ant-switch-disabled){
+.ant-switch:hover:not(.ant-switch-disabled) {
   background: #787878;
 }
-.ant-slider .ant-slider-rail{
+.ant-slider .ant-slider-rail {
   background: #787878;
 }
 
-.flex_box{
+.flex_box {
   display: inline-flex;
   align-items: center;
   justify-items: space-between;
   /* flex-direction: column; */
+}
+
+:where(.css-dev-only-do-not-override-fx2ox2).ant-pagination
+  .ant-pagination-disabled
+  .ant-pagination-item-link,
+:where(.css-dev-only-do-not-override-fx2ox2).ant-pagination
+  .ant-pagination-disabled:hover
+  .ant-pagination-item-link {
+  color: #fff;
+}
+
+.ant-tabs-content-holder{
+  height: 100%;
 }
