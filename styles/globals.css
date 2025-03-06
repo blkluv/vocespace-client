@@ -106,3 +106,7 @@ h2 a {
 .ant-tabs-content-holder{
   height: 100%;
 }
+
+.ant-collapse-header{
+  padding: 8px !important;
+}

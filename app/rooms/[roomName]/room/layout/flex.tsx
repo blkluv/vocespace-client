@@ -5,9 +5,9 @@ import { Size, SizeNum } from '@/lib/std';
 /**
  * # FlexLayout for Participants
  * 为参与者列表提供的flex布局，需要具备以下能力
- * - [ ] flex布局
- * - [ ] 参与者列表
- * - [ ] 翻页
+ * - flex布局
+ * - 参与者列表
+ * - 翻页
  */
 export function FlexLayout({
   tracks,

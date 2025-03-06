@@ -19,6 +19,7 @@ import { SubjectKey, subscriber } from '@/lib/std/chanel';
 import styles from '@/styles/participant.module.scss';
 import { use_add_user_device } from '@/lib/hooks/store/user_choices';
 import { count_video_blur } from '@/lib/std/device';
+import { SvgResource } from '../../pre_join/resources';
 
 interface ParticipantItemProps extends HTMLAttributes<HTMLDivElement> {
   trackRef?: TrackReferenceOrPlaceholder;
@@ -38,11 +39,12 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
   // [states] -----------------------------------------------------------------
   const [audio_enabled, set_audio_enabled] = useState(userChoices.audioEnabled);
   const [video_enabled, set_video_enabled] = useState(userChoices.videoEnabled);
+
   const add_derivce_settings = use_add_user_device(
     room?.localParticipant.name || userChoices.username,
   );
   const [video_blur, set_video_blur] = useState(add_derivce_settings.video.blur);
-
+  const [screen_enabled, set_screen_enabled] = useState(add_derivce_settings.screen.enabled);
   const trackReference = useEnsureTrackRef(trackRef);
   const layoutContext = useMaybeLayoutContext();
   const autoManageSubscription = useFeatureContext()?.autoSubscription;
@@ -80,15 +82,26 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
       enableVideoTrack(room, enabled);
     }
   }, []);
+  // - [screen] ---------------------------------------------------------
+  const handleScreenStateChange = useCallback((enabled: boolean) => {
+    console.warn('接收到屏幕状态变化:', enabled);
+
+    if (room && enabled) {
+      set_screen_enabled(enabled);
+      enableScreenTrack(room, enabled);
+    }
+  }, []);
 
   useEffect(() => {
     const audio_subscription = subscriber(SubjectKey.Audio, handleAudioStateChange);
     const video_subscription = subscriber(SubjectKey.Video, handleVideoStateChange);
+    const screen_subscription = subscriber(SubjectKey.Screen, handleScreenStateChange);
     return () => {
       audio_subscription?.unsubscribe();
       video_subscription?.unsubscribe();
+      screen_subscription?.unsubscribe();
     };
-  }, [handleAudioStateChange, handleVideoStateChange]);
+  }, [handleAudioStateChange, handleVideoStateChange, handleScreenStateChange]);
 
   // 监听状态变化
   useEffect(() => {
@@ -112,6 +125,10 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
       )}
       <div className={styles.tile_name}>
         <ParticipantName></ParticipantName>
+        <div className={styles.tile_name_tools}>
+          <SvgResource svgSize={16} type="focus"></SvgResource>
+          <SvgResource svgSize={16} type="wave"></SvgResource>
+        </div>
       </div>
     </ParticipantTile>
   );
@@ -165,6 +182,21 @@ function enableVideoTrack(room: Room, enabled: boolean) {
   } else {
     if (room.localParticipant.connectionQuality != ConnectionQuality.Unknown) {
       room.localParticipant.setCameraEnabled(enabled);
+    }
+  }
+}
+
+function enableScreenTrack(room: Room, enabled: boolean) {
+  const screenTrack = room.localParticipant.getTrackPublication(Track.Source.ScreenShare);
+  if (screenTrack) {
+    enabled ? screenTrack.unmute() : screenTrack.mute();
+  } else {
+    if (!enabled) {
+      return;
+    }
+
+    if (room.localParticipant.connectionQuality != ConnectionQuality.Unknown && enabled) {
+      room.localParticipant.setScreenShareEnabled(enabled);
     }
   }
 }

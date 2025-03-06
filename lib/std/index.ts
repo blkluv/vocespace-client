@@ -19,3 +19,10 @@ export interface SizeNum{
     height: number;
     width: number;
 }
+
+export interface UserItemProp {
+  name: string;
+  status: UserStatus;
+}
+
+export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';

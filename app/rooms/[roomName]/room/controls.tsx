@@ -16,6 +16,7 @@ import { publisher, subject_map, SubjectKey } from '@/lib/std/chanel';
 import { SettingToggle } from './controls/setting_toggle';
 import { Button, Drawer } from 'antd';
 import { SvgResource } from '../pre_join/resources';
+import { use_add_user_device } from '@/lib/hooks/store/user_choices';
 
 export function Controls({ saveUserChoices = true }) {
   const {
@@ -25,10 +26,11 @@ export function Controls({ saveUserChoices = true }) {
     saveAudioInputDeviceId,
     saveVideoInputDeviceId,
   } = usePersistentUserChoices({ preventSave: !saveUserChoices });
-
+  const add_derivce_settings = use_add_user_device(userChoices.username);
   // [states] -----------------------------------------------------------------
   const [audio_enabled, set_audio_enabled] = useState(userChoices.audioEnabled);
   const [video_enabled, set_video_enabled] = useState(userChoices.videoEnabled);
+  const [screen_enabled, set_screen_enabled] = useState(add_derivce_settings.screen.enabled);
   const [setting_visible, set_setting_visible] = useState(false);
 
   // [toggle click handlers] -------------------------------------------------
@@ -56,6 +58,17 @@ export function Controls({ saveUserChoices = true }) {
     },
     [saveVideoInputEnabled, saveVideoInputDeviceId],
   );
+  // - [screen] --------------------------------------------------------------
+  const screen_on_clicked = useCallback(
+    (enabled: boolean): void => {
+      const new_state = !enabled;
+      set_screen_enabled(new_state);
+      add_derivce_settings.screen.enabled = new_state;
+      // 发布事件
+      publisher(SubjectKey.Screen, new_state);
+    },
+    [saveVideoInputEnabled],
+  );
 
   // - [setting] -------------------------------------------------------------
   const setting_on_clicked = useCallback(
@@ -71,7 +84,7 @@ export function Controls({ saveUserChoices = true }) {
       <div className={styles.controls_left}>
         <AudioToggle enabled={audio_enabled} onClicked={audio_on_clicked}></AudioToggle>
         <VideoToggle enabled={video_enabled} onClicked={video_on_clicked}></VideoToggle>
-        <ScreenToggle></ScreenToggle>
+        <ScreenToggle enabled={screen_enabled} onClicked={screen_on_clicked}></ScreenToggle>
         <SettingToggle enabled={setting_visible} onClicked={setting_on_clicked}></SettingToggle>
       </div>
       <div className={styles.controls_right}>

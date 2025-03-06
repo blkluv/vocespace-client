@@ -14,14 +14,15 @@ import {
   RoomName,
   TrackReferenceOrPlaceholder,
   useCreateLayoutContext,
+  useMaybeRoomContext,
   usePinnedTracks,
   useTracks,
   VideoConferenceProps,
   WidgetState,
 } from '@livekit/components-react';
 import { AudioRenderer } from './audio_renderer';
-import { useEffect, useRef, useState } from 'react';
-import { Participant, RoomEvent, Track } from 'livekit-client';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Participant, Room, RoomEvent, Track } from 'livekit-client';
 import Search from 'antd/es/input/Search';
 import { Collapse, CollapseProps } from 'antd';
 import { Controls } from './controls';
@@ -31,6 +32,7 @@ import { FlexLayout } from './layout/flex';
 import { RoomList } from './panel/room_list';
 import { UserItem, UserList } from './panel/user_list';
 import { ParticipantItem } from './panel/participant';
+import { UserItemProp } from '@/lib/std';
 
 /**
  * ## VideoContainer
@@ -48,7 +50,8 @@ export function VideoContainer({
     showSettings: false,
   });
   const lastAutoFocusedScreenShareTrack = useRef<TrackReferenceOrPlaceholder | null>(null);
-
+  const room = useMaybeRoomContext();
+  // [tracks] -------------------------------------------------------------------
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -56,7 +59,6 @@ export function VideoContainer({
     ],
     { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false },
   );
-
   const widgetUpdate = (state: WidgetState) => {
     console.debug('updating widget state', state);
     setWidgetState(state);
@@ -141,7 +143,7 @@ export function VideoContainer({
     },
   ];
   const item_size = { height: '100px', width: '48%' };
-  const tile_style = Object.assign(item_size, {backgroundColor: '#1E1E1E'});
+  const tile_style = Object.assign(item_size, { backgroundColor: '#1E1E1E' });
 
   return (
     <div className={styles.container} {...props}>
@@ -154,6 +156,7 @@ export function VideoContainer({
           <div className={styles['container_left']}>
             <div className={styles['container_left_rooms']}>
               <Search
+                style={{margin: '8px'}}
                 addonBefore="Room"
                 placeholder="search room"
                 allowClear
@@ -172,23 +175,16 @@ export function VideoContainer({
                   onSearch={search_member}
                 />
               </header>
-              <main>
-                <UserList
-                  data={[
-                    {
-                      name: 'Sheng',
-                      status: 'success',
-                    },
-                  ]}
-                ></UserList>
-              </main>
+              <main>{room && <UserList data={get_user_list(room)}></UserList>}</main>
               <footer>
-                <UserItem
-                  item={{
-                    name: 'Sheng',
-                    status: 'processing',
-                  }}
-                ></UserItem>
+                {room && (
+                  <UserItem
+                    item={{
+                      name: room.localParticipant?.name || 'UnKnown',
+                      status: 'processing',
+                    }}
+                  ></UserItem>
+                )}
               </footer>
             </div>
           </div>
@@ -315,3 +311,26 @@ export type TrackReferencePlaceholder = {
   publication?: never;
   source: Track.Source;
 };
+
+function get_user_list(room?: Room): UserItemProp[] {
+  const user_list: UserItemProp[] = [];
+  if (!room) {
+    return user_list;
+  }
+
+  const participants = room.remoteParticipants;
+  participants.forEach((value, key) => {
+    user_list.push({
+      name: value.name || key,
+      status: 'success',
+    });
+  });
+
+  const local_participant = room.localParticipant;
+  user_list.push({
+    name: local_participant.name || 'UnKnown',
+    status: 'processing',
+  });
+
+  return user_list;
+}

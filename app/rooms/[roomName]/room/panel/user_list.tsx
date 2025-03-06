@@ -1,5 +1,7 @@
 import { Avatar, Badge, List } from 'antd';
 import styles from '@/styles/user_list.module.scss';
+import { useMaybeRoomContext } from '@livekit/components-react';
+import { UserItemProp } from '@/lib/std';
 
 export function UserList({ data }: { data: UserItemProp[] }) {
   return (
@@ -53,9 +55,3 @@ export function UserItem({ item }: { item: UserItemProp }) {
   );
 }
 
-interface UserItemProp {
-  name: string;
-  status: UserStatus;
-}
-
-type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';
