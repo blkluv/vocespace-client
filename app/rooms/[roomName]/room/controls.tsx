@@ -37,9 +37,8 @@ export function Controls({ saveUserChoices = true }) {
       const new_state = !enabled;
       set_audio_enabled(new_state);
       saveAudioInputEnabled(new_state);
-      // - [publish] ------------------------------------------------------------
-      const audio_publisher = publisher(new_state);
-      subject_map.set(SubjectKey.Audio, audio_publisher);
+      // 发布事件
+      publisher(SubjectKey.Audio, new_state);
     },
     [saveAudioInputEnabled],
   );

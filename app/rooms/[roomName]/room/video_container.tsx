@@ -30,6 +30,7 @@ import { MainPanel } from './panel/main_panel';
 import { FlexLayout } from './layout/flex';
 import { RoomList } from './panel/room_list';
 import { UserItem, UserList } from './panel/user_list';
+import { ParticipantItem } from './panel/participant';
 
 /**
  * ## VideoContainer
@@ -68,6 +69,7 @@ export function VideoContainer({
     .filter((track) => track.publication.source === Track.Source.ScreenShare);
 
   const focusTrack = usePinnedTracks(layoutContext)?.[0];
+  // console.error(focusTrack);
   const carouselTracks = tracks.filter((track) => !isEqualTrackRef(track, focusTrack));
 
   useEffect(() => {
@@ -139,6 +141,7 @@ export function VideoContainer({
     },
   ];
   const item_size = { height: '100px', width: '48%' };
+  const tile_style = Object.assign(item_size, {backgroundColor: '#1E1E1E'});
 
   return (
     <div className={styles.container} {...props}>
@@ -233,7 +236,8 @@ export function VideoContainer({
                 
               </div> */}
               <FlexLayout tracks={tracks} size={item_size}>
-                <ParticipantTile style={item_size} />
+                {/* <ParticipantTile style={item_size} /> */}
+                <ParticipantItem style={tile_style}></ParticipantItem>
               </FlexLayout>
             </div>
             <div className={styles['container_right_tools']}>

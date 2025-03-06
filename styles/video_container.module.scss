@@ -54,7 +54,8 @@
   }
   &_main {
     height: 100%;
-    width: 80%;
+    width: 50%;
+    flex-grow: 1;
     min-width: 420px;
     display: flex;
     align-items: center;
