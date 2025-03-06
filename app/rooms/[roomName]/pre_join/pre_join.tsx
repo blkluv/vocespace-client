@@ -16,7 +16,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { SvgResource } from './resources';
 import { Button, Input, Slider, Switch } from 'antd';
 import { DevicesSelector } from '@/app/api/devices/device_selector';
-import { default_device, MediaDeviceKind } from '@/lib/std/device';
+import { count_video_blur, default_device, MediaDeviceKind } from '@/lib/std/device';
 import { ScreenPreview } from '@/app/api/devices/screen_preview';
 import { use_add_user_device, use_stored_set, UserAddInfos } from '@/lib/hooks/store/user_choices';
 
@@ -35,7 +35,6 @@ export function PreJoin({
   // [ref] ----------------------------------------------------------------
   const audio_ref = useRef();
   const audio_play_ref = useRef<HTMLAudioElement>(null);
-
   // [user choices] ----------------------------------------------------------------
   const {
     userChoices: initialUserChoices,
@@ -103,7 +102,7 @@ export function PreJoin({
   }, [username, saveUsername]);
   // [about video] ----------------------------------------------------------------
   const video_ref = useRef(null);
-  const video_el = useRef(null);
+  const video_el = useRef<HTMLVideoElement>(null);
   const video_track = useMemo<LocalVideoTrack | undefined>((): LocalVideoTrack | undefined => {
     return tracks?.filter((track) => track.kind === Track.Kind.Video)[0] as LocalVideoTrack;
   }, [tracks]);
@@ -184,8 +183,8 @@ export function PreJoin({
 
   // [reset settings] -------------------------------------------------------------
   const reset_settings = () => {
-    set_video_blur(6);
-    set_screen_blur(6);
+    set_video_blur(0.15);
+    set_screen_blur(0.15);
     set_volume_self(100);
     set_volume_others(20);
     set_audio_enabled(false);
@@ -303,11 +302,12 @@ export function PreJoin({
               <div className={styles.adjust_settings}>
                 <span>Video Blur:</span>
                 <Slider
-                  defaultValue={30}
+                  defaultValue={0.15}
                   className={`${styles.common_space} ${styles.slider}`}
                   value={video_blur}
                   min={0}
-                  max={20}
+                  max={1}
+                  step={0.05}
                   onChange={(e) => {
                     set_video_blur(e);
                   }}
@@ -342,11 +342,12 @@ export function PreJoin({
               <div className={styles.adjust_settings}>
                 <span>Screen Blur:</span>
                 <Slider
-                  defaultValue={30}
+                  defaultValue={0.15}
                   className={`${styles.common_space} ${styles.slider}`}
                   value={screen_blur}
                   min={0}
-                  max={20}
+                  max={1}
+                  step={0.05}
                   onChange={(e) => {
                     set_screen_blur(e);
                   }}
@@ -372,14 +373,25 @@ export function PreJoin({
             <div className={styles['pre_join_main_device_right_video']}>
               {video_track && video_enabled && (
                 <video
-                  style={{ height: '100%', width: '100%', filter: `blur(${video_blur}px)` }}
+                  style={{
+                    height: '100%',
+                    width: '100%',
+                    filter: `blur(${count_video_blur(video_blur, {
+                      height: video_el.current?.height || 360,
+                      width: video_el.current?.width || 320,
+                    })}px)`,
+                  }}
                   ref={video_el}
                   data-lk-facing-mode={facing_mode}
                 />
               )}
               {(!video_track || !video_enabled) && (
                 <div className={styles['pre_join_main_device_right_video_empty']}>
-                  <img height={48} src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/vocespace.svg`} alt="" />
+                  <img
+                    height={48}
+                    src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/vocespace.svg`}
+                    alt=""
+                  />
                   <p>Video Share</p>
                 </div>
               )}
@@ -387,7 +399,10 @@ export function PreJoin({
             <div className={styles['pre_join_main_device_right_video']}>
               <ScreenPreview
                 enabled={screen_enabled}
-                blur={screen_blur}
+                blur={count_video_blur(screen_blur, {
+                  height: video_el.current?.height || 360,
+                  width: video_el.current?.width || 320,
+                })}
                 onClose={() => {
                   set_screen_enabled(false);
                 }}
@@ -414,7 +429,11 @@ export function PreJoin({
           Join Meeting
         </Button>
       </footer>
-      <audio ref={audio_play_ref} src={`${process.env.NEXT_PUBLIC_BASE_PATH}/audios/pre_test.mp3`} style={{ display: 'none' }}></audio>
+      <audio
+        ref={audio_play_ref}
+        src={`${process.env.NEXT_PUBLIC_BASE_PATH}/audios/pre_test.mp3`}
+        style={{ display: 'none' }}
+      ></audio>
     </div>
   );
 }

@@ -8,14 +8,17 @@ import {
   useEnsureTrackRef,
   useFeatureContext,
   useMaybeLayoutContext,
+  useMaybeRoomContext,
   usePersistentUserChoices,
   VideoTrack,
 } from '@livekit/components-react';
-import { Track, TrackEvent } from 'livekit-client';
-import { HTMLAttributes, useCallback, useEffect, useState } from 'react';
+import { ConnectionQuality, Room, Track } from 'livekit-client';
+import { HTMLAttributes, useCallback, useEffect, useRef, useState } from 'react';
 import { isTrackReferencePlaceholder } from '../video_container';
-import { subject_map, SubjectKey, subscriber } from '@/lib/std/chanel';
-import { Subscription } from 'rxjs';
+import { SubjectKey, subscriber } from '@/lib/std/chanel';
+import styles from '@/styles/participant.module.scss';
+import { use_add_user_device } from '@/lib/hooks/store/user_choices';
+import { count_video_blur } from '@/lib/std/device';
 
 interface ParticipantItemProps extends HTMLAttributes<HTMLDivElement> {
   trackRef?: TrackReferenceOrPlaceholder;
@@ -29,9 +32,16 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
     saveAudioInputDeviceId,
     saveVideoInputDeviceId,
   } = usePersistentUserChoices({ preventSave: false, preventLoad: false });
-
+  const room = useMaybeRoomContext();
+  // [refs] ------------------------------------------------------------------
+  const video_track_ref = useRef<HTMLVideoElement>(null);
   // [states] -----------------------------------------------------------------
   const [audio_enabled, set_audio_enabled] = useState(userChoices.audioEnabled);
+  const [video_enabled, set_video_enabled] = useState(userChoices.videoEnabled);
+  const add_derivce_settings = use_add_user_device(
+    room?.localParticipant.name || userChoices.username,
+  );
+  const [video_blur, set_video_blur] = useState(add_derivce_settings.video.blur);
 
   const trackReference = useEnsureTrackRef(trackRef);
   const layoutContext = useMaybeLayoutContext();
@@ -51,23 +61,34 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
     [trackReference, layoutContext],
   );
 
+  // [toggle state] -----------------------------------------------------
+  // - [audio] ----------------------------------------------------------
   const handleAudioStateChange = useCallback((enabled: boolean) => {
     console.warn('接收到音频状态变化:', enabled);
-    set_audio_enabled(enabled);
-    saveAudioInputEnabled(enabled);
-    
-    console.error(trackReference.participant);
-    // if (enabled) {
-    //     trackReference.participant
-    // }else{
-    //     trackReference.publication?.handleMuted();
-    // }
+    if (room) {
+      set_audio_enabled(enabled);
+      saveAudioInputEnabled(enabled);
+      enableAudioTrack(room, enabled);
+    }
+  }, []);
+  // - [video] ----------------------------------------------------------
+  const handleVideoStateChange = useCallback((enabled: boolean) => {
+    console.warn('接收到视频状态变化:', enabled);
+    if (room) {
+      set_video_enabled(enabled);
+      saveVideoInputEnabled(enabled);
+      enableVideoTrack(room, enabled);
+    }
   }, []);
 
   useEffect(() => {
-    const subscription = subscriber(SubjectKey.Audio, handleAudioStateChange);
-    return () => subscription?.unsubscribe();
-  }, [handleAudioStateChange]);
+    const audio_subscription = subscriber(SubjectKey.Audio, handleAudioStateChange);
+    const video_subscription = subscriber(SubjectKey.Video, handleVideoStateChange);
+    return () => {
+      audio_subscription?.unsubscribe();
+      video_subscription?.unsubscribe();
+    };
+  }, [handleAudioStateChange, handleVideoStateChange]);
 
   // 监听状态变化
   useEffect(() => {
@@ -75,29 +96,23 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
   }, [audio_enabled]);
 
   return (
-    <ParticipantTile {...htmlProps}>
-      {/* {isTrackReference(trackReference) &&
-      (trackReference.publication?.kind === 'video' ||
-        trackReference.source === Track.Source.Camera ||
-        trackReference.source === Track.Source.ScreenShare) ? (
-        <VideoTrack
-          trackRef={trackReference}
-          onSubscriptionStatusChanged={handleSubscribe}
-          manageSubscription={autoManageSubscription}
-        />
-      ) : (
-        isTrackReference(trackReference) && (
-          <AudioTrack
-            trackRef={trackReference}
-            muted={!audio_enabled}
-          />
-        )
-      )} */}
-      {isTrackReference(trackReference) && (
+    <ParticipantTile {...htmlProps} className={styles.tile}>
+      {isTrackReference(trackReference) && video_enabled && (
         // <AudioTrack trackRef={trackReference} muted={!audio_enabled} />
-        <VideoTrack trackRef={trackReference}></VideoTrack>
+        <VideoTrack
+          ref={video_track_ref}
+          trackRef={trackReference}
+          style={{
+            filter: `blur(${count_video_blur(video_blur, {
+              height: video_track_ref.current?.height || 100,
+              width: video_track_ref.current?.width || 120,
+            })}px)`,
+          }}
+        ></VideoTrack>
       )}
-      <ParticipantName></ParticipantName>
+      <div className={styles.tile_name}>
+        <ParticipantName></ParticipantName>
+      </div>
     </ParticipantTile>
   );
 }
@@ -128,5 +143,28 @@ export function isTrackReferencePinned(
     );
   } else {
     return false;
+  }
+}
+
+/// 开启｜静音 音频轨道
+function enableAudioTrack(room: Room, enabled: boolean) {
+  const audioTrack = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+  if (audioTrack) {
+    enabled ? audioTrack.unmute() : audioTrack.mute();
+  } else {
+    if (room.localParticipant.connectionQuality != ConnectionQuality.Unknown) {
+      room.localParticipant.setMicrophoneEnabled(enabled);
+    }
+  }
+}
+
+function enableVideoTrack(room: Room, enabled: boolean) {
+  const videoTrack = room.localParticipant.getTrackPublication(Track.Source.Camera);
+  if (videoTrack) {
+    enabled ? videoTrack.unmute() : videoTrack.mute();
+  } else {
+    if (room.localParticipant.connectionQuality != ConnectionQuality.Unknown) {
+      room.localParticipant.setCameraEnabled(enabled);
+    }
   }
 }

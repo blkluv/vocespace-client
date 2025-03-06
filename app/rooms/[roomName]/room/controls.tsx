@@ -6,7 +6,7 @@ import {
   RoomContext,
   RoomName,
 } from '@livekit/components-react';
-import styles from '@/styles/controls/controls.module.scss';
+import styles from '@/styles/controls.module.scss';
 import { AudioToggle } from './controls/audio_toggle';
 import { VideoToggle } from './controls/video_toggle';
 import { ScreenToggle } from './controls/screen_toggle';
@@ -28,6 +28,7 @@ export function Controls({ saveUserChoices = true }) {
 
   // [states] -----------------------------------------------------------------
   const [audio_enabled, set_audio_enabled] = useState(userChoices.audioEnabled);
+  const [video_enabled, set_video_enabled] = useState(userChoices.videoEnabled);
   const [setting_visible, set_setting_visible] = useState(false);
 
   // [toggle click handlers] -------------------------------------------------
@@ -37,10 +38,23 @@ export function Controls({ saveUserChoices = true }) {
       const new_state = !enabled;
       set_audio_enabled(new_state);
       saveAudioInputEnabled(new_state);
+      new_state && saveAudioInputDeviceId(userChoices.audioDeviceId);
       // 发布事件
       publisher(SubjectKey.Audio, new_state);
     },
-    [saveAudioInputEnabled],
+    [saveAudioInputEnabled, saveAudioInputDeviceId],
+  );
+  // - [video] ---------------------------------------------------------------
+  const video_on_clicked = useCallback(
+    (enabled: boolean): void => {
+      const new_state = !enabled;
+      set_video_enabled(new_state);
+      saveVideoInputEnabled(new_state);
+      new_state && saveVideoInputDeviceId(userChoices.videoDeviceId);
+      // 发布事件
+      publisher(SubjectKey.Video, new_state);
+    },
+    [saveVideoInputEnabled, saveVideoInputDeviceId],
   );
 
   // - [setting] -------------------------------------------------------------
@@ -56,7 +70,7 @@ export function Controls({ saveUserChoices = true }) {
     <div className={styles.controls}>
       <div className={styles.controls_left}>
         <AudioToggle enabled={audio_enabled} onClicked={audio_on_clicked}></AudioToggle>
-        <VideoToggle></VideoToggle>
+        <VideoToggle enabled={video_enabled} onClicked={video_on_clicked}></VideoToggle>
         <ScreenToggle></ScreenToggle>
         <SettingToggle enabled={setting_visible} onClicked={setting_on_clicked}></SettingToggle>
       </div>
@@ -69,7 +83,7 @@ export function Controls({ saveUserChoices = true }) {
         title="Settings"
         placement="bottom"
         closable={false}
-        height={"70%"}
+        height={'70%'}
         open={setting_visible}
         extra={setting_drawer_header({
           on_clicked: () => set_setting_visible(false),
