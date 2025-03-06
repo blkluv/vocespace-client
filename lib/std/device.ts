@@ -1,6 +1,8 @@
 import { Track } from 'livekit-client';
 import { SizeNum } from '.';
-
+import { TrackReferenceOrPlaceholder } from '@livekit/components-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDebounce, useThrottle } from './debounce';
 export interface Device {
   value: string;
   label: string;
@@ -66,5 +68,83 @@ export function count_video_blur(video_blur: number, size: SizeNum): number {
   const { height, width } = size;
   const h_blur = (height / 10.0) * video_blur;
   const w_blur = (width / 10.0) * video_blur;
+  console.warn(h_blur, w_blur, height, width);
+
   return Math.max(h_blur, w_blur);
+}
+
+export interface ScreenFocus {
+  track_ref?: TrackReferenceOrPlaceholder;
+  video_blur?: number;
+}
+
+export interface UseVideoBlurProps {
+  videoRef: React.RefObject<HTMLVideoElement>;
+  initialBlur?: number;
+  defaultDimensions?: SizeNum;
+}
+
+
+
+export function useVideoBlur({
+  videoRef,
+  initialBlur = 0,
+  defaultDimensions = { width: 120, height: 100 },
+}: UseVideoBlurProps) {
+  const [videoBlur, setVideoBlur] = useState(initialBlur);
+  const [dimensions, setDimensions] = useState<SizeNum>(defaultDimensions);
+
+  // 使用防抖处理尺寸更新
+  const debouncedDimensions = useDebounce(dimensions, 100);
+  
+  // 使用节流处理模糊值更新
+  const throttledVideoBlur = useThrottle(videoBlur, 16); // 约60fps
+
+  const updateDimensions = useCallback(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    // 只在尺寸真正变化时更新
+    const newWidth = videoElement.clientWidth || defaultDimensions.width;
+    const newHeight = videoElement.clientHeight || defaultDimensions.height;
+    
+    if (newWidth !== dimensions.width || newHeight !== dimensions.height) {
+      setDimensions({
+        width: newWidth,
+        height: newHeight,
+      });
+    }
+  }, [defaultDimensions, dimensions, videoRef]);
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(updateDimensions);
+    });
+
+    resizeObserver.observe(videoElement);
+    videoElement.addEventListener('loadedmetadata', updateDimensions);
+
+    return () => {
+      resizeObserver.disconnect();
+      videoElement.removeEventListener('loadedmetadata', updateDimensions);
+    };
+  }, [updateDimensions]);
+
+  // 使用 useMemo 缓存计算结果，并使用防抖和节流后的值
+  const blurValue = useMemo(() => {
+    return count_video_blur(throttledVideoBlur, debouncedDimensions);
+  }, [throttledVideoBlur, debouncedDimensions]);
+
+  const handleSetVideoBlur = useCallback((value: number) => {
+    setVideoBlur(value);
+  }, []);
+
+  return {
+    blurValue,
+    dimensions: debouncedDimensions,
+    setVideoBlur: handleSetVideoBlur,
+  };
 }

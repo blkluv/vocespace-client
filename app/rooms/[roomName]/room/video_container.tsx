@@ -156,7 +156,7 @@ export function VideoContainer({
           <div className={styles['container_left']}>
             <div className={styles['container_left_rooms']}>
               <Search
-                style={{margin: '8px'}}
+                style={{ margin: '8px' }}
                 addonBefore="Room"
                 placeholder="search room"
                 allowClear
@@ -216,7 +216,7 @@ export function VideoContainer({
                     <UserPanel></UserPanel>
                   </ParticipantTile>
                 </GridLayout> */}
-                <MainPanel></MainPanel>
+                {room && <MainPanel room={room}></MainPanel>}
               </div>
             </main>
             <footer>

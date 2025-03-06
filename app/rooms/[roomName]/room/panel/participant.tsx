@@ -15,11 +15,12 @@ import {
 import { ConnectionQuality, Room, Track } from 'livekit-client';
 import { HTMLAttributes, useCallback, useEffect, useRef, useState } from 'react';
 import { isTrackReferencePlaceholder } from '../video_container';
-import { SubjectKey, subscriber } from '@/lib/std/chanel';
+import { publisher, SubjectKey, subscriber } from '@/lib/std/chanel';
 import styles from '@/styles/participant.module.scss';
 import { use_add_user_device } from '@/lib/hooks/store/user_choices';
-import { count_video_blur } from '@/lib/std/device';
+import { count_video_blur, useVideoBlur } from '@/lib/std/device';
 import { SvgResource } from '../../pre_join/resources';
+import { Button } from 'antd';
 
 interface ParticipantItemProps extends HTMLAttributes<HTMLDivElement> {
   trackRef?: TrackReferenceOrPlaceholder;
@@ -43,7 +44,12 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
   const add_derivce_settings = use_add_user_device(
     room?.localParticipant.name || userChoices.username,
   );
-  const [video_blur, set_video_blur] = useState(add_derivce_settings.video.blur);
+  const { blurValue, setVideoBlur } = useVideoBlur({
+    videoRef: video_track_ref,
+    initialBlur: add_derivce_settings.video.blur,
+  });
+
+
   const [screen_enabled, set_screen_enabled] = useState(add_derivce_settings.screen.enabled);
   const trackReference = useEnsureTrackRef(trackRef);
   const layoutContext = useMaybeLayoutContext();
@@ -103,6 +109,15 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
     };
   }, [handleAudioStateChange, handleVideoStateChange, handleScreenStateChange]);
 
+  // [focus] -------------------------------------------------------------
+  const focus_on = () => {
+    // 发布焦点事件
+    publisher(SubjectKey.Focus, {
+      track_ref: trackReference,
+      video_blur: add_derivce_settings.video.blur,
+    });
+  };
+
   // 监听状态变化
   useEffect(() => {
     console.warn('audio_enabled 状态实际变化为:', audio_enabled);
@@ -116,17 +131,21 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
           ref={video_track_ref}
           trackRef={trackReference}
           style={{
-            filter: `blur(${count_video_blur(video_blur, {
-              height: video_track_ref.current?.height || 100,
-              width: video_track_ref.current?.width || 120,
-            })}px)`,
+            filter: `blur(${blurValue}px)`,
           }}
         ></VideoTrack>
       )}
       <div className={styles.tile_name}>
         <ParticipantName></ParticipantName>
         <div className={styles.tile_name_tools}>
-          <SvgResource svgSize={16} type="focus"></SvgResource>
+          <Button
+            type="text"
+            size="small"
+            style={{ backgroundColor: 'transparent' }}
+            onClick={focus_on}
+          >
+            <SvgResource svgSize={16} type="focus"></SvgResource>
+          </Button>
           <SvgResource svgSize={16} type="wave"></SvgResource>
         </div>
       </div>
