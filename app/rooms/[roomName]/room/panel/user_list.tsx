@@ -1,6 +1,5 @@
 import { Avatar, Badge, List } from 'antd';
 import styles from '@/styles/user_list.module.scss';
-import { useMaybeRoomContext } from '@livekit/components-react';
 import { UserItemProp } from '@/lib/std';
 
 export function UserList({ data }: { data: UserItemProp[] }) {

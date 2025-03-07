@@ -5,24 +5,7 @@ import { DebugMode } from '@/lib/Debug';
 import { RecordingIndicator } from '@/lib/RecordingIndicator';
 import { SettingsMenu } from '@/lib/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
-import {
-  AudioConference,
-  AudioTrack,
-  formatChatMessageLinks,
-  LiveKitRoom,
-  LocalUserChoices,
-  ParticipantLoop,
-  ParticipantName,
-  ParticipantTile,
-  RoomAudioRenderer,
-  TrackLoop,
-  TrackRefContext,
-  useParticipants,
-  useTracks,
-  VideoConference,
-  VideoTrack,
-  // PreJoin
-} from '@livekit/components-react';
+import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
 import {
   ExternalE2EEKeyProvider,
   RoomOptions,
@@ -31,15 +14,9 @@ import {
   Room,
   DeviceUnsupportedError,
   RoomConnectOptions,
-  RoomEvent,
-  Track,
-  isLocalTrack,
-  isLocalParticipant,
-  RemoteParticipant,
-  LocalParticipant,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { PreJoin } from './pre_join/pre_join';
 import { VideoContainer } from './room/video_container';
 

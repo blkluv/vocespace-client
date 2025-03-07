@@ -1,5 +1,4 @@
 import {
-  AudioTrack,
   isTrackReference,
   ParticipantName,
   ParticipantTile,
@@ -18,7 +17,7 @@ import { isTrackReferencePlaceholder } from '../video_container';
 import { publisher, SubjectKey, subscriber } from '@/lib/std/chanel';
 import styles from '@/styles/participant.module.scss';
 import { use_add_user_device } from '@/lib/hooks/store/user_choices';
-import { count_video_blur, useVideoBlur } from '@/lib/std/device';
+import { useVideoBlur } from '@/lib/std/device';
 import { SvgResource } from '../../pre_join/resources';
 import { Button } from 'antd';
 
@@ -48,7 +47,6 @@ export function ParticipantItem({ trackRef, ...htmlProps }: ParticipantItemProps
     videoRef: video_track_ref,
     initialBlur: add_derivce_settings.video.blur,
   });
-
 
   const [screen_enabled, set_screen_enabled] = useState(add_derivce_settings.screen.enabled);
   const trackReference = useEnsureTrackRef(trackRef);

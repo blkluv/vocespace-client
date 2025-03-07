@@ -1,16 +1,13 @@
 import {
   isTrackReference,
-  TrackReference,
   TrackReferenceOrPlaceholder,
-  useMaybeRoomContext,
-  useRoomInfo,
   VideoTrack,
 } from '@livekit/components-react';
 import styles from '@/styles/main_panel.module.scss';
 import { Room, Track } from 'livekit-client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { SubjectKey, subscriber } from '@/lib/std/chanel';
-import { count_video_blur, ScreenFocus, useVideoBlur } from '@/lib/std/device';
+import { ScreenFocus, useVideoBlur } from '@/lib/std/device';
 /**
  * # Main panel for the room
  * 主面板是位于房间中心区域的主要显示区域，用于显示主要内容。

@@ -18,7 +18,7 @@ import { Button, Input, Slider, Switch } from 'antd';
 import { DevicesSelector } from '@/app/api/devices/device_selector';
 import { count_video_blur, default_device, MediaDeviceKind } from '@/lib/std/device';
 import { ScreenPreview } from '@/app/api/devices/screen_preview';
-import { use_add_user_device, use_stored_set, UserAddInfos } from '@/lib/hooks/store/user_choices';
+import { use_add_user_device, use_stored_set} from '@/lib/hooks/store/user_choices';
 
 /**
  * The PreJoin Page component should use before user enter into the room.
