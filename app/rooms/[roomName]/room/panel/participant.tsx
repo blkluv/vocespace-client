@@ -237,7 +237,7 @@ export function isTrackReferencePinned(
 
 /// 开启｜静音 音频轨道
 function enableAudioTrack(room: Room, enabled: boolean) {
-  if (room.state !== ConnectionState.Connected) {
+  if (room.state === ConnectionState.Connected) {
     const audioTrack = room.localParticipant.getTrackPublication(Track.Source.Microphone);
     if (audioTrack) {
       enabled ? audioTrack.unmute() : audioTrack.mute();
@@ -250,7 +250,7 @@ function enableAudioTrack(room: Room, enabled: boolean) {
 }
 
 function enableVideoTrack(room: Room, enabled: boolean) {
-  if (room.state !== ConnectionState.Connected) {
+  if (room.state === ConnectionState.Connected) {
     const videoTrack = room.localParticipant.getTrackPublication(Track.Source.Camera);
     if (videoTrack) {
       enabled ? videoTrack.unmute() : videoTrack.mute();
@@ -263,7 +263,7 @@ function enableVideoTrack(room: Room, enabled: boolean) {
 }
 
 async function enableScreenTrack(room: Room, enabled: boolean) {
-  if (room.state !== ConnectionState.Connected) {
+  if (room.state === ConnectionState.Connected) {
     const screenTrack = room.localParticipant.getTrackPublication(Track.Source.ScreenShare);
     if (screenTrack) {
       if (enabled) {
