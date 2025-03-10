@@ -58,6 +58,7 @@ export const default_device = (): AddDeviceInfo => {
 export interface ToggleProps {
   enabled: boolean;
   onClicked: (enabled: boolean) => void;
+  showText?: boolean;
 }
 
 /// 计算视频模糊度

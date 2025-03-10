@@ -17,10 +17,10 @@ import { ScreenFocus, useVideoBlur } from '@/lib/std/device';
  * 3. 素材（若房间的owner在构建房间时提供了主面板素材）
  * 4. 房间信息（房间名称、房间号、房间密码、房间创建者、房间创建时间等）(当前版本进行实现)
  */
-export function MainPanel({ room }: { room: Room }) {
+export function MainPanel({ room, initialTrack }: { room: Room, initialTrack: TrackReferenceOrPlaceholder }) {
   const video_track_ref = useRef<HTMLVideoElement>(null);
   const [focus, set_focus] = useState(false);
-  const [track, set_track] = useState<TrackReferenceOrPlaceholder>();
+  const [track, set_track] = useState<TrackReferenceOrPlaceholder| undefined>(initialTrack);
   const { blurValue, setVideoBlur } = useVideoBlur({
     videoRef: video_track_ref,
     initialBlur: 0,
@@ -34,11 +34,27 @@ export function MainPanel({ room }: { room: Room }) {
     },
     [set_focus, set_track, setVideoBlur],
   );
+  // - [video] ----------------------------------------------------------
+  const handleVideoStateChange = useCallback((enabled: boolean) => {
+    if (!enabled) {
+      set_focus(false);
+    }
+  }, []);
+  // - [screen] ---------------------------------------------------------
+  const handleScreenStateChange = useCallback((enabled: boolean) => {
+    if (!enabled) {
+      set_focus(false);
+    }
+  }, []);
 
   useEffect(() => {
+    const video_subscription = subscriber(SubjectKey.Video, handleVideoStateChange);
+    const screen_subscription = subscriber(SubjectKey.Screen, handleScreenStateChange);
     const subscription = subscriber(SubjectKey.Focus, handleFocus);
     return () => {
       subscription?.unsubscribe();
+      video_subscription?.unsubscribe();
+      screen_subscription?.unsubscribe();
     };
   }, [handleFocus]);
 

@@ -2,6 +2,7 @@ import { TrackLoop, TrackReferenceOrPlaceholder, usePagination } from '@livekit/
 import { createRef, RefObject, useState } from 'react';
 import styles from '@/styles/flex_layout.module.scss';
 import { Size, SizeNum } from '@/lib/std';
+import { Track } from 'livekit-client';
 /**
  * # FlexLayout for Participants
  * 为参与者列表提供的flex布局，需要具备以下能力
@@ -18,9 +19,10 @@ export function FlexLayout({
   children: React.ReactNode;
   size: Size;
 }) {
+  const visible_tracks = tracks;
   const gridEL = createRef<HTMLDivElement>();
   const [max_tile, set_max_tile] = useState(max_tile_num(gridEL, size));
-  const pagination = usePagination(max_tile, tracks);
+  const pagination = usePagination(max_tile, visible_tracks);
 
   return (
     <div ref={gridEL} className={styles.layout}>

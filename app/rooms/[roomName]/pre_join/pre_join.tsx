@@ -50,10 +50,11 @@ export function PreJoin({
   });
 
   const [user_choices, set_user_choices] = useState(initialUserChoices);
+  const [device_settings, set_device_settings] = useState(use_add_user_device(user_choices.username));
   // [enables] ---------------------------------------------------------------------
-  const [audio_enabled, set_audio_enabled] = useState(user_choices.audioEnabled);
-  const [video_enabled, set_video_enabled] = useState(user_choices.videoEnabled);
-  const [screen_enabled, set_screen_enabled] = useState(false);
+  const [audio_enabled, set_audio_enabled] = useState(device_settings.microphone.enabled);
+  const [video_enabled, set_video_enabled] = useState(device_settings.video.enabled);
+  const [screen_enabled, set_screen_enabled] = useState(device_settings.screen.enabled);
   const [audio_device_id, set_audio_device_id] = useState(user_choices.audioDeviceId);
   const [video_device_id, set_video_device_id] = useState(user_choices.videoDeviceId);
   const [username, set_username] = useState(user_choices.username);
@@ -72,10 +73,6 @@ export function PreJoin({
     return tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack;
   }, [tracks]);
   // [other settings] -------------------------------------------------------------
-  const [device_settings, set_device_settings] = useState(default_device());
-  useEffect(() => {
-    set_device_settings(use_add_user_device(username));
-  }, [username]);
   const [video_blur, set_video_blur] = useState(device_settings.video.blur);
   const [screen_blur, set_screen_blur] = useState(device_settings.screen.blur);
   const [volume_self, set_volume_self] = useState(device_settings.microphone.self);

@@ -110,3 +110,16 @@ h2 a {
 .ant-collapse-header{
   padding: 8px !important;
 }
+
+:where(.css-dev-only-do-not-override-fx2ox2).ant-dropdown .ant-dropdown-menu{
+  background-color: #1e1e1e;
+  color:#fff;
+}
+
+.controls_audio_toggle{
+  .ant-select-selector{
+    background-color: #1e1e1e;
+    color: #fff;
+  }
+
+}

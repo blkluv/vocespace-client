@@ -19,9 +19,10 @@ import {
   useTracks,
   VideoConferenceProps,
   WidgetState,
+  VideoConference,
 } from '@livekit/components-react';
 import { AudioRenderer } from './audio_renderer';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Participant, Room, RoomEvent, Track } from 'livekit-client';
 import Search from 'antd/es/input/Search';
 import { Collapse, CollapseProps } from 'antd';
@@ -33,6 +34,7 @@ import { RoomList } from './panel/room_list';
 import { UserItem, UserList } from './panel/user_list';
 import { ParticipantItem } from './panel/participant';
 import { UserItemProp } from '@/lib/std';
+import { SubjectKey, subscriber } from '@/lib/std/chanel';
 
 /**
  * ## VideoContainer
@@ -51,6 +53,7 @@ export function VideoContainer({
   });
   const lastAutoFocusedScreenShareTrack = useRef<TrackReferenceOrPlaceholder | null>(null);
   const room = useMaybeRoomContext();
+  const participant_item_ref = useRef<HTMLDivElement>(null);
   // [tracks] -------------------------------------------------------------------
   const tracks = useTracks(
     [
@@ -59,20 +62,18 @@ export function VideoContainer({
     ],
     { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false },
   );
+
+  const layoutContext = useCreateLayoutContext();
+  const screenShareTracks = tracks
+    .filter(isTrackReference)
+    .filter((track) => track.publication.source === Track.Source.ScreenShare);
+  const focusTrack = usePinnedTracks(layoutContext)?.[0];
+  const carouselTracks = tracks.filter((track) => !isEqualTrackRef(track, focusTrack));
+
   const widgetUpdate = (state: WidgetState) => {
     console.debug('updating widget state', state);
     setWidgetState(state);
   };
-
-  const layoutContext = useCreateLayoutContext();
-
-  const screenShareTracks = tracks
-    .filter(isTrackReference)
-    .filter((track) => track.publication.source === Track.Source.ScreenShare);
-
-  const focusTrack = usePinnedTracks(layoutContext)?.[0];
-  // console.error(focusTrack);
-  const carouselTracks = tracks.filter((track) => !isEqualTrackRef(track, focusTrack));
 
   useEffect(() => {
     // If screen share tracks are published, and no pin is set explicitly, auto set the screen share.
@@ -113,8 +114,6 @@ export function VideoContainer({
     tracks,
   ]);
 
-  //   useWarnAboutMissingStyles();
-
   // [search room . member] -------------------------------------------------------------------
   const search_room = (room: string) => {
     console.log('search_room:', room);
@@ -142,7 +141,7 @@ export function VideoContainer({
       children: <RoomList data={[]}></RoomList>,
     },
   ];
-  const item_size = { height: '100px', width: '48%' };
+  const item_size = { height: '150px', width: '100%' };
   const tile_style = Object.assign(item_size, { backgroundColor: '#1E1E1E' });
 
   return (
@@ -154,6 +153,33 @@ export function VideoContainer({
           onWidgetChange={widgetUpdate}
         >
           <div className={styles['container_left']}>
+            <FlexLayout tracks={tracks} size={item_size}>
+              <ParticipantItem ref={participant_item_ref} style={tile_style}></ParticipantItem>
+            </FlexLayout>
+            {/* {!focusTrack ? (
+              <div className="lk-grid-layout-wrapper">
+                <GridLayout tracks={tracks}>
+                  <ParticipantItem ref={participant_item_ref} style={tile_style}></ParticipantItem>
+                </GridLayout>
+              </div>
+            ) : (
+              <div className="lk-focus-layout-wrapper">
+                <FocusLayoutContainer>
+                  <CarouselLayout tracks={carouselTracks}>
+                    <ParticipantItem ref={participant_item_ref} style={tile_style}></ParticipantItem>
+                  </CarouselLayout>
+                  {focusTrack && <FocusLayout trackRef={focusTrack} />}
+                </FocusLayoutContainer>
+              </div>
+            )} */}
+            {/* <div className="lk-grid-layout-wrapper">
+                <GridLayout tracks={tracks}>
+            
+                  <ParticipantItem ref={participant_item_ref} style={tile_style}></ParticipantItem>
+                </GridLayout>
+              </div> */}
+          </div>
+          {/* <div className={styles['container_left']}>
             <div className={styles['container_left_rooms']}>
               <Search
                 style={{ margin: '8px' }}
@@ -187,7 +213,7 @@ export function VideoContainer({
                 )}
               </footer>
             </div>
-          </div>
+          </div> */}
           <div className={styles['container_main']}>
             <header>
               <RoomName></RoomName>
@@ -195,53 +221,28 @@ export function VideoContainer({
             </header>
             <main>
               <div className="lk-video-conference-inner" style={{ height: '100%' }}>
-                {/* {!focusTrack ? (
-                  <div className="lk-grid-layout-wrapper">
-                    <GridLayout tracks={tracks}>
-                      <ParticipantTile />
-                    </GridLayout>
-                  </div>
-                ) : (
-                  <div className="lk-focus-layout-wrapper">
-                    <FocusLayoutContainer>
-                      <CarouselLayout tracks={carouselTracks}>
-                        <ParticipantTile />
-                      </CarouselLayout>
-                      {focusTrack && <FocusLayout trackRef={focusTrack} />}
-                    </FocusLayoutContainer>
-                  </div>
-                )} */}
-                {/* <GridLayout tracks={tracks}>
-                  <ParticipantTile>
-                    <UserPanel></UserPanel>
-                  </ParticipantTile>
-                </GridLayout> */}
-                {room && <MainPanel room={room}></MainPanel>}
+                {room && <MainPanel room={room} initialTrack={screenShareTracks[0]}></MainPanel>}
               </div>
             </main>
             <footer>
-              <Controls></Controls>
+              <Controls room={room} controls={{ chat: true, settings: !!SettingsComponent }}></Controls>
+              {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }}></ControlBar> */}
             </footer>
           </div>
-          <div className={styles['container_right']}>
+          {/* <div className={styles['container_right']}>
             <div className={styles['container_right_participants']}>
-              {/* <div className="lk-grid-layout-wrapper">
-                <GridLayout tracks={tracks}>
-                  <ParticipantTile style={{height: '120px'}} />
-                </GridLayout>
-                
-              </div> */}
+              
               <FlexLayout tracks={tracks} size={item_size}>
-                {/* <ParticipantTile style={item_size} /> */}
+
                 <ParticipantItem style={tile_style}></ParticipantItem>
               </FlexLayout>
             </div>
             <div className={styles['container_right_tools']}>
               <Tools></Tools>
             </div>
-          </div>
+          </div> */}
           <Chat
-            style={{ display: widgetState.showChat ? 'grid' : 'none' }}
+            style={{ display: widgetState.showChat ? 'grid' : 'none', width: '360px' }}
             messageFormatter={chatMessageFormatter}
           />
           {SettingsComponent && (

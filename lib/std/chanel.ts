@@ -3,13 +3,14 @@
 //! the receive component should subscribe to the state change and update some other things.
 
 import { BehaviorSubject } from 'rxjs';
-import { ScreenFocus } from './device';
+import { AddDeviceInfo, ScreenFocus } from './device';
 
 export enum SubjectKey {
   Audio = 'audio',
   Video = 'video',
   Screen = 'screen',
   Focus = 'focus',
+  Setting = 'setting',
 }
 
 // 初始化所有主题
@@ -18,6 +19,7 @@ export const subject_map = new Map<SubjectKey, BehaviorSubject<any>>([
   [SubjectKey.Video, new BehaviorSubject<boolean>(true)],
   [SubjectKey.Screen, new BehaviorSubject<boolean>(false)],
   [SubjectKey.Focus, new BehaviorSubject<ScreenFocus>({})],
+  [SubjectKey.Setting, new BehaviorSubject<AddDeviceInfo | undefined>(undefined)],
 ]);
 
 // 发布事件
