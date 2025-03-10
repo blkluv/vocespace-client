@@ -26,3 +26,7 @@ export interface UserItemProp {
 }
 
 export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';
+
+export function is_web(): boolean {
+  return typeof window !== 'undefined';
+}

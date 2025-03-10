@@ -80,7 +80,7 @@ export interface ScreenFocus {
 }
 
 export interface UseVideoBlurProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement> | React.RefObject<HTMLImageElement>;
   initialBlur?: number;
   defaultDimensions?: SizeNum;
 }

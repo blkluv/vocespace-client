@@ -55,8 +55,6 @@ export function VideoToggle({ enabled, onClicked, showText = true }: ToggleProps
           <Button
             type="text"
             style={{ paddingRight: 0 }}
-            // variant="solid"
-            // color="default"
             size="large"
             onClick={on_clicked}
           >
@@ -78,7 +76,17 @@ export function VideoToggle({ enabled, onClicked, showText = true }: ToggleProps
                 padding: '0 12px',
               }}
             >
-              {active_video}
+              
+              <div
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100px',
+                }}
+              >
+                {active_video}
+              </div>
               <SvgResource type="down" svgSize={16}></SvgResource>
             </span>
           </Dropdown>

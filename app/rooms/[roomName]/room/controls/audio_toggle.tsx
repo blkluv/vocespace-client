@@ -55,8 +55,6 @@ export function AudioToggle({ enabled, onClicked, showText = true }: ToggleProps
           <Button
             type="text"
             style={{ paddingRight: 0, height: '16px' }}
-            // variant="solid"
-            // color="default"
             size="large"
             onClick={on_clicked}
           >
@@ -78,7 +76,16 @@ export function AudioToggle({ enabled, onClicked, showText = true }: ToggleProps
                 padding: '0 12px',
               }}
             >
-              {active_audio}
+              <div
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100px',
+                }}
+              >
+                {active_audio}
+              </div>
               <SvgResource type="down" svgSize={16}></SvgResource>
             </span>
           </Dropdown>

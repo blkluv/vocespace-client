@@ -215,10 +215,9 @@ export function VideoContainer({
             </div>
           </div> */}
           <div className={styles['container_main']}>
-            <header>
+            {/* <header>
               <RoomName></RoomName>
-              {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
-            </header>
+            </header> */}
             <main>
               <div className="lk-video-conference-inner" style={{ height: '100%' }}>
                 {room && <MainPanel room={room} initialTrack={screenShareTracks[0]}></MainPanel>}

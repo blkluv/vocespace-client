@@ -1,3 +1,4 @@
+import { is_web } from '@/lib/std';
 import { AddDeviceInfo, default_device } from '@/lib/std/device';
 
 export type UserAddInfos = Map<string, UserAddInfo>;
@@ -8,6 +9,9 @@ export interface UserAddInfo {
 
 /// This hook is used to store the user's choices into the local storage
 export function use_stored_set(key: string, val: UserAddInfo) {
+  if (!is_web()) {
+    return;
+  }
   let user_infos = new Map<string, UserAddInfo>();
   const user_infos_json = localStorage.getItem('voce_space_user_infos');
 
@@ -25,6 +29,9 @@ export function use_stored_set(key: string, val: UserAddInfo) {
 
 /// This hook is used to get the user's choices from the local storage
 export function use_stored_get(): UserAddInfos | undefined {
+  if (!is_web()) {
+    return undefined;
+  }
   const data = localStorage.getItem('voce_space_user_infos');
   if (data) {
     // 将解析后的对象转换为 Map
@@ -35,6 +42,10 @@ export function use_stored_get(): UserAddInfos | undefined {
 }
 
 export function use_lk_username(): string {
+  if (!is_web()) {
+    return '';
+  }
+
   const lk_json = localStorage.getItem('lk-user-choices');
   if (lk_json) {
     const lk = JSON.parse(lk_json);
@@ -44,6 +55,9 @@ export function use_lk_username(): string {
 }
 
 export function use_add_user_device(username?: string): AddDeviceInfo {
+  if (!is_web()) {
+    return default_device();
+  }
   const user_name = use_lk_username() || username || '';
   const user_infos = use_stored_get();
   let device_settings = default_device();

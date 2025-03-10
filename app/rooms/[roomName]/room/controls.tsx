@@ -15,13 +15,13 @@ import { AudioToggle } from './controls/audio_toggle';
 import { VideoToggle } from './controls/video_toggle';
 import { ScreenToggle } from './controls/screen_toggle';
 import { ConnectionState, Room, Track } from 'livekit-client';
-import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { publisher, subject_map, SubjectKey } from '@/lib/std/chanel';
 import { SettingToggle } from './controls/setting_toggle';
 import { Button, Drawer, message, Slider } from 'antd';
 import { SvgResource } from '../pre_join/resources';
 import { use_add_user_device, use_stored_set } from '@/lib/hooks/store/user_choices';
-import { AddDeviceInfo } from '@/lib/std/device';
+import { AddDeviceInfo, useVideoBlur } from '@/lib/std/device';
 
 export function Controls({
   room,
@@ -41,6 +41,7 @@ export function Controls({
     saveVideoInputDeviceId,
   } = usePersistentUserChoices({ preventSave: !saveUserChoices });
   const add_derivce_settings = use_add_user_device(userChoices.username);
+  const video_track_ref = useRef<HTMLImageElement>(null);
   // [states] -----------------------------------------------------------------
   const [messageApi, contextHolder] = message.useMessage();
   const [audio_enabled, set_audio_enabled] = useState(userChoices.audioEnabled);
@@ -65,6 +66,11 @@ export function Controls({
     visibleControls.screenShare ??= localPermissions.canPublish;
     visibleControls.chat ??= localPermissions.canPublishData && controls?.chat;
   }
+
+  const { blurValue, setVideoBlur } = useVideoBlur({
+    videoRef: video_track_ref,
+    initialBlur: add_derivce_settings.video.blur,
+  });
 
   // [toggle click handlers] -------------------------------------------------
   // - [audio] ---------------------------------------------------------------
@@ -190,6 +196,7 @@ export function Controls({
               step={0.05}
               onChange={(e) => {
                 set_video_blur(e);
+                setVideoBlur(e);
               }}
             />
           </div>
@@ -204,9 +211,20 @@ export function Controls({
               step={0.05}
               onChange={(e) => {
                 set_screen_blur(e);
+                setVideoBlur(e);
               }}
             />
           </div>
+          <div className={styles.setting_box} style={{overflow: 'hidden'}}> 
+            <div>Blur Test:{Math.round(blurValue)}px</div>
+            <img
+              ref={video_track_ref}
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/blur_test.png`}
+              height="220"
+              style={{ marginBottom: '16px', filter: `blur(${blurValue}px)`, overflow: 'hidden' }}
+            />
+          </div>
+
           <div className={styles.setting_container_footer}>
             <Button type="primary" onClick={save_changes}>
               Save Changes
