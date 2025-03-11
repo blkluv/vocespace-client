@@ -145,101 +145,37 @@ export function VideoContainer({
   const tile_style = Object.assign(item_size, { backgroundColor: '#1E1E1E' });
 
   return (
-    <div className={styles.container} {...props}>
+    <div className="lk-video-conference" {...props}>
       {is_web && (
         <LayoutContextProvider
           value={layoutContext}
           // onPinChange={handleFocusStateChange}
           onWidgetChange={widgetUpdate}
         >
-          <div className={styles['container_left']}>
-            <FlexLayout tracks={tracks} size={item_size}>
-              <ParticipantItem ref={participant_item_ref} style={tile_style}></ParticipantItem>
-            </FlexLayout>
-            {/* {!focusTrack ? (
+          <div className="lk-video-conference-inner">
+            {!focusTrack ? (
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
-                  <ParticipantItem ref={participant_item_ref} style={tile_style}></ParticipantItem>
+                  <ParticipantItem ref={participant_item_ref}></ParticipantItem>
                 </GridLayout>
               </div>
             ) : (
               <div className="lk-focus-layout-wrapper">
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
-                    <ParticipantItem ref={participant_item_ref} style={tile_style}></ParticipantItem>
+                    <ParticipantItem ref={participant_item_ref}></ParticipantItem>
                   </CarouselLayout>
-                  {focusTrack && <FocusLayout trackRef={focusTrack} />}
+                  {focusTrack && <FocusLayout trackRef={focusTrack} >
+                  <ParticipantItem ref={participant_item_ref} style={{height: '100%',display: 'flex', alignItems: 'center', justifyContent: 'center'}}></ParticipantItem>
+                    </FocusLayout>}
                 </FocusLayoutContainer>
               </div>
-            )} */}
-            {/* <div className="lk-grid-layout-wrapper">
-                <GridLayout tracks={tracks}>
-            
-                  <ParticipantItem ref={participant_item_ref} style={tile_style}></ParticipantItem>
-                </GridLayout>
-              </div> */}
+            )}
+            <Controls
+              room={room}
+              controls={{ chat: true, settings: !!SettingsComponent }}
+            ></Controls>
           </div>
-          {/* <div className={styles['container_left']}>
-            <div className={styles['container_left_rooms']}>
-              <Search
-                style={{ margin: '8px' }}
-                addonBefore="Room"
-                placeholder="search room"
-                allowClear
-                onSearch={search_room}
-              />
-              <div className={styles.collapse_wrapper}>
-                <Collapse bordered={false} items={rooms} defaultActiveKey={['1']} />
-              </div>
-            </div>
-            <div className={styles['container_left_members']}>
-              <header>
-                <Search
-                  addonBefore="Member"
-                  placeholder="search member"
-                  allowClear
-                  onSearch={search_member}
-                />
-              </header>
-              <main>{room && <UserList data={get_user_list(room)}></UserList>}</main>
-              <footer>
-                {room && (
-                  <UserItem
-                    item={{
-                      name: room.localParticipant?.name || 'UnKnown',
-                      status: 'processing',
-                    }}
-                  ></UserItem>
-                )}
-              </footer>
-            </div>
-          </div> */}
-          <div className={styles['container_main']}>
-            {/* <header>
-              <RoomName></RoomName>
-            </header> */}
-            <main>
-              <div className="lk-video-conference-inner" style={{ height: '100%' }}>
-                {room && <MainPanel room={room} initialTrack={screenShareTracks[0]}></MainPanel>}
-              </div>
-            </main>
-            <footer>
-              <Controls room={room} controls={{ chat: true, settings: !!SettingsComponent }}></Controls>
-              {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }}></ControlBar> */}
-            </footer>
-          </div>
-          {/* <div className={styles['container_right']}>
-            <div className={styles['container_right_participants']}>
-              
-              <FlexLayout tracks={tracks} size={item_size}>
-
-                <ParticipantItem style={tile_style}></ParticipantItem>
-              </FlexLayout>
-            </div>
-            <div className={styles['container_right_tools']}>
-              <Tools></Tools>
-            </div>
-          </div> */}
           <Chat
             style={{ display: widgetState.showChat ? 'grid' : 'none', width: '360px' }}
             messageFormatter={chatMessageFormatter}

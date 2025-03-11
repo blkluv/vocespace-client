@@ -10,17 +10,23 @@ interface ScreenPreviewProps {
 
 export function ScreenPreview({ enabled, blur, onError, onClose }: ScreenPreviewProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [close, setClose] = useState<boolean>(enabled);
+  const [isRequesting, setIsRequesting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const startScreenShare = useCallback(async () => {
+    if (isRequesting) {
+      return;
+    }
     try {
+      setIsRequesting(true);
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: false,
       });
 
-      setStream(mediaStream);
+      if (!videoRef?.current?.srcObject) {
+        setStream(mediaStream);
+      }
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
@@ -29,6 +35,7 @@ export function ScreenPreview({ enabled, blur, onError, onClose }: ScreenPreview
       // 监听用户停止分享
       mediaStream.getVideoTracks()[0].onended = () => {
         setStream(null);
+        setIsRequesting(false);
         onClose();
         if (videoRef.current) {
           videoRef.current.srcObject = null;
@@ -43,6 +50,7 @@ export function ScreenPreview({ enabled, blur, onError, onClose }: ScreenPreview
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
+      setIsRequesting(false);
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
@@ -51,6 +59,10 @@ export function ScreenPreview({ enabled, blur, onError, onClose }: ScreenPreview
 
   // 监听开启/关闭
   useEffect(() => {
+    if (isRequesting) {
+      return;
+    }
+
     if (enabled) {
       startScreenShare();
     } else {
@@ -69,7 +81,11 @@ export function ScreenPreview({ enabled, blur, onError, onClose }: ScreenPreview
         />
       ) : (
         <div className={styles['pre_join_main_device_right_video_empty']}>
-          <img height={48} src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/vocespace.svg`} alt="" />
+          <img
+            height={48}
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/vocespace.svg`}
+            alt=""
+          />
           <p>Screen Share</p>
         </div>
       )}

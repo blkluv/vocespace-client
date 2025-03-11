@@ -1,11 +1,18 @@
 import {
+  ConnectionQualityIndicator,
   isTrackReference,
+  LayoutContext,
+  LockLockedIcon,
   ParticipantName,
+  ParticipantPlaceholder,
   ParticipantTile,
   PinState,
+  ScreenShareIcon,
+  TrackMutedIndicator,
   TrackReferenceOrPlaceholder,
   useEnsureTrackRef,
   useFeatureContext,
+  useIsEncrypted,
   useMaybeLayoutContext,
   useMaybeRoomContext,
   usePersistentUserChoices,
@@ -51,7 +58,7 @@ export const ParticipantItem = forwardRef(
     const [audio_enabled, set_audio_enabled] = useState(userChoices.audioEnabled);
     const [video_enabled, set_video_enabled] = useState(userChoices.videoEnabled);
     const [is_focus, set_is_focus] = useState(false);
-
+    const isEncrypted = useIsEncrypted(trackRef?.participant);
     const add_derivce_settings = useMemo(() => {
       return use_add_user_device(room?.localParticipant.name || userChoices.username);
     }, []);
@@ -187,20 +194,63 @@ export const ParticipantItem = forwardRef(
               }}
             ></VideoTrack>
           )}
-        <div className={styles.tile_name}>
+        {/* {!isTrackReference(trackReference) && (
+          <div
+            style={{
+              display: 'inline-flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100%',
+              width: '100%',
+            }}
+          >
+            <SvgResource type="user_lk" svgSize={'70%'}></SvgResource>
+          </div>
+        )} */}
+        {/* <div className={styles.tile_name}>
           <ParticipantName></ParticipantName>
           <div className={styles.tile_name_tools}>
-            <Button
-              type="text"
-              size="small"
-              style={{ backgroundColor: 'transparent' }}
-              onClick={focus_on}
-            >
-              <SvgResource svgSize={16} type="focus"></SvgResource>
-            </Button>
+
             <SvgResource svgSize={16} type="wave"></SvgResource>
           </div>
+        </div> */}
+        <div className="lk-participant-placeholder">
+          <ParticipantPlaceholder />
         </div>
+        <div className="lk-participant-metadata">
+          <div className="lk-participant-metadata-item">
+            {trackReference.source === Track.Source.Camera ? (
+              <>
+                {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
+                <TrackMutedIndicator
+                  trackRef={{
+                    participant: trackReference.participant,
+                    source: Track.Source.Microphone,
+                  }}
+                  show={'muted'}
+                ></TrackMutedIndicator>
+                <ParticipantName />
+              </>
+            ) : (
+              <>
+                <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
+                <ParticipantName>&apos;s screen</ParticipantName>
+              </>
+            )}
+          </div>
+          <ConnectionQualityIndicator className="lk-participant-metadata-item" />
+        </div>
+        <LayoutContext.Consumer>
+            {(layoutContext) =>
+              layoutContext !== undefined && (
+                <button className='lk-button lk-focus-toggle-button' style={{
+                  left: '0.25rem', width: 'fit-content'
+                }}>
+                  <SvgResource svgSize={16} type="wave"></SvgResource>
+                </button>
+              )
+            }
+          </LayoutContext.Consumer>
       </ParticipantTile>
     );
   },
@@ -282,3 +332,28 @@ async function enableScreenTrack(room: Room, enabled: boolean) {
     }
   }
 }
+
+// export const WaveBtn: (
+//   props: FocusToggleProps & React.RefAttributes<HTMLButtonElement>,
+// ) => React.ReactNode = /* @__PURE__ */ React.forwardRef<HTMLButtonElement, FocusToggleProps>(
+//   function FocusToggle({ trackRef, ...props }: FocusToggleProps, ref) {
+//     // const trackRefFromContext = useMaybeTrackRefContext();
+
+//     // const { mergedProps, inFocus } = useFocusToggle({
+//     //   trackRef: trackRef ?? trackRefFromContext,
+//     //   props,
+//     // });
+
+//     return (
+//       <LayoutContext.Consumer>
+//         {(layoutContext) =>
+//           layoutContext !== undefined && (
+//             <button ref={ref} >
+//               <SvgResource svgSize={16} type="wave"></SvgResource>
+//             </button>
+//           )
+//         }
+//       </LayoutContext.Consumer>
+//     );
+//   },
+// );

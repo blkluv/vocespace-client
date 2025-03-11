@@ -11,7 +11,8 @@ export type SvgType =
   | 'close'
   | 'wave'
   | 'focus'
-  | 'down';
+  | 'down'
+  | 'user_lk';
 
 export function SvgResource({
   type,
@@ -19,7 +20,7 @@ export function SvgResource({
   color = '#ffffff',
 }: {
   type: SvgType;
-  svgSize?: number;
+  svgSize?: number | string;
   color?: string;
 }) {
   switch (type) {
@@ -268,6 +269,42 @@ export function SvgResource({
             p-id="2879"
           ></path>
         </svg>
+      );
+    case 'user_lk':
+      return (
+        <svg
+          width={svgSize}
+          height={svgSize}
+          viewBox="0 0 320 320"
+          preserveAspectRatio="xMidYMid meet"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M160 180C204.182 180 240 144.183 240 100C240 55.8172 204.182 20 160 20C115.817 20 79.9997 55.8172 79.9997 100C79.9997 144.183 115.817 180 160 180Z"
+            fill="white"
+            fill-opacity="0.25"
+          ></path>
+          <path
+            d="M97.6542 194.614C103.267 191.818 109.841 192.481 115.519 195.141C129.025 201.466 144.1 205 159.999 205C175.899 205 190.973 201.466 204.48 195.141C210.158 192.481 216.732 191.818 222.345 194.614C262.703 214.719 291.985 253.736 298.591 300.062C300.15 310.997 291.045 320 280 320H39.9997C28.954 320 19.8495 310.997 21.4087 300.062C28.014 253.736 57.2966 214.72 97.6542 194.614Z"
+            fill="white"
+            fill-opacity="0.25"
+          ></path>
+        </svg>
+        // <svg
+        //   viewBox="0 0 1024 1024"
+        //   version="1.1"
+        //   xmlns="http://www.w3.org/2000/svg"
+        //   p-id="2878"
+        //   width={svgSize}
+        //   height={svgSize}
+        // >
+        //   <path
+        //     d="M716.8 614.4c141.3888 0 256 114.6112 256 256v102.4a51.2 51.2 0 1 1-102.4 0v-102.4c0-84.8256-68.7744-153.6-153.6-153.6H307.2c-84.8256 0-153.6 68.7744-153.6 153.6v102.4a51.2 51.2 0 1 1-102.4 0v-102.4c0-141.3888 114.6112-256 256-256h409.6zM512 0c141.3888 0 256 114.6112 256 256s-114.6112 256-256 256-256-114.6112-256-256S370.6112 0 512 0z m0 102.4c-84.8256 0-153.6 68.7744-153.6 153.6s68.7744 153.6 153.6 153.6 153.6-68.7744 153.6-153.6S596.8256 102.4 512 102.4z"
+        //     fill={color}
+        //     p-id="2879"
+        //   ></path>
+        // </svg>
       );
   }
 }

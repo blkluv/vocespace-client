@@ -146,7 +146,7 @@ export function Controls({
   };
 
   return (
-    <div className={styles.controls}>
+    <div className={`${styles.controls} lk-control-bar`}>
       {contextHolder}
       <div className={styles.controls_left}>
         <AudioToggle enabled={audio_enabled} onClicked={audio_on_clicked}></AudioToggle>
@@ -191,8 +191,8 @@ export function Controls({
               defaultValue={0.15}
               className={`${styles.common_space} ${styles.slider}`}
               value={video_blur}
-              min={0}
-              max={1}
+              min={0.0}
+              max={1.0}
               step={0.05}
               onChange={(e) => {
                 set_video_blur(e);
@@ -206,8 +206,8 @@ export function Controls({
               defaultValue={0.15}
               className={`${styles.common_space} ${styles.slider}`}
               value={screen_blur}
-              min={0}
-              max={1}
+              min={0.0}
+              max={1.0}
               step={0.05}
               onChange={(e) => {
                 set_screen_blur(e);

@@ -8,7 +8,6 @@ export default function Page({
 }: {
   params: { roomName: string };
   searchParams: {
-    // FIXME: We should not allow values for regions if in playground mode.
     region?: string;
     hq?: string;
     codec?: string;
