@@ -177,7 +177,7 @@ export function Controls({
       >
         <div className={styles.setting_container}>
           <div className={styles.setting_box}>
-            <div>Microphone volume for self:</div>
+            <div>Microphone volume:</div>
             <Slider
               defaultValue={volume}
               className={styles.common_space}

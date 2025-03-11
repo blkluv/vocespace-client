@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { PreJoin } from './pre_join/pre_join';
 import { VideoContainer } from './room/video_container';
+import { use_add_user_device } from '@/lib/hooks/store/user_choices';
 
 const CONN_DETAILS_ENDPOINT =
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ??
@@ -135,7 +136,7 @@ function VideoConferenceComponent(props: {
   }, [props.userChoices, props.options.hq, props.options.codec]);
 
   const room = React.useMemo(() => new Room(roomOptions), []);
-
+  const device_settings = use_add_user_device(props.userChoices.username);
   React.useEffect(() => {
     if (e2eeEnabled) {
       keyProvider
