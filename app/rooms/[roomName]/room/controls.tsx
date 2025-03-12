@@ -16,12 +16,12 @@ import { VideoToggle } from './controls/video_toggle';
 import { ScreenToggle } from './controls/screen_toggle';
 import { ConnectionState, Room, Track } from 'livekit-client';
 import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import { publisher, subject_map, SubjectKey } from '@/lib/std/chanel';
+import { publisher, subject_map, SubjectKey, subscriber } from '@/lib/std/chanel';
 import { SettingToggle } from './controls/setting_toggle';
-import { Button, Drawer, message, Slider } from 'antd';
+import { Button, Drawer, message, Modal, Slider } from 'antd';
 import { SvgResource } from '../pre_join/resources';
 import { use_add_user_device, use_stored_set } from '@/lib/hooks/store/user_choices';
-import { AddDeviceInfo, useVideoBlur } from '@/lib/std/device';
+import { AddDeviceInfo, State, useVideoBlur } from '@/lib/std/device';
 
 export function Controls({
   room,
@@ -51,7 +51,9 @@ export function Controls({
   const [volume, set_volume] = useState(add_derivce_settings.microphone.other);
   const [video_blur, set_video_blur] = useState(add_derivce_settings.video.blur);
   const [screen_blur, set_screen_blur] = useState(add_derivce_settings.screen.blur);
-
+  const [screen_bg_color, set_screen_bg_color] = useState(screen_enabled ? '#1E1E1E' : '#22CCEE');
+  const [record, set_record] = useState(add_derivce_settings);
+  const [saved, set_saved] = useState(false);
   const visibleControls = { leave: true, ...controls };
   const localPermissions = useLocalParticipantPermissions();
 
@@ -124,7 +126,7 @@ export function Controls({
     [saveAudioInputEnabled],
   );
 
-  const save_changes = () => {
+  const save_changes = (save: boolean) => {
     let username = userChoices.username;
     let data = Object.assign(add_derivce_settings, {
       microphone: {
@@ -138,12 +140,75 @@ export function Controls({
       },
     }) as AddDeviceInfo;
     use_stored_set(username, { device: data });
-    set_setting_visible(false);
+
     // 发布事件
     publisher(SubjectKey.Setting, data);
-
-    messageApi.success('Changes saved successfully');
+    set_saved(save);
+    if (save) {
+      set_setting_visible(false);
+      set_record(data);
+      messageApi.success('Changes saved successfully');
+    }
   };
+
+  const close_setting = () => {
+    // 当saved为false时 ,将record重新赋值给add_derivce_settings
+    if (!saved) {
+      set_volume(record.microphone.other);
+      set_video_blur(record.video.blur);
+      set_screen_blur(record.screen.blur);
+      let username = userChoices.username;
+      use_stored_set(username, { device: record });
+    }
+  };
+
+  const screen_handle_state = useCallback((state: State) => {
+    if (state === State.Start) {
+      set_screen_enabled(true);
+      set_screen_bg_color('#22CCEE');
+    } else {
+      set_screen_enabled(false);
+
+      set_screen_bg_color('#1E1E1E');
+    }
+  }, []);
+
+  // const audio_handle_state = useCallback((state: State) => {
+  //   console.error('audio_handle_state', state);
+  //   set_audio_enabled(state === State.Start);
+  // }, []);
+
+  // const video_handle_state = useCallback((state: State) => {
+  //   set_video_enabled(state === State.Start);
+  // }, []);
+
+  useEffect(() => {
+    const screen_sub = subscriber(SubjectKey.ScreenState, screen_handle_state);
+    // const audio_sub = subscriber(SubjectKey.AudioState, audio_handle_state);
+    // const video_sub = subscriber(SubjectKey.VideoState, video_handle_state);
+
+    return () => {
+      screen_sub?.unsubscribe();
+      // audio_sub?.unsubscribe();
+      // video_sub?.unsubscribe();
+    };
+  }, [screen_handle_state]);
+
+  // [当整个room加载好之后，询问用户是否需要开启屏幕分享] -------------------------------------------------------------------
+  const { confirm } = Modal;
+
+  useEffect(() => {
+    if (room?.state === ConnectionState.Connected) {
+      confirm({
+        title: 'Do you want to share your screen?',
+        content: 'You can share your screen with others in the room.',
+        onOk() {
+          screen_on_clicked(false);
+        },
+        onCancel() {},
+      });
+    }
+  }, [room?.state]);
 
   return (
     <div className={`${styles.controls} lk-control-bar`}>
@@ -151,7 +216,11 @@ export function Controls({
       <div className={styles.controls_left}>
         <AudioToggle enabled={audio_enabled} onClicked={audio_on_clicked}></AudioToggle>
         <VideoToggle enabled={video_enabled} onClicked={video_on_clicked}></VideoToggle>
-        <ScreenToggle enabled={screen_enabled} onClicked={screen_on_clicked}></ScreenToggle>
+        <ScreenToggle
+          enabled={screen_enabled}
+          onClicked={screen_on_clicked}
+          bg_color={screen_bg_color}
+        ></ScreenToggle>
         <SettingToggle enabled={setting_visible} onClicked={setting_on_clicked}></SettingToggle>
         {visibleControls.chat && (
           <ChatToggle>
@@ -169,6 +238,7 @@ export function Controls({
         title="Settings"
         placement="right"
         closable={false}
+        onClose={close_setting}
         width={'40%'}
         open={setting_visible}
         extra={setting_drawer_header({
@@ -181,7 +251,10 @@ export function Controls({
             <Slider
               defaultValue={volume}
               className={styles.common_space}
-              onChange={(e) => set_volume(e)}
+              onChange={(e) => {
+                set_volume(e);
+                save_changes(false);
+              }}
             />
           </div>
 
@@ -197,6 +270,7 @@ export function Controls({
               onChange={(e) => {
                 set_video_blur(e);
                 setVideoBlur(e);
+                save_changes(false);
               }}
             />
           </div>
@@ -212,21 +286,12 @@ export function Controls({
               onChange={(e) => {
                 set_screen_blur(e);
                 setVideoBlur(e);
+                save_changes(false);
               }}
             />
           </div>
-          <div className={styles.setting_box} style={{overflow: 'hidden'}}> 
-            <div>Blur Test:{Math.round(blurValue)}px</div>
-            <img
-              ref={video_track_ref}
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/blur_test.png`}
-              height="220"
-              style={{ marginBottom: '16px', filter: `blur(${blurValue}px)`, overflow: 'hidden' }}
-            />
-          </div>
-
           <div className={styles.setting_container_footer}>
-            <Button type="primary" onClick={save_changes}>
+            <Button type="primary" onClick={() => save_changes(true)}>
               Save Changes
             </Button>
           </div>

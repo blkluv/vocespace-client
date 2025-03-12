@@ -136,7 +136,6 @@ function VideoConferenceComponent(props: {
   }, [props.userChoices, props.options.hq, props.options.codec]);
 
   const room = React.useMemo(() => new Room(roomOptions), []);
-  const device_settings = use_add_user_device(props.userChoices.username);
   React.useEffect(() => {
     if (e2eeEnabled) {
       keyProvider

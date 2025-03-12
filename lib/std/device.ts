@@ -149,3 +149,8 @@ export function useVideoBlur({
     setVideoBlur: handleSetVideoBlur,
   };
 }
+
+export enum State {
+  Start,
+  Stop,
+}

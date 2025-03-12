@@ -5,9 +5,9 @@
   align-items: space-around;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 32px;
+  gap: 16px;
   // flex-direction: column;
-  padding: 36px;
+  padding: 8px 24px;
   overflow-y: scroll;
   &_header {
     width: 100%;
@@ -101,8 +101,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 0;
     gap: 48px;
+    padding: 0;
   }
 }
 

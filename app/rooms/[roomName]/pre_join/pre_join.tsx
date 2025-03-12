@@ -18,7 +18,7 @@ import { Button, Input, Slider, Switch } from 'antd';
 import { DevicesSelector } from '@/app/api/devices/device_selector';
 import { count_video_blur, default_device, MediaDeviceKind } from '@/lib/std/device';
 import { ScreenPreview } from '@/app/api/devices/screen_preview';
-import { use_add_user_device, use_stored_set} from '@/lib/hooks/store/user_choices';
+import { use_add_user_device, use_stored_set } from '@/lib/hooks/store/user_choices';
 
 /**
  * The PreJoin Page component should use before user enter into the room.
@@ -50,11 +50,12 @@ export function PreJoin({
   });
 
   const [user_choices, set_user_choices] = useState(initialUserChoices);
-  const [device_settings, set_device_settings] = useState(use_add_user_device(user_choices.username));
+  const [device_settings, set_device_settings] = useState(
+    use_add_user_device(user_choices.username),
+  );
   // [enables] ---------------------------------------------------------------------
-  const [audio_enabled, set_audio_enabled] = useState(device_settings.microphone.enabled);
-  const [video_enabled, set_video_enabled] = useState(device_settings.video.enabled);
-  const [screen_enabled, set_screen_enabled] = useState(device_settings.screen.enabled);
+  const [audio_enabled, set_audio_enabled] = useState(true);
+  const [video_enabled, set_video_enabled] = useState(true);
   const [audio_device_id, set_audio_device_id] = useState(user_choices.audioDeviceId);
   const [video_device_id, set_video_device_id] = useState(user_choices.videoDeviceId);
   const [username, set_username] = useState(user_choices.username);
@@ -146,7 +147,7 @@ export function PreJoin({
             blur: video_blur,
           },
           screen: {
-            enabled: screen_enabled,
+            enabled: false,
             blur: screen_blur,
           },
         },
@@ -184,9 +185,8 @@ export function PreJoin({
     set_screen_blur(0.15);
     set_volume_self(100);
     set_volume_others(20);
-    set_audio_enabled(false);
-    set_video_enabled(false);
-    set_screen_enabled(false);
+    set_audio_enabled(true);
+    set_video_enabled(true);
     set_username('');
   };
   // [play] ------------------------------------------------------------------------
@@ -246,7 +246,11 @@ export function PreJoin({
                 </div>
 
                 <Slider
-                  defaultValue={volume_self}
+                  min={0.0}
+                  max={100.0}
+                  step={1}
+                  value={volume_self}
+                  defaultValue={100}
                   className={styles.common_space}
                   onChange={(e) => set_volume_self(e)}
                 />
@@ -265,7 +269,11 @@ export function PreJoin({
                   </Button>
                 </div>
                 <Slider
-                  defaultValue={volume_others}
+                  min={0.0}
+                  max={100.0}
+                  step={1}
+                  value={volume_others}
+                  defaultValue={20}
                   className={styles.common_space}
                   onChange={(e) => set_volume_others(e)}
                 />
@@ -324,36 +332,6 @@ export function PreJoin({
             <div>
               <header>
                 <div className={styles['pre_join_main_device_tool']}>
-                  <SvgResource type="screen" />
-                  <span>Screen share</span>
-                </div>
-                <Switch
-                  defaultChecked={screen_enabled}
-                  className={styles.remove_bg}
-                  value={screen_enabled}
-                  onChange={(e) => {
-                    set_screen_enabled(e);
-                  }}
-                ></Switch>
-              </header>
-              <div className={styles.adjust_settings}>
-                <span>Screen Blur:</span>
-                <Slider
-                  defaultValue={0.15}
-                  className={`${styles.common_space} ${styles.slider}`}
-                  value={screen_blur}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  onChange={(e) => {
-                    set_screen_blur(e);
-                  }}
-                />
-              </div>
-            </div>
-            <div>
-              <header>
-                <div className={styles['pre_join_main_device_tool']}>
                   <SvgResource type="user" />
                   <span>Username</span>
                 </div>
@@ -392,18 +370,6 @@ export function PreJoin({
                   <p>Video Share</p>
                 </div>
               )}
-            </div>
-            <div className={styles['pre_join_main_device_right_video']}>
-              <ScreenPreview
-                enabled={screen_enabled}
-                blur={count_video_blur(screen_blur, {
-                  height: video_el.current?.height || 360,
-                  width: video_el.current?.width || 320,
-                })}
-                onClose={() => {
-                  set_screen_enabled(false);
-                }}
-              ></ScreenPreview>
             </div>
           </div>
         </div>

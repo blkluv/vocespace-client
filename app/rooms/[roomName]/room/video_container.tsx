@@ -3,15 +3,11 @@ import {
   CarouselLayout,
   Chat,
   ConnectionStateToast,
-  ControlBar,
   FocusLayout,
   FocusLayoutContainer,
   GridLayout,
   isTrackReference,
   LayoutContextProvider,
-  ParticipantName,
-  ParticipantTile,
-  RoomName,
   TrackReferenceOrPlaceholder,
   useCreateLayoutContext,
   useMaybeRoomContext,
@@ -19,22 +15,15 @@ import {
   useTracks,
   VideoConferenceProps,
   WidgetState,
-  VideoConference,
 } from '@livekit/components-react';
 import { AudioRenderer } from './audio_renderer';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Participant, Room, RoomEvent, Track } from 'livekit-client';
-import Search from 'antd/es/input/Search';
-import { Collapse, CollapseProps } from 'antd';
+import { ConnectionState, Participant, Room, RoomEvent, Track } from 'livekit-client';
+import { Collapse, CollapseProps, message, Modal } from 'antd';
 import { Controls } from './controls';
-import { Tools } from './tools/tools';
-import { MainPanel } from './panel/main_panel';
-import { FlexLayout } from './layout/flex';
 import { RoomList } from './panel/room_list';
-import { UserItem, UserList } from './panel/user_list';
 import { ParticipantItem } from './panel/participant';
 import { UserItemProp } from '@/lib/std';
-import { SubjectKey, subscriber } from '@/lib/std/chanel';
 
 /**
  * ## VideoContainer
@@ -141,9 +130,6 @@ export function VideoContainer({
       children: <RoomList data={[]}></RoomList>,
     },
   ];
-  const item_size = { height: '150px', width: '100%' };
-  const tile_style = Object.assign(item_size, { backgroundColor: '#1E1E1E' });
-
   return (
     <div className="lk-video-conference" {...props}>
       {is_web && (
@@ -165,16 +151,28 @@ export function VideoContainer({
                   <CarouselLayout tracks={carouselTracks}>
                     <ParticipantItem ref={participant_item_ref}></ParticipantItem>
                   </CarouselLayout>
-                  {focusTrack && <FocusLayout trackRef={focusTrack} >
-                  <ParticipantItem ref={participant_item_ref} style={{height: '100%',display: 'flex', alignItems: 'center', justifyContent: 'center'}}></ParticipantItem>
-                    </FocusLayout>}
+                  {focusTrack && (
+                    <FocusLayout trackRef={focusTrack}>
+                      <ParticipantItem
+                        ref={participant_item_ref}
+                        style={{
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      ></ParticipantItem>
+                    </FocusLayout>
+                  )}
                 </FocusLayoutContainer>
               </div>
             )}
-            <Controls
-              room={room}
-              controls={{ chat: true, settings: !!SettingsComponent }}
-            ></Controls>
+            {room && (
+              <Controls
+                room={room}
+                controls={{ chat: true, settings: !!SettingsComponent }}
+              ></Controls>
+            )}
           </div>
           <Chat
             style={{ display: widgetState.showChat ? 'grid' : 'none', width: '360px' }}

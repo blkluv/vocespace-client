@@ -84,7 +84,7 @@ export function AudioToggle({ enabled, onClicked, showText = true }: ToggleProps
                   maxWidth: '100px',
                 }}
               >
-                {active_audio}
+                Microphone
               </div>
               <SvgResource type="down" svgSize={16}></SvgResource>
             </span>

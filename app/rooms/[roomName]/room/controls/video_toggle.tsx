@@ -85,7 +85,7 @@ export function VideoToggle({ enabled, onClicked, showText = true }: ToggleProps
                   maxWidth: '100px',
                 }}
               >
-                {active_video}
+                Camera
               </div>
               <SvgResource type="down" svgSize={16}></SvgResource>
             </span>

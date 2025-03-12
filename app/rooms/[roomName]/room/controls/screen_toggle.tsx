@@ -1,8 +1,10 @@
 import { Button } from 'antd';
 import { SvgResource } from '../../pre_join/resources';
-import { ToggleProps } from '@/lib/std/device';
+import { State, ToggleProps } from '@/lib/std/device';
+import { useCallback, useEffect, useState } from 'react';
 
-export function ScreenToggle({ enabled, onClicked, showText = true }: ToggleProps) {
+export function ScreenToggle({ enabled, onClicked, showText = true, bg_color }: ToggleProps & {bg_color: string}) {
+
   const on_clicked = () => {
     onClicked(enabled);
   };
@@ -10,13 +12,24 @@ export function ScreenToggle({ enabled, onClicked, showText = true }: ToggleProp
   return (
     <>
       {showText ? (
-        <Button variant="solid" color="default" size="large" onClick={on_clicked} style={{backgroundColor: '#1E1E1E', height : '44px', borderRadius: '8px'}}>
+        <Button
+          variant="solid"
+          color="default"
+          size="large"
+          onClick={on_clicked}
+          style={{ backgroundColor: bg_color, height: '44px', borderRadius: '8px' }}
+        >
           {enabled ? (
-            <SvgResource type="screen" svgSize={16}></SvgResource>
+            <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <SvgResource type="screen_close" svgSize={16}></SvgResource>
+              <div style={{ marginLeft: '12px' }}>Stop screen share</div>
+            </div>
           ) : (
-            <SvgResource type="screen_close" svgSize={16}></SvgResource>
+            <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <SvgResource type="screen" svgSize={16}></SvgResource>
+              <div style={{ marginLeft: '12px' }}>Share screen</div>
+            </div>
           )}
-          Share screen
         </Button>
       ) : (
         <Button shape="circle" variant="solid" color="default" size="large" onClick={on_clicked}>
