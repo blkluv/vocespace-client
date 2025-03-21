@@ -168,13 +168,13 @@ function VideoConferenceComponent(props: {
   const handleOnLeave = React.useCallback(() => router.push('/'), [router]);
   const handleError = React.useCallback((error: Error) => {
     console.error(error);
-    alert(`Encountered an unexpected error, check the console logs for details: ${error.message}`);
+    // alert(`Encountered an unexpected error, check the console logs for details: ${error.message}`);
   }, []);
   const handleEncryptionError = React.useCallback((error: Error) => {
     console.error(error);
-    alert(
-      `Encountered an unexpected encryption error, check the console logs for details: ${error.message}`,
-    );
+    // alert(
+    //   `Encountered an unexpected encryption error, check the console logs for details: ${error.message}`,
+    // );
   }, []);
 
   return (
