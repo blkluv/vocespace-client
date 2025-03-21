@@ -23,7 +23,7 @@ import { use_add_user_device } from '@/lib/hooks/store/user_choices';
 
 const CONN_DETAILS_ENDPOINT =
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ??
-  `${process.env.NEXT_PUBLIC_BASE_PATH}/api/connection-details`;
+  `/api/connection-details`;
 const SHOW_SETTINGS_MENU = process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU == 'true';
 
 export function PageClientImpl(props: {

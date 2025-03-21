@@ -83,7 +83,7 @@ export function ScreenPreview({ enabled, blur, onError, onClose }: ScreenPreview
         <div className={styles['pre_join_main_device_right_video_empty']}>
           <img
             height={48}
-            src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/vocespace.svg`}
+            src={`/images/vocespace.svg`}
             alt=""
           />
           <p>Screen Share</p>

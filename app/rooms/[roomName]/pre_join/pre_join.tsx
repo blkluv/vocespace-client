@@ -364,7 +364,7 @@ export function PreJoin({
                 <div className={styles['pre_join_main_device_right_video_empty']}>
                   <img
                     height={48}
-                    src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/vocespace.svg`}
+                    src={`/images/vocespace.svg`}
                     alt=""
                   />
                   <p>Video Share</p>
@@ -394,7 +394,7 @@ export function PreJoin({
       </footer>
       <audio
         ref={audio_play_ref}
-        src={`${process.env.NEXT_PUBLIC_BASE_PATH}/audios/pre_test.mp3`}
+        src={`/audios/pre_test.mp3`}
         style={{ display: 'none' }}
       ></audio>
     </div>

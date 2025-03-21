@@ -244,7 +244,7 @@ export function ParticipantItem({
       <audio
         ref={wave_audio_ref}
         style={{ display: 'none' }}
-        src={`${process.env.NEXT_PUBLIC_BASE_PATH}/audios/vocespacewave.m4a`}
+        src={`/audios/vocespacewave.m4a`}
       ></audio>
     </ParticipantTile>
   );

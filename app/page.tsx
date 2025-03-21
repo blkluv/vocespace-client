@@ -195,7 +195,7 @@ function PageFooter() {
 function PageHeader() {
   return (
     <header className="header">
-      <img src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/vocespace.svg`} alt="Voce Space Meet" width="360" height="45" style={{marginBottom: '16px'}} />
+      <img src={`/images/vocespace.svg`} alt="Voce Space Meet" width="360" height="45" style={{marginBottom: '16px'}} />
       <h2>Self-hosted open source video conferencing app built on Voce Space, By Privoce</h2>
     </header>
   );
