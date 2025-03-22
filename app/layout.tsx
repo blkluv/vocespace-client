@@ -1,33 +1,15 @@
 import '../styles/globals.css';
 import '@livekit/components-styles';
 import '@livekit/components-styles/prefabs';
-import { ConfigProvider } from 'antd';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
   title: {
-    default: 'LiveKit Meet | Conference app build with LiveKit open source',
+    default: 'Voce Space | Self-hosted conference app',
     template: '%s',
   },
   description:
-    'LiveKit is an open source WebRTC project that gives you everything needed to build scalable and real-time audio and/or video experiences in your applications.',
-  twitter: {
-    creator: '@livekitted',
-    site: '@livekitted',
-    card: 'summary_large_image',
-  },
-  openGraph: {
-    url: 'https://meet.livekit.io',
-    images: [
-      {
-        url: 'https://meet.livekit.io/images/livekit-meet-open-graph.png',
-        width: 2000,
-        height: 1000,
-        type: 'image/png',
-      },
-    ],
-    siteName: 'LiveKit Meet',
-  },
+    'Voce space is WebRTC project that gives you everything needed to build scalable and real-time audio and/or video experiences in your applications.',
   icons: {
     icon: {
       rel: 'icon',
@@ -50,24 +32,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: '#22CCEE', // 修改主题色
-          borderRadius: 4,
-          colorText: '#8c8c8c',
-
-        },
-        components: {
-          Switch: {
-            handleBg: '#ffffff'
-          }
-        }
-      }}
-    >
-      <html lang="en">
-        <body>{children}</body>
-      </html>
-    </ConfigProvider>
+    <html lang="en">
+      <body>{children}</body>
+    </html>
   );
 }

@@ -1,202 +1,185 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { Suspense, useImperativeHandle, useRef, useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { encodePassphrase, generateRoomId, randomString } from '@/lib/client-utils';
-import styles from '../styles/home_page.module.scss';
-import { Button, Card, Checkbox, CheckboxProps, Input, Tabs, TabsProps } from 'antd';
-import TextArea from 'antd/es/input/TextArea';
+import styles from '../styles/Home.module.css';
 
-/// Main page component --------------------------------------------------------------------------------
+function Tabs(props: React.PropsWithChildren<{}>) {
+  const searchParams = useSearchParams();
+  const tabIndex = searchParams?.get('tab') === 'custom' ? 1 : 0;
+
+  const router = useRouter();
+  function onTabSelected(index: number) {
+    const tab = index === 1 ? 'custom' : 'demo';
+    router.push(`/?tab=${tab}`);
+  }
+
+  let tabs = React.Children.map(props.children, (child, index) => {
+    return (
+      <button
+        className="lk-button"
+        onClick={() => {
+          if (onTabSelected) {
+            onTabSelected(index);
+          }
+        }}
+        aria-pressed={tabIndex === index}
+      >
+        {/* @ts-ignore */}
+        {child?.props.label}
+      </button>
+    );
+  });
+
+  return (
+    <div className={styles.tabContainer}>
+      <div className={styles.tabSelect}>{tabs}</div>
+      {/* @ts-ignore */}
+      {props.children[tabIndex]}
+    </div>
+  );
+}
+
+function DemoMeetingTab(props: { label: string }) {
+  const router = useRouter();
+  const [e2ee, setE2ee] = useState(false);
+  const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+  const startMeeting = () => {
+    if (e2ee) {
+      router.push(`/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
+    } else {
+      router.push(`/rooms/${generateRoomId()}`);
+    }
+  };
+  return (
+    <div className={styles.tabContent}>
+      <p style={{ margin: 0 }}>Try Voce Space for free with our live demo project.</p>
+      <button style={{ marginTop: '1rem' }} className="lk-button" onClick={startMeeting}>
+        Start Meeting
+      </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+          <input
+            id="use-e2ee"
+            type="checkbox"
+            checked={e2ee}
+            onChange={(ev) => setE2ee(ev.target.checked)}
+          ></input>
+          <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
+        </div>
+        {e2ee && (
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+            <label htmlFor="passphrase">Passphrase</label>
+            <input
+              id="passphrase"
+              type="password"
+              value={sharedPassphrase}
+              onChange={(ev) => setSharedPassphrase(ev.target.value)}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CustomConnectionTab(props: { label: string }) {
+  const router = useRouter();
+
+  const [e2ee, setE2ee] = useState(false);
+  const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+
+  const onSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target as HTMLFormElement);
+    const serverUrl = formData.get('serverUrl');
+    const token = formData.get('token');
+    if (e2ee) {
+      router.push(
+        `/custom/?liveKitUrl=${serverUrl}&token=${token}#${encodePassphrase(sharedPassphrase)}`,
+      );
+    } else {
+      router.push(`/custom/?liveKitUrl=${serverUrl}&token=${token}`);
+    }
+  };
+  return (
+    <form className={styles.tabContent} onSubmit={onSubmit}>
+      <p style={{ marginTop: 0 }}>
+        Connect Voce Space with a custom server using Voce Space Server.
+      </p>
+      <input
+        id="serverUrl"
+        name="serverUrl"
+        type="url"
+        placeholder="Voce Space Server URL: wss://space.voce.chat"
+        required
+      />
+      <textarea
+        id="token"
+        name="token"
+        placeholder="Token"
+        required
+        rows={5}
+        style={{ padding: '1px 2px', fontSize: 'inherit', lineHeight: 'inherit' }}
+      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+          <input
+            id="use-e2ee"
+            type="checkbox"
+            checked={e2ee}
+            onChange={(ev) => setE2ee(ev.target.checked)}
+          ></input>
+          <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
+        </div>
+        {e2ee && (
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+            <label htmlFor="passphrase">Passphrase</label>
+            <input
+              id="passphrase"
+              type="password"
+              value={sharedPassphrase}
+              onChange={(ev) => setSharedPassphrase(ev.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
+      <hr
+        style={{ width: '100%', borderColor: 'rgba(255, 255, 255, 0.15)', marginBlock: '1rem' }}
+      />
+      <button
+        style={{ paddingInline: '1.25rem', width: '100%' }}
+        className="lk-button"
+        type="submit"
+      >
+        Connect
+      </button>
+    </form>
+  );
+}
+
 export default function Page() {
   return (
     <>
       <main className={styles.main} data-lk-theme="default">
-        <PageHeader></PageHeader>
-        <PageMain></PageMain>
+        <div className="header">
+          <img src="/images/vocespace.svg" alt="VoceSpace" width="360" height="45" />
+          <h2>
+            Self-hosted open source video conferencing app built on LiveKit, By Privoce
+          </h2>
+        </div>
+        <Suspense fallback="Loading">
+          <Tabs>
+            <DemoMeetingTab label="Demo" />
+            <CustomConnectionTab label="Custom" />
+          </Tabs>
+        </Suspense>
       </main>
-      <PageFooter />
+      <footer data-lk-theme="default">
+        Contact <a href="mailto:han@privoce.com" style={{color:'#22CCEE',textDecorationLine:'none'}}>han@privoce.com</a> to learn more.
+      </footer>
     </>
-  );
-}
-
-/// page main component for the page -----------------------------------------------------------------
-function PageMain() {
-  const items: TabsProps['items'] = [
-    {
-      key: 'demo',
-      label: 'Demo',
-      children: <DemoMeetingTab />,
-    },
-    {
-      key: 'custom',
-      label: 'Custom',
-      children: <CustomConnectionTab />,
-    },
-  ];
-
-  return (
-    <main className={styles.vs_main}>
-      <Suspense fallback="Loading">
-        <div className={styles['vs_main_tabs']}>
-          <Tabs
-            defaultActiveKey="demo"
-            items={items}
-            centered
-            size="large"
-            tabBarGutter={100}
-            indicator={{ size: (origin) => origin + 60 }}
-          ></Tabs>
-        </div>
-      </Suspense>
-    </main>
-  );
-}
-
-/// DemoMeetingTab component for the page -----------------------------------------------------------------
-function DemoMeetingTab() {
-  const e2eebox_ref = useRef<{ start_meeting: () => void }>(null);
-
-  const route = `/rooms/${generateRoomId()}`;
-
-  const start_meeting = () => {
-    if (!e2eebox_ref.current) return;
-    e2eebox_ref.current.start_meeting();
-  };
-
-  return (
-    <div className={styles.common_tab}>
-      <p>Try Voce Space for free with our live demo project.</p>
-      <Button
-        onClick={start_meeting}
-        type="primary"
-        size="large"
-        style={{ fontSize: '16px', margin: 'auto' }}
-      >
-        Start Meeting
-      </Button>
-      <footer className={styles['common_tab_footer']}>
-        <EnableE2eeBox ref={e2eebox_ref} basic_route={route} e2ee_route={route} />
-      </footer>
-    </div>
-  );
-}
-
-interface E2eeBoxProps {
-  basic_route: string;
-  e2ee_route: string;
-}
-
-const EnableE2eeBox = React.forwardRef((props: E2eeBoxProps, ref) => {
-  const router = useRouter();
-
-  const [passphrase, set_passphrase] = useState(randomString(64));
-  const [e2ee, setE2ee] = useState(false);
-
-  const set_e2ee: CheckboxProps['onChange'] = (e) => {
-    setE2ee(e.target.checked);
-  };
-
-  const start_meeting = (): void => {
-    if (e2ee) {
-      router.push(`${props.e2ee_route}#${encodePassphrase(passphrase)}`);
-    } else {
-      router.push(props.basic_route);
-    }
-  };
-
-  React.useImperativeHandle(ref, () => ({
-    start_meeting,
-  }));
-
-  return (
-    <div>
-      <Checkbox onChange={set_e2ee}>Enable end-to-end encryption</Checkbox>
-      {e2ee && (
-        <div className={styles['common_tab_footer_passphrase']}>
-          <label>Passphrase</label>
-          <Input.Password
-            placeholder="input passphrase"
-            style={{ color: '#000' }}
-            value={passphrase}
-            onChange={(e) => set_passphrase(e.target.value)}
-          />
-          <Button type="primary" onClick={start_meeting}>
-            Confirm
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-});
-
-/// CustomConnectionTab component for the page -----------------------------------------------------------------
-function CustomConnectionTab() {
-  const e2eebox_ref = useRef<{ start_meeting: () => void }>(null);
-  const [server_url, set_server_url] = useState('');
-  const [token, set_token] = useState('');
-  const route = `/custom/?liveKitUrl=${server_url}&token=${token}`;
-  const basic_input_style = {
-    input: {
-      color: '#000',
-    },
-  };
-  return (
-    <div className={styles.common_tab}>
-      <p>
-        Connect Voce Space Meet with a custom server using Voce Space Cloud or Voce Space Server.
-      </p>
-      <div className={styles['common_tab_con_form']}>
-        <Input
-          addonBefore="Server URL"
-          placeholder="Voce Space Server URL: wss://*.livekit.cloud"
-          styles={basic_input_style}
-          value={server_url}
-          onChange={(e) => set_server_url(e.target.value)}
-        ></Input>
-        <TextArea
-          rows={6}
-          placeholder="Token"
-          style={basic_input_style.input}
-          value={token}
-          onChange={(e) => set_token(e.target.value)}
-        ></TextArea>
-      </div>
-      <Button type="primary" size="large" onClick={() => e2eebox_ref.current?.start_meeting()} style={{ fontSize: '16px', margin: 'auto' }}>
-        Submit
-      </Button>
-      <footer>
-        <EnableE2eeBox ref={e2eebox_ref} basic_route={route} e2ee_route={route} />
-      </footer>
-    </div>
-  );
-}
-
-/// page footer component for the page -----------------------------------------------------------------
-function PageFooter() {
-  /// connect email for more information
-  const connect_email: { url: string; href: string } = {
-    url: 'han@privoce.com',
-    href: 'mailto:han@privoce.com',
-  };
-
-  return (
-    <footer data-lk-theme="default">
-      Contact{' '}
-      <a href={connect_email.href} className="basic_link">
-        {connect_email.url}
-      </a>{' '}
-      to learn more.
-    </footer>
-  );
-}
-
-/// page header component for the page -----------------------------------------------------------------
-function PageHeader() {
-  return (
-    <header className="header">
-      <img src={`/images/vocespace.svg`} alt="Voce Space Meet" width="360" height="45" style={{marginBottom: '16px'}} />
-      <h2>Self-hosted open source video conferencing app built on Voce Space, By Privoce</h2>
-    </header>
   );
 }
