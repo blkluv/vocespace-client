@@ -1,8 +1,8 @@
 'use client';
 
-import { Settings } from '@/app/settings/settings';
 import { decodePassphrase } from '@/lib/client-utils';
 import { DebugMode } from '@/lib/Debug';
+import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from '@/lib/RecordingIndicator';
 import { SettingsMenu } from '@/lib/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
@@ -25,7 +25,7 @@ import {
   MediaDeviceFailure,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { createContext, ReactNode, useState } from 'react';
 
 const CONN_DETAILS_ENDPOINT =
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
@@ -94,6 +94,7 @@ function VideoConferenceComponent(props: {
     codec: VideoCodec;
   };
 }) {
+  const { t } = useI18n();
   const e2eePassphrase =
     typeof window !== 'undefined' && decodePassphrase(location.hash.substring(1));
 
@@ -202,7 +203,7 @@ function VideoConferenceComponent(props: {
         case MediaDeviceFailure.PermissionDenied:
           notApi.open({
             duration: 3,
-            message: 'Permission Denied.',
+            message: t("msg.error.device.permission_denied_title"),
             description:
               'Please allow access to your media devices. You can do these by click the following button.',
             btn: (
@@ -236,6 +237,11 @@ function VideoConferenceComponent(props: {
         audio: true,
       });
 
+      await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true,
+      });
+
       // 权限已获取，通知用户
       messageApi.success('Media permissions granted successfully!');
 
@@ -257,7 +263,7 @@ function VideoConferenceComponent(props: {
 
       // 设置详细错误信息
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        setPermissionError('权限被拒绝。请在浏览器设置中手动允许访问摄像头和麦克风。');
+        setPermissionError('权限被拒绝。请在浏览器设置中手动允许访问摄像头, 麦克风以及屏幕共享。');
       } else {
         setPermissionError(`请求权限时出错: ${error.message}`);
       }

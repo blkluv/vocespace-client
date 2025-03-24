@@ -1,3 +1,4 @@
+import { I18nProvider } from '@/lib/i18n/i18n';
 import '../styles/globals.css';
 import '@livekit/components-styles';
 import '@livekit/components-styles/prefabs';
@@ -33,7 +34,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <I18nProvider initialLocale='en'>
+        {children}
+        </I18nProvider>
+      </body>
     </html>
   );
 }

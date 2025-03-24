@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { Suspense, useState } from 'react';
 import { encodePassphrase, generateRoomId, randomString } from '@/lib/client-utils';
 import styles from '@/styles/Home.module.css';
+import { useI18n } from '@/lib/i18n/i18n';
 
 function Tabs(props: React.PropsWithChildren<{}>) {
   const searchParams = useSearchParams();
@@ -42,6 +43,7 @@ function Tabs(props: React.PropsWithChildren<{}>) {
 }
 
 function DemoMeetingTab(props: { label: string }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [e2ee, setE2ee] = useState(false);
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
@@ -54,9 +56,9 @@ function DemoMeetingTab(props: { label: string }) {
   };
   return (
     <div className={styles.tabContent}>
-      <p style={{ margin: 0 }}>Try Voce Space for free with our live demo project.</p>
+      <p style={{ margin: 0 }}>{t('msg.info.try_free')}</p>
       <button style={{ marginTop: '1rem' }} className="lk-button" onClick={startMeeting}>
-        Start Meeting
+      {t('common.start_metting')}
       </button>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
@@ -66,11 +68,11 @@ function DemoMeetingTab(props: { label: string }) {
             checked={e2ee}
             onChange={(ev) => setE2ee(ev.target.checked)}
           ></input>
-          <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
+          <label htmlFor="use-e2ee">{t('msg.info.enabled_e2ee')}</label>
         </div>
         {e2ee && (
           <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-            <label htmlFor="passphrase">Passphrase</label>
+            <label htmlFor="passphrase"> {t('common.passphrase')}</label>
             <input
               id="passphrase"
               type="password"
@@ -85,6 +87,7 @@ function DemoMeetingTab(props: { label: string }) {
 }
 
 function CustomConnectionTab(props: { label: string }) {
+  const { t } = useI18n();
   const router = useRouter();
 
   const [e2ee, setE2ee] = useState(false);
@@ -106,7 +109,7 @@ function CustomConnectionTab(props: { label: string }) {
   return (
     <form className={styles.tabContent} onSubmit={onSubmit}>
       <p style={{ marginTop: 0 }}>
-        Connect Voce Space with a custom server using Voce Space Server.
+        {t("msg.info.connect_with_server")}
       </p>
       <input
         id="serverUrl"
@@ -131,11 +134,11 @@ function CustomConnectionTab(props: { label: string }) {
             checked={e2ee}
             onChange={(ev) => setE2ee(ev.target.checked)}
           ></input>
-          <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
+          <label htmlFor="use-e2ee">{t('msg.info.enabled_e2ee')}</label>
         </div>
         {e2ee && (
           <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-            <label htmlFor="passphrase">Passphrase</label>
+            <label htmlFor="passphrase">{t('common.passphrase')}</label>
             <input
               id="passphrase"
               type="password"
@@ -161,24 +164,33 @@ function CustomConnectionTab(props: { label: string }) {
 }
 
 export default function Page() {
+  const { t } = useI18n();
   return (
     <>
       <main className={styles.main} data-lk-theme="default">
         <div className="header">
-          <img src="/images/vocespace.svg" alt="VoceSpace" width="360" height="45" />
-          <h2>
-            Self-hosted open source video conferencing app built on LiveKit, By Privoce
-          </h2>
+          <img
+            src="/images/vocespace.svg"
+            alt="VoceSpace"
+            width="360"
+            height="45"
+            style={{ marginBottom: '12px' }}
+          />
+          <h2>{t('msg.info.title')}</h2>
         </div>
         <Suspense fallback="Loading">
           <Tabs>
-            <DemoMeetingTab label="Demo" />
-            <CustomConnectionTab label="Custom" />
+            <DemoMeetingTab label={t('common.demo')} />
+            <CustomConnectionTab label={t('common.custom')} />
           </Tabs>
         </Suspense>
       </main>
       <footer data-lk-theme="default">
-        Contact <a href="mailto:han@privoce.com" style={{color:'#22CCEE',textDecorationLine:'none'}}>han@privoce.com</a> to learn more.
+        {t('msg.info.contact')}
+        <a href="mailto:han@privoce.com" style={{ color: '#22CCEE', textDecorationLine: 'none', margin: "0 4px" }}>
+          han@privoce.com
+        </a>
+        {t('msg.info.learn_more')}
       </footer>
     </>
   );
