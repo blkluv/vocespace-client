@@ -1,0 +1,10 @@
+.settings{
+    &_item{
+        height: 36px;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+}
