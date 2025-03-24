@@ -43,8 +43,8 @@ export function I18nProvider({ children, initialLocale = 'en' }: I18nProviderPro
   const t = (key: string): string => {
     return (
       key.split('.').reduce((acc, cur) => {
-        return acc[cur as keyof typeof acc];
-      }, translations[locale as keyof typeof translations]) || key
+        return acc && acc[cur as keyof typeof acc];
+      }, translations[locale as keyof typeof translations] as any) || key
     );
   };
 
