@@ -37,6 +37,7 @@ export function PageClientImpl(props: {
   hq: boolean;
   codec: VideoCodec;
 }) {
+  const { t } = useI18n();
   const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
     undefined,
   );
@@ -73,6 +74,9 @@ export function PageClientImpl(props: {
             defaults={preJoinDefaults}
             onSubmit={handlePreJoinSubmit}
             onError={handlePreJoinError}
+            joinLabel={t('common.join_room')}
+            micLabel={t('common.device.microphone')}
+            camLabel={t('common.device.camera')}
           />
         </div>
       ) : (
@@ -151,9 +155,7 @@ function VideoConferenceComponent(props: {
         .then(() => {
           room.setE2EEEnabled(true).catch((e) => {
             if (e instanceof DeviceUnsupportedError) {
-              console.error(
-                `You're trying to join an encrypted meeting, but your browser does not support it. Please update it to the latest version and try again.`,
-              );
+              console.error(t('msg.error.e2ee.unsupport'));
               console.error(e);
             } else {
               throw e;
@@ -176,49 +178,42 @@ function VideoConferenceComponent(props: {
   const router = useRouter();
   const handleOnLeave = React.useCallback(() => router.push('/'), [router]);
   const handleError = React.useCallback((error: Error) => {
-    console.error(
-      `Encountered an unexpected error, check the console logs for details: ${error.message}`,
-    );
+    console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
     if (error.name === 'ConnectionError') {
-      messageApi.error('Connection Error, please check your network connection and try again.');
+      messageApi.error(t('msg.error.room.network'));
     } else {
       console.error(error);
     }
   }, []);
   const handleEncryptionError = React.useCallback((error: Error) => {
-    messageApi.error(
-      `Encountered an unexpected encryption error, check the console logs for details: ${error.message}`,
-    );
+    messageApi.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
   }, []);
 
   const handleMediaDeviceFailure = React.useCallback((fail?: MediaDeviceFailure) => {
     if (fail) {
       switch (fail) {
         case MediaDeviceFailure.DeviceInUse:
-          messageApi.error(`Current Media Device is in use. Please close and try again later.`);
+          messageApi.error(t('msg.error.device.in_use'));
           break;
         case MediaDeviceFailure.NotFound:
-          messageApi.error(`Media Device not found. Please check your device and try again.`);
+          messageApi.error(t('msg.error.device.not_found'));
           break;
         case MediaDeviceFailure.PermissionDenied:
           notApi.open({
             duration: 3,
-            message: t("msg.error.device.permission_denied_title"),
-            description:
-              'Please allow access to your media devices. You can do these by click the following button.',
+            message: t('msg.error.device.permission_denied_title'),
+            description: t('msg.error.device.permission_denied_desc'),
             btn: (
               <Space>
                 <Button type="primary" size="small" onClick={() => setPermissionModalVisible(true)}>
-                  Allow Media Permissions
+                  {t('msg.request.device.allow')}
                 </Button>
               </Space>
             ),
           });
           break;
         case MediaDeviceFailure.Other:
-          messageApi.error(
-            `An error occurred with your media devices. Please check your devices and try again.`,
-          );
+          messageApi.error(t('msg.error.device.other'));
           break;
       }
     }
@@ -243,7 +238,7 @@ function VideoConferenceComponent(props: {
       });
 
       // 权限已获取，通知用户
-      messageApi.success('Media permissions granted successfully!');
+      messageApi.success(t('msg.success.device.granted'));
 
       // 关闭模态框
       setPermissionModalVisible(false);
@@ -255,17 +250,17 @@ function VideoConferenceComponent(props: {
           await room.localParticipant.setCameraEnabled(true);
           await room.localParticipant.setMicrophoneEnabled(true);
         } catch (err) {
-          console.error('Failed to enable devices after permission granted:', err);
+          console.error(t('msg.error.device.granted'), err);
         }
       }
     } catch (error: any) {
-      console.error('Error requesting media permissions:', error);
+      console.error(t('msg.error.other.permission'), error);
 
       // 设置详细错误信息
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        setPermissionError('权限被拒绝。请在浏览器设置中手动允许访问摄像头, 麦克风以及屏幕共享。');
+        setPermissionError(t('msg.error.device.granted'));
       } else {
-        setPermissionError(`请求权限时出错: ${error.message}`);
+        setPermissionError(`${t('msg.error.other.permission')} ${error.message}`);
       }
     } finally {
       setPermissionRequested(false);
@@ -296,12 +291,12 @@ function VideoConferenceComponent(props: {
         <DebugMode />
         <RecordingIndicator />
         <Modal
-          title="需要访问摄像头和麦克风权限"
+          title={t('msg.request.device.title')}
           open={permissionModalVisible}
           onCancel={() => setPermissionModalVisible(false)}
           footer={[
             <Button key="cancel" onClick={() => setPermissionModalVisible(false)}>
-              取消
+              {t('common.cancel')}
             </Button>,
             <Button
               key="request"
@@ -314,13 +309,13 @@ function VideoConferenceComponent(props: {
                   permissionError.includes('Permission denied'))
               }
             >
-              {permissionRequested ? '请求中...' : '允许访问摄像头和麦克风'}
+              {permissionRequested
+                ? t('msg.request.device.waiting')
+                : t('msg.request.device.allow')}
             </Button>,
           ]}
         >
-          <div style={{ marginBottom: '16px' }}>
-            Voce Space 需要访问您的摄像头和麦克风才能参与会议。请点击下方按钮允许访问。
-          </div>
+          <div style={{ marginBottom: '16px' }}>Voce Space {t('msg.request.device.ask')}</div>
 
           {permissionError && (
             <div
@@ -333,24 +328,25 @@ function VideoConferenceComponent(props: {
               }}
             >
               <p>
-                <strong>出现问题:</strong> {permissionError}
+                <strong>{t('common.error')}:</strong> {permissionError}
               </p>
 
               {permissionError.includes('权限被拒绝') ||
               permissionError.includes('Permission denied') ? (
                 <div>
                   <p>
-                    <strong>如何在浏览器中修改权限:</strong>
+                    <strong>{t('msg.request.device.permission.how')}</strong>
                   </p>
                   {renderBrowserSpecificInstructions()}
-                  <p>修改权限后，请刷新页面重试。</p>
+                  <p>{t('msg.request.device.permission.changed_with_reload')}</p>
                 </div>
               ) : null}
             </div>
           )}
 
           <p>
-            <strong>注意:</strong> 如果您之前拒绝了权限，您可能需要在浏览器设置中手动允许它们。
+            <strong>{t('common.attention')}:</strong>{' '}
+            {t('msg.request.device.permission.set_on_hand')}
           </p>
         </Modal>
       </LiveKitRoom>
@@ -359,6 +355,7 @@ function VideoConferenceComponent(props: {
 }
 
 const renderBrowserSpecificInstructions = () => {
+  const { t } = useI18n();
   // 检测浏览器类型
   const isChrome = navigator.userAgent.indexOf('Chrome') > -1;
   const isFirefox = navigator.userAgent.indexOf('Firefox') > -1;
@@ -369,41 +366,35 @@ const renderBrowserSpecificInstructions = () => {
   if (isChrome || isEdge) {
     return (
       <ol>
-        <li>点击浏览器地址栏左侧的锁定图标</li>
-        <li>选择"网站设置"</li>
-        <li>找到"摄像头"和"麦克风"设置</li>
-        <li>将设置从"阻止"更改为"允许"</li>
-        <li>刷新页面</li>
+        <li>{t('msg.request.device.permission.chrome_edge.0')}</li>
+        <li>{t('msg.request.device.permission.chrome_edge.1')}</li>
+        <li>{t('msg.request.device.permission.chrome_edge.2')}</li>
+        <li>{t('msg.request.device.permission.chrome_edge.3')}</li>
       </ol>
     );
   } else if (isFirefox) {
     return (
       <ol>
-        <li>点击浏览器地址栏左侧的锁定图标</li>
-        <li>点击"连接安全"</li>
-        <li>点击"更多信息"</li>
-        <li>在"权限"部分，找到"使用摄像头"和"使用麦克风"</li>
-        <li>将设置从"阻止"更改为"允许"</li>
-        <li>刷新页面</li>
+        <li>{t('msg.request.device.permission.firefox.0')}</li>
+        <li>{t('msg.request.device.permission.firefox.1')}</li>
+        <li>{t('msg.request.device.permission.firefox.2')}</li>
+        <li>{t('msg.request.device.permission.firefox.3')}</li>
+        <li>{t('msg.request.device.permission.firefox.4')}</li>
       </ol>
     );
   } else if (isSafari) {
     return (
       <ol>
-        <li>打开 Safari 偏好设置 (Safari菜单或右上角的齿轮图标)</li>
-        <li>选择"网站"选项卡</li>
-        <li>在左侧找到"摄像头"和"麦克风"</li>
-        <li>找到当前网站并更改权限设置</li>
-        <li>刷新页面</li>
+        <li>{t('msg.request.device.permission.safari.0')}</li>
+        <li>{t('msg.request.device.permission.safari.1')}</li>
+        <li>{t('msg.request.device.permission.safari.2')}</li>
+        <li>{t('msg.request.device.permission.safari.3')}</li>
       </ol>
     );
   } else {
     return (
       <ol>
-        <li>点击浏览器地址栏左侧的锁定或信息图标</li>
-        <li>找到摄像头和麦克风权限设置</li>
-        <li>将设置从"阻止"更改为"允许"</li>
-        <li>刷新页面</li>
+        <li>{t('msg.request.device.permission.other')}</li>
       </ol>
     );
   }

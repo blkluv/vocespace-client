@@ -15,7 +15,13 @@ export default {
     demo: '演示',
     custom: '自定义',
     start_metting: 'Start Meeting',
+    join_room: "Join Room",
     passphrase: "Passphrase",
+    device: {
+        microphone: "Mircophone",
+        camera: "Camera",
+        screen: "Screen",
+    }
   },
   msg: {
     info: {

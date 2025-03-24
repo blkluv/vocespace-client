@@ -15,7 +15,13 @@ export default {
         demo: "演示",
         custom: "自定义",
         start_metting: "开始会议",
+        join_room: "加入房间",
         passphrase: "密码",
+        device: {
+            microphone: "麦克风",
+            camera: "摄像头",
+            screen: "屏幕",
+        }
     },
     msg: {
         info: {

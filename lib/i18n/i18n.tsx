@@ -4,7 +4,6 @@ import en from './en_US';
 import zh from './zh_CN';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-
 // 定义翻译类型
 export type Translations = typeof en;
 
@@ -29,7 +28,6 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ children, initialLocale = 'en' }: I18nProviderProps) {
-
   const [locale, setLocale] = useState(initialLocale);
 
   // 从 URL 或浏览器语言获取初始语言
@@ -40,16 +38,13 @@ export function I18nProvider({ children, initialLocale = 'en' }: I18nProviderPro
     }
   }, []);
 
-  // 翻译函数, 通过 key 获取翻译 
+  // 翻译函数, 通过 key 获取翻译
   // #allow(warning): `acc[cur as keyof typeof acc]` is safe because `cur` is a key of `acc`
   const t = (key: string): string => {
     return (
-      key
-        .split('.')
-        .reduce(
-          (acc, cur) => acc[cur as keyof typeof acc],
-          translations[locale as keyof typeof translations],
-        ) || key
+      key.split('.').reduce((acc, cur) => {
+        return acc[cur as keyof typeof acc];
+      }, translations[locale as keyof typeof translations]) || key
     );
   };
 
