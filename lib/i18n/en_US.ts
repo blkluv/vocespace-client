@@ -22,6 +22,10 @@ export default {
       camera: 'Camera',
       screen: 'Screen',
     },
+    chat: 'Chat',
+    leave: 'Leave',
+    share_screen: 'Share Screen',
+    stop_share: 'Stop Share Share',
   },
   msg: {
     info: {

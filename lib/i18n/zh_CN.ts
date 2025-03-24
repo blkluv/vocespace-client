@@ -22,6 +22,10 @@ export default {
       camera: '摄像头',
       screen: '屏幕',
     },
+    chat: '聊天',
+    leave: '离开',
+    share_screen: '共享屏幕',
+    stop_share: '停止共享',
   },
   msg: {
     info: {

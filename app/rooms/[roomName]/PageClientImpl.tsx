@@ -1,5 +1,6 @@
 'use client';
 
+import { VideoContainer } from '@/app/devices/video_container';
 import { decodePassphrase } from '@/lib/client-utils';
 import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
@@ -284,10 +285,14 @@ function VideoConferenceComponent(props: {
         onError={handleError}
         onMediaDeviceFailure={handleMediaDeviceFailure}
       >
-        <VideoConference
+        {/* <VideoConference
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
-        />
+        /> */}
+        <VideoContainer
+          chatMessageFormatter={formatChatMessageLinks}
+          SettingsComponent={undefined}
+        ></VideoContainer>
         <DebugMode />
         <RecordingIndicator />
         <Modal
