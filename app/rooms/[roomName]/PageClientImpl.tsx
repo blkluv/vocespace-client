@@ -112,6 +112,7 @@ function VideoConferenceComponent(props: {
   const [e2eeSetupComplete, setE2eeSetupComplete] = React.useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [notApi, notHolder] = notification.useNotification();
+  const [permissionOpened, setPermissionOpened] = useState(false);
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
@@ -200,18 +201,26 @@ function VideoConferenceComponent(props: {
           messageApi.error(t('msg.error.device.not_found'));
           break;
         case MediaDeviceFailure.PermissionDenied:
-          notApi.open({
-            duration: 3,
-            message: t('msg.error.device.permission_denied_title'),
-            description: t('msg.error.device.permission_denied_desc'),
-            btn: (
-              <Space>
-                <Button type="primary" size="small" onClick={() => setPermissionModalVisible(true)}>
-                  {t('msg.request.device.allow')}
-                </Button>
-              </Space>
-            ),
-          });
+          if (!permissionOpened) {
+            setPermissionOpened(true);
+            notApi.open({
+              duration: 3,
+              message: t('msg.error.device.permission_denied_title'),
+              description: t('msg.error.device.permission_denied_desc'),
+              btn: (
+                <Space>
+                  <Button
+                    type="primary"
+                    size="small"
+                    onClick={() => setPermissionModalVisible(true)}
+                  >
+                    {t('msg.request.device.allow')}
+                  </Button>
+                </Space>
+              ),
+              onClose: () => setPermissionOpened(false),
+            });
+          }
           break;
         case MediaDeviceFailure.Other:
           messageApi.error(t('msg.error.device.other'));
@@ -229,11 +238,6 @@ function VideoConferenceComponent(props: {
     try {
       // 请求媒体权限
       await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-
-      await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: true,
       });
