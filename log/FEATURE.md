@@ -1,0 +1,80 @@
+# FEATURES
+
+## Prejoin before join the room
+
+###  Basic
+
+- [x] Mircophone
+- [x] Camera
+- [x] Preview for Video
+- [x] Username
+- [x] Join room
+
+### More settings
+
+- [ ] Volume adjust
+- [ ] Volume test
+- [ ] Microphone device selection
+- [ ] Video blur adjust
+- [ ] Video blur test
+- [ ] Camera device selection
+- [ ] Reset Settings
+
+## Room for chat
+
+### Basic
+
+- [x] Mircophone
+- [x] Camera
+- [x] Screen Share
+- [x] Leave
+- [x] Different chat Layouts
+
+
+#### Settings
+
+- [ ] General
+  - [ ] Username
+  - [ ] User status
+- [ ] Audio
+  - [ ] Volume
+  - [ ] Selection
+- [ ] Video
+  - [ ] Blur
+  - [ ] Selection
+  - [ ] Screen Blur
+- [ ] Virtual
+  - [ ] Models
+  - [ ] Backgrounds
+  - [ ] Active or not
+  - [ ] Detect check
+- [ ] About Us
+
+#### RPC
+
+- [ ] Others cursors focus
+- [ ] Wave｜Remind others
+
+## Permission 
+
+- [x] Request
+- [x] Description and guide
+
+## Participant
+
+- [ ] Status
+- [ ] Settings
+
+## AI
+
+- [x] Noice cancellation
+- [ ] Virtual role
+
+## i18n
+
+- [x] Chinese
+- [x] English
+
+## e2ee
+
+- [x] enabled
