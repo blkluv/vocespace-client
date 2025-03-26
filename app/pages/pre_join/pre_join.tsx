@@ -92,6 +92,17 @@ export function PreJoin({
       return 'undefined';
     }
   }, [videoTrack]);
+
+  React.useEffect(() => {
+    if (videoEl.current && videoTrack) {
+      videoTrack.unmute();
+      videoTrack.attach(videoEl.current);
+    }
+
+    return () => {
+      videoTrack?.detach();
+    };
+  }, [videoTrack]);
   // audio track --------------------------------------------------------------------------------------
   const audioTrack = React.useMemo(
     () => tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack,
@@ -156,7 +167,14 @@ export function PreJoin({
     <div className={styles.view}>
       <div className={styles.view__video}>
         {videoTrack && (
-          <video ref={videoEl} width="1280" height="720" data-lk-facing-mode={facingMode} />
+          <video
+            ref={videoEl}
+            data-lk-facing-mode={facingMode}
+            style={{
+              height: '100%',
+              width: '100%',
+            }}
+          />
         )}
         {(!videoTrack || !videoEnabled) && (
           <div className={styles.view__video__placeholder}>
