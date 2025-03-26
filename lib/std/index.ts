@@ -15,9 +15,9 @@ export interface Size {
   width: string;
 }
 
-export interface SizeNum{
-    height: number;
-    width: number;
+export interface SizeNum {
+  height: number;
+  width: number;
 }
 
 export interface UserItemProp {
@@ -29,4 +29,12 @@ export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warni
 
 export function is_web(): boolean {
   return typeof window !== 'undefined';
+}
+
+export function src(url: string): string {
+  let prefix = process.env.NEXT_PUBLIC_BASE_PATH;
+  if (!prefix || prefix === '' || prefix === '/') {
+    return url;
+  }
+  return `${prefix}${url}`;
 }

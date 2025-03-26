@@ -15,6 +15,7 @@ import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
 import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { src } from '@/lib/std';
 
 export function PreJoin({
   defaults = {},
@@ -211,7 +212,7 @@ export function PreJoin({
             <span>{volume}</span>
             <audio
               ref={audio_play_ref}
-              src={`/audios/pre_test.mp3`}
+              src={src("/audios/pre_test.mp3")}
               style={{ display: 'none' }}
             ></audio>
           </div>
