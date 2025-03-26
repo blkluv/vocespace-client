@@ -8,6 +8,7 @@
 ### Features
 
 - PreJoin add volume adjust
+- PreJoin add volume test
 
 ### Fixes
 

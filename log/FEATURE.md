@@ -12,8 +12,8 @@
 
 ### More settings
 
-- [ ] Volume adjust
-- [ ] Volume test
+- [x] Volume adjust
+- [x] Volume test
 - [ ] Microphone device selection
 - [ ] Video blur adjust
 - [ ] Video blur test
