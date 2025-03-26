@@ -19,6 +19,11 @@ export default {
     passphrase: '密码',
     device: {
       microphone: '麦克风',
+      volume: '麦克风音量',
+      test: {
+        audio: '测试音频',
+        close_audio: '关闭音频',
+      },
       camera: '摄像头',
       screen: '屏幕',
     },

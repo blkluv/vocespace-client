@@ -21,6 +21,8 @@ import {
 import { Participant, RoomEvent, Track } from 'livekit-client';
 import React from 'react';
 import { Controls } from './controls/bar';
+import { useRecoilState } from 'recoil';
+import { deviceState } from '../rooms/[roomName]/PageClientImpl';
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -98,6 +100,7 @@ export function VideoContainer({
   ]);
 
   //   useWarnAboutMissingStyles();
+  const [device, setDevice] = useRecoilState(deviceState);
 
   return (
     <div className="lk-video-conference" {...props}>
@@ -141,7 +144,7 @@ export function VideoContainer({
           )}
         </LayoutContextProvider>
       )}
-      <RoomAudioRenderer />
+      <RoomAudioRenderer volume={device.volme / 100.0} />
       <ConnectionStateToast />
     </div>
   );

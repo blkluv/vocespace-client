@@ -7,6 +7,8 @@
 
 ### Features
 
+- PreJoin add volume adjust
+
 ### Fixes
 
 ### UI / Components

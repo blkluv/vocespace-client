@@ -35,9 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <I18nProvider initialLocale='en'>
-        {children}
-        </I18nProvider>
+        <I18nProvider initialLocale="en">{children}</I18nProvider>
       </body>
     </html>
   );

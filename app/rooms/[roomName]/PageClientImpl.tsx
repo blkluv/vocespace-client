@@ -11,7 +11,7 @@ import {
   formatChatMessageLinks,
   LiveKitRoom,
   LocalUserChoices,
-  PreJoin,
+  // PreJoin,
   VideoConference,
 } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
@@ -27,6 +27,15 @@ import {
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
+import {PreJoin} from "@/app/pages/pre_join/pre_join";
+import { atom, RecoilRoot } from 'recoil';
+
+export const deviceState = atom({
+  key: 'deviceState',
+  default: {
+    volme: 80,
+  },
+});
 
 const CONN_DETAILS_ENDPOINT =
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
@@ -67,8 +76,10 @@ export function PageClientImpl(props: {
   }, []);
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
+
   return (
-    <main data-lk-theme="default" style={{ height: '100%' }}>
+    <RecoilRoot>
+      <main data-lk-theme="default" style={{ height: '100%' }}>
       {connectionDetails === undefined || preJoinChoices === undefined ? (
         <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
           <PreJoin
@@ -88,6 +99,7 @@ export function PageClientImpl(props: {
         />
       )}
     </main>
+    </RecoilRoot>
   );
 }
 

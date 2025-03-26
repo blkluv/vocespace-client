@@ -7,6 +7,7 @@ import { DemoMeetingTab } from './pages/pre_join/demo';
 
 export default function Page() {
   const { t } = useI18n();
+
   return (
     <>
       <main className={styles.main} data-lk-theme="default">

@@ -19,6 +19,11 @@ export default {
     passphrase: 'Password',
     device: {
       microphone: 'Microphone',
+      volume: 'Microphone Volume',
+      test: {
+        audio: 'Test Audio',
+        close_audio: 'Close Audio Test',
+      },
       camera: 'Camera',
       screen: 'Screen',
     },
