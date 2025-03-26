@@ -1,0 +1,62 @@
+'use client';
+
+import { encodePassphrase, generateRoomId, randomString } from '@/lib/client-utils';
+import { useI18n } from '@/lib/i18n/i18n';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import styles from '@/styles/Home.module.css';
+import { Input } from 'antd';
+
+/**
+ * # DemoMeetingTab
+ * Demo meeting tab for room, which use before PreJoin
+ * ## Features
+ * - Start meeting and nav to PreJoin page
+ * - Enable E2EE (input passphrase)
+ * @param props 
+ * @returns 
+ */
+export function DemoMeetingTab(props: { label: string }) {
+    const { t } = useI18n();
+    const router = useRouter();
+    const [e2ee, setE2ee] = useState(false);
+    const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+    const startMeeting = () => {
+      if (e2ee) {
+        router.push(`/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
+      } else {
+        router.push(`/rooms/${generateRoomId()}`);
+      }
+    };
+    return (
+      <div className={styles.tabContent}>
+        <p style={{ margin: 0 }}>{t('msg.info.try_free')}</p>
+        <button style={{ marginTop: '1rem' }} className="lk-button" onClick={startMeeting}>
+        {t('common.start_metting')}
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+            <input
+              id="use-e2ee"
+              type="checkbox"
+              checked={e2ee}
+              onChange={(ev) => setE2ee(ev.target.checked)}
+            ></input>
+            <label htmlFor="use-e2ee">{t('msg.info.enabled_e2ee')}</label>
+          </div>
+          {e2ee && (
+            <div style={{ display: 'inline-flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
+              <label htmlFor="passphrase" style={{textWrap: "nowrap"}}> {t('common.passphrase')}</label>
+              <Input
+                id="passphrase"
+                type="password"
+                value={sharedPassphrase}
+                onChange={(ev) => setSharedPassphrase(ev.target.value)}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  

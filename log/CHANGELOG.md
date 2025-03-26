@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## v0.1.1
+
+- date: 2025-03-26
+- branch: dev_0.1.1
+
+### Features
+
+### Fixes
+
+### UI / Components
+
+#### `app/page.tsx`
+
+- remove custom tab
+
+#### `app/pages/pre_join/demo.tsx`
+
+- `input` -> `ant::Input`
+
 ## v0.1.0
 
 - date: 2025-03-26
