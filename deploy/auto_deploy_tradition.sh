@@ -8,7 +8,7 @@
 # Variables --------------------------------------------------------------#
 #=========================================================================#
 ROOT_PATH="/root/vocespace-client/"
-KIND="prod"
+KIND="tradition"
 PKG_NAME="vocespace_tradition"
 REPO_URL="https://github.com/Privoce/vocespace-client.git"
 BRANCH="tradition"
