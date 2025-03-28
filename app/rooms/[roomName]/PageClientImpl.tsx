@@ -34,6 +34,7 @@ export const deviceState = atom({
   key: 'deviceState',
   default: {
     volme: 80,
+    blur: 0.15
   },
 });
 

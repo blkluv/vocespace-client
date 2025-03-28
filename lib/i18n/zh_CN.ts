@@ -24,6 +24,7 @@ export default {
         audio: '测试音频',
         close_audio: '关闭音频',
       },
+      blur: '摄像头虚化',
       camera: '摄像头',
       screen: '屏幕',
     },

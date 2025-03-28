@@ -16,6 +16,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
 import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { src } from '@/lib/std';
+import { useVideoBlur } from '@/lib/std/device';
 
 export function PreJoin({
   defaults = {},
@@ -149,8 +150,14 @@ export function PreJoin({
   // volume --------------------------------------------------------------------------------------
   const [device, setDevice] = useRecoilState(deviceState);
   const [volume, setVolume] = React.useState(device.volme);
+  const [blur, setBlur] = React.useState(device.blur);
   const [play, setPlay] = React.useState(false);
   const audio_play_ref = React.useRef<HTMLAudioElement>(null);
+  const { blurValue, setVideoBlur } = useVideoBlur({
+    videoRef: videoEl,
+    initialBlur: 0.15,
+    defaultDimensions: {height: 280, width: 448}
+  });
   // [play] ------------------------------------------------------------------------
   const play_sound = () => {
     if (!audio_play_ref) return;
@@ -167,13 +174,14 @@ export function PreJoin({
   return (
     <div className={styles.view}>
       <div className={styles.view__video}>
-        {videoTrack && (
+        {videoTrack && videoEnabled && (
           <video
             ref={videoEl}
             data-lk-facing-mode={facingMode}
             style={{
               height: '100%',
               width: '100%',
+              filter: `blur(${blurValue}px)`
             }}
           />
         )}
@@ -249,6 +257,27 @@ export function PreJoin({
               onActiveDeviceChange={(_, id) => setVideoDeviceId(id)}
             />
           </div>
+        </div>
+        <div className={styles.view__controls__group_volume}>
+          <div className={styles.view__controls__group_volume__header}>
+            <div className={styles.view__controls__group_volume__header__left}>
+              <SvgResource type="video" svgSize={18}></SvgResource>
+              <span>{t('common.device.blur')}</span>
+            </div>
+            <span>{Math.round(blur * 100.0)}%</span>
+          </div>
+          <Slider
+            min={0.0}
+            max={1.0}
+            step={0.01}
+            defaultValue={0.15}
+            value={blur}
+            onChange={(e) => {
+              setBlur(e);
+              setVideoBlur(e);
+              setDevice({ ...device, blur: e });
+            }}
+          ></Slider>
         </div>
         <form className={styles.view__controls__form}>
           <input

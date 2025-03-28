@@ -24,6 +24,7 @@ export default {
         audio: 'Test Audio',
         close_audio: 'Close Audio Test',
       },
+      blur: 'Camera Blur',
       camera: 'Camera',
       screen: 'Screen',
     },
