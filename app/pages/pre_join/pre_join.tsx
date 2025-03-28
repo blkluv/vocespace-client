@@ -17,6 +17,7 @@ import { useRecoilState } from 'recoil';
 import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { src } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
+import { ulid } from 'ulid';
 
 export function PreJoin({
   defaults = {},
@@ -118,7 +119,11 @@ export function PreJoin({
       if (typeof onValidate === 'function') {
         return onValidate(values);
       } else {
-        return values.username !== '';
+        if (values.username === '') {
+          let auto_name = `user_${ulid()}`;
+          setUsername(auto_name);
+        }
+        return true;
       }
     },
     [onValidate],

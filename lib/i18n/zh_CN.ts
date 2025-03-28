@@ -17,6 +17,7 @@ export default {
     start_metting: '开始会议',
     join_room: '加入房间',
     passphrase: '密码',
+    username: '用户名',
     device: {
       microphone: '麦克风',
       volume: '麦克风音量',

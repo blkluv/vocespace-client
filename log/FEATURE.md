@@ -14,11 +14,12 @@
 
 - [x] Volume adjust
 - [x] Volume test
-- [ ] Microphone device selection
-- [ ] Video blur adjust
-- [ ] Video blur test
-- [ ] Camera device selection
+- [x] Microphone device selection
+- [x] Video blur adjust
+- [x] Video blur test
+- [x] Camera device selection
 - [ ] Reset Settings
+- [ ] Auto Username
 
 ## Room for chat
 

@@ -11,7 +11,6 @@ import {
   formatChatMessageLinks,
   LiveKitRoom,
   LocalUserChoices,
-  // PreJoin,
   VideoConference,
 } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
@@ -89,6 +88,7 @@ export function PageClientImpl(props: {
               joinLabel={t('common.join_room')}
               micLabel={t('common.device.microphone')}
               camLabel={t('common.device.camera')}
+              userLabel={t('common.username')}
             />
           </div>
         ) : (

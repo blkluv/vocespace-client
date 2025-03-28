@@ -17,6 +17,7 @@ export default {
     start_metting: 'Start Meeting',
     join_room: 'Join Room',
     passphrase: 'Password',
+    username: 'Username',
     device: {
       microphone: 'Microphone',
       volume: 'Microphone Volume',

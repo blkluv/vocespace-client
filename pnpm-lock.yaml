@@ -53,6 +53,9 @@ importers:
       tinykeys:
         specifier: ^3.0.0
         version: 3.0.0
+      ulid:
+        specifier: ^3.0.0
+        version: 3.0.0
     devDependencies:
       '@types/node':
         specifier: 22.10.7
@@ -2192,6 +2195,10 @@ packages:
   typescript@5.7.3:
     resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
     engines: {node: '>=14.17'}
+    hasBin: true
+
+  ulid@3.0.0:
+    resolution: {integrity: sha512-yvZYdXInnJve6LdlPIuYmURdS2NP41ZoF4QW7SXwbUKYt53+0eDAySO+rGSvM2O/ciuB/G+8N7GQrZ1mCJpuqw==}
     hasBin: true
 
   unbox-primitive@1.0.2:
@@ -4748,6 +4755,8 @@ snapshots:
       rxjs: 7.8.2
 
   typescript@5.7.3: {}
+
+  ulid@3.0.0: {}
 
   unbox-primitive@1.0.2:
     dependencies:
