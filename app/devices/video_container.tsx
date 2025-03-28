@@ -23,6 +23,7 @@ import React from 'react';
 import { Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
 import { deviceState } from '../rooms/[roomName]/PageClientImpl';
+import { ParticipantItem } from '../pages/participant/tile';
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -114,14 +115,16 @@ export function VideoContainer({
             {!focusTrack ? (
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
-                  <ParticipantTile />
+                  {/* <ParticipantTile /> */}
+                  <ParticipantItem></ParticipantItem>
                 </GridLayout>
               </div>
             ) : (
               <div className="lk-focus-layout-wrapper">
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
-                    <ParticipantTile />
+                    {/* <ParticipantTile /> */}
+                    <ParticipantItem></ParticipantItem>
                   </CarouselLayout>
                   {focusTrack && <FocusLayout trackRef={focusTrack} />}
                 </FocusLayoutContainer>

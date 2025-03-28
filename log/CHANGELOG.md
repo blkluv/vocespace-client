@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## v0.1.2
+
+- date: 2025-03-26
+- branch: dev_0.1.2
+
+### Features
+
+- PreJoin add video blur
+- PreJoin add video blur test
+
+
 ## v0.1.1
 
 - date: 2025-03-26

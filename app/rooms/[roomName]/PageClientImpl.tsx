@@ -27,19 +27,19 @@ import {
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
-import {PreJoin} from "@/app/pages/pre_join/pre_join";
+import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, RecoilRoot } from 'recoil';
+import { connect_endpoint } from '@/lib/std';
 
 export const deviceState = atom({
   key: 'deviceState',
   default: {
     volme: 80,
-    blur: 0.15
+    blur: 0.15,
   },
 });
 
-const CONN_DETAILS_ENDPOINT =
-  process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
+const CONN_DETAILS_ENDPOINT = connect_endpoint();
 const SHOW_SETTINGS_MENU = process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU == 'true';
 
 export function PageClientImpl(props: {
@@ -77,29 +77,28 @@ export function PageClientImpl(props: {
   }, []);
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
-
   return (
     <RecoilRoot>
       <main data-lk-theme="default" style={{ height: '100%' }}>
-      {connectionDetails === undefined || preJoinChoices === undefined ? (
-        <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
-          <PreJoin
-            defaults={preJoinDefaults}
-            onSubmit={handlePreJoinSubmit}
-            onError={handlePreJoinError}
-            joinLabel={t('common.join_room')}
-            micLabel={t('common.device.microphone')}
-            camLabel={t('common.device.camera')}
+        {connectionDetails === undefined || preJoinChoices === undefined ? (
+          <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
+            <PreJoin
+              defaults={preJoinDefaults}
+              onSubmit={handlePreJoinSubmit}
+              onError={handlePreJoinError}
+              joinLabel={t('common.join_room')}
+              micLabel={t('common.device.microphone')}
+              camLabel={t('common.device.camera')}
+            />
+          </div>
+        ) : (
+          <VideoConferenceComponent
+            connectionDetails={connectionDetails}
+            userChoices={preJoinChoices}
+            options={{ codec: props.codec, hq: props.hq }}
           />
-        </div>
-      ) : (
-        <VideoConferenceComponent
-          connectionDetails={connectionDetails}
-          userChoices={preJoinChoices}
-          options={{ codec: props.codec, hq: props.hq }}
-        />
-      )}
-    </main>
+        )}
+      </main>
     </RecoilRoot>
   );
 }
