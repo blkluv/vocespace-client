@@ -12,7 +12,7 @@ interface RoomSettings {
   };
 }
 
-export const roomSettings: RoomSettings = {};
+const roomSettings: RoomSettings = {};
 
 // 获取房间所有参与者设置
 export async function GET(request: NextRequest) {
