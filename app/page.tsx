@@ -23,10 +23,6 @@ export default function Page() {
           <h2>{t('msg.info.title')}</h2>
         </div>
         <Suspense fallback="Loading">
-          {/* <Tabs>
-            <DemoMeetingTab label={t('common.demo')} />
-            <CustomConnectionTab label={t('common.custom')} />
-          </Tabs> */}
           <DemoMeetingTab label={t('common.demo')} />
         </Suspense>
       </main>
@@ -43,39 +39,3 @@ export default function Page() {
     </>
   );
 }
-
-// function Tabs(props: React.PropsWithChildren<{}>) {
-//   const searchParams = useSearchParams();
-//   const tabIndex = searchParams?.get('tab') === 'custom' ? 1 : 0;
-
-//   const router = useRouter();
-//   function onTabSelected(index: number) {
-//     const tab = index === 1 ? 'custom' : 'demo';
-//     router.push(`/?tab=${tab}`);
-//   }
-
-//   let tabs = React.Children.map(props.children, (child, index) => {
-//     return (
-//       <button
-//         className="lk-button"
-//         onClick={() => {
-//           if (onTabSelected) {
-//             onTabSelected(index);
-//           }
-//         }}
-//         aria-pressed={tabIndex === index}
-//       >
-//         {/* @ts-ignore */}
-//         {child?.props.label}
-//       </button>
-//     );
-//   });
-
-//   return (
-//     <div className={styles.tabContainer}>
-//       <div className={styles.tabSelect}>{tabs}</div>
-//       {/* @ts-ignore */}
-//       {props.children[tabIndex]}
-//     </div>
-//   );
-// }

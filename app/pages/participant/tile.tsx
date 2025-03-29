@@ -1,4 +1,6 @@
 import { isTrackReferencePlaceholder } from '@/app/devices/video_container';
+
+import { useVideoBlur } from '@/lib/std/device';
 import {
   AudioTrack,
   ConnectionQualityIndicator,
@@ -15,17 +17,34 @@ import {
   useEnsureTrackRef,
   useFeatureContext,
   useIsEncrypted,
+  useLocalParticipant,
   useMaybeLayoutContext,
   VideoTrack,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import React from 'react';
+import React, { useEffect } from 'react';
 
-export function ParticipantItem({ trackRef }: ParticipantTileProps) {
+export function ParticipantItem({
+  trackRef,
+  blurs,
+}: ParticipantTileProps & { blurs: Record<string, { blur: number }> }) {
+  const videoRef = React.useRef<HTMLVideoElement>(null);
   const trackReference = useEnsureTrackRef(trackRef);
+  const {localParticipant} = useLocalParticipant();
   const isEncrypted = useIsEncrypted(trackReference.participant);
   const layoutContext = useMaybeLayoutContext();
   const autoManageSubscription = useFeatureContext()?.autoSubscription;
+  const { blurValue, setVideoBlur } = useVideoBlur({
+    videoRef,
+    initialBlur: blurs[trackReference.participant.identity]?.blur || 0,
+  });
+  
+  useEffect(()=>{
+    if (blurs && trackReference.participant.identity !== localParticipant.identity) {
+      setVideoBlur(blurs[trackReference.participant.identity]?.blur || 0);
+    }
+  }, [blurs])
+
   const handleSubscribe = React.useCallback(
     (subscribed: boolean) => {
       if (
@@ -48,6 +67,10 @@ export function ParticipantItem({ trackRef }: ParticipantTileProps) {
         trackReference.source === Track.Source.Camera ||
         trackReference.source === Track.Source.ScreenShare) ? (
         <VideoTrack
+          ref={videoRef}
+          style={{
+            filter: `blur(${blurValue}px)`,
+          }}
           trackRef={trackReference}
           onSubscriptionStatusChanged={handleSubscribe}
           manageSubscription={autoManageSubscription}

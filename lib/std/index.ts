@@ -39,10 +39,10 @@ export function src(url: string): string {
   return `${prefix}${url}`;
 }
 
-export function connect_endpoint() {
+export function connect_endpoint(url: string): string {
   let prefix = process.env.NEXT_PUBLIC_BASE_PATH;
   if (!prefix || prefix === '' || prefix === '/') {
-    return process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
+    return url;
   }
-  return `${prefix}${process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details'}`;
+  return `${prefix}${url}`;
 }

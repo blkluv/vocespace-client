@@ -18,8 +18,9 @@
 - [x] Video blur adjust
 - [x] Video blur test
 - [x] Camera device selection
-- [ ] Reset Settings
+- [x] Reset Settings
 - [ ] Auto Username
+- [x] Username ulid if not write
 
 ## Room for chat
 

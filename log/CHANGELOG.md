@@ -9,6 +9,8 @@
 
 - PreJoin add video blur
 - PreJoin add video blur test
+- PreJoin username ulid if not write
+- PreJoin Reset settings
 
 ## v0.1.1
 

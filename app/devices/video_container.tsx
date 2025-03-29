@@ -13,17 +13,26 @@ import {
   RoomAudioRenderer,
   TrackReference,
   useCreateLayoutContext,
+  useMaybeRoomContext,
   usePinnedTracks,
   useTracks,
   VideoConferenceProps,
   WidgetState,
 } from '@livekit/components-react';
-import { Participant, RoomEvent, Track } from 'livekit-client';
-import React from 'react';
+import {
+  ConnectionState,
+  Participant,
+  Room,
+  RoomEvent,
+  RpcInvocationData,
+  Track,
+} from 'livekit-client';
+import React, { useEffect } from 'react';
 import { Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
 import { deviceState } from '../rooms/[roomName]/PageClientImpl';
 import { ParticipantItem } from '../pages/participant/tile';
+import { useRoomSettings } from '@/lib/hooks/room_settings';
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -32,6 +41,28 @@ export function VideoContainer({
   SettingsComponent,
   ...props
 }: VideoConferenceProps) {
+  const room = useMaybeRoomContext();
+  const [device, setDevice] = useRecoilState(deviceState);
+  const { settings, updateSettings, fetchSettings, setSettings } = useRoomSettings(
+    room?.name || '', // 房间 ID
+    room?.localParticipant?.identity || '', // 参与者 ID
+  );
+  useEffect(() => {
+    if (!room || room.state !== ConnectionState.Connected) return;
+
+    const syncSettings = async () => {
+      // 将当前参与者的摄像头模糊度发送到服务器
+      await updateSettings({
+        blur: device.blur,
+      });
+
+      const newSettings = await fetchSettings();
+      setSettings(newSettings);
+    };
+
+    syncSettings();
+  }, [room?.state]);
+
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
     showChat: false,
     unreadMessages: 0,
@@ -101,7 +132,6 @@ export function VideoContainer({
   ]);
 
   //   useWarnAboutMissingStyles();
-  const [device, setDevice] = useRecoilState(deviceState);
 
   return (
     <div className="lk-video-conference" {...props}>
@@ -116,7 +146,7 @@ export function VideoContainer({
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
                   {/* <ParticipantTile /> */}
-                  <ParticipantItem></ParticipantItem>
+                  <ParticipantItem blurs={settings}></ParticipantItem>
                 </GridLayout>
               </div>
             ) : (
@@ -124,7 +154,7 @@ export function VideoContainer({
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
                     {/* <ParticipantTile /> */}
-                    <ParticipantItem></ParticipantItem>
+                    <ParticipantItem blurs={settings}></ParticipantItem>
                   </CarouselLayout>
                   {focusTrack && <FocusLayout trackRef={focusTrack} />}
                 </FocusLayoutContainer>

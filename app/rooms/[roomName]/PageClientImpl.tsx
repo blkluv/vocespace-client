@@ -23,11 +23,13 @@ import {
   DeviceUnsupportedError,
   RoomConnectOptions,
   MediaDeviceFailure,
+  RpcInvocationData,
+  ConnectionState,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
-import { atom, RecoilRoot } from 'recoil';
+import { atom, RecoilRoot, useRecoilState } from 'recoil';
 import { connect_endpoint } from '@/lib/std';
 
 export const deviceState = atom({
@@ -38,7 +40,7 @@ export const deviceState = atom({
   },
 });
 
-const CONN_DETAILS_ENDPOINT = connect_endpoint();
+const CONN_DETAILS_ENDPOINT = connect_endpoint(process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details');
 const SHOW_SETTINGS_MENU = process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU == 'true';
 
 export function PageClientImpl(props: {
@@ -161,7 +163,6 @@ function VideoConferenceComponent(props: {
   }, [props.userChoices, props.options.hq, props.options.codec]);
 
   const room = React.useMemo(() => new Room(roomOptions), []);
-
   React.useEffect(() => {
     if (e2eeEnabled) {
       keyProvider
@@ -301,10 +302,6 @@ function VideoConferenceComponent(props: {
         onError={handleError}
         onMediaDeviceFailure={handleMediaDeviceFailure}
       >
-        {/* <VideoConference
-          chatMessageFormatter={formatChatMessageLinks}
-          SettingsComponent={undefined}
-        /> */}
         <VideoContainer
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
