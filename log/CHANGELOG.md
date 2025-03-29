@@ -2,7 +2,7 @@
 
 ## v0.1.2
 
-- date: 2025-03-26
+- date: 2025-03-28
 - branch: dev_0.1.2
 
 ### Features
@@ -11,6 +11,7 @@
 - PreJoin add video blur test
 - PreJoin username ulid if not write
 - PreJoin Reset settings
+- Auto Username
 
 ## v0.1.1
 

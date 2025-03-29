@@ -19,7 +19,7 @@
 - [x] Video blur test
 - [x] Camera device selection
 - [x] Reset Settings
-- [ ] Auto Username
+- [x] Auto Username
 - [x] Username ulid if not write
 
 ## Room for chat
@@ -31,7 +31,6 @@
 - [x] Screen Share
 - [x] Leave
 - [x] Different chat Layouts
-
 
 #### Settings
 
