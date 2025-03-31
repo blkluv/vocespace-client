@@ -42,6 +42,7 @@ export default {
       try_free: '通过我们的现场演示项目免费试用 Voce Space。',
       connect_with_server: '使用 Voce Space Server 将 Voce Space 与自定义服务器连接。',
       enabled_e2ee: '启用端到端加密',
+      enter_room: '请输入房间号'
     },
     error: {
       e2ee: {

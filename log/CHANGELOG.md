@@ -12,6 +12,7 @@
 - PreJoin username ulid if not write
 - PreJoin Reset settings
 - Auto Username
+- Enter into target room
 
 ## v0.1.1
 

@@ -43,6 +43,7 @@ export default {
       try_free: 'Try Voce Space for free through our live demo project.',
       connect_with_server: 'Connect Voce Space with a custom server using Voce Space Server.',
       enabled_e2ee: 'End-to-end encryption enabled',
+      enter_room: 'Please enter the room',
     },
     error: {
       e2ee: {
