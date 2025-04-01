@@ -3,6 +3,7 @@ import '../styles/globals.css';
 import '@livekit/components-styles';
 import '@livekit/components-styles/prefabs';
 import type { Metadata, Viewport } from 'next';
+import { ConfigProvider } from 'antd';
 
 export const metadata: Metadata = {
   title: {
@@ -33,10 +34,25 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        <I18nProvider initialLocale="en">{children}</I18nProvider>
-      </body>
-    </html>
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#22CCEE',
+          borderRadius: 4,
+          colorText: '#8c8c8c',
+        },
+        components: {
+          Switch: {
+            handleBg: '#ffffff',
+          },
+        },
+      }}
+    >
+      <html lang="en">
+        <body>
+          <I18nProvider initialLocale="en">{children}</I18nProvider>
+        </body>
+      </html>
+    </ConfigProvider>
   );
 }

@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.1.3
+
+- date: 2025-04-01
+- branch: dev_0.1.3
+
+### Features
+
+- Settings
+
+
 ## v0.1.2
 
 - date: 2025-03-28

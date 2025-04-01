@@ -18,6 +18,7 @@ export default {
     join_room: 'Join Room',
     passphrase: 'Password',
     username: 'Username',
+    setting: 'Setting',
     device: {
       microphone: 'Microphone',
       volume: 'Microphone Volume',

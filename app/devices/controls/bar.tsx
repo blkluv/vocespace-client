@@ -12,8 +12,18 @@ import {
   useMaybeLayoutContext,
   usePersistentUserChoices,
 } from '@livekit/components-react';
+import { Button, Drawer, message } from 'antd';
 import { Track } from 'livekit-client';
 import * as React from 'react';
+// import { Settings } from './settings';
+import { SettingToggle } from './setting_toggle';
+import { SvgResource } from '@/app/resources/svg';
+import styles from '@/styles/controls.module.scss';
+import { Settings, SettingsExports, TabKey } from './settings';
+import { ModelBg, ModelRole } from '@/lib/std/virtual';
+import { useRecoilState } from 'recoil';
+import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
+
 
 /** @public */
 export type ControlBarControls = {
@@ -64,7 +74,9 @@ export function Controls({
 }: ControlBarProps) {
   const { t } = useI18n();
   const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [settingVis, setSettingVis] = React.useState(false);
   const layoutContext = useMaybeLayoutContext();
+  
   React.useEffect(() => {
     if (layoutContext?.widget.state?.showChat !== undefined) {
       setIsChatOpen(layoutContext?.widget.state?.showChat);
@@ -114,10 +126,12 @@ export function Controls({
   const htmlProps = { className: 'lk-control-bar', ...props };
 
   const {
+    userChoices,
     saveAudioInputEnabled,
     saveVideoInputEnabled,
     saveAudioInputDeviceId,
     saveVideoInputDeviceId,
+    saveUsername
   } = usePersistentUserChoices({ preventSave: !saveUserChoices });
 
   const microphoneOnChange = React.useCallback(
@@ -131,6 +145,32 @@ export function Controls({
       isUserInitiated ? saveVideoInputEnabled(enabled) : null,
     [saveVideoInputEnabled],
   );
+
+  // settings ------------------------------------------------------------------------------------------
+  const [key, set_key] = React.useState<TabKey>('common');
+  const [virtualEnabled, setVirtualEnabled] = React.useState(false);
+  const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.Haru);
+  const [modelBg, setModelBg] = React.useState<ModelBg>(ModelBg.ClassRoom);
+  const settingsRef = React.useRef<SettingsExports>(null);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [device, setDevice] = useRecoilState(deviceState);
+  const [volume, setVolume] = React.useState(device.volme);
+  const [videoBlur, setVideoBlur] = React.useState(device.blur);
+  const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
+  
+
+  const closeSetting = () => {
+    // 当saved为false时 ,将record重新赋值给add_derivce_settings
+    // if (!saved) {
+    //   set_volume(record.microphone.other);
+    //   set_video_blur(record.video.blur);
+    //   set_screen_blur(record.screen.blur);
+    //   let username = userChoices.username;
+    //   use_stored_set(username, { device: record });
+    // }
+  };
+
+  const saveChanges = async (save: boolean, key: TabKey) => {};
 
   return (
     <div {...htmlProps}>
@@ -191,7 +231,12 @@ export function Controls({
           {showText && t('common.chat')}
         </ChatToggle>
       )}
-
+      <SettingToggle
+            enabled={settingVis}
+            onClicked={() => {
+              setSettingVis(true);
+            }}
+          ></SettingToggle>
       {visibleControls.leave && (
         <DisconnectButton>
           {showIcon && <LeaveIcon />}
@@ -199,6 +244,63 @@ export function Controls({
         </DisconnectButton>
       )}
       <StartMediaButton />
+      <Drawer
+          style={{ backgroundColor: '#1e1e1e', padding: 0, margin: 0, color: '#fff' }}
+          title={t('common.setting')}
+          placement="right"
+          closable={false}
+          onClose={closeSetting}
+          width={'640px'}
+          open={settingVis}
+          extra={setting_drawer_header({
+            on_clicked: () => setSettingVis(false),
+          })}
+        >
+          <div className={styles.setting_container}>
+            <Settings
+              virtual={{
+                enabled: virtualEnabled,
+                setEnabled: setVirtualEnabled,
+                modelRole: modelRole,
+                setModelRole: setModelRole,
+                modelBg: modelBg,
+                setModelBg: setModelBg,
+              }}
+              ref={settingsRef}
+              messageApi={messageApi}
+              microphone={{
+                audio: {
+                  volume: volume,
+                  setVolume,
+                },
+              }}
+              camera={{
+                video: {
+                  blur: videoBlur,
+                  setVideoBlur,
+                },
+                screen: {
+                  blur: screenBlur,
+                  setScreenBlur
+                },
+      
+              }}
+              user={{
+                username: userChoices.username,
+                saveUsername,
+              }}
+              tab_key={{ key, set_key }}
+              save_changes={saveChanges}
+            ></Settings>
+            <div className={styles.setting_container_footer}>
+              {key !== 'about_us' && (
+                <Button type="primary" onClick={() => saveChanges(true, key)}>
+                  Save Changes
+                </Button>
+              )}
+            </div>
+          </div>
+        </Drawer>
     </div>
   );
 }
@@ -251,3 +353,13 @@ export function supportsScreenSharing(): boolean {
     !!navigator.mediaDevices.getDisplayMedia
   );
 }
+
+const setting_drawer_header = ({ on_clicked }: { on_clicked: () => void }): React.ReactNode => {
+  return (
+    <div>
+      <Button type="text" shape="circle" onClick={on_clicked}>
+        <SvgResource type="close" color="#fff" svgSize={16}></SvgResource>
+      </Button>
+    </div>
+  );
+};

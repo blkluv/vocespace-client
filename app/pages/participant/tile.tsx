@@ -23,6 +23,7 @@ import {
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import React, { useEffect } from 'react';
+import { PName } from './name';
 
 export function ParticipantItem({
   trackRef,
@@ -95,7 +96,8 @@ export function ParticipantItem({
                 }}
                 show={'muted'}
               ></TrackMutedIndicator>
-              <ParticipantName />
+              {/* <ParticipantName /> */}
+              <PName></PName>
             </>
           ) : (
             <>

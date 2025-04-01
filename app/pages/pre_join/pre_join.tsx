@@ -112,24 +112,18 @@ export function PreJoin({
     [tracks],
   );
 
-  const [isValid, setIsValid] = React.useState<boolean>();
-
   const handleValidation = React.useCallback(
     (values: LocalUserChoices) => {
       if (typeof onValidate === 'function') {
         return onValidate(values);
       } else {
-        if (values.username === '') {
-          let auto_name = `user_${ulid()}`;
-          setUsername(auto_name);
-        }
-        return true;
+        return values.username !== '';
       }
     },
     [onValidate],
   );
 
-  React.useEffect(() => {
+  const saveUserChoices = () => {
     const newUserChoices = {
       username,
       videoEnabled,
@@ -138,19 +132,24 @@ export function PreJoin({
       audioDeviceId,
     };
     setUserChoices(newUserChoices);
-    setIsValid(handleValidation(newUserChoices));
-  }, [username, videoEnabled, handleValidation, audioEnabled, audioDeviceId, videoDeviceId]);
+  };
 
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  const handleSubmit = () => {
     if (handleValidation(userChoices)) {
+      saveUserChoices();
       if (typeof onSubmit === 'function') {
         onSubmit(userChoices);
       }
     } else {
-      console.warn('Validation failed with: ', userChoices);
+      let auto_name = `user${ulid()}`;
+      setUsername(auto_name);
+      saveUsername(auto_name);
+      saveUserChoices();
+      if (typeof onSubmit === 'function') {
+        onSubmit(userChoices);
+      }
     }
-  }
+  };
 
   // volume --------------------------------------------------------------------------------------
   const [device, setDevice] = useRecoilState(deviceState);
@@ -161,7 +160,7 @@ export function PreJoin({
   const { blurValue, setVideoBlur } = useVideoBlur({
     videoRef: videoEl,
     initialBlur: 0.15,
-    defaultDimensions: {height: 280, width: 448}
+    defaultDimensions: { height: 280, width: 448 },
   });
   // [play] ------------------------------------------------------------------------
   const play_sound = () => {
@@ -186,7 +185,7 @@ export function PreJoin({
             style={{
               height: '100%',
               width: '100%',
-              filter: `blur(${blurValue}px)`
+              filter: `blur(${blurValue}px)`,
             }}
           />
         )}
@@ -225,7 +224,7 @@ export function PreJoin({
             <span>{volume}</span>
             <audio
               ref={audio_play_ref}
-              src={src("/audios/pre_test.mp3")}
+              src={src('/audios/pre_test.mp3')}
               style={{ display: 'none' }}
             ></audio>
           </div>
@@ -284,26 +283,24 @@ export function PreJoin({
             }}
           ></Slider>
         </div>
-        <form className={styles.view__controls__form}>
-          <input
-            className="lk-form-control"
-            id="username"
-            name="username"
-            type="text"
-            defaultValue={username}
-            placeholder={userLabel}
-            onChange={(inputEl) => setUsername(inputEl.target.value)}
-            autoComplete="off"
-          />
-          <button
-            className={styles.view__controls__form__button}
-            type="submit"
-            onClick={handleSubmit}
-            disabled={!isValid}
-          >
-            {joinLabel}
-          </button>
-        </form>
+        <input
+          style={{ width: '100%' }}
+          className="lk-form-control"
+          id="username"
+          name="username"
+          type="text"
+          defaultValue={username}
+          placeholder={userLabel}
+          onChange={(inputEl) => setUsername(inputEl.target.value)}
+          autoComplete="off"
+        />
+        <button
+          className={styles.view__controls__form__button}
+          type="submit"
+          onClick={handleSubmit}
+        >
+          {joinLabel}
+        </button>
       </div>
     </div>
   );
