@@ -42,7 +42,7 @@ export interface SettingsExports {
   username: string;
 }
 
-export type TabKey = 'common' | 'audio' | 'video' | 'virtual' | 'about_us';
+export type TabKey = 'general' | 'audio' | 'video' | 'virtual' | 'about_us';
 
 export const Settings = forwardRef<SettingsExports, SettingsProps>(
   (
@@ -69,11 +69,11 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
 
     const items: TabsProps['items'] = [
       {
-        key: 'common',
-        label: <TabItem type="setting" label="Common"></TabItem>,
+        key: 'general',
+        label: <TabItem type="setting" label={t('settings.general.title')}></TabItem>,
         children: (
           <div className={styles.setting_box}>
-            <div>username:</div>
+            <div>{t('settings.general.username')}:</div>
             <Input
               className={styles.common_space}
               value={username}
@@ -86,11 +86,11 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       },
       {
         key: 'audio',
-        label: <TabItem type="audio" label="Audio"></TabItem>,
+        label: <TabItem type="audio" label={t('settings.audio.title')}></TabItem>,
         children: (
           <div>
             <div className={styles.setting_box}>
-              <div>volume:</div>
+              <div>{t('settings.audio.volume')}:</div>
               <Slider
                 defaultValue={volume}
                 className={styles.common_space}
@@ -105,11 +105,11 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       },
       {
         key: 'video',
-        label: <TabItem type="video" label="Video"></TabItem>,
+        label: <TabItem type="video" label={t('settings.video.title')}></TabItem>,
         children: (
           <div>
             <div className={styles.setting_box}>
-              <span>Video Blur:</span>
+              <span>{t('settings.video.video_blur')}:</span>
               <Slider
                 defaultValue={0.15}
                 className={`${styles.common_space} ${styles.slider}`}
@@ -124,7 +124,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               />
             </div>
             <div className={styles.setting_box}>
-              <span>Screen Blur:</span>
+              <span>{t('settings.video.screen_blur')}:</span>
               <Slider
                 defaultValue={0.15}
                 className={`${styles.common_space} ${styles.slider}`}
@@ -503,7 +503,7 @@ export const VirtualSettings = forwardRef<
           />
         </div>
         <Tabs
-          defaultActiveKey="common"
+          defaultActiveKey="general"
           tabPosition="top"
           items={items}
           style={{ width: '100%', height: '100%' }}

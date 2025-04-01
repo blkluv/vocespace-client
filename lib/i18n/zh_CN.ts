@@ -35,6 +35,42 @@ export default {
     share_screen: '共享屏幕',
     stop_share: '停止共享',
   },
+  settings: {
+    title: '设置',
+    general: {
+      title: '常规',
+      username: "用户名",
+    },
+    audio: {
+      title: '音频',
+      volume: '音量',
+    },
+    video: {
+      title: '视频',
+      video_blur: '视频虚化',
+      screen_blur: '屏幕虚化',
+    },
+    virtual: {
+      title: '虚拟形象'
+    },
+    about_us: {
+      title: '关于我们',
+    },
+    device: {
+      audio: {
+        title: '音频设备',
+        desc: '选择您的音频输入和输出设备。',
+      },
+      video: {
+        title: '视频设备',
+        desc: '选择您的视频输入设备。',
+      },
+      screen: {
+        title: '屏幕共享',
+        desc: '选择要共享的屏幕或窗口。',
+      },
+    },
+  },
   msg: {
     info: {
       title: '由 Privoce 开发的基于 LiveKit 的自托管开源视频会议应用程序',
