@@ -5,7 +5,8 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import styles from '@/styles/Home.module.css';
-import { Input } from 'antd';
+import { Input, Radio } from 'antd';
+import { CheckboxGroupProps } from 'antd/es/checkbox';
 
 /**
  * # DemoMeetingTab
@@ -22,6 +23,11 @@ export function DemoMeetingTab(props: { label: string }) {
   const [e2ee, setE2ee] = useState(false);
   const [roomUrl, setRoomUrl] = useState('');
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+  const options: CheckboxGroupProps<string>['options'] = [
+    { label: t('common.demo'), value: 'demo' },
+    { label: t('common.custom'), value: 'custom' },
+  ];
+  const [optionVal, setOptionVal] = useState('demo');
   const startMeeting = () => {
     if (e2ee) {
       router.push(`/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
@@ -35,16 +41,33 @@ export function DemoMeetingTab(props: { label: string }) {
   };
   return (
     <div className={styles.tabContent}>
-      <p style={{ margin: 0 }}>{t('msg.info.try_free')}</p>
-      <input
-        className="lk-form-control"
-        type="text"
-        placeholder={t('msg.info.enter_room')}
-        value={roomUrl}
+      <Radio.Group
+        block
+        options={options}
+        defaultValue="demo"
+        optionType="button"
+        buttonStyle="solid"
+        size="large"
+        value={optionVal}
         onChange={(e) => {
-          setRoomUrl(e.target.value);
+          setRoomUrl('');
+          setOptionVal(e.target.value);
         }}
       />
+      <p style={{ margin: 0 }}>
+        {optionVal == 'demo' ? t('msg.info.try_free') : t('msg.info.try_enter_room')}
+      </p>
+      {optionVal == 'custom' && (
+        <input
+          className="lk-form-control"
+          type="text"
+          placeholder={t('msg.info.enter_room')}
+          value={roomUrl}
+          onChange={(e) => {
+            setRoomUrl(e.target.value);
+          }}
+        />
+      )}
       <button className="lk-button" onClick={startMeeting}>
         {t('common.start_metting')}
       </button>

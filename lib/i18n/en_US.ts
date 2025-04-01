@@ -35,6 +35,45 @@ export default {
     share_screen: 'Share Screen',
     stop_share: 'Stop Share Share',
   },
+  settings: {
+    title: 'Settings',
+    general: {
+      title: 'General',
+      username: "Username",
+    },
+    audio: {
+      title: 'Audio',
+      volume: 'Volume',
+    },
+    video: {
+      title: 'Video',
+      video_blur: 'Video Blur',
+      screen_blur: 'Screen Blur',
+    },
+    virtual: {
+      title: 'Virtual Role',
+      open: 'Enable Virtual Role',
+    },
+    about_us: {
+      title: 'About Us',
+      brief: "Secure Video Calls Under Your Domain and Brand",
+      desc: "We will help you host your own secure video and audio conferencing platform under your subdomain with your own logo and branding. Complete control over your data with enterprise-grade encryption."
+    },
+    device: {
+      audio: {
+        title: '音频设备',
+        desc: '选择您的音频输入和输出设备。',
+      },
+      video: {
+        title: '视频设备',
+        desc: '选择您的视频输入设备。',
+      },
+      screen: {
+        title: '屏幕共享',
+        desc: '选择要共享的屏幕或窗口。',
+      },
+    },
+  },
   msg: {
     info: {
       title:

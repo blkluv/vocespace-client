@@ -51,10 +51,13 @@ export default {
       screen_blur: '屏幕虚化',
     },
     virtual: {
-      title: '虚拟形象'
+      title: '虚拟形象',
+      open: '开启虚拟形象',
     },
     about_us: {
       title: '关于我们',
+      brief: "在您的域名和品牌下进行安全的视频通话",
+      desc: "我们将帮助您在您的子域下托管您自己的安全视频和音频会议平台，并使用您自己的徽标和品牌。使用企业级加密完全控制您的数据。"
     },
     device: {
       audio: {
@@ -77,6 +80,7 @@ export default {
       contact: '请联系',
       learn_more: '了解更多',
       try_free: '通过我们的现场演示项目免费试用 Voce Space。',
+      try_enter_room: '通过房间号加入指定会议或创建新会议。',
       connect_with_server: '使用 Voce Space Server 将 Voce Space 与自定义服务器连接。',
       enabled_e2ee: '启用端到端加密',
       enter_room: '请输入房间号'

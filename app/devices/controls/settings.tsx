@@ -143,7 +143,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       },
       {
         key: 'virtual',
-        label: <TabItem type="user" label="Virtual"></TabItem>,
+        label: <TabItem type="user" label={t('settings.virtual.title')}></TabItem>,
         children: (
           <VirtualSettings
             messageApi={messageApi}
@@ -158,7 +158,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       },
       {
         key: 'about_us',
-        label: <TabItem type="logo" label="About Us"></TabItem>,
+        label: <TabItem type="logo" label={t('settings.about_us.title')}></TabItem>,
         children: (
           <div
             style={{
@@ -183,12 +183,10 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 wordSpacing: '0px',
               }}
             >
-              Secure Video Calls Under Your Domain and Brand
+              {t('settings.about_us.brief')}
             </div>
             <div style={{ textAlign: 'justify', textIndent: '2rem' }}>
-              We will help you host your own secure video and audio conferencing platform under your
-              subdomain with your own logo and branding. Complete control over your data with
-              enterprise-grade encryption.
+              {t('settings.about_us.desc')}
             </div>
             <div style={{ textAlign: 'right', width: '100%' }}>
               {t('msg.info.contact')}
@@ -267,6 +265,7 @@ export const VirtualSettings = forwardRef<
     }: VirtualSettingsProps & { messageApi: MessageInstance },
     ref,
   ) => {
+    const { t } = useI18n();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [trackingActive, setTrackingActive] = useState(false);
     const [model_selected_index, set_model_selected_index] = useState(0);
@@ -461,7 +460,7 @@ export const VirtualSettings = forwardRef<
     return (
       <div className={styles.virtual_settings}>
         <div className={styles.virtual_settings_header}>
-          <span>Use Virtual Model:</span>
+          <span>{t('settings.virtual.open')}:</span>
           <Switch value={enabled} onClick={() => setEnabled(!enabled)}></Switch>
         </div>
         <div className={styles.virtual_video_box}>

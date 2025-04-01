@@ -45,6 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Switch: {
             handleBg: '#ffffff',
           },
+          Radio: {
+            buttonBg: '#1E1E1E',
+            colorBorder: '#1E1E1E',
+          }
         },
       }}
     >
