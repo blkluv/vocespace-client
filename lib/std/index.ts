@@ -46,3 +46,13 @@ export function connect_endpoint(url: string): string {
   }
   return `${prefix}${url}`;
 }
+
+/// 生成随机4个字符
+export function ulid(): string {
+  const char = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  let res = "";
+  for (let i = 0; i < 4; i++) {
+    res += char[Math.floor(Math.random() * char.length)];
+  }
+  return res;
+}

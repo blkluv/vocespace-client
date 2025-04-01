@@ -15,9 +15,8 @@ import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
 import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
-import { src } from '@/lib/std';
+import { src, ulid } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
-import { ulid } from 'ulid';
 
 export function PreJoin({
   defaults = {},
@@ -111,43 +110,37 @@ export function PreJoin({
     () => tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack,
     [tracks],
   );
+  React.useEffect(() => {
+    // 仅当 username 不为空时更新 userChoices
+    if (username) {
+      const newUserChoices = {
+        username,
+        videoEnabled,
+        videoDeviceId,
+        audioEnabled,
+        audioDeviceId,
+      };
+      setUserChoices(newUserChoices);
+      console.warn('用户名更新后的选项:', newUserChoices);
+    }
+  }, [username, videoEnabled, videoDeviceId, audioEnabled, audioDeviceId]);
 
-  const handleValidation = React.useCallback(
-    (values: LocalUserChoices) => {
-      if (typeof onValidate === 'function') {
-        return onValidate(values);
-      } else {
-        return values.username !== '';
-      }
-    },
-    [onValidate],
-  );
-
-  const saveUserChoices = () => {
-    const newUserChoices = {
-      username,
+  const handleSubmit = () => {
+    const effectiveUsername = username === '' ? `user${ulid()}` : username;
+    const finalUserChoices = {
+      username: effectiveUsername,
       videoEnabled,
       videoDeviceId,
       audioEnabled,
       audioDeviceId,
     };
-    setUserChoices(newUserChoices);
-  };
-
-  const handleSubmit = () => {
-    if (handleValidation(userChoices)) {
-      saveUserChoices();
-      if (typeof onSubmit === 'function') {
-        onSubmit(userChoices);
-      }
-    } else {
-      let auto_name = `user${ulid()}`;
-      setUsername(auto_name);
-      saveUsername(auto_name);
-      saveUserChoices();
-      if (typeof onSubmit === 'function') {
-        onSubmit(userChoices);
-      }
+    
+    if (username === '') {
+      setUsername(effectiveUsername);
+    }
+    
+    if (typeof onSubmit === 'function') {
+      onSubmit(finalUserChoices);
     }
   };
 
@@ -289,9 +282,11 @@ export function PreJoin({
           id="username"
           name="username"
           type="text"
-          defaultValue={username}
           placeholder={userLabel}
-          onChange={(inputEl) => setUsername(inputEl.target.value)}
+          value={username}
+          onChange={(inputEl) => {
+            setUsername(inputEl.target.value);
+          }}
           autoComplete="off"
         />
         <button

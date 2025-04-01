@@ -97,7 +97,10 @@ export function ParticipantItem({
                 show={'muted'}
               ></TrackMutedIndicator>
               {/* <ParticipantName /> */}
-              <PName name={trackReference.participant.name || "unknown"}></PName>
+              
+              {trackReference.participant.name && (
+                <PName name={trackReference.participant.name}></PName>
+              )}
             </>
           ) : (
             <>
