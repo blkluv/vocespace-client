@@ -1,12 +1,14 @@
-import { Card, Input, List, message, Slider, Switch, Tabs, TabsProps } from 'antd';
+import { Card, Input, List, message, Select, Slider, Switch, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, RefAttributes, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import * as faceapi from 'face-api.js';
 import { MessageInstance } from 'antd/es/message/interface';
 import { loadVideo } from '@/lib/std/device';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { SvgResource, SvgType } from '@/app/resources/svg';
-import { useI18n } from '@/lib/i18n/i18n';
+import { langOptions, useI18n } from '@/lib/i18n/i18n';
+import { AudioSelect } from './audio_select';
+import { VideoSelect } from './video_select';
 
 export interface SettingsProps {
   microphone: {
@@ -62,9 +64,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
     }: SettingsProps,
     ref,
   ) => {
-    const { t } = useI18n();
+    const { locale, t, changeLocale } = useI18n();
     const virtual_settings_ref = useRef<VirtualSettingsExports>(null);
-
     // const [username, set_username] = useState(user.username);
 
     const items: TabsProps['items'] = [
@@ -81,6 +82,13 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 saveUsername(e.target.value);
               }}
             ></Input>
+            <div className={styles.common_space}>{t('settings.general.lang')}:</div>
+            <Select
+              options={langOptions}
+              value={locale}
+              onChange={changeLocale}
+              style={{ width: '100%' }}
+            ></Select>
           </div>
         ),
       },
@@ -89,6 +97,10 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         label: <TabItem type="audio" label={t('settings.audio.title')}></TabItem>,
         children: (
           <div>
+            <div className={styles.setting_box}>
+              <div>{t('settings.audio.device')}:</div>
+              <AudioSelect className={styles.common_space}></AudioSelect>
+            </div>
             <div className={styles.setting_box}>
               <div>{t('settings.audio.volume')}:</div>
               <Slider
@@ -108,6 +120,10 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         label: <TabItem type="video" label={t('settings.video.title')}></TabItem>,
         children: (
           <div>
+            <div className={styles.setting_box}>
+              <div>{t('settings.video.device')}:</div>
+              <VideoSelect className={styles.common_space}></VideoSelect>
+            </div>
             <div className={styles.setting_box}>
               <span>{t('settings.video.video_blur')}:</span>
               <Slider
@@ -212,7 +228,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         tabPosition="left"
         centered
         items={items}
-        style={{ width: '100%', height: 'max-content' }}
+        style={{ width: '100%', height: '100%' }}
         onChange={(k: string) => {
           set_key(k as TabKey);
         }}

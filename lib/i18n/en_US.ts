@@ -40,15 +40,18 @@ export default {
     general: {
       title: 'General',
       username: "Username",
+      lang: 'Language',
     },
     audio: {
       title: 'Audio',
       volume: 'Volume',
+      device: 'Audio Device',
     },
     video: {
       title: 'Video',
       video_blur: 'Video Blur',
       screen_blur: 'Screen Blur',
+      device: 'Video Device',
     },
     virtual: {
       title: 'Virtual Role',

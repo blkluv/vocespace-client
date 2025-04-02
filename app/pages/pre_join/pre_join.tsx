@@ -1,5 +1,4 @@
 import {
-  LocalUserChoices,
   MediaDeviceMenu,
   ParticipantPlaceholder,
   PreJoinProps,
@@ -10,7 +9,7 @@ import {
 import styles from '@/styles/pre_join.module.scss';
 import React from 'react';
 import { facingModeFromLocalTrack, LocalAudioTrack, LocalVideoTrack, Track } from 'livekit-client';
-import { Button, Slider } from 'antd';
+import { Slider } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
@@ -134,11 +133,11 @@ export function PreJoin({
       audioEnabled,
       audioDeviceId,
     };
-    
+
     if (username === '') {
       setUsername(effectiveUsername);
     }
-    
+
     if (typeof onSubmit === 'function') {
       onSubmit(finalUserChoices);
     }

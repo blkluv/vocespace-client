@@ -40,15 +40,18 @@ export default {
     general: {
       title: '常规',
       username: "用户名",
+      lang: '语言',
     },
     audio: {
       title: '音频',
       volume: '音量',
+      device: '音频设备'
     },
     video: {
       title: '视频',
       video_blur: '视频虚化',
       screen_blur: '屏幕虚化',
+      device: '视频设备'
     },
     virtual: {
       title: '虚拟形象',
