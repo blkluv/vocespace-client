@@ -35,7 +35,7 @@ import { connect_endpoint } from '@/lib/std';
 export const deviceState = atom({
   key: 'deviceState',
   default: {
-    volme: 80,
+    volume: 80,
     blur: 0.15,
     screenBlur: 0.15,
   },

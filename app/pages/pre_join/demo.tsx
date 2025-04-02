@@ -58,8 +58,8 @@ export function DemoMeetingTab(props: { label: string }) {
         {optionVal == 'demo' ? t('msg.info.try_free') : t('msg.info.try_enter_room')}
       </p>
       {optionVal == 'custom' && (
-        <input
-          className="lk-form-control"
+        <Input
+          size='large'
           type="text"
           placeholder={t('msg.info.enter_room')}
           value={roomUrl}

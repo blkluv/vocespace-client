@@ -9,7 +9,7 @@ import {
 import styles from '@/styles/pre_join.module.scss';
 import React from 'react';
 import { facingModeFromLocalTrack, LocalAudioTrack, LocalVideoTrack, Track } from 'livekit-client';
-import { Slider } from 'antd';
+import { Input, Slider } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
@@ -145,7 +145,7 @@ export function PreJoin({
 
   // volume --------------------------------------------------------------------------------------
   const [device, setDevice] = useRecoilState(deviceState);
-  const [volume, setVolume] = React.useState(device.volme);
+  const [volume, setVolume] = React.useState(device.volume);
   const [blur, setBlur] = React.useState(device.blur);
   const [play, setPlay] = React.useState(false);
   const audio_play_ref = React.useRef<HTMLAudioElement>(null);
@@ -231,10 +231,14 @@ export function PreJoin({
             value={volume}
             onChange={(e) => {
               setVolume(e);
-              setDevice({ ...device, volme: e });
+              setDevice({ ...device, volume: e });
             }}
           ></Slider>
-          <button className={styles.view__controls__group_volume__button} onClick={play_sound}>
+          <button
+            style={{ backgroundColor: '#22CCEE' }}
+            className={styles.view__controls__group_volume__button}
+            onClick={play_sound}
+          >
             {!play ? t('common.device.test.audio') : t('common.device.test.close_audio')}
           </button>
         </div>
@@ -278,9 +282,9 @@ export function PreJoin({
             }}
           ></Slider>
         </div>
-        <input
+        <Input
+          size="large"
           style={{ width: '100%' }}
-          className="lk-form-control"
           id="username"
           name="username"
           type="text"
@@ -292,6 +296,7 @@ export function PreJoin({
           autoComplete="off"
         />
         <button
+          style={{ backgroundColor: '#22CCEE' }}
           className={styles.view__controls__form__button}
           type="submit"
           onClick={handleSubmit}

@@ -37,6 +37,7 @@ export function VideoSelect({ className }: { className?: string }) {
 
   return (
     <Select
+      size="large"
       prefix={<SelectPrefix type="video" color="#22CCEE" svgSize={16}></SelectPrefix>}
       className={className}
       defaultValue={active_video}

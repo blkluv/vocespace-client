@@ -10,6 +10,7 @@ import { langOptions, useI18n } from '@/lib/i18n/i18n';
 import { AudioSelect } from './audio_select';
 import { VideoSelect } from './video_select';
 import { SelectPrefix } from './select_prefix';
+import { LangSelect } from './lang_select';
 
 export interface SettingsProps {
   microphone: {
@@ -62,7 +63,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
     }: SettingsProps,
     ref,
   ) => {
-    const { locale, t, changeLocale } = useI18n();
+    const { t } = useI18n();
     const virtual_settings_ref = useRef<VirtualSettingsExports>(null);
     const [username, setUsername] = useState(uname);
 
@@ -74,6 +75,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
           <div className={styles.setting_box}>
             <div>{t('settings.general.username')}:</div>
             <Input
+              size="large"
               className={styles.common_space}
               value={username}
               onChange={(e: any) => {
@@ -86,15 +88,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               }}
             ></Input>
             <div className={styles.common_space}>{t('settings.general.lang')}:</div>
-            <Select
-              prefix={<SelectPrefix type="lang" svgSize={16} color="#22CCEE"></SelectPrefix>}
-              options={langOptions}
-              value={locale}
-              onChange={(e) => {
-                changeLocale(e);
-              }}
-              style={{ width: '100%' }}
-            ></Select>
+            <LangSelect style={{ width: '100%' }}></LangSelect>
           </div>
         ),
       },
@@ -114,7 +108,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 className={styles.common_space}
                 onChange={(e) => {
                   setVolume(e);
-                  saveChanges(false, 'audio');
+                  saveChanges(true, 'audio');
                 }}
               />
             </div>
@@ -141,7 +135,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 step={0.05}
                 onChange={(e) => {
                   setVideoBlur(e);
-                  saveChanges(false, 'video');
+                  saveChanges(true, 'video');
                 }}
               />
             </div>
@@ -156,7 +150,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 step={0.05}
                 onChange={(e) => {
                   setScreenBlur(e);
-                  saveChanges(false, 'video');
+                  saveChanges(true, 'video');
                 }}
               />
             </div>

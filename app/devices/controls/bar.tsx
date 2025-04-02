@@ -159,7 +159,7 @@ export function Controls({
   const settingsRef = React.useRef<SettingsExports>(null);
   const [messageApi, contextHolder] = message.useMessage();
   const [device, setDevice] = useRecoilState(deviceState);
-  const [volume, setVolume] = React.useState(device.volme);
+  const [volume, setVolume] = React.useState(device.volume);
   const [videoBlur, setVideoBlur] = React.useState(device.blur);
   const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
   const closeSetting = () => {
@@ -178,9 +178,7 @@ export function Controls({
       case 'general': {
         const new_name = settingsRef.current?.username;
         if (new_name) {
-          // rename_user_and_store(username, new_name);
           saveUsername(new_name);
-          // await localParticipant.setName(settings_ref.current?.username);
           if (room) {
             try {
               await room.localParticipant?.setMetadata(JSON.stringify({ name: new_name }));
@@ -191,6 +189,14 @@ export function Controls({
             }
           }
         }
+        break;
+      }
+      case 'audio': {
+        setDevice({ ...device, volume });
+        break;
+      }
+      case 'video': {
+        setDevice({ ...device, blur: videoBlur, screenBlur: screenBlur });
         break;
       }
     }

@@ -38,6 +38,7 @@ export function AudioSelect({ className }: { className?: string }) {
 
   return (
     <Select
+      size="large"
       prefix={<SelectPrefix type="audio" color="#22CCEE" svgSize={16}></SelectPrefix>}
       className={className}
       defaultValue={active_audio}

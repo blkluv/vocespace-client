@@ -49,9 +49,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             buttonBg: '#1E1E1E',
             colorBorder: '#1E1E1E',
           },
-          // Select: {
-          //   optionSelectedBg: '#cbf6ff',
-          // }
+          Input: {
+            colorBgBase: '#1E1E1E',
+            activeBg: '#1E1E1E',
+            colorBgContainer: '#1E1E1E',
+            colorBorder: '#1E1E1E',
+            colorTextPlaceholder: '#8c8c8c',
+            paddingBlockLG: 8,
+          },
           Select: {
             selectorBg: '#1E1E1E',
             activeBorderColor: '#1E1E1E',
