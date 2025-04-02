@@ -177,7 +177,8 @@ export function VideoContainer({
           )}
         </LayoutContextProvider>
       )}
-      <RoomAudioRenderer volume={device.volme / 100.0} />
+      {/* volume={device.volme / 100.0} */}
+      <RoomAudioRenderer />
       <ConnectionStateToast />
     </div>
   );
