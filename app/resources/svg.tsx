@@ -26,15 +26,18 @@ export type SvgType =
   | 'volume'
   | 'lang';
 
+
+export interface SvgResourceProps  {
+  type: SvgType;
+  svgSize?: number | string;
+  color?: string;
+}
+
 export function SvgResource({
   type,
   svgSize = 24,
   color = '#ffffff',
-}: {
-  type: SvgType;
-  svgSize?: number | string;
-  color?: string;
-}) {
+}: SvgResourceProps) {
   switch (type) {
     case 'screen':
       return (

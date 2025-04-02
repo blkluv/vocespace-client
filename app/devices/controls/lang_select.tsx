@@ -1,6 +1,7 @@
 import { SvgResource } from '@/app/resources/svg';
 import { langOptions, useI18n } from '@/lib/i18n/i18n';
 import { ConfigProvider, Select } from 'antd';
+import { SelectPrefix } from './select_prefix';
 
 export function LangSelect() {
   const { locale, changeLocale } = useI18n();
@@ -31,19 +32,7 @@ export function LangSelect() {
       }}
     >
       <Select
-        prefix={
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '22px',
-              width: '100%',
-            }}
-          >
-            <SvgResource type="lang" svgSize={16} color="#ffffff"></SvgResource>
-          </div>
-        }
+        prefix={<SelectPrefix type="lang" svgSize={16} color="#ffffff"></SelectPrefix>}
         value={locale}
         options={langOptions}
         onChange={(value) => {

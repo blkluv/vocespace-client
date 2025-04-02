@@ -1,11 +1,10 @@
-import { Button, Dropdown, MenuProps, Select } from 'antd';
-import { MediaDeviceKind, ToggleProps } from '@/lib/std/device';
+import { Select } from 'antd';
+import { MediaDeviceKind } from '@/lib/std/device';
 import { useMediaDevices } from '@livekit/components-react';
 import { useEffect, useState } from 'react';
-import { SvgResource } from '@/app/resources/svg';
+import { SelectPrefix } from './select_prefix';
 
 export function VideoSelect({ className }: { className?: string }) {
-
   const devices = useMediaDevices({
     kind: MediaDeviceKind.VideoInput,
   });
@@ -22,11 +21,11 @@ export function VideoSelect({ className }: { className?: string }) {
       const validDevices = devices.filter((device) => device.deviceId !== '');
       if (validDevices.length > 0) {
         set_items(
-            validDevices.map((device) => ({
-              label: device.label,
-              value: device.deviceId,
-            })),
-          );
+          validDevices.map((device) => ({
+            label: device.label,
+            value: device.deviceId,
+          })),
+        );
 
         // 如果没有选中的设备，设置第一个为默认
         if (!active_video) {
@@ -38,9 +37,8 @@ export function VideoSelect({ className }: { className?: string }) {
 
   return (
     <Select
-    prefix={<SvgResource type="video" color='#22CCEE' svgSize={14}></SvgResource>}
+      prefix={<SelectPrefix type="video" color="#22CCEE" svgSize={16}></SelectPrefix>}
       className={className}
-      size="large"
       defaultValue={active_video}
       options={items}
       value={active_video}

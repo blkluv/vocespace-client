@@ -270,7 +270,7 @@ export function Controls({
       )}
       <StartMediaButton />
       <Drawer
-        style={{ backgroundColor: '#1e1e1e', padding: 0, margin: 0, color: '#fff' }}
+        style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
         title={t('common.setting')}
         placement="right"
         closable={false}

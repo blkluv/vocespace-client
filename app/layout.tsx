@@ -49,9 +49,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             buttonBg: '#1E1E1E',
             colorBorder: '#1E1E1E',
           },
+          // Select: {
+          //   optionSelectedBg: '#cbf6ff',
+          // }
           Select: {
-            optionSelectedBg: '#cbf6ff',
-          }
+            selectorBg: '#1E1E1E',
+            activeBorderColor: '#1E1E1E',
+            activeOutlineColor: '#1E1E1E',
+            colorTextPlaceholder: '#ffffff',
+            colorText: '#ffffff',
+            colorIcon: '#ffffff',
+            colorIconHover: '#ffffff',
+            hoverBorderColor: '#1E1E1E',
+            optionSelectedBg: '#22CCEE',
+            optionSelectedColor: '#fff',
+            optionActiveBg: '#1E1E1E',
+            colorBgBase: '#1E1E1E',
+            multipleItemBg: '#1E1E1E',
+            colorBorder: '#1E1E1E',
+            colorBgContainer: '#1E1E1E',
+            colorBgLayout: '#1E1E1E',
+            colorBgElevated: '#1E1E1E',
+          },
         },
       }}
     >

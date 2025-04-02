@@ -9,6 +9,7 @@ import { SvgResource, SvgType } from '@/app/resources/svg';
 import { langOptions, useI18n } from '@/lib/i18n/i18n';
 import { AudioSelect } from './audio_select';
 import { VideoSelect } from './video_select';
+import { SelectPrefix } from './select_prefix';
 
 export interface SettingsProps {
   microphone: {
@@ -79,11 +80,14 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 setUsername(e.target.value);
               }}
               onBlur={() => {
-                saveChanges(true, 'general');
+                if (username !== uname) {
+                  saveChanges(true, 'general');
+                }
               }}
             ></Input>
             <div className={styles.common_space}>{t('settings.general.lang')}:</div>
             <Select
+              prefix={<SelectPrefix type="lang" svgSize={16} color="#22CCEE"></SelectPrefix>}
               options={langOptions}
               value={locale}
               onChange={(e) => {

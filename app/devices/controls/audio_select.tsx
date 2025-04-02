@@ -2,7 +2,8 @@ import { Select } from 'antd';
 import { MediaDeviceKind } from '@/lib/std/device';
 import { useMediaDevices } from '@livekit/components-react';
 import { useEffect, useState } from 'react';
-import { SvgResource } from '@/app/resources/svg';
+import { SelectPrefix } from './select_prefix';
+
 
 export function AudioSelect({ className }: { className?: string }) {
   const devices = useMediaDevices({
@@ -37,9 +38,8 @@ export function AudioSelect({ className }: { className?: string }) {
 
   return (
     <Select
-      prefix={<SvgResource type="audio" color="#22CCEE" svgSize={14}></SvgResource>}
+      prefix={<SelectPrefix type="audio" color="#22CCEE" svgSize={16}></SelectPrefix>}
       className={className}
-      size="large"
       defaultValue={active_audio}
       options={items}
       value={active_audio}
