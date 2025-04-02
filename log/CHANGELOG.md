@@ -8,6 +8,26 @@
 ### Features
 
 - Settings
+  - [x] General
+    - [x] Username
+    - [x] language
+    - [ ] User status
+  - [x] Audio
+    - [x] Volume
+    - [x] Selection
+  - [ ] Video
+    - [ ] Blur
+    - [x] Selection
+    - [ ] Screen Blur
+  - [ ] Virtual
+    - [ ] Models
+    - [ ] Backgrounds
+    - [ ] Active or not
+    - [ ] Detect check
+  - [x] About Us
+- language change
+- tab for different way to room
+
 
 
 ## v0.1.2

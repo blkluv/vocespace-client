@@ -34,22 +34,23 @@
 
 #### Settings
 
-- [ ] General
-  - [ ] Username
+- [x] General
+  - [x] Username
+  - [x] language
   - [ ] User status
-- [ ] Audio
-  - [ ] Volume
-  - [ ] Selection
+- [x] Audio
+  - [x] Volume
+  - [x] Selection
 - [ ] Video
   - [ ] Blur
-  - [ ] Selection
+  - [x] Selection
   - [ ] Screen Blur
 - [ ] Virtual
   - [ ] Models
   - [ ] Backgrounds
   - [ ] Active or not
   - [ ] Detect check
-- [ ] About Us
+- [x] About Us
 
 #### RPC
 
