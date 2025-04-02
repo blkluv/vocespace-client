@@ -2,7 +2,7 @@
 
 REPO_URL="https://github.com/Privoce/vocespace-client.git"
 BRANCH="vocespace_com"
-ROOT_PATH="/root/vocespace-client/"
+ROOT_PATH="/var/vocespace/"
 PKG_NAME="vocespace_com"
 LOG_FILE="deploy_com.log"
 LOG_SRC="/root/deploy_log"
@@ -48,3 +48,20 @@ else
     echo "SYSTEM: pull vocespace_com from github repo success" >> $LOG_PATH
 fi
 
+#==========================================================================#
+# chmod for index.html ----------------------------------------------------#
+#==========================================================================#
+cd $ROOT_PATH/$PKG_NAME
+if [ -f index.html ]; then
+    chmod +rwx index.html
+    if [ $? -ne 0 ]; then
+        echo "chmod index.html failed!" >> $LOG_PATH
+        echo $ERROR_FMT
+        exit 1
+    fi
+    echo "SYSTEM: chmod index.html success" >> $LOG_PATH
+else
+    echo "index.html not found!" >> $LOG_PATH
+    echo $ERROR_FMT
+    exit 1
+fi
