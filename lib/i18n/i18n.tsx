@@ -35,6 +35,8 @@ export function I18nProvider({ children, initialLocale = 'en' }: I18nProviderPro
     const browserLocale = navigator.language.split('-')[0];
     if (Object.keys(translations).includes(browserLocale)) {
       setLocale(browserLocale);
+    } else {
+      setLocale(initialLocale);
     }
   }, []);
 
@@ -83,4 +85,4 @@ export const langOptions = [
     value: 'zh',
     label: '简体中文',
   },
-]
+];

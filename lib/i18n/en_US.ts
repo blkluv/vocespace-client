@@ -39,7 +39,7 @@ export default {
     title: 'Settings',
     general: {
       title: 'General',
-      username: "Username",
+      username: 'Username',
       lang: 'Language',
     },
     audio: {
@@ -59,8 +59,8 @@ export default {
     },
     about_us: {
       title: 'About Us',
-      brief: "Secure Video Calls Under Your Domain and Brand",
-      desc: "We will help you host your own secure video and audio conferencing platform under your subdomain with your own logo and branding. Complete control over your data with enterprise-grade encryption."
+      brief: 'Secure Video Calls Under Your Domain and Brand',
+      desc: 'We will help you host your own secure video and audio conferencing platform under your subdomain with your own logo and branding. Complete control over your data with enterprise-grade encryption.',
     },
     device: {
       audio: {
@@ -112,6 +112,11 @@ export default {
       other: {
         permission: 'Failed to request permission.',
       },
+      user: {
+        username: {
+          change: 'Username changed failed',
+        },
+      },
     },
     request: {
       device: {
@@ -153,6 +158,12 @@ export default {
     success: {
       device: {
         granted: 'Media permissions have been successfully granted.',
+      },
+      user: {
+        username: {
+          change: 'Username changed successfully',
+        },
+        lang: "Language changed successfully",
       },
     },
   },

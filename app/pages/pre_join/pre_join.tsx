@@ -16,6 +16,7 @@ import { useRecoilState } from 'recoil';
 import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { src, ulid } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
+import { LangSelect } from '@/app/devices/controls/lang_select';
 
 export function PreJoin({
   defaults = {},
@@ -120,7 +121,6 @@ export function PreJoin({
         audioDeviceId,
       };
       setUserChoices(newUserChoices);
-      console.warn('用户名更新后的选项:', newUserChoices);
     }
   }, [username, videoEnabled, videoDeviceId, audioEnabled, audioDeviceId]);
 
@@ -169,6 +169,9 @@ export function PreJoin({
   };
   return (
     <div className={styles.view}>
+      <span className={styles.view__lang_select}>
+        <LangSelect></LangSelect>
+      </span>
       <div className={styles.view__video}>
         {videoTrack && videoEnabled && (
           <video

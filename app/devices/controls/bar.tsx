@@ -150,6 +150,7 @@ export function Controls({
   );
 
   // settings ------------------------------------------------------------------------------------------
+  const room = useMaybeRoomContext();
 
   const [key, set_key] = React.useState<TabKey>('general');
   const [virtualEnabled, setVirtualEnabled] = React.useState(false);
@@ -172,7 +173,28 @@ export function Controls({
     // }
   };
 
-  const saveChanges = async (save: boolean, key: TabKey) => {};
+  const saveChanges = async (save: boolean, key: TabKey) => {
+    switch (key) {
+      case 'general': {
+        const new_name = settingsRef.current?.username;
+        if (new_name) {
+          // rename_user_and_store(username, new_name);
+          saveUsername(new_name);
+          // await localParticipant.setName(settings_ref.current?.username);
+          if (room) {
+            try {
+              await room.localParticipant?.setMetadata(JSON.stringify({ name: new_name }));
+              await room.localParticipant.setName(new_name);
+              messageApi.success(t('msg.success.user.username.change'));
+            } catch (error) {
+              messageApi.error(t('msg.error.user.username.change'));
+            }
+          }
+        }
+        break;
+      }
+    }
+  };
 
   return (
     <div {...htmlProps}>
@@ -287,12 +309,9 @@ export function Controls({
                 setScreenBlur,
               },
             }}
-            user={{
-              username: userChoices.username,
-              saveUsername,
-            }}
+            username={userChoices.username}
             tab_key={{ key, set_key }}
-            save_changes={saveChanges}
+            saveChanges={saveChanges}
           ></Settings>
         </div>
       </Drawer>

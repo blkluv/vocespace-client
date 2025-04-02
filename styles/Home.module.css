@@ -39,3 +39,9 @@
   border-radius: 0.5rem;
   width: 400px;
 }
+
+.lang_select{
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}

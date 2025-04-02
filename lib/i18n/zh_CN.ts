@@ -108,6 +108,11 @@ export default {
       other: {
         permission: '请求权限失败。',
       },
+      user: {
+        username: {
+          change: '用户名修改失败',
+        },
+      },
     },
     request: {
       device: {
@@ -147,6 +152,12 @@ export default {
     success: {
       device: {
         granted: '已成功授予媒体权限。',
+      },
+      user: {
+        username: {
+          change: '用户名修改成功',
+        },
+        lang: "语言修改成功",
       },
     },
   },
