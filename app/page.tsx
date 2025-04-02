@@ -74,6 +74,7 @@ function DemoMeetingTab(props: { label: string }) {
           <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
             <label htmlFor="passphrase"> {t('common.passphrase')}</label>
             <input
+              className="lk-form-control"
               id="passphrase"
               type="password"
               value={sharedPassphrase}
