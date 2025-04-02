@@ -132,6 +132,9 @@ export function VideoContainer({
   ]);
 
   //   useWarnAboutMissingStyles();
+  const audioVolume = React.useMemo(() => {
+    return device.volme / 100.0;
+  }, [device.volme]);
 
   return (
     <div className="lk-video-conference" {...props}>
@@ -177,8 +180,7 @@ export function VideoContainer({
           )}
         </LayoutContextProvider>
       )}
-      {/* volume={device.volme / 100.0} */}
-      <RoomAudioRenderer />
+      <RoomAudioRenderer volume={audioVolume} />
       <ConnectionStateToast />
     </div>
   );
