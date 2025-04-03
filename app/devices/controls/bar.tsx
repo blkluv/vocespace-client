@@ -3,7 +3,6 @@ import {
   ChatIcon,
   ChatToggle,
   DisconnectButton,
-  GearIcon,
   LeaveIcon,
   MediaDeviceMenu,
   StartMediaButton,
@@ -11,14 +10,11 @@ import {
   useLocalParticipantPermissions,
   useMaybeLayoutContext,
   useMaybeRoomContext,
-  useMediaDeviceSelect,
   usePersistentUserChoices,
-  useTracks,
 } from '@livekit/components-react';
 import { Button, Drawer, message } from 'antd';
-import { LocalAudioTrack, RoomEvent, Track } from 'livekit-client';
+import { Track } from 'livekit-client';
 import * as React from 'react';
-// import { Settings } from './settings';
 import { SettingToggle } from './setting_toggle';
 import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
@@ -26,7 +22,7 @@ import { Settings, SettingsExports, TabKey } from './settings';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
 import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
-import { MediaDeviceKind } from '@/lib/std/device';
+import { ParticipantSettings } from '@/lib/hooks/room_settings';
 
 /** @public */
 export type ControlBarControls = {
@@ -73,8 +69,11 @@ export function Controls({
   controls,
   saveUserChoices = true,
   onDeviceError,
+  updateSettings,
   ...props
-}: ControlBarProps) {
+}: ControlBarProps & {
+  updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
+}) {
   const { t } = useI18n();
   const [isChatOpen, setIsChatOpen] = React.useState(false);
   const [settingVis, setSettingVis] = React.useState(false);
@@ -173,7 +172,7 @@ export function Controls({
     // }
   };
 
-  const saveChanges = async (save: boolean, key: TabKey) => {
+  const saveChanges = async (key: TabKey) => {
     switch (key) {
       case 'general': {
         const new_name = settingsRef.current?.username;
@@ -196,7 +195,17 @@ export function Controls({
         break;
       }
       case 'video': {
-        setDevice({ ...device, blur: videoBlur, screenBlur: screenBlur });
+        setDevice({ ...device, blur: videoBlur });
+        await updateSettings({
+          blur: videoBlur,
+        });
+        break;
+      }
+      case 'screen': {
+        setDevice({ ...device, screenBlur: screenBlur });
+        await updateSettings({
+          screenBlur: screenBlur,
+        });
         break;
       }
     }

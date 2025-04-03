@@ -7,6 +7,7 @@ interface RoomSettings {
     participants: {
       [participantId: string]: {
         blur: number;
+        screenBlur: number;
       };
     };
   };

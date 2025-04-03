@@ -5,8 +5,10 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import styles from '@/styles/Home.module.css';
-import { Input, Radio } from 'antd';
+import { Input, message, Radio } from 'antd';
 import { CheckboxGroupProps } from 'antd/es/checkbox';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { MessageInstance } from 'antd/es/message/interface';
 
 /**
  * # DemoMeetingTab
@@ -20,6 +22,7 @@ import { CheckboxGroupProps } from 'antd/es/checkbox';
 export function DemoMeetingTab(props: { label: string }) {
   const { t } = useI18n();
   const router = useRouter();
+  const [messageApi, contextHolder] = message.useMessage();
   const [e2ee, setE2ee] = useState(false);
   const [roomUrl, setRoomUrl] = useState('');
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
@@ -35,12 +38,20 @@ export function DemoMeetingTab(props: { label: string }) {
       if (roomUrl == '') {
         router.push(`/rooms/${generateRoomId()}`);
       } else {
-        router.push(`/rooms/${roomUrl}`);
+        // 对roomUrl进行判断，如果是个有效的网址则直接跳转，否则跳转到房间
+        isAllowUrlAnd(
+          roomUrl,
+          router,
+          messageApi,
+          t('msg.error.room.invalid'),
+        )
+        
       }
     }
   };
   return (
     <div className={styles.tabContent}>
+      {contextHolder}
       <Radio.Group
         block
         options={options}
@@ -54,12 +65,12 @@ export function DemoMeetingTab(props: { label: string }) {
           setOptionVal(e.target.value);
         }}
       />
-      <p style={{ margin: 0 }}>
+      <p style={{ margin: 0, textAlign: 'justify' }}>
         {optionVal == 'demo' ? t('msg.info.try_free') : t('msg.info.try_enter_room')}
       </p>
       {optionVal == 'custom' && (
         <Input
-          size='large'
+          size="large"
           type="text"
           placeholder={t('msg.info.enter_room')}
           value={roomUrl}
@@ -106,3 +117,36 @@ export function DemoMeetingTab(props: { label: string }) {
     </div>
   );
 }
+
+const AllowUrls = ['vocespace.com', 'space.voce.chat'];
+
+// 判断是否是允许的url，如果是则跳转，如果是房间名则拼接
+const isAllowUrlAnd = (
+  url: string,
+  router: AppRouterInstance,
+  messageApi: MessageInstance,
+  msg: string,
+) => {
+  // 判断是否是允许的url，拼接AllowUrls，并且可能是没有AllowUrls的，当用户输入的只是一个房间名时
+  // 格式为: ^(https?:\/\/)?(vocespace.com|space.voce.chat)?\/rooms\/([a-zA-Z0-9_-]+)$
+  let regax = new RegExp(
+    `^(https?:\/\/)?(vocespace.com|space.voce.chat)?(\/rooms\/)?([a-zA-Z0-9_-]+)$`,
+  );
+  let match = url.match(regax);
+  if (match) {
+    // 如果是允许的url，且allowUrls是vocespace.com则内部跳转，是space.voce.chat则外部跳转
+    if (match[2] == AllowUrls[0]) {
+      // 内部跳转
+      router.push(`/rooms/${match[3]}`);
+    } else if (match[2] == AllowUrls[1]) {
+      // 外部跳转
+      router.replace(`https://${match[2]}/rooms/${match[3]}`);
+    }else if (!match[1] && !match[2] && !match[3]) {
+      // 如果是房间名则拼接
+      router.push(`/rooms/${match[4]}`);
+    }
+  } else {
+    // 如果不是允许的url
+    messageApi.error(msg);
+  }
+};

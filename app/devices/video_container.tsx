@@ -4,7 +4,6 @@ import {
   Chat,
   ConnectionStateToast,
   ControlBar,
-  FocusLayout,
   FocusLayoutContainer,
   GridLayout,
   isTrackReference,
@@ -33,6 +32,7 @@ import { useRecoilState } from 'recoil';
 import { deviceState } from '../rooms/[roomName]/PageClientImpl';
 import { ParticipantItem } from '../pages/participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
+import { FocusLayout } from '../pages/layout/focus';
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -159,12 +159,23 @@ export function VideoContainer({
                     {/* <ParticipantTile /> */}
                     <ParticipantItem blurs={settings}></ParticipantItem>
                   </CarouselLayout>
-                  {focusTrack && <FocusLayout trackRef={focusTrack} />}
+                  {focusTrack && (
+                    <FocusLayout
+                      trackRef={focusTrack}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      blurs={settings}
+                    >
+                      {/* <ParticipantItem blurs={settings}></ParticipantItem> */}
+                    </FocusLayout>
+                  )}
                 </FocusLayoutContainer>
               </div>
             )}
             {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
-            <Controls controls={{ chat: true, settings: !!SettingsComponent }}></Controls>
+            <Controls
+              controls={{ chat: true, settings: !!SettingsComponent }}
+              updateSettings={updateSettings}
+            ></Controls>
           </div>
           <Chat
             style={{ display: widgetState.showChat ? 'grid' : 'none' }}

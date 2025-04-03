@@ -12,8 +12,8 @@ export default {
     loading: '加载中...',
     no_data: '暂无数据',
     no_more: '没有更多了',
-    demo: '演示',
-    custom: '自定义',
+    demo: '新会议',
+    custom: '会议房间',
     start_metting: '开始会议',
     join_room: '加入房间',
     passphrase: '密码',
@@ -83,10 +83,10 @@ export default {
       contact: '请联系',
       learn_more: '了解更多',
       try_free: '通过我们的现场演示项目免费试用 Voce Space。',
-      try_enter_room: '通过房间号加入指定会议或创建新会议。',
+      try_enter_room: '通过房间名加入指定会议或创建新会议。',
       connect_with_server: '使用 Voce Space Server 将 Voce Space 与自定义服务器连接。',
       enabled_e2ee: '启用端到端加密',
-      enter_room: '请输入房间号'
+      enter_room: '请输入房间名或链接'
     },
     error: {
       e2ee: {
@@ -95,6 +95,7 @@ export default {
       room: {
         unexpect: '遇到意外错误，请检查控制台日志了解详细信息。',
         network: '连接错误，请检查您的网络连接并重试。',
+        invalid: '房间不存在，请检查房间名称或链接。',
       },
       device: {
         in_use: '设备已被占用，请检查其他应用程序是否正在使用它。',

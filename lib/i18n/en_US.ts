@@ -12,8 +12,8 @@ export default {
     loading: 'Loading...',
     no_data: 'No data available',
     no_more: 'No more data',
-    demo: 'Demo',
-    custom: 'Custom',
+    demo: 'New meeting',
+    custom: 'Meeting space',
     start_metting: 'Start Meeting',
     join_room: 'Join Room',
     passphrase: 'Password',
@@ -84,9 +84,10 @@ export default {
       contact: 'Contact',
       learn_more: 'Learn More',
       try_free: 'Try Voce Space for free through our live demo project.',
+      try_enter_room: 'Enter a name to join or create a space.',
       connect_with_server: 'Connect Voce Space with a custom server using Voce Space Server.',
       enabled_e2ee: 'End-to-end encryption enabled',
-      enter_room: 'Please enter the room',
+      enter_room: 'Please enter the space name or link',
     },
     error: {
       e2ee: {
@@ -97,6 +98,7 @@ export default {
         unexpect:
           'An unexpected error has occurred. Please check the console logs for more details.',
         network: 'Connection error. Please check your network connection and try again.',
+        invalid: 'Room does not exist. Please check the room name or link.',
       },
       device: {
         in_use: 'The device is currently in use. Please check if other applications are using it.',

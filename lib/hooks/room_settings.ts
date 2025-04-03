@@ -2,8 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { connect_endpoint } from '../std';
 
-interface ParticipantSettings {
+export interface ParticipantSettings {
   blur: number;
+  screenBlur: number;
 }
 
 interface RoomSettings {

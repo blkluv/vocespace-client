@@ -35,7 +35,7 @@ export interface SettingsProps {
     key: TabKey;
     set_key: (e: TabKey) => void;
   };
-  saveChanges: (e: boolean, tab_key: TabKey) => void;
+  saveChanges: (tab_key: TabKey) => void;
   messageApi: MessageInstance;
 }
 
@@ -43,7 +43,7 @@ export interface SettingsExports {
   username: string;
 }
 
-export type TabKey = 'general' | 'audio' | 'video' | 'virtual' | 'about_us';
+export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'virtual' | 'about_us';
 
 export const Settings = forwardRef<SettingsExports, SettingsProps>(
   (
@@ -83,7 +83,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               }}
               onBlur={() => {
                 if (username !== uname) {
-                  saveChanges(true, 'general');
+                  saveChanges('general');
                 }
               }}
             ></Input>
@@ -108,7 +108,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 className={styles.common_space}
                 onChange={(e) => {
                   setVolume(e);
-                  saveChanges(true, 'audio');
+                  saveChanges('audio');
                 }}
               />
             </div>
@@ -135,7 +135,10 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 step={0.05}
                 onChange={(e) => {
                   setVideoBlur(e);
-                  saveChanges(true, 'video');
+                }}
+                onChangeComplete={(e) => {
+                  setVideoBlur(e);
+                  saveChanges('video');
                 }}
               />
             </div>
@@ -150,7 +153,10 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 step={0.05}
                 onChange={(e) => {
                   setScreenBlur(e);
-                  saveChanges(true, 'video');
+                }}
+                onChangeComplete={(e) => {
+                  setScreenBlur(e);
+                  saveChanges('screen');
                 }}
               />
             </div>

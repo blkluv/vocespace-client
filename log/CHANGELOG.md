@@ -15,10 +15,10 @@
   - [x] Audio
     - [x] Volume
     - [x] Selection
-  - [ ] Video
-    - [ ] Blur
+  - [x] Video
+    - [x] Blur
     - [x] Selection
-    - [ ] Screen Blur
+    - [x] Screen Blur
   - [ ] Virtual
     - [ ] Models
     - [ ] Backgrounds
@@ -27,9 +27,11 @@
   - [x] About Us
 - language change
 - tab for different way to room
+- [ ] enter room by using link
 
 
-
+格式为: ^(https?:\/\/)?(vocespace.com|space.voce.chat)\/rooms\/([a-zA-Z0-9]+)$
+router.push(`/rooms/${roomUrl}`);
 ## v0.1.2
 
 - date: 2025-03-28
