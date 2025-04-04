@@ -5,7 +5,6 @@ export enum ModelRole {
   Mark = 'Mark',
   Natori = 'Natori',
   Rice = 'Rice',
-  Wanko = 'Wanko',
 }
 
 export enum ModelBg {

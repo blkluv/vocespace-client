@@ -1,4 +1,16 @@
-import { Card, Input, List, message, Select, Slider, Switch, Tabs, TabsProps } from 'antd';
+import {
+  Card,
+  Divider,
+  Input,
+  List,
+  message,
+  Select,
+  Slider,
+  Spin,
+  Switch,
+  Tabs,
+  TabsProps,
+} from 'antd';
 import styles from '@/styles/controls.module.scss';
 import { forwardRef, RefAttributes, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import * as faceapi from 'face-api.js';
@@ -11,6 +23,8 @@ import { AudioSelect } from './audio_select';
 import { VideoSelect } from './video_select';
 import { SelectPrefix } from './select_prefix';
 import { LangSelect } from './lang_select';
+import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
+import { src } from '@/lib/std';
 
 export interface SettingsProps {
   microphone: {
@@ -293,7 +307,6 @@ export const VirtualSettings = forwardRef<
     const [model_selected_index, set_model_selected_index] = useState(0);
     const [bg_selected_index, set_bg_selected_index] = useState(0);
     // const [use, set_use] = useState(false);
-    const [detector_ready, set_detector_ready] = useState(false);
 
     const modelDatas = [
       {
@@ -319,10 +332,6 @@ export const VirtualSettings = forwardRef<
       {
         name: 'Rice',
         src: 'Rice.png',
-      },
-      {
-        name: 'Wanko',
-        src: 'Wanko.png',
       },
     ];
 
@@ -368,14 +377,17 @@ export const VirtualSettings = forwardRef<
                     onClick={() => {
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
+                      if (enabled) {
+                        setEnabled(false);
+                        setTimeout(() => {
+                          setEnabled(true);
+                        }, 200);
+                      }
                     }}
                   >
                     {model_selected_index == index && <SelectedMask></SelectedMask>}
                     <h4>{item.name}</h4>
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/models/${item.src}`}
-                      alt=""
-                    />
+                    <img src={src(`/images/models/${item.src}`)} alt="" />
                   </div>
                 </List.Item>
               )}
@@ -401,14 +413,17 @@ export const VirtualSettings = forwardRef<
                     onClick={() => {
                       set_bg_selected_index(index);
                       setModelBg(item.src as ModelBg);
+                      if (enabled) {
+                        setEnabled(false);
+                        setTimeout(() => {
+                          setEnabled(true);
+                        }, 200);
+                      }
                     }}
                   >
                     {bg_selected_index == index && <SelectedMask></SelectedMask>}
                     <h4>{item.name}</h4>
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/bg/${item.src}`}
-                      alt=""
-                    />
+                    <img src={src(`/images/bg/${item.src}`)} alt="" />
                   </div>
                 </List.Item>
               )}
@@ -418,52 +433,7 @@ export const VirtualSettings = forwardRef<
       },
     ];
 
-    // 单次检测人脸，主要用于测试
-    const detectFace = async (videoele: HTMLVideoElement) => {
-      if (!detector_ready) {
-        await new Promise<void>((resolve) => {
-          const checkDetector = () => {
-            if (detector_ready) {
-              resolve();
-            } else {
-              console.log('等待检测器...');
-              setTimeout(checkDetector, 2000);
-            }
-          };
-          checkDetector();
-        });
-      }
-      try {
-        const detection = await faceapi.detectSingleFace(
-          videoele,
-          new faceapi.TinyFaceDetectorOptions(),
-        );
-
-        if (detection) {
-          console.log('检测到人脸', detection);
-          const { x, y, width, height } = detection.box;
-          const centerX = x + width / 2;
-          const centerY = y + height / 2;
-          return { centerX, centerY };
-        }
-      } catch (e) {
-        console.error('Failed to detect face:', e);
-      }
-      return null;
-    };
-
     useEffect(() => {
-      const loadFaceDetection = async () => {
-        try {
-          await faceapi.loadTinyFaceDetectorModel(
-            `${process.env.NEXT_PUBLIC_BASE_PATH}/models/tiny_face_detector_model-weights_manifest.json`,
-          );
-          set_detector_ready(true);
-        } catch (error) {
-          messageApi.error('failed to load face detection model');
-        }
-      };
-      loadFaceDetection();
       loadVideo(videoRef);
       return () => {
         if (videoRef.current && videoRef.current.srcObject) {
@@ -471,57 +441,40 @@ export const VirtualSettings = forwardRef<
           stream.getTracks().forEach((track) => track.stop());
         }
       };
-    }, [loadVideo]);
-
-    // useImperativeHandle(ref, () => ({
-    //   enabled: use,
-    //   model_role: modelDatas[model_selected_index].name as ModelRole,
-    //   model_bg: bgDatas[bg_selected_index].src as ModelBg,
-    // }));
+    }, [loadVideo, enabled]);
 
     return (
       <div className={styles.virtual_settings}>
         <div className={styles.virtual_settings_header}>
           <span>{t('settings.virtual.open')}:</span>
-          <Switch value={enabled} onClick={() => setEnabled(!enabled)}></Switch>
+          <Switch
+            value={enabled}
+            onClick={() => {
+              const val = !enabled;
+              setEnabled(val);
+            }}
+          ></Switch>
         </div>
         <div className={styles.virtual_video_box}>
-          <div className={styles.virtual_video_box_preview}>
-            <img
-              className={styles.virtual_video_box_preview_model}
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/models/${modelDatas[model_selected_index].src}`}
-              alt=""
-            />
-            <img
-              className={styles.virtual_video_box_preview_bg}
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/bg/${bgDatas[bg_selected_index].src}`}
-              alt=""
-            />
-          </div>
-          <button
-            className={styles.virtual_video_box_test_btn}
-            onClick={async () => {
-              // 执行一次人脸检测测试
-              if (videoRef.current && videoRef.current.readyState >= 2) {
-                const pos = await detectFace(videoRef.current);
-                if (pos) {
-                  messageApi.success('success to detect face');
-                }
-              } else {
-                messageApi.error('video element is not ready');
-              }
-            }}
-          >
-            detect face
-          </button>
           <video
-            ref={videoRef}
+            className={enabled ? '' : styles.virtual_video_box_video}
             style={{
-              border: trackingActive ? '2px solid #22CCEE' : '2px solid #efefef',
+              visibility: enabled ? 'hidden' : 'visible',
             }}
+            ref={videoRef}
             playsInline
             muted
           />
+          {enabled && (
+            <div className={styles.virtual_video_box_canvas}>
+              <VirtualRoleCanvas
+                video_ele={videoRef}
+                model_bg={modelBg}
+                model_role={modelRole}
+                enabled
+              ></VirtualRoleCanvas>
+            </div>
+          )}
         </div>
         <Tabs
           defaultActiveKey="general"

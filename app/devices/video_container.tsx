@@ -26,13 +26,12 @@ import {
   RpcInvocationData,
   Track,
 } from 'livekit-client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
 import { deviceState } from '../rooms/[roomName]/PageClientImpl';
 import { ParticipantItem } from '../pages/participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
-import { FocusLayout } from '../pages/layout/focus';
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -43,6 +42,7 @@ export function VideoContainer({
 }: VideoConferenceProps) {
   const room = useMaybeRoomContext();
   const [device, setDevice] = useRecoilState(deviceState);
+  const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
   const { settings, updateSettings, fetchSettings, setSettings } = useRoomSettings(
     room?.name || '', // 房间 ID
     room?.localParticipant?.identity || '', // 参与者 ID
@@ -79,8 +79,13 @@ export function VideoContainer({
   );
 
   const widgetUpdate = (state: WidgetState) => {
-    console.debug('updating widget state', state);
-    setWidgetState(state);
+    if (cacheWidgetState && cacheWidgetState == state) {
+      return;
+    } else {
+      console.debug('updating widget state', state);
+      setCacheWidgetState(state);
+      setWidgetState(state);
+    }
   };
 
   const layoutContext = useCreateLayoutContext();
@@ -160,13 +165,13 @@ export function VideoContainer({
                     <ParticipantItem blurs={settings}></ParticipantItem>
                   </CarouselLayout>
                   {focusTrack && (
-                    <FocusLayout
-                      trackRef={focusTrack}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      blurs={settings}
-                    >
-                      {/* <ParticipantItem blurs={settings}></ParticipantItem> */}
-                    </FocusLayout>
+                    // <FocusLayout
+                    //   trackRef={focusTrack}
+                    //   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    //   blurs={settings}
+                    // >
+                    // </FocusLayout>
+                    <ParticipantItem blurs={settings} trackRef={focusTrack}></ParticipantItem>
                   )}
                 </FocusLayoutContainer>
               </div>
