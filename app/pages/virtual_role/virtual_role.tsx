@@ -32,7 +32,7 @@ export const Live2DComponent = ({
   const smoothnessFactorRef = useRef(0.25); // 添加平滑过渡因子 (0-1之间，越小越平滑)
   // 实现连续头部追踪的函数
   const startFaceTracking = (model: any, videoElement: HTMLVideoElement) => {
-    if (!enabled) return () => {};
+    if (!enabled || trackingActive) return () => {};
 
     // 如果已经有追踪在进行，先停止它
     if (trackingRef.current !== null) {
@@ -42,9 +42,10 @@ export const Live2DComponent = ({
 
     // 创建追踪函数
     const track = async () => {
-      if (!videoElement || !model) {
+      if (!videoElement || !model || !enabled) {
         console.log('视频或模型不可用，停止追踪');
         setTrackingActive(false);
+        trackingRef.current = null;
         return;
       }
       const detection = await faceapi
@@ -53,13 +54,14 @@ export const Live2DComponent = ({
 
       // 限制检测频率，减少资源占用
       const now = Date.now();
-      if (!lastDetectionAt || now - lastDetectionAt > 100) {
-        // 每100ms检测一次
+      if (!lastDetectionAt || now - lastDetectionAt > 460) {
         try {
           if (detection) {
             setIsLoading(false);
+            if (!trackingActive) {
+              setTrackingActive(true);
+            }
             // 设置追踪状态
-            setTrackingActive(true);
             const landmarks = detection.landmarks;
             const leftEye = landmarks.getLeftEye();
             const rightEye = landmarks.getRightEye();
@@ -102,7 +104,7 @@ export const Live2DComponent = ({
             // 添加轻微的自然偏移来模拟人眼微动
             const microMovementX = Math.sin(Date.now() / 2000) * 5;
             const microMovementY = Math.cos(Date.now() / 2500) * 3;
-            console.log('微动:', microMovementX, microMovementY);
+            console.log('微动:', realX + microMovementX, realY + microMovementY);
             // 应用focus
             model.focus(realX + microMovementX, realY + microMovementY);
           }
@@ -281,7 +283,7 @@ export const Live2DComponent = ({
 
         Live2DModel.registerTicker(PIXI.Ticker);
         const canvasele = document.getElementById('virtual_role_canvas') as HTMLCanvasElement;
-
+       
         // 初始化 PIXI 应用
         const app = new PIXI.Application({
           view: canvasele,
@@ -313,21 +315,30 @@ export const Live2DComponent = ({
           // 设置口型同步
           const motionSync = new MotionSync(model.internalModel);
           let motion_file = '';
+          let anchor_y = 0.15;
+          let scale = 0.25;
           switch (model_role) {
             case ModelRole.Haru: {
               motion_file = 'haru_g_idle.motion3';
+              anchor_y = 0.1;
+              scale = 0.48;
               break;
             }
             case ModelRole.Hiyori: {
               motion_file = 'Hiyori_m01.motion3';
+              anchor_y = 0.1;
+              scale = 0.46;
               break;
             }
             case ModelRole.Mao: {
               motion_file = 'mtn_01.motion3';
+              anchor_y = 0.15;
               break;
             }
             case ModelRole.Mark: {
               motion_file = 'mark_m01.motion3';
+              anchor_y = 0.3;
+              scale = 0.45;
               break;
             }
             case ModelRole.Natori: {
@@ -352,47 +363,26 @@ export const Live2DComponent = ({
 
           // 添加到舞台并进行基本设置
           app.stage.addChild(model);
-          model.anchor.set(0.5, 0.15);
+          model.anchor.set(0.5, anchor_y);
           model.position.set(app.screen.width / 2, app.screen.height / 2);
-          model.scale.set(0.25);
+          model.scale.set(scale);
+          console.error(app.screen);
           setScreenSize({
-            width: app.screen.width,
-            height: app.screen.height,
+            width: canvasele.clientWidth,
+            height: canvasele.clientHeight,
           });
           // 添加窗口大小调整监听
           const resizeHandler = () => {
-            bg.width = app.screen.width;
-            bg.height = app.screen.height;
-            model.position.set(app.screen.width / 2, app.screen.height / 2);
+            bg.width = canvasele.clientWidth;
+            bg.height = canvasele.clientHeight;
+            model.position.set(canvasele.clientWidth / 2, canvasele.clientHeight / 2);
           };
 
-          window.addEventListener('resize', resizeHandler);
-
-          // 开始连续的头部追踪
-          if (videoRef.current) {
-            // 先进行一次单次检测测试
-            // const pos = await detectFace(videoRef.current);
-            // if (pos) {
-            //   console.log('初始人脸位置:', pos);
-            //   // 使用原始坐标测试
-            //   model.focus(pos.centerX, pos.centerY);
-            // }
-
-            // // 然后开始连续追踪
-            // console.log('开始连续头部追踪');
-            // const stopTracking = startFaceTracking(model, videoRef.current);
-
-            // 将停止追踪函数添加到清理函数中
-            const originalCleanup = cleanup;
-            cleanup = () => {
-              originalCleanup();
-              // stopTracking();
-            };
-          }
+          canvasele.addEventListener('resize', resizeHandler);
 
           // 设置清理函数
           cleanup = () => {
-            window.removeEventListener('resize', resizeHandler);
+            canvasele.removeEventListener('resize', resizeHandler);
             app.destroy(true);
             motionSync.reset();
             mediaStream.getTracks().forEach((track) => track.stop());
@@ -423,12 +413,13 @@ export const Live2DComponent = ({
     if (!enabled) {
       if (trackingRef.current !== null) {
         cancelAnimationFrame(trackingRef.current);
-        trackingRef.current = null;
-        setTrackingActive(false);
       }
+      trackingRef.current = null;
+      setTrackingActive(false);
       return;
     }
-    if (detectorReady && modelRef.current && videoRef.current) {
+    if (detectorReady && modelRef.current && videoRef.current && !trackingActive) {
+      console.warn('开始自动追踪');
       startFaceTracking(modelRef.current, videoRef.current);
       // const canvasElement = document.getElementById('virtual_role_canvas') as HTMLCanvasElement;
       // if (!canvasElement) return;
@@ -453,11 +444,11 @@ export const Live2DComponent = ({
       if (trackingRef.current !== null) {
         console.log('清理面部追踪');
         cancelAnimationFrame(trackingRef.current);
-        trackingRef.current = null;
-        setTrackingActive(false);
       }
+      trackingRef.current = null;
+      setTrackingActive(false);
     };
-  }, [detectorReady, modelRef.current, videoRef.current, enabled]);
+  }, [detectorReady, modelRef.current, videoRef.current, enabled, trackingActive]);
 
   return (
     <div ref={containerRef} className={styles.virtual_role}>
@@ -466,101 +457,6 @@ export const Live2DComponent = ({
         id="virtual_role_canvas"
         style={{ height: '100%', width: '100%', position: 'absolute' }}
       ></canvas>
-
-      {/* <video ref={videoRef} className={styles.virtual_role_video} playsInline muted /> */}
-
-      <div
-        style={{
-          position: 'absolute',
-          left: '10px',
-          bottom: '10px',
-          zIndex: 30,
-          display: 'flex',
-          gap: '8px',
-        }}
-      >
-        <button
-          style={{
-            padding: '8px 12px',
-            backgroundColor: trackingActive ? '#dc3545' : '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-          onClick={() => {
-            if (trackingActive) {
-              // 停止追踪
-              console.log('停止追踪');
-              if (trackingRef.current !== null) {
-                cancelAnimationFrame(trackingRef.current);
-              }
-              trackingRef.current = null;
-              setTrackingActive(false);
-            } else {
-              // 开始追踪
-              if (videoRef.current && modelRef.current) {
-                startFaceTracking(modelRef.current, videoRef.current);
-              } else {
-                alert('视频或模型未准备好');
-              }
-            }
-          }}
-        >
-          {trackingActive ? '停止头部追踪' : '开始头部追踪'}
-        </button>
-
-        {/* <button
-          style={{
-            padding: '8px 12px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-          onClick={async () => {
-            // 执行一次人脸检测测试
-            if (videoRef.current) {
-              const pos = await detectFace(videoRef.current);
-
-              if (pos && modelRef.current) {
-                // 归一化坐标
-                const normalizedX = (pos.centerX / videoRef.current.videoWidth) * 2 - 1;
-                const normalizedY = (pos.centerY / videoRef.current.videoHeight) * 2 - 1;
-
-                modelRef.current.focus(normalizedX, -normalizedY);
-                alert(`检测到人脸，坐标: (${normalizedX.toFixed(2)}, ${normalizedY.toFixed(2)})`);
-              } else {
-                alert('未检测到人脸');
-              }
-            } else {
-              alert('视频未准备好');
-            }
-          }}
-        >
-          测试人脸检测
-        </button> */}
-      </div>
-
-      {/* 状态显示 */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          color: 'white',
-          padding: '5px 10px',
-          borderRadius: '4px',
-          fontSize: '12px',
-          zIndex: 30,
-        }}
-      >
-        检测状态: {trackingActive ? '追踪中' : '未追踪'}
-        <br />
-        检测器: {detectorReady ? '已加载' : '加载中'}
-      </div>
     </div>
   );
 };
