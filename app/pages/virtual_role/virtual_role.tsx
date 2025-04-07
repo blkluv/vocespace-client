@@ -54,7 +54,7 @@ export const Live2DComponent = ({
 
       // 限制检测频率，减少资源占用
       const now = Date.now();
-      if (!lastDetectionAt || now - lastDetectionAt > 460) {
+      if (!lastDetectionAt || now - lastDetectionAt > 200) {
         try {
           if (detection) {
             setIsLoading(false);
@@ -283,11 +283,11 @@ export const Live2DComponent = ({
 
         Live2DModel.registerTicker(PIXI.Ticker);
         const canvasele = document.getElementById('virtual_role_canvas') as HTMLCanvasElement;
-       
+
         // 初始化 PIXI 应用
         const app = new PIXI.Application({
           view: canvasele,
-          resizeTo: window,
+          resizeTo: canvasele,
           autoStart: true,
           transparent: true,
         });
@@ -306,6 +306,7 @@ export const Live2DComponent = ({
           );
 
           const bg = await PIXI.Sprite.from(src(`/images/bg/${model_bg}`));
+          console.log('背景图加载完成', app.screen);
           bg.width = app.screen.width;
           bg.height = app.screen.height;
           app.stage.addChildAt(bg, 0);
@@ -315,38 +316,44 @@ export const Live2DComponent = ({
           // 设置口型同步
           const motionSync = new MotionSync(model.internalModel);
           let motion_file = '';
+          let anchor_x = 0.5;
           let anchor_y = 0.15;
           let scale = 0.25;
           switch (model_role) {
             case ModelRole.Haru: {
               motion_file = 'haru_g_idle.motion3';
-              anchor_y = 0.1;
-              scale = 0.48;
+              anchor_y = 0.12;
+              scale = 0.16;
               break;
             }
             case ModelRole.Hiyori: {
               motion_file = 'Hiyori_m01.motion3';
-              anchor_y = 0.1;
-              scale = 0.46;
+              anchor_y = 0.16;
+              scale = 0.16;
               break;
             }
             case ModelRole.Mao: {
               motion_file = 'mtn_01.motion3';
-              anchor_y = 0.15;
+              anchor_y = 0.20;
+              scale = 0.06;
               break;
             }
             case ModelRole.Mark: {
               motion_file = 'mark_m01.motion3';
-              anchor_y = 0.3;
-              scale = 0.45;
+              anchor_y = 0.32;
+              scale = 0.14;
               break;
             }
             case ModelRole.Natori: {
               motion_file = 'mtn_00.motion3';
+              scale = 0.14;
               break;
             }
             case ModelRole.Rice: {
               motion_file = 'mtn_01.motion3';
+              anchor_x = 0.65;
+              anchor_y = 0.2;
+              scale = 0.18;
               break;
             }
           }
@@ -363,21 +370,25 @@ export const Live2DComponent = ({
 
           // 添加到舞台并进行基本设置
           app.stage.addChild(model);
-          model.anchor.set(0.5, anchor_y);
+          model.anchor.set(anchor_x, anchor_y);
           model.position.set(app.screen.width / 2, app.screen.height / 2);
           model.scale.set(scale);
-          console.error(app.screen);
+
           setScreenSize({
-            width: canvasele.clientWidth,
-            height: canvasele.clientHeight,
+            width: app.screen.width,
+            height: app.screen.height,
           });
           // 添加窗口大小调整监听
           const resizeHandler = () => {
-            bg.width = canvasele.clientWidth;
-            bg.height = canvasele.clientHeight;
-            model.position.set(canvasele.clientWidth / 2, canvasele.clientHeight / 2);
+            console.error(app.screen);
+            bg.width = app.screen.width;
+            bg.height = app.screen.height;
+            model.position.set(app.screen.width / 2, app.screen.height / 2);
           };
-
+          // canvasele.addEventListener('pointermove', (event) => {
+          //   console.log('pointermove', event.clientX, event.clientY);
+          //   model.focus(event.clientX, event.clientY);
+          // });
           canvasele.addEventListener('resize', resizeHandler);
 
           // 设置清理函数
@@ -419,7 +430,7 @@ export const Live2DComponent = ({
       return;
     }
     if (detectorReady && modelRef.current && videoRef.current && !trackingActive) {
-      console.warn('开始自动追踪');
+      // console.warn('开始自动追踪');
       startFaceTracking(modelRef.current, videoRef.current);
       // const canvasElement = document.getElementById('virtual_role_canvas') as HTMLCanvasElement;
       // if (!canvasElement) return;
@@ -442,7 +453,7 @@ export const Live2DComponent = ({
         onVirtualStreamReady(null);
       }
       if (trackingRef.current !== null) {
-        console.log('清理面部追踪');
+        // console.log('清理面部追踪');
         cancelAnimationFrame(trackingRef.current);
       }
       trackingRef.current = null;
