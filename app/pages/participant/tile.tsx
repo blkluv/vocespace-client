@@ -1,6 +1,6 @@
 import { isTrackReferencePlaceholder } from '@/app/devices/video_container';
 
-import { useVideoBlur } from '@/lib/std/device';
+import { loadVideo, useVideoBlur } from '@/lib/std/device';
 import {
   AudioTrack,
   ConnectionQualityIndicator,
@@ -13,6 +13,7 @@ import {
   PinState,
   ScreenShareIcon,
   TrackMutedIndicator,
+  TrackReference,
   TrackReferenceOrPlaceholder,
   useEnsureTrackRef,
   useFeatureContext,
@@ -21,9 +22,13 @@ import {
   useMaybeLayoutContext,
   VideoTrack,
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import { LocalTrack, Track } from 'livekit-client';
 import React, { useEffect } from 'react';
-
+import VirtualRoleCanvas from '../virtual_role/live2d';
+import { ModelBg, ModelRole } from '@/lib/std/virtual';
+import { useRecoilState } from 'recoil';
+import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
+import styles from '@/styles/controls.module.scss';
 export interface ParticipantItemProps extends ParticipantTileProps {
   blurs: Record<string, { blur: number; screenBlur: number }>;
 }
@@ -33,6 +38,7 @@ export const ParticipantItem: (
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
   function ParticipantItem({ trackRef, blurs }: ParticipantItemProps, ref) {
     const videoRef = React.useRef<HTMLVideoElement>(null);
+    const [device, setDevice] = useRecoilState(deviceState);
     const trackReference = useEnsureTrackRef(trackRef);
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const layoutContext = useMaybeLayoutContext();
@@ -67,20 +73,35 @@ export const ParticipantItem: (
       },
       [trackReference, layoutContext],
     );
+    
 
     const deviceTrack = React.useMemo(() => {
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
-            <VideoTrack
-              ref={videoRef}
-              style={{
-                filter: `blur(${blurValue}px)`,
-              }}
-              trackRef={trackReference}
-              onSubscriptionStatusChanged={handleSubscribe}
-              manageSubscription={autoManageSubscription}
-            />
+            <div style={{ height: '100%', width: '100%' }}>
+              <VideoTrack
+                ref={videoRef}
+                style={{
+                  filter: `blur(${blurValue}px)`,
+                  visibility: device.virtualRole.enabled ? 'hidden' : 'visible',
+                }}
+                trackRef={trackReference}
+                onSubscriptionStatusChanged={handleSubscribe}
+                manageSubscription={autoManageSubscription}
+              />
+              {device.virtualRole.enabled && (
+                <div className={styles.virtual_video_box_canvas}>
+                  <VirtualRoleCanvas
+                    video_ele={videoRef}
+                    model_bg={device.virtualRole.bg}
+                    model_role={device.virtualRole.role}
+                    enabled={device.virtualRole.enabled}
+                    trackRef={trackReference}
+                  ></VirtualRoleCanvas>
+                </div>
+              )}
+            </div>
           );
         } else if (trackReference.source === Track.Source.ScreenShare) {
           return (
@@ -100,7 +121,7 @@ export const ParticipantItem: (
           );
         }
       }
-    }, [trackReference, loading, blurValue, videoRef]);
+    }, [trackReference, loading, blurValue, videoRef, device.virtualRole]);
 
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
@@ -161,3 +182,4 @@ export function isTrackReferencePinned(
     return false;
   }
 }
+

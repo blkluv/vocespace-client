@@ -19,6 +19,7 @@ export default {
     passphrase: 'Password',
     username: 'Username',
     setting: 'Setting',
+    compare: 'Compare Effect',
     device: {
       microphone: 'Microphone',
       volume: 'Microphone Volume',

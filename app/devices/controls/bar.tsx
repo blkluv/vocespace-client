@@ -155,6 +155,7 @@ export function Controls({
   const [virtualEnabled, setVirtualEnabled] = React.useState(false);
   const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.Haru);
   const [modelBg, setModelBg] = React.useState<ModelBg>(ModelBg.ClassRoom);
+  const [compare, setCompare] = React.useState(false);
   const settingsRef = React.useRef<SettingsExports>(null);
   const [messageApi, contextHolder] = message.useMessage();
   const [device, setDevice] = useRecoilState(deviceState);
@@ -162,15 +163,30 @@ export function Controls({
   const [videoBlur, setVideoBlur] = React.useState(device.blur);
   const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
   const closeSetting = () => {
-    // 当saved为false时 ,将record重新赋值给add_derivce_settings
-    // if (!saved) {
-    //   set_volume(record.microphone.other);
-    //   set_video_blur(record.video.blur);
-    //   set_screen_blur(record.screen.blur);
-    //   let username = userChoices.username;
-    //   use_stored_set(username, { device: record });
-    // }
+    setCompare(false);
   };
+  // 监听虚拟角色相关的变化 -------------------------------------------------
+  React.useEffect(()=>{
+    setDevice({...device, virtualRole: {
+      ...device.virtualRole,
+      bg: modelBg,
+    } })
+  }, [modelBg]);
+
+  React.useEffect(()=>{
+    setDevice({...device, virtualRole: {
+      ...device.virtualRole,
+      enabled: virtualEnabled,
+    } })
+  }, [modelRole]);
+
+  React.useEffect(()=>{
+    console.warn('virtualEnabled', virtualEnabled);
+    setDevice({...device, virtualRole: {
+      ...device.virtualRole,
+      enabled: virtualEnabled,
+    } })
+  }, [virtualEnabled]);
 
   const saveChanges = async (key: TabKey) => {
     switch (key) {
@@ -305,6 +321,8 @@ export function Controls({
               setModelRole: setModelRole,
               modelBg: modelBg,
               setModelBg: setModelBg,
+              compare,
+              setCompare
             }}
             ref={settingsRef}
             messageApi={messageApi}

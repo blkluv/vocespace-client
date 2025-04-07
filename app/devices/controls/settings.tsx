@@ -71,7 +71,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       },
       username: uname,
       tab_key: { key, set_key },
-      virtual: { enabled, setEnabled, modelRole, setModelRole, modelBg, setModelBg },
+      virtual: { enabled, setEnabled, modelRole, setModelRole, modelBg, setModelBg, compare, setCompare },
       saveChanges,
       messageApi,
     }: SettingsProps,
@@ -189,6 +189,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             setModelBg={setModelBg}
             enabled={enabled}
             setEnabled={setEnabled}
+            compare={compare}
+            setCompare={setCompare}
           ></VirtualSettings>
         ),
       },
@@ -281,6 +283,8 @@ export interface VirtualSettingsProps {
   setModelRole: (e: ModelRole) => void;
   modelBg: ModelBg;
   setModelBg: (e: ModelBg) => void;
+  compare: boolean;
+  setCompare: (e: boolean) => void;
 }
 
 export interface VirtualSettingsExports {}
@@ -298,6 +302,8 @@ export const VirtualSettings = forwardRef<
       setModelRole,
       modelBg,
       setModelBg,
+      compare,
+      setCompare,
     }: VirtualSettingsProps & { messageApi: MessageInstance },
     ref,
   ) => {
@@ -306,7 +312,6 @@ export const VirtualSettings = forwardRef<
     const [trackingActive, setTrackingActive] = useState(false);
     const [model_selected_index, set_model_selected_index] = useState(0);
     const [bg_selected_index, set_bg_selected_index] = useState(0);
-    // const [use, set_use] = useState(false);
 
     const modelDatas = [
       {
@@ -377,10 +382,10 @@ export const VirtualSettings = forwardRef<
                     onClick={() => {
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
-                      if (enabled) {
-                        setEnabled(false);
+                      if (compare) {
+                        setCompare(false);
                         setTimeout(() => {
-                          setEnabled(true);
+                          setCompare(true);
                         }, 200);
                       }
                     }}
@@ -414,9 +419,9 @@ export const VirtualSettings = forwardRef<
                       set_bg_selected_index(index);
                       setModelBg(item.src as ModelBg);
                       if (enabled) {
-                        setEnabled(false);
+                        setCompare(false);
                         setTimeout(() => {
-                          setEnabled(true);
+                          setCompare(true);
                         }, 200);
                       }
                     }}
@@ -441,7 +446,7 @@ export const VirtualSettings = forwardRef<
           stream.getTracks().forEach((track) => track.stop());
         }
       };
-    }, [loadVideo, enabled]);
+    }, [loadVideo, compare]);
 
     return (
       <div className={styles.virtual_settings}>
@@ -455,23 +460,33 @@ export const VirtualSettings = forwardRef<
             }}
           ></Switch>
         </div>
+        <div className={styles.virtual_settings_header}>
+          <span>{t('common.compare')}:</span>
+          <Switch
+            value={compare}
+            onClick={() => {
+              const val = !compare;
+              setCompare(val);
+            }}
+          ></Switch>
+        </div>
         <div className={styles.virtual_video_box}>
           <video
-            className={enabled ? '' : styles.virtual_video_box_video}
+            className={compare ? '' : styles.virtual_video_box_video}
             style={{
-              visibility: enabled ? 'hidden' : 'visible',
+              visibility: compare ? 'hidden' : 'visible',
             }}
             ref={videoRef}
             playsInline
             muted
           />
-          {enabled && (
+          {compare && (
             <div className={styles.virtual_video_box_canvas}>
               <VirtualRoleCanvas
                 video_ele={videoRef}
                 model_bg={modelBg}
                 model_role={modelRole}
-                enabled
+                enabled={compare}
               ></VirtualRoleCanvas>
             </div>
           )}
