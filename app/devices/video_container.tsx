@@ -27,9 +27,9 @@ import {
   Track,
 } from 'livekit-client';
 import React, { useEffect, useState } from 'react';
-import { Controls } from './controls/bar';
+import { ControlBarExport, Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
-import { deviceState } from '../rooms/[roomName]/PageClientImpl';
+import { userState } from '../rooms/[roomName]/PageClientImpl';
 import { ParticipantItem } from '../pages/participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
 
@@ -41,7 +41,8 @@ export function VideoContainer({
   ...props
 }: VideoConferenceProps) {
   const room = useMaybeRoomContext();
-  const [device, setDevice] = useRecoilState(deviceState);
+  const [device, setDevice] = useRecoilState(userState);
+  const controlsRef = React.useRef<ControlBarExport>(null);
   const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
   const { settings, updateSettings, fetchSettings, setSettings } = useRoomSettings(
     room?.name || '', // 房间 ID
@@ -141,6 +142,10 @@ export function VideoContainer({
     return device.volume / 100.0;
   }, [device.volume]);
 
+  const toSettingGeneral = () => {
+    controlsRef.current?.openSettings('general');
+  };
+
   return (
     <div className="lk-video-conference" {...props}>
       {is_web() && (
@@ -153,31 +158,23 @@ export function VideoContainer({
             {!focusTrack ? (
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
-                  {/* <ParticipantTile /> */}
-                  <ParticipantItem blurs={settings}></ParticipantItem>
+                  <ParticipantItem blurs={settings} toSettings={toSettingGeneral}></ParticipantItem>
                 </GridLayout>
               </div>
             ) : (
               <div className="lk-focus-layout-wrapper">
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
-                    {/* <ParticipantTile /> */}
                     <ParticipantItem blurs={settings}></ParticipantItem>
                   </CarouselLayout>
                   {focusTrack && (
-                    // <FocusLayout
-                    //   trackRef={focusTrack}
-                    //   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    //   blurs={settings}
-                    // >
-                    // </FocusLayout>
                     <ParticipantItem blurs={settings} trackRef={focusTrack}></ParticipantItem>
                   )}
                 </FocusLayoutContainer>
               </div>
             )}
-            {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
             <Controls
+              ref={controlsRef}
               controls={{ chat: true, settings: !!SettingsComponent }}
               updateSettings={updateSettings}
             ></Controls>

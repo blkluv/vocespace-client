@@ -40,19 +40,30 @@ export default {
     title: '设置',
     general: {
       title: '常规',
-      username: "用户名",
+      username: '用户名',
       lang: '语言',
+      status: {
+        title: '状态',
+        online: '在线',
+        online_desc: '在线，用户可以接受到任何消息',
+        idot: '离线',
+        idot_desc: '离线，用户将不会收到任何消息',
+        busy: '忙碌',
+        busy_desc: '忙碌中，请勿打扰，用户将不会收到任何消息，但依然显示在线',
+        invisible: '隐身',
+        invisible_desc: '隐身，用户不会显示在线，但用户可以使用所有 Vocespace 功能',
+      },
     },
     audio: {
       title: '音频',
       volume: '音量',
-      device: '音频设备'
+      device: '音频设备',
     },
     video: {
       title: '视频',
       video_blur: '视频虚化',
       screen_blur: '屏幕虚化',
-      device: '视频设备'
+      device: '视频设备',
     },
     virtual: {
       title: '虚拟形象',
@@ -60,8 +71,8 @@ export default {
     },
     about_us: {
       title: '关于我们',
-      brief: "在您的域名和品牌下进行安全的视频通话",
-      desc: "我们将帮助您在您的子域下托管您自己的安全视频和音频会议平台，并使用您自己的徽标和品牌。使用企业级加密完全控制您的数据。"
+      brief: '在您的域名和品牌下进行安全的视频通话',
+      desc: '我们将帮助您在您的子域下托管您自己的安全视频和音频会议平台，并使用您自己的徽标和品牌。使用企业级加密完全控制您的数据。',
     },
     device: {
       audio: {
@@ -87,7 +98,7 @@ export default {
       try_enter_room: '通过房间名加入指定会议或创建新会议。',
       connect_with_server: '使用 Voce Space Server 将 Voce Space 与自定义服务器连接。',
       enabled_e2ee: '启用端到端加密',
-      enter_room: '请输入房间名或链接'
+      enter_room: '请输入房间名或链接',
     },
     error: {
       e2ee: {
@@ -159,7 +170,7 @@ export default {
         username: {
           change: '用户名修改成功',
         },
-        lang: "语言修改成功",
+        lang: '语言修改成功',
       },
     },
   },

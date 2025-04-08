@@ -27,18 +27,24 @@ import React, { useEffect } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
-import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
+import { SvgResource, SvgType } from '@/app/resources/svg';
+import { Dropdown, MenuProps } from 'antd';
+import { useI18n } from '@/lib/i18n/i18n';
+
 export interface ParticipantItemProps extends ParticipantTileProps {
   blurs: Record<string, { blur: number; screenBlur: number }>;
+  toSettings?: () => void;
 }
 
 export const ParticipantItem: (
   props: ParticipantItemProps & React.RefAttributes<HTMLDivElement>,
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
-  function ParticipantItem({ trackRef, blurs }: ParticipantItemProps, ref) {
+  function ParticipantItem({ trackRef, blurs, toSettings }: ParticipantItemProps, ref) {
+    const { t } = useI18n();
     const videoRef = React.useRef<HTMLVideoElement>(null);
-    const [device, setDevice] = useRecoilState(deviceState);
+    const [device, setDevice] = useRecoilState(userState);
     const trackReference = useEnsureTrackRef(trackRef);
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const layoutContext = useMaybeLayoutContext();
@@ -73,7 +79,6 @@ export const ParticipantItem: (
       },
       [trackReference, layoutContext],
     );
-    
 
     const deviceTrack = React.useMemo(() => {
       if (isTrackReference(trackReference) && !loading) {
@@ -123,6 +128,99 @@ export const ParticipantItem: (
       }
     }, [trackReference, loading, blurValue, videoRef, device.virtualRole]);
 
+    // [status] ------------------------------------------------------------
+    const [userStatusDisply, setUserStatusDisply] = React.useState<SvgType>('online_dot');
+    const setStatusLabel = (): String => {
+      switch (userStatusDisply) {
+        case 'online_dot':
+          return t("settings.general.status.online");
+        case 'offline_dot':
+          return t("settings.general.status.idot");
+        case 'busy_dot':
+          return t("settings.general.status.busy");
+        case 'away_dot':
+          return t("settings.general.status.invisible");
+        default:
+          return t("settings.general.status.online");
+      }
+    };
+
+    const status_menu: MenuProps['items'] = [
+      {
+        key: 'online_dot',
+        label: (
+          <div className={styles.status_item}>
+            <SvgResource type="online_dot" svgSize={14}></SvgResource>
+            <span>{t("settings.general.status.online")}</span>
+            <div>{t("settings.general.status.online_desc")}</div>
+          </div>
+        ),
+      },
+      {
+        key: 'offline_dot',
+        label: (
+          <div className={styles.status_item}>
+            <SvgResource type="offline_dot" svgSize={14}></SvgResource>
+            <span>{t("settings.general.status.idot")}</span>
+            <div>{t("settings.general.status.idot_desc")}</div>
+          </div>
+        ),
+      },
+      {
+        key: 'busy_dot',
+        label: (
+          <div className={styles.status_item}>
+            <SvgResource type="busy_dot" svgSize={14}></SvgResource>
+            <span>{t("settings.general.status.busy")}</span>
+            <div>{t("settings.general.status.busy_desc")}</div>
+          </div>
+        ),
+      },
+      {
+        key: 'away_dot',
+        label: (
+          <div className={styles.status_item}>
+            <SvgResource type="away_dot" svgSize={14}></SvgResource>
+            <span>{t("settings.general.status.invisible")}</span>
+            <div>{t("settings.general.status.invisible_desc")}</div>
+          </div>
+        ),
+      },
+    ];
+
+    const user_menu: MenuProps['items'] = [
+      {
+        key: 'user_info',
+        label: (
+          <div className={styles.user_info_wrap} onClick={toSettings}>
+            <div className={styles.user_info_wrap_name}>{trackReference.participant.name}</div>
+            <SvgResource type="modify" svgSize={14} color="#fff"></SvgResource>
+            {/* <div className={styles.user_info_wrap_identity}>{trackReference.participant.identity}</div> */}
+          </div>
+        ),
+      },
+      {
+        key: 'user_status',
+        label: (
+          <Dropdown
+            placement="topLeft"
+            menu={{
+              items: status_menu,
+              onClick: (e) => setUserStatusDisply(e.key as SvgType),
+            }}
+          >
+            <div className={styles.status_item_inline} style={{ width: '100%' }}>
+              <div className={styles.status_item_inline}>
+                <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
+                <div>{setStatusLabel()}</div>
+              </div>
+              <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
+            </div>
+          </Dropdown>
+        ),
+      },
+    ];
+    const { localParticipant } = useLocalParticipant();
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
         {deviceTrack}
@@ -130,26 +228,39 @@ export const ParticipantItem: (
           <ParticipantPlaceholder />
         </div>
         <div className="lk-participant-metadata">
-          <div className="lk-participant-metadata-item">
-            {trackReference.source === Track.Source.Camera ? (
-              <>
-                {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
-                <TrackMutedIndicator
-                  trackRef={{
-                    participant: trackReference.participant,
-                    source: Track.Source.Microphone,
-                  }}
-                  show={'muted'}
-                ></TrackMutedIndicator>
-                <ParticipantName />
-              </>
-            ) : (
-              <>
-                <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
-                <ParticipantName>&apos;s screen</ParticipantName>
-              </>
-            )}
-          </div>
+          <Dropdown
+            placement="topLeft"
+            trigger={['click']}
+            menu={{
+              items: user_menu,
+            }}
+            disabled={trackReference.participant.identity != localParticipant.identity}
+          >
+            <div className="lk-participant-metadata-item">
+              {trackReference.source === Track.Source.Camera ? (
+                <>
+                  {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
+                  <TrackMutedIndicator
+                    trackRef={{
+                      participant: trackReference.participant,
+                      source: Track.Source.Microphone,
+                    }}
+                    show={'muted'}
+                  ></TrackMutedIndicator>
+                  <ParticipantName />
+                  <div style={{marginLeft: '0.25rem'}}>
+                    <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
+                  <ParticipantName>&apos;s screen</ParticipantName>
+                </>
+              )}
+            </div>
+          </Dropdown>
+
           <ConnectionQualityIndicator className="lk-participant-metadata-item" />
         </div>
       </ParticipantTile>
@@ -182,4 +293,3 @@ export function isTrackReferencePinned(
     return false;
   }
 }
-

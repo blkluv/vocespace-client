@@ -25,7 +25,14 @@ export interface UserItemProp {
   status: UserStatus;
 }
 
-export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';
+// export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';
+
+export enum UserStatus {
+  Online = 'online',
+  Idot = 'offline',
+  Busy = 'busy',
+  Invisible = 'away',
+}
 
 export function is_web(): boolean {
   return typeof window !== 'undefined';

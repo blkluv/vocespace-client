@@ -37,19 +37,19 @@
 - [x] General
   - [x] Username
   - [x] language
-  - [ ] User status
+  - [x] User status
 - [x] Audio
   - [x] Volume
   - [x] Selection
-- [ ] Video
-  - [ ] Blur
+- [x] Video
+  - [x] Blur
   - [x] Selection
-  - [ ] Screen Blur
-- [ ] Virtual
-  - [ ] Models
-  - [ ] Backgrounds
-  - [ ] Active or not
-  - [ ] Detect check
+  - [x] Screen Blur
+- [x] Virtual
+  - [x] Models
+  - [x] Backgrounds
+  - [x] Active or not
+  - [x] Detect check
 - [x] About Us
 
 #### RPC
@@ -64,13 +64,13 @@
 
 ## Participant
 
-- [ ] Status
-- [ ] Settings
+- [x] Status
+- [x] Settings
 
 ## AI
 
 - [x] Noice cancellation
-- [ ] Virtual role
+- [x] Virtual role
 
 ## i18n
 

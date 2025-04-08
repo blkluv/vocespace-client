@@ -25,6 +25,7 @@ import { SelectPrefix } from './select_prefix';
 import { LangSelect } from './lang_select';
 import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
 import { src } from '@/lib/std';
+import { StatusSelect } from './status_select';
 
 export interface SettingsProps {
   microphone: {
@@ -45,9 +46,9 @@ export interface SettingsProps {
   };
   username: string;
   virtual: VirtualSettingsProps;
-  tab_key: {
+  tab: {
     key: TabKey;
-    set_key: (e: TabKey) => void;
+    setKey: (e: TabKey) => void;
   };
   saveChanges: (tab_key: TabKey) => void;
   messageApi: MessageInstance;
@@ -70,8 +71,17 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         screen: { blur: screen_blur, setScreenBlur },
       },
       username: uname,
-      tab_key: { key, set_key },
-      virtual: { enabled, setEnabled, modelRole, setModelRole, modelBg, setModelBg, compare, setCompare },
+      tab: { key, setKey },
+      virtual: {
+        enabled,
+        setEnabled,
+        modelRole,
+        setModelRole,
+        modelBg,
+        setModelBg,
+        compare,
+        setCompare,
+      },
       saveChanges,
       messageApi,
     }: SettingsProps,
@@ -103,6 +113,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             ></Input>
             <div className={styles.common_space}>{t('settings.general.lang')}:</div>
             <LangSelect style={{ width: '100%' }}></LangSelect>
+            <div className={styles.common_space}>{t('settings.general.status.title')}:</div>
+            <StatusSelect style={{ width: '100%' }}></StatusSelect>
           </div>
         ),
       },
@@ -247,12 +259,13 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
 
     return (
       <Tabs
+        activeKey={key}
         tabPosition="left"
         centered
         items={items}
         style={{ width: '100%', height: '100%' }}
         onChange={(k: string) => {
-          set_key(k as TabKey);
+          setKey(k as TabKey);
         }}
       />
     );
@@ -453,6 +466,7 @@ export const VirtualSettings = forwardRef<
         <div className={styles.virtual_settings_header}>
           <span>{t('settings.virtual.open')}:</span>
           <Switch
+            style={{ background: '#22CCEE' }}
             value={enabled}
             onClick={() => {
               const val = !enabled;
@@ -463,6 +477,7 @@ export const VirtualSettings = forwardRef<
         <div className={styles.virtual_settings_header}>
           <span>{t('common.compare')}:</span>
           <Switch
+            style={{ background: '#22CCEE' }}
             value={compare}
             onClick={() => {
               const val = !compare;

@@ -42,8 +42,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           colorText: '#8c8c8c',
         },
         components: {
-          Switch: {
-            handleBg: '#ffffff',
+          Dropdown: {
+            colorBgElevated: '#1E1E1E',
           },
           Radio: {
             buttonBg: '#1E1E1E',
@@ -56,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             colorBorder: '#1E1E1E',
             colorTextPlaceholder: '#8c8c8c',
             paddingBlockLG: 8,
+            colorText: '#ffffff',
           },
           Select: {
             selectorBg: '#1E1E1E',

@@ -13,7 +13,7 @@ import { Input, Slider } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
-import { deviceState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { src, ulid } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
 import { LangSelect } from '@/app/devices/controls/lang_select';
@@ -144,7 +144,7 @@ export function PreJoin({
   };
 
   // volume --------------------------------------------------------------------------------------
-  const [device, setDevice] = useRecoilState(deviceState);
+  const [device, setDevice] = useRecoilState(userState);
   const [volume, setVolume] = React.useState(device.volume);
   const [blur, setBlur] = React.useState(device.blur);
   const [play, setPlay] = React.useState(false);

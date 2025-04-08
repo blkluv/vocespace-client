@@ -10,6 +10,7 @@ import { ModelRole } from '@/lib/std/virtual';
 import { src } from '@/lib/std';
 import { isTrackReference, useLocalParticipant } from '@livekit/components-react';
 import { LocalTrackPublication, Track } from 'livekit-client';
+import { loadVideo } from '@/lib/std/device';
 
 export const Live2DComponent = ({
   video_ele: videoRef,
@@ -24,6 +25,7 @@ export const Live2DComponent = ({
   const modelRef = useRef<any>(null);
   const appRef = useRef<PIXI.Application | null>(null);
   const trackingRef = useRef<number | null>(null);
+  const fakeVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // const [isLoading, setIsLoading] = useState(true);
   // const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,8 @@ export const Live2DComponent = ({
   const smoothnessFactorRef = useRef(0.25); // 添加平滑过渡因子 (0-1之间，越小越平滑)
   // 存储发布的虚拟轨道
   const virtualTrackRef = useRef<LocalTrackPublication | null>(null);
+  // 存储原始视频流
+
   // 状态机来控制流程
   const [cState, setCState] = useState<{
     isLoading: boolean;
@@ -90,6 +94,11 @@ export const Live2DComponent = ({
       trackingActive: false,
       detectorReady: false,
     });
+
+    if (fakeVideoRef.current) {
+      const stream = fakeVideoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+    }
   };
 
   const loadLive2dCore = () => {
@@ -234,19 +243,33 @@ export const Live2DComponent = ({
       if (!cameraPub?.track) {
         return;
       }
+
       // 创建虚拟摄像头流
       const virtualStream = await createVirtualCameraStream(canvasEle.current);
       if (!virtualStream) {
         throw new Error('Failed to create virtual camera stream');
       }
+      const originalTrack = cameraPub.track;
       const virtualTrack = virtualStream.getVideoTracks()[0];
-      await localParticipant.unpublishTrack(cameraPub.track);
-      const virtualPub = await localParticipant.publishTrack(virtualTrack, {
-        name: 'virtual_camera',
-        source: Track.Source.Camera,
-      });
-      virtualTrackRef.current = virtualPub;
-      console.log('虚拟摄像头流创建成功');
+      // console.warn('虚拟摄像头流:', virtualTrack, cameraPub.track);
+      if (originalTrack) {
+        originalTrack.stop();
+        originalTrack.restartTrack(virtualTrack);
+      }
+
+      // await localParticipant.unpublishTrack(cameraPub.track);
+      // const virtualPub = await localParticipant.publishTrack(virtualTrack, {
+      //   name: 'virtual_camera',
+      //   source: Track.Source.Camera,
+      //   simulcast: true,
+      //   videoEncoding: {
+      //     maxBitrate: 1500000,
+      //     maxFramerate:24
+      //   },
+      //   videoCodec: 'vp8'
+      // });
+      // virtualTrackRef.current = virtualPub;
+      // console.log('虚拟摄像头流创建成功');
     } catch (error) {
       console.error('虚拟摄像头流构建失败:', error);
     }
@@ -266,28 +289,30 @@ export const Live2DComponent = ({
   };
 
   // 实现连续头部追踪的函数
-  const startFaceTracking = () => {
+  const startFaceTracking = async () => {
     // 防止重复启动
     if (!enabled || cState.trackingActive || trackingRef.current !== null) return;
-
-    // // 如果已经有追踪在进行，先停止它
-    // if (trackingRef.current !== null) {
-    //   cancelAnimationFrame(trackingRef.current);
-    //   trackingRef.current = null;
-    // }
+    if (!fakeVideoRef.current || !videoRef.current) return;
+    let realVideoTrack = videoRef.current;
+    if (fakeVideoRef.current && trackRef) {
+      console.log('使用虚拟视频流进行追踪');
+      await loadVideo(fakeVideoRef);
+      realVideoTrack = fakeVideoRef.current;
+    }
 
     // 创建追踪函数
     const track = async () => {
-      if (!videoRef.current || !modelRef.current || !enabled) {
+      // 这里如果有trackRef则需要使用fakeVideoRef，因为真实的已经被替换了
+      if (!realVideoTrack || !modelRef.current || !enabled) {
         console.log('视频或模型不可用，停止追踪');
         cleanupTracking();
         return;
       }
-    
-      const detection = await faceapi
-        .detectSingleFace(videoRef.current!, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks();
 
+      const detection = await faceapi
+        .detectSingleFace(realVideoTrack, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks();
+      console.log('1212121212:', detection);
       // 限制检测频率，减少资源占用
       const now = Date.now();
       if (!lastDetectionAt || now - lastDetectionAt > 200) {
@@ -325,7 +350,7 @@ export const Live2DComponent = ({
             // 归一化坐标 (-1 到 1 的范围)
             const normalizedX = (centerX / videoRef!.current!.videoWidth) * 2 - 1;
             const normalizedY = (centerY / videoRef!.current!.videoHeight) * 2 - 1;
-            
+
             // 将归一化坐标与ScreenSize结合转为真实坐标
             let realX = (normalizedX * screenSize.width) / 2 + screenSize.width / 2;
             let realY = (-normalizedY * screenSize.height) / 2 + screenSize.height / 2;
@@ -343,7 +368,7 @@ export const Live2DComponent = ({
             // 添加轻微的自然偏移来模拟人眼微动
             const microMovementX = Math.sin(Date.now() / 2000) * 5;
             const microMovementY = Math.cos(Date.now() / 2500) * 3;
-            // console.log('微动:', realX + microMovementX, realY + microMovementY);
+            console.log('微动:', realX + microMovementX, realY + microMovementY);
             // 应用focus
             modelRef.current.focus(realX + microMovementX, realY + microMovementY);
           }
@@ -423,7 +448,7 @@ export const Live2DComponent = ({
         // 设置虚拟摄像头
         await setupVirtualCamera();
       }
-    }
+    };
 
     // 只有在有效尺寸、已加载模型、启用状态下才开始追踪
     if (
@@ -447,6 +472,16 @@ export const Live2DComponent = ({
         id="virtual_role_canvas"
         style={{ height: '100%', width: '100%', position: 'absolute' }}
       ></canvas>
+      {trackRef && (
+        <video
+          ref={fakeVideoRef}
+          style={{
+            height: '100%',
+            width: '100%',
+            visibility: 'hidden',
+          }}
+        ></video>
+      )}
     </div>
   );
 };

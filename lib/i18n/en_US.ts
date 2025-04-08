@@ -42,6 +42,17 @@ export default {
       title: 'General',
       username: 'Username',
       lang: 'Language',
+      status: {
+        title: 'Status',
+        online: 'Online',
+        online_desc: 'Online, user can receive any messages',
+        idot: 'Offline',
+        idot_desc: 'Offline, user will not receive any messages',
+        busy: 'Busy',
+        busy_desc: 'Busy, do not disturb, user will not receive any messages but still appears online',
+        invisible: 'Invisible',
+        invisible_desc: 'Invisible, user will not appear online but can use all Vocespace features',
+      },
     },
     audio: {
       title: 'Audio',

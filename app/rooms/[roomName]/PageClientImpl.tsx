@@ -30,11 +30,11 @@ import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, RecoilRoot, useRecoilState } from 'recoil';
-import { connect_endpoint } from '@/lib/std';
+import { connect_endpoint, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 
-export const deviceState = atom({
-  key: 'deviceState',
+export const userState = atom({
+  key: 'userState',
   default: {
     volume: 80,
     blur: 0.15,
@@ -43,7 +43,8 @@ export const deviceState = atom({
       enabled: false,
       role: ModelRole.Haru,
       bg: ModelBg.ClassRoom
-    }
+    },
+    status: UserStatus.Online
   },
 });
 
