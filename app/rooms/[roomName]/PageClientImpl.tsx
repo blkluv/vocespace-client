@@ -318,6 +318,8 @@ function VideoConferenceComponent(props: {
         <VideoContainer
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
+          messageApi={messageApi}
+          noteApi={notApi}
         ></VideoContainer>
         <DebugMode />
         <RecordingIndicator />

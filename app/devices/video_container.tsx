@@ -32,15 +32,21 @@ import { useRecoilState } from 'recoil';
 import { userState } from '../rooms/[roomName]/PageClientImpl';
 import { ParticipantItem } from '../pages/participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
+import { MessageInstance } from 'antd/es/message/interface';
+import { NotificationInstance } from 'antd/es/notification/interface';
+import { useI18n } from '@/lib/i18n/i18n';
 
 export function VideoContainer({
   chatMessageFormatter,
   chatMessageDecoder,
   chatMessageEncoder,
   SettingsComponent,
+  noteApi,
+  messageApi,
   ...props
-}: VideoConferenceProps) {
+}: VideoConferenceProps & { messageApi: MessageInstance; noteApi: NotificationInstance }) {
   const room = useMaybeRoomContext();
+  const { t } = useI18n();
   const [device, setDevice] = useRecoilState(userState);
   const controlsRef = React.useRef<ControlBarExport>(null);
   const waveAudioRef = React.useRef<HTMLAudioElement>(null);
@@ -65,6 +71,11 @@ export function VideoContainer({
     room.registerRpcMethod('wave', async (data: RpcInvocationData) => {
       if (waveAudioRef.current) {
         waveAudioRef.current.play();
+        const payload = JSON.parse(data.payload) as { name: string };
+
+        noteApi.info({
+          message: `${payload.name} ${t('common.wave_msg')}`,
+        });
       }
       return JSON.stringify(true);
     });
@@ -165,17 +176,25 @@ export function VideoContainer({
             {!focusTrack ? (
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
-                  <ParticipantItem blurs={settings} toSettings={toSettingGeneral}></ParticipantItem>
+                  <ParticipantItem
+                    blurs={settings}
+                    toSettings={toSettingGeneral}
+                    messageApi={messageApi}
+                  ></ParticipantItem>
                 </GridLayout>
               </div>
             ) : (
               <div className="lk-focus-layout-wrapper">
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
-                    <ParticipantItem blurs={settings}></ParticipantItem>
+                    <ParticipantItem blurs={settings} messageApi={messageApi}></ParticipantItem>
                   </CarouselLayout>
                   {focusTrack && (
-                    <ParticipantItem blurs={settings} trackRef={focusTrack}></ParticipantItem>
+                    <ParticipantItem
+                      blurs={settings}
+                      trackRef={focusTrack}
+                      messageApi={messageApi}
+                    ></ParticipantItem>
                   )}
                 </FocusLayoutContainer>
               </div>

@@ -35,6 +35,7 @@ export default {
     leave: '离开',
     share_screen: '共享屏幕',
     stop_share: '停止共享',
+    wave_msg: "向您发送了一条提醒!"
   },
   settings: {
     title: '设置',
@@ -101,6 +102,10 @@ export default {
       enter_room: '请输入房间名或链接',
     },
     error: {
+      virtual: {
+        video_stream: "虚拟摄像头流构建错误",
+        model: "模型或视频不可用"
+      },
       e2ee: {
         unsupport: '您正在尝试加入加密会议，但您的浏览器不支持该功能。请将其更新至最新版本并重试。',
       },

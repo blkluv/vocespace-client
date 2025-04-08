@@ -55,7 +55,7 @@
 #### RPC
 
 - [ ] Others cursors focus
-- [ ] Wave｜Remind others
+- [x] Wave｜Remind others
 
 ## Permission 
 
@@ -66,6 +66,7 @@
 
 - [x] Status
 - [x] Settings
+- [ ] Virtual role video stream
 
 ## AI
 

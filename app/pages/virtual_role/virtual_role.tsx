@@ -11,6 +11,7 @@ import { src } from '@/lib/std';
 import { isTrackReference, useLocalParticipant } from '@livekit/components-react';
 import { LocalTrackPublication, Track } from 'livekit-client';
 import { loadVideo } from '@/lib/std/device';
+import { useI18n } from '@/lib/i18n/i18n';
 
 export const Live2DComponent = ({
   video_ele: videoRef,
@@ -18,6 +19,7 @@ export const Live2DComponent = ({
   model_role,
   enabled,
   trackRef,
+  messageApi,
 }: VirtualRoleProps) => {
   // [ref] --------------------------------------------------------------------------------------------------------------------
   const containerRef = useRef<HTMLDivElement>(null);
@@ -26,23 +28,14 @@ export const Live2DComponent = ({
   const appRef = useRef<PIXI.Application | null>(null);
   const trackingRef = useRef<number | null>(null);
   const fakeVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  // const [isLoading, setIsLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
-  // const [scriptLoaded, setScriptLoaded] = useState(false);
-
   const { localParticipant } = useLocalParticipant();
-  // const videoRef = useRef<HTMLVideoElement>(null);
-  // const [detectorReady, setDetectorReady] = useState(false);
-
-  // const [trackingActive, setTrackingActive] = useState(false);
   const [lastDetectionAt, setLastDetectionAt] = useState<number | null>(null);
   const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
   const [lastPosition, setLastPosition] = useState<{ x: number; y: number } | null>(null);
   const smoothnessFactorRef = useRef(0.25); // 添加平滑过渡因子 (0-1之间，越小越平滑)
   // 存储发布的虚拟轨道
   const virtualTrackRef = useRef<LocalTrackPublication | null>(null);
-  // 存储原始视频流
+  const { t } = useI18n();
 
   // 状态机来控制流程
   const [cState, setCState] = useState<{
@@ -126,7 +119,6 @@ export const Live2DComponent = ({
   };
 
   const initPixiAndModel = async () => {
-    console.log('开始加载 Live2D 模型...');
     (window as any).PIXI = PIXI;
     const { Live2DModel } = await import('pixi-live2d-display/cubism4');
     Live2DModel.registerTicker(PIXI.Ticker);
@@ -272,6 +264,7 @@ export const Live2DComponent = ({
       // console.log('虚拟摄像头流创建成功');
     } catch (error) {
       console.error('虚拟摄像头流构建失败:', error);
+      messageApi.error('msg.error.virtual.video_stream');
     }
   };
 
@@ -304,7 +297,7 @@ export const Live2DComponent = ({
     const track = async () => {
       // 这里如果有trackRef则需要使用fakeVideoRef，因为真实的已经被替换了
       if (!realVideoTrack || !modelRef.current || !enabled) {
-        console.log('视频或模型不可用，停止追踪');
+        messageApi.error(t('msg.error.virtual.model'));
         cleanupTracking();
         return;
       }
@@ -458,11 +451,26 @@ export const Live2DComponent = ({
       enabled &&
       !cState.trackingActive
     ) {
-      console.log('屏幕尺寸已更新，开始追踪', screenSize);
+      // console.log('屏幕尺寸已更新，开始追踪', screenSize);
       startFaceTracking();
       startVirtualCamera();
     }
   }, [screenSize, enabled, cState.trackingActive]);
+
+  //创建虚拟视频流
+  const createVirtualCameraStream = async (canvasElement: HTMLCanvasElement) => {
+    if (!canvasElement) return null;
+
+    try {
+      // 将canvas转换为媒体流
+      const stream = canvasElement.captureStream(24); // 24 FPS
+      return stream;
+    } catch (err) {
+      console.error('创建虚拟摄像头流失败:', err);
+      messageApi.error(t('msg.error.virtual.video_stream'));
+      return null;
+    }
+  };
 
   return (
     <div ref={containerRef} className={styles.virtual_role}>
@@ -487,17 +495,3 @@ export const Live2DComponent = ({
 };
 
 export default Live2DComponent;
-
-//创建虚拟视频流
-const createVirtualCameraStream = async (canvasElement: HTMLCanvasElement) => {
-  if (!canvasElement) return null;
-
-  try {
-    // 将canvas转换为媒体流
-    const stream = canvasElement.captureStream(24); // 24 FPS
-    return stream;
-  } catch (err) {
-    console.error('创建虚拟摄像头流失败:', err);
-    return null;
-  }
-};

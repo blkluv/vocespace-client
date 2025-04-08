@@ -35,6 +35,7 @@ export default {
     leave: 'Leave',
     share_screen: 'Share Screen',
     stop_share: 'Stop Share Share',
+    wave_msg: "sent you a reminder!",
   },
   settings: {
     title: 'Settings',
@@ -102,6 +103,10 @@ export default {
       enter_room: 'Please enter the space name or link',
     },
     error: {
+      virtual: {
+        video_stream: "Virtual camera stream construction error",
+        model: "Model or video unavailable",
+      },
       e2ee: {
         unsupport:
           'You are trying to join an encrypted meeting, but your browser does not support this feature. Please update it to the latest version and try again.',

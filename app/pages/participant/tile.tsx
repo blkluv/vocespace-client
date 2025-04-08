@@ -34,20 +34,21 @@ import { SvgResource, SvgType } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
 import { UserStatus } from '@/lib/std';
+import { MessageInstance } from 'antd/es/message/interface';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   blurs: Record<string, { blur: number; screenBlur: number }>;
   toSettings?: () => void;
+  messageApi: MessageInstance;
 }
 
 export const ParticipantItem: (
   props: ParticipantItemProps & React.RefAttributes<HTMLDivElement>,
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
-  function ParticipantItem({ trackRef, blurs, toSettings }: ParticipantItemProps, ref) {
+  function ParticipantItem({ trackRef, blurs, toSettings, messageApi }: ParticipantItemProps, ref) {
     const { t } = useI18n();
     const { localParticipant } = useLocalParticipant();
     const videoRef = React.useRef<HTMLVideoElement>(null);
-
     const [uState, setUState] = useRecoilState(userState);
     const trackReference = useEnsureTrackRef(trackRef);
     const isEncrypted = useIsEncrypted(trackReference.participant);
@@ -106,6 +107,7 @@ export const ParticipantItem: (
                     model_bg={uState.virtualRole.bg}
                     model_role={uState.virtualRole.role}
                     enabled={uState.virtualRole.enabled}
+                    messageApi={messageApi}
                     trackRef={trackReference}
                   ></VirtualRoleCanvas>
                 </div>
@@ -264,7 +266,7 @@ export const ParticipantItem: (
           destinationIdentity: trackReference.participant.identity,
           method: 'wave',
           payload: JSON.stringify({
-            sender: localParticipant.identity,
+            name: localParticipant.name || localParticipant.identity,
           }),
         });
 
