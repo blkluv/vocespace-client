@@ -32,6 +32,7 @@ import styles from '@/styles/controls.module.scss';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
+import { UserStatus } from '@/lib/std';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   blurs: Record<string, { blur: number; screenBlur: number }>;
@@ -44,7 +45,7 @@ export const ParticipantItem: (
   function ParticipantItem({ trackRef, blurs, toSettings }: ParticipantItemProps, ref) {
     const { t } = useI18n();
     const videoRef = React.useRef<HTMLVideoElement>(null);
-    const [device, setDevice] = useRecoilState(userState);
+    const [uState, setUState] = useRecoilState(userState);
     const trackReference = useEnsureTrackRef(trackRef);
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const layoutContext = useMaybeLayoutContext();
@@ -89,19 +90,19 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter: `blur(${blurValue}px)`,
-                  visibility: device.virtualRole.enabled ? 'hidden' : 'visible',
+                  visibility: uState.virtualRole.enabled ? 'hidden' : 'visible',
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {device.virtualRole.enabled && (
+              {uState.virtualRole.enabled && (
                 <div className={styles.virtual_video_box_canvas}>
                   <VirtualRoleCanvas
                     video_ele={videoRef}
-                    model_bg={device.virtualRole.bg}
-                    model_role={device.virtualRole.role}
-                    enabled={device.virtualRole.enabled}
+                    model_bg={uState.virtualRole.bg}
+                    model_role={uState.virtualRole.role}
+                    enabled={uState.virtualRole.enabled}
                     trackRef={trackReference}
                   ></VirtualRoleCanvas>
                 </div>
@@ -126,10 +127,35 @@ export const ParticipantItem: (
           );
         }
       }
-    }, [trackReference, loading, blurValue, videoRef, device.virtualRole]);
+    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole]);
 
     // [status] ------------------------------------------------------------
-    const [userStatusDisply, setUserStatusDisply] = React.useState<SvgType>('online_dot');
+    const userStatusDisply = React.useMemo(()=>{
+      switch (uState.status) {
+        case UserStatus.Online:
+          return 'online_dot';
+        case UserStatus.Idot:
+          return 'offline_dot';
+        case UserStatus.Busy:
+          return 'busy_dot';
+        case UserStatus.Invisible:
+          return 'away_dot';
+      }
+    }, [uState.status]);
+    const statusFromSvgType = (svgType: SvgType): UserStatus => {
+      switch (svgType) {
+        case 'online_dot':
+          return UserStatus.Online;
+        case 'offline_dot':
+          return UserStatus.Idot;
+        case 'busy_dot':
+          return UserStatus.Busy;
+        case 'away_dot':
+          return UserStatus.Invisible;
+        default:
+          return UserStatus.Online;
+      }
+    }
     const setStatusLabel = (): String => {
       switch (userStatusDisply) {
         case 'online_dot':
@@ -206,7 +232,12 @@ export const ParticipantItem: (
             placement="topLeft"
             menu={{
               items: status_menu,
-              onClick: (e) => setUserStatusDisply(e.key as SvgType),
+              onClick: (e) => {
+                setUState({
+                  ...uState,
+                  status: statusFromSvgType(e.key as SvgType),
+                });
+              },
             }}
           >
             <div className={styles.status_item_inline} style={{ width: '100%' }}>
