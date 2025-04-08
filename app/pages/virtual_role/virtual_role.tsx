@@ -191,6 +191,9 @@ export const Live2DComponent = ({
         break;
       }
     }
+    // 这里的数值都是像对于440 * 220的窗口大小，这里需要根据实际窗口大小进行调整
+    scale = resize(scale, app.screen.width, app.screen.height);
+
     motionSync.loadMotionSyncFromUrl(
       src(`/live2d_resources/${model_role}/motions/${motion_file}.json`),
     );
@@ -297,7 +300,7 @@ export const Live2DComponent = ({
     const track = async () => {
       // 这里如果有trackRef则需要使用fakeVideoRef，因为真实的已经被替换了
       if (!realVideoTrack || !modelRef.current || !enabled) {
-        messageApi.error(t('msg.error.virtual.model'));
+        // messageApi.error(t('msg.error.virtual.model'));
         cleanupTracking();
         return;
       }
@@ -474,7 +477,7 @@ export const Live2DComponent = ({
 
   return (
     <div ref={containerRef} className={styles.virtual_role}>
-      {cState.isLoading && <div className={styles.virtual_role_msgbox}>虚拟角色加载中...</div>}
+      {cState.isLoading && <div className={styles.virtual_role_msgbox}>{t('msg.info.virtual_loading')}</div>}
       <canvas
         ref={canvasEle}
         id="virtual_role_canvas"
@@ -495,3 +498,7 @@ export const Live2DComponent = ({
 };
 
 export default Live2DComponent;
+
+const resize = (value: number, width: number, height: number): number => {
+  return value * Math.min(width / 440, height / 212);
+};

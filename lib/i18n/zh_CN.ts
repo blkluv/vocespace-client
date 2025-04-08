@@ -100,6 +100,7 @@ export default {
       connect_with_server: '使用 Voce Space Server 将 Voce Space 与自定义服务器连接。',
       enabled_e2ee: '启用端到端加密',
       enter_room: '请输入房间名或链接',
+      virtual_loading: '虚拟形象加载中...',
     },
     error: {
       virtual: {

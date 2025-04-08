@@ -101,6 +101,7 @@ export default {
       connect_with_server: 'Connect Voce Space with a custom server using Voce Space Server.',
       enabled_e2ee: 'End-to-end encryption enabled',
       enter_room: 'Please enter the space name or link',
+      virtual_loading: 'Loading virtual role, please wait...',
     },
     error: {
       virtual: {

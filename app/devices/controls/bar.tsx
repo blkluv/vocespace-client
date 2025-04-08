@@ -181,6 +181,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           bg: modelBg,
         },
       });
+      setVirtualEnabled(false);
+      setTimeout(() => {
+        setVirtualEnabled(true);
+      }, 100);
     }, [modelBg]);
 
     React.useEffect(() => {
@@ -188,9 +192,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         ...device,
         virtualRole: {
           ...device.virtualRole,
-          enabled: virtualEnabled,
+          role: modelRole,
         },
       });
+      setVirtualEnabled(false);
+      setTimeout(() => {
+        setVirtualEnabled(true);
+      }, 100);
     }, [modelRole]);
 
     React.useEffect(() => {
@@ -246,11 +254,15 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const openSettings = (tab: TabKey) => {
       setKey(tab);
       setSettingVis(true);
-    }
+    };
 
-    React.useImperativeHandle(ref, () => ({
-      openSettings,
-    }) as ControlBarExport);
+    React.useImperativeHandle(
+      ref,
+      () =>
+        ({
+          openSettings,
+        } as ControlBarExport),
+    );
 
     return (
       <div {...htmlProps}>

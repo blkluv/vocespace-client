@@ -1,6 +1,5 @@
 import { isTrackReferencePlaceholder } from '@/app/devices/video_container';
-
-import { loadVideo, useVideoBlur } from '@/lib/std/device';
+import { useVideoBlur } from '@/lib/std/device';
 import {
   AudioTrack,
   ConnectionQualityIndicator,
@@ -14,7 +13,6 @@ import {
   PinState,
   ScreenShareIcon,
   TrackMutedIndicator,
-  TrackReference,
   TrackReferenceOrPlaceholder,
   useEnsureTrackRef,
   useFeatureContext,
@@ -23,10 +21,9 @@ import {
   useMaybeLayoutContext,
   VideoTrack,
 } from '@livekit/components-react';
-import { LocalTrack, RpcInvocationData, Track } from 'livekit-client';
+import { Track } from 'livekit-client';
 import React, { useEffect } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
-import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
 import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';

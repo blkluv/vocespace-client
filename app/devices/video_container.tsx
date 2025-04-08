@@ -3,12 +3,10 @@ import {
   CarouselLayout,
   Chat,
   ConnectionStateToast,
-  ControlBar,
   FocusLayoutContainer,
   GridLayout,
   isTrackReference,
   LayoutContextProvider,
-  ParticipantTile,
   RoomAudioRenderer,
   TrackReference,
   useCreateLayoutContext,
@@ -18,14 +16,7 @@ import {
   VideoConferenceProps,
   WidgetState,
 } from '@livekit/components-react';
-import {
-  ConnectionState,
-  Participant,
-  Room,
-  RoomEvent,
-  RpcInvocationData,
-  Track,
-} from 'livekit-client';
+import { ConnectionState, Participant, RoomEvent, RpcInvocationData, Track } from 'livekit-client';
 import React, { useEffect, useState } from 'react';
 import { ControlBarExport, Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
@@ -68,17 +59,20 @@ export function VideoContainer({
       setSettings(newSettings);
     };
 
-    room.registerRpcMethod('wave', async (data: RpcInvocationData) => {
-      if (waveAudioRef.current) {
-        waveAudioRef.current.play();
-        const payload = JSON.parse(data.payload) as { name: string };
+    // 注册 提醒的 RPC 方法
+    if (!device.rpc) {
+      room.registerRpcMethod('wave', async (data: RpcInvocationData) => {
+        if (waveAudioRef.current) {
+          waveAudioRef.current.play();
+          const payload = JSON.parse(data.payload) as { name: string };
 
-        noteApi.info({
-          message: `${payload.name} ${t('common.wave_msg')}`,
-        });
-      }
-      return JSON.stringify(true);
-    });
+          noteApi.info({
+            message: `${payload.name} ${t('common.wave_msg')}`,
+          });
+        }
+        return JSON.stringify(true);
+      });
+    }
     syncSettings();
   }, [room?.state]);
 

@@ -1,27 +1,13 @@
-import {
-  Card,
-  Divider,
-  Input,
-  List,
-  message,
-  Select,
-  Slider,
-  Spin,
-  Switch,
-  Tabs,
-  TabsProps,
-} from 'antd';
+import { Input, List, Slider, Switch, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
-import { forwardRef, RefAttributes, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import * as faceapi from 'face-api.js';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
 import { loadVideo } from '@/lib/std/device';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { SvgResource, SvgType } from '@/app/resources/svg';
-import { langOptions, useI18n } from '@/lib/i18n/i18n';
+import { useI18n } from '@/lib/i18n/i18n';
 import { AudioSelect } from './audio_select';
 import { VideoSelect } from './video_select';
-import { SelectPrefix } from './select_prefix';
 import { LangSelect } from './lang_select';
 import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
 import { src } from '@/lib/std';
@@ -322,7 +308,6 @@ export const VirtualSettings = forwardRef<
   ) => {
     const { t } = useI18n();
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [trackingActive, setTrackingActive] = useState(false);
     const [model_selected_index, set_model_selected_index] = useState(0);
     const [bg_selected_index, set_bg_selected_index] = useState(0);
 
@@ -502,6 +487,7 @@ export const VirtualSettings = forwardRef<
                 model_bg={modelBg}
                 model_role={modelRole}
                 enabled={compare}
+                messageApi={messageApi}
               ></VirtualRoleCanvas>
             </div>
           )}
