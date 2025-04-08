@@ -43,6 +43,7 @@ export function VideoContainer({
   const room = useMaybeRoomContext();
   const [device, setDevice] = useRecoilState(userState);
   const controlsRef = React.useRef<ControlBarExport>(null);
+  const waveAudioRef = React.useRef<HTMLAudioElement>(null);
   const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
   const { settings, updateSettings, fetchSettings, setSettings } = useRoomSettings(
     room?.name || '', // 房间 ID
@@ -61,6 +62,12 @@ export function VideoContainer({
       setSettings(newSettings);
     };
 
+    room.registerRpcMethod('wave', async (data: RpcInvocationData) => {
+      if (waveAudioRef.current) {
+        waveAudioRef.current.play();
+      }
+      return JSON.stringify(true);
+    });
     syncSettings();
   }, [room?.state]);
 
@@ -195,6 +202,11 @@ export function VideoContainer({
       )}
       <RoomAudioRenderer volume={audioVolume} />
       <ConnectionStateToast />
+      <audio
+        ref={waveAudioRef}
+        style={{ display: 'none' }}
+        src={`${process.env.NEXT_PUBLIC_BASE_PATH}/audios/vocespacewave.m4a`}
+      ></audio>
     </div>
   );
 }

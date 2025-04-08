@@ -5,6 +5,7 @@ import {
   AudioTrack,
   ConnectionQualityIndicator,
   isTrackReference,
+  LayoutContext,
   LockLockedIcon,
   ParticipantName,
   ParticipantPlaceholder,
@@ -22,7 +23,7 @@ import {
   useMaybeLayoutContext,
   VideoTrack,
 } from '@livekit/components-react';
-import { LocalTrack, Track } from 'livekit-client';
+import { LocalTrack, RpcInvocationData, Track } from 'livekit-client';
 import React, { useEffect } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
@@ -44,7 +45,9 @@ export const ParticipantItem: (
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
   function ParticipantItem({ trackRef, blurs, toSettings }: ParticipantItemProps, ref) {
     const { t } = useI18n();
+    const { localParticipant } = useLocalParticipant();
     const videoRef = React.useRef<HTMLVideoElement>(null);
+
     const [uState, setUState] = useRecoilState(userState);
     const trackReference = useEnsureTrackRef(trackRef);
     const isEncrypted = useIsEncrypted(trackReference.participant);
@@ -130,7 +133,7 @@ export const ParticipantItem: (
     }, [trackReference, loading, blurValue, videoRef, uState.virtualRole]);
 
     // [status] ------------------------------------------------------------
-    const userStatusDisply = React.useMemo(()=>{
+    const userStatusDisply = React.useMemo(() => {
       switch (uState.status) {
         case UserStatus.Online:
           return 'online_dot';
@@ -155,19 +158,19 @@ export const ParticipantItem: (
         default:
           return UserStatus.Online;
       }
-    }
+    };
     const setStatusLabel = (): String => {
       switch (userStatusDisply) {
         case 'online_dot':
-          return t("settings.general.status.online");
+          return t('settings.general.status.online');
         case 'offline_dot':
-          return t("settings.general.status.idot");
+          return t('settings.general.status.idot');
         case 'busy_dot':
-          return t("settings.general.status.busy");
+          return t('settings.general.status.busy');
         case 'away_dot':
-          return t("settings.general.status.invisible");
+          return t('settings.general.status.invisible');
         default:
-          return t("settings.general.status.online");
+          return t('settings.general.status.online');
       }
     };
 
@@ -177,8 +180,8 @@ export const ParticipantItem: (
         label: (
           <div className={styles.status_item}>
             <SvgResource type="online_dot" svgSize={14}></SvgResource>
-            <span>{t("settings.general.status.online")}</span>
-            <div>{t("settings.general.status.online_desc")}</div>
+            <span>{t('settings.general.status.online')}</span>
+            <div>{t('settings.general.status.online_desc')}</div>
           </div>
         ),
       },
@@ -187,8 +190,8 @@ export const ParticipantItem: (
         label: (
           <div className={styles.status_item}>
             <SvgResource type="offline_dot" svgSize={14}></SvgResource>
-            <span>{t("settings.general.status.idot")}</span>
-            <div>{t("settings.general.status.idot_desc")}</div>
+            <span>{t('settings.general.status.idot')}</span>
+            <div>{t('settings.general.status.idot_desc')}</div>
           </div>
         ),
       },
@@ -197,8 +200,8 @@ export const ParticipantItem: (
         label: (
           <div className={styles.status_item}>
             <SvgResource type="busy_dot" svgSize={14}></SvgResource>
-            <span>{t("settings.general.status.busy")}</span>
-            <div>{t("settings.general.status.busy_desc")}</div>
+            <span>{t('settings.general.status.busy')}</span>
+            <div>{t('settings.general.status.busy_desc')}</div>
           </div>
         ),
       },
@@ -207,8 +210,8 @@ export const ParticipantItem: (
         label: (
           <div className={styles.status_item}>
             <SvgResource type="away_dot" svgSize={14}></SvgResource>
-            <span>{t("settings.general.status.invisible")}</span>
-            <div>{t("settings.general.status.invisible_desc")}</div>
+            <span>{t('settings.general.status.invisible')}</span>
+            <div>{t('settings.general.status.invisible_desc')}</div>
           </div>
         ),
       },
@@ -251,7 +254,26 @@ export const ParticipantItem: (
         ),
       },
     ];
-    const { localParticipant } = useLocalParticipant();
+
+    // 使用rpc向服务器发送消息，告诉某个人打招呼
+    const wavePin = async () => {
+      // 注册rpc方法来发送用户之间的提醒, 用户之间可以点击"打招呼"按钮来触发
+      console.warn(trackReference.participant.identity);
+      try {
+        const response = await localParticipant.performRpc({
+          destinationIdentity: trackReference.participant.identity,
+          method: 'wave',
+          payload: JSON.stringify({
+            sender: localParticipant.identity,
+          }),
+        });
+
+        console.log('wave response', response);
+      } catch (e) {
+        console.error('wave error', e);
+      }
+    };
+
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
         {deviceTrack}
@@ -279,7 +301,7 @@ export const ParticipantItem: (
                     show={'muted'}
                   ></TrackMutedIndicator>
                   <ParticipantName />
-                  <div style={{marginLeft: '0.25rem'}}>
+                  <div style={{ marginLeft: '0.25rem' }}>
                     <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
                   </div>
                 </>
@@ -294,6 +316,24 @@ export const ParticipantItem: (
 
           <ConnectionQualityIndicator className="lk-participant-metadata-item" />
         </div>
+        {trackReference.participant.identity != localParticipant.identity && (
+          <LayoutContext.Consumer>
+            {(layoutContext) =>
+              layoutContext !== undefined && (
+                <button
+                  className="lk-button lk-focus-toggle-button"
+                  style={{
+                    left: '0.25rem',
+                    width: 'fit-content',
+                  }}
+                  onClick={wavePin}
+                >
+                  <SvgResource svgSize={16} type="wave"></SvgResource>
+                </button>
+              )
+            }
+          </LayoutContext.Consumer>
+        )}
       </ParticipantTile>
     );
   },

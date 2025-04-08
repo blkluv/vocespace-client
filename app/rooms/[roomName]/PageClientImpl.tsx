@@ -42,13 +42,15 @@ export const userState = atom({
     virtualRole: {
       enabled: false,
       role: ModelRole.Haru,
-      bg: ModelBg.ClassRoom
+      bg: ModelBg.ClassRoom,
     },
-    status: UserStatus.Online
+    status: UserStatus.Online,
   },
 });
 
-const CONN_DETAILS_ENDPOINT = connect_endpoint(process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details');
+const CONN_DETAILS_ENDPOINT = connect_endpoint(
+  process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details',
+);
 const SHOW_SETTINGS_MENU = process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU == 'true';
 
 export function PageClientImpl(props: {
@@ -199,7 +201,10 @@ function VideoConferenceComponent(props: {
   }, []);
 
   const router = useRouter();
-  const handleOnLeave = React.useCallback(() => router.push('/'), [router]);
+  const handleOnLeave = React.useCallback(() => {
+    room.unregisterRpcMethod('wave');
+    router.push('/');
+  }, [router]);
   const handleError = React.useCallback((error: Error) => {
     console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
     if (error.name === 'ConnectionError') {
