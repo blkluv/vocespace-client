@@ -66,7 +66,7 @@
 
 - [x] Status
 - [x] Settings
-- [ ] Virtual role video stream
+- [x] Virtual role video stream
 
 ## AI
 

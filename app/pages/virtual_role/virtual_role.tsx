@@ -247,10 +247,15 @@ export const Live2DComponent = ({
       const originalTrack = cameraPub.track;
       const virtualTrack = virtualStream.getVideoTracks()[0];
       // console.warn('虚拟摄像头流:', virtualTrack, cameraPub.track);
-      if (originalTrack) {
-        originalTrack.stop();
-        originalTrack.restartTrack(virtualTrack);
-      }
+      // if (originalTrack) {
+      //   originalTrack.stop();
+      //   originalTrack.restartTrack(virtualTrack);
+      // }
+
+      // const unPubTrack = await localParticipant.unpublishTrack(cameraPub.track);
+      // console.warn('取消发布:', unPubTrack);
+
+      await localParticipant.publishTrack(virtualTrack);
 
       // await localParticipant.unpublishTrack(cameraPub.track);
       // const virtualPub = await localParticipant.publishTrack(virtualTrack, {

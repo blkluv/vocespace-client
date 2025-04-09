@@ -8,30 +8,32 @@
 ### Features
 
 - Settings
-  - [x] General
-    - [x] Username
-    - [x] language
-    - [ ] User status
-  - [x] Audio
-    - [x] Volume
-    - [x] Selection
-  - [x] Video
-    - [x] Blur
-    - [x] Selection
-    - [x] Screen Blur
-  - [ ] Virtual
-    - [ ] Models
-    - [ ] Backgrounds
-    - [ ] Active or not
-    - [ ] Detect check
-  - [x] About Us
+  - General
+    - Username
+    - language
+    - User status
+  - Audio
+    - Volume
+    - Selection
+  - Video
+    - Blur
+    - Selection
+    - Screen Blur
+  - Virtual
+    - Models
+    - Backgrounds
+    - Active or not
+    - Detect check
+  - About Us
 - language change
 - tab for different way to room
-- [ ] enter room by using link
+- enter room by using link
+- Rpc
+  - Wave｜Remind others
+- Participant
+  - Virtual role video stream
 
 
-格式为: ^(https?:\/\/)?(vocespace.com|space.voce.chat)\/rooms\/([a-zA-Z0-9]+)$
-router.push(`/rooms/${roomUrl}`);
 ## v0.1.2
 
 - date: 2025-03-28
