@@ -193,7 +193,6 @@ export const Live2DComponent = ({
     }
     // 这里的数值都是像对于440 * 220的窗口大小，这里需要根据实际窗口大小进行调整
     scale = resize(scale, app.screen.width, app.screen.height);
-
     motionSync.loadMotionSyncFromUrl(
       src(`/live2d_resources/${model_role}/motions/${motion_file}.json`),
     );
@@ -293,7 +292,7 @@ export const Live2DComponent = ({
   const startFaceTracking = async () => {
     // 防止重复启动
     if (!enabled || cState.trackingActive || trackingRef.current !== null) return;
-    if (!fakeVideoRef.current || !videoRef.current) return;
+    if ( !videoRef.current) return;
     let realVideoTrack = videoRef.current;
     if (fakeVideoRef.current && trackRef) {
       console.log('使用虚拟视频流进行追踪');
@@ -305,11 +304,9 @@ export const Live2DComponent = ({
     const track = async () => {
       // 这里如果有trackRef则需要使用fakeVideoRef，因为真实的已经被替换了
       if (!realVideoTrack || !modelRef.current || !enabled) {
-        // messageApi.error(t('msg.error.virtual.model'));
         cleanupTracking();
         return;
       }
-
       const detection = await faceapi
         .detectSingleFace(realVideoTrack, new faceapi.TinyFaceDetectorOptions())
         .withFaceLandmarks();

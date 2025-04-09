@@ -1,13 +1,14 @@
 // lib/hooks/useRoomSettings.ts
 import { useState, useEffect, useCallback } from 'react';
-import { connect_endpoint } from '../std';
+import { connect_endpoint, UserStatus } from '../std';
 
 export interface ParticipantSettings {
   blur: number;
   screenBlur: number;
+  status: UserStatus;
 }
 
-interface RoomSettings {
+export interface RoomSettings {
   [participantId: string]: ParticipantSettings;
 }
 

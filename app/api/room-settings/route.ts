@@ -1,4 +1,5 @@
 // /app/api/room-settings/route.ts
+import { UserStatus } from '@/lib/std';
 import { NextRequest, NextResponse } from 'next/server';
 
 // 内存中存储房间设置 (实际应用中可能需要使用数据库或 Redis)
@@ -8,6 +9,7 @@ interface RoomSettings {
       [participantId: string]: {
         blur: number;
         screenBlur: number;
+        status: UserStatus;
       };
     };
   };

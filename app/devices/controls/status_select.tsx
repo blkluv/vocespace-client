@@ -17,11 +17,12 @@ interface Item {
 export function StatusSelect({
   style,
   className,
+  setUserStatus,
 }: {
   style?: React.CSSProperties;
   className?: string;
+  setUserStatus?: (status: UserStatus) => Promise<void>;
 }) {
-  
   const { t } = useI18n();
   const [state, setState] = useRecoilState(userState);
   const [active, setActive] = useState(state.status);
@@ -58,6 +59,9 @@ export function StatusSelect({
       ...state,
       status: active as UserStatus,
     });
+    if (setUserStatus) {
+      setUserStatus(active as UserStatus);
+    }
   };
 
   const renderedItem: SelectProps['optionRender'] = (option) => {

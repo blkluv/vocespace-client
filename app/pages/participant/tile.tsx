@@ -32,9 +32,11 @@ import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
 import { UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
+import { RoomSettings } from '@/lib/hooks/room_settings';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
-  blurs: Record<string, { blur: number; screenBlur: number }>;
+  settings: RoomSettings;
+  setUserStatus: (status: UserStatus) => Promise<void>;
   toSettings?: () => void;
   messageApi: MessageInstance;
 }
@@ -42,7 +44,10 @@ export interface ParticipantItemProps extends ParticipantTileProps {
 export const ParticipantItem: (
   props: ParticipantItemProps & React.RefAttributes<HTMLDivElement>,
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
-  function ParticipantItem({ trackRef, blurs, toSettings, messageApi }: ParticipantItemProps, ref) {
+  function ParticipantItem(
+    { trackRef, settings, toSettings, messageApi, setUserStatus }: ParticipantItemProps,
+    ref,
+  ) {
     const { t } = useI18n();
     const { localParticipant } = useLocalParticipant();
     const videoRef = React.useRef<HTMLVideoElement>(null);
@@ -57,15 +62,15 @@ export const ParticipantItem: (
     });
     const [loading, setLoading] = React.useState(true);
     useEffect(() => {
-      if (blurs && Object.keys(blurs).length > 0) {
+      if (settings && Object.keys(settings).length > 0) {
         if (trackReference.source === Track.Source.Camera) {
-          setVideoBlur(blurs[trackReference.participant.identity]?.blur ?? 0.15);
+          setVideoBlur(settings[trackReference.participant.identity]?.blur ?? 0.15);
         } else {
-          setVideoBlur(blurs[trackReference.participant.identity]?.screenBlur ?? 0.15);
+          setVideoBlur(settings[trackReference.participant.identity]?.screenBlur ?? 0.15);
         }
         setLoading(false);
       }
-    }, [blurs, trackReference.source]);
+    }, [settings, trackReference.source]);
 
     const handleSubscribe = React.useCallback(
       (subscribed: boolean) => {
@@ -133,7 +138,7 @@ export const ParticipantItem: (
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {
-      switch (uState.status) {
+      switch (settings[trackReference.participant.identity]?.status) {
         case UserStatus.Online:
           return 'online_dot';
         case UserStatus.Idot:
@@ -143,7 +148,7 @@ export const ParticipantItem: (
         case UserStatus.Invisible:
           return 'away_dot';
       }
-    }, [uState.status]);
+    }, [settings]);
     const statusFromSvgType = (svgType: SvgType): UserStatus => {
       switch (svgType) {
         case 'online_dot':
@@ -234,11 +239,13 @@ export const ParticipantItem: (
             placement="topLeft"
             menu={{
               items: status_menu,
-              onClick: (e) => {
+              onClick: async (e) => {
+                let status = statusFromSvgType(e.key as SvgType);
                 setUState({
                   ...uState,
-                  status: statusFromSvgType(e.key as SvgType),
+                  status,
                 });
+                await setUserStatus(status);
               },
             }}
           >

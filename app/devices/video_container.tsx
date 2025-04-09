@@ -1,4 +1,4 @@
-import { is_web } from '@/lib/std';
+import { is_web, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   Chat,
@@ -53,6 +53,7 @@ export function VideoContainer({
       // 将当前参与者的摄像头模糊度发送到服务器
       await updateSettings({
         blur: device.blur,
+        status: UserStatus.Online,
       });
 
       const newSettings = await fetchSettings();
@@ -158,6 +159,12 @@ export function VideoContainer({
     controlsRef.current?.openSettings('general');
   };
 
+  const setUserStatus = async (status: UserStatus) => {
+    await updateSettings({
+      status,
+    });
+  };
+
   return (
     <div className="lk-video-conference" {...props}>
       {is_web() && (
@@ -171,9 +178,10 @@ export function VideoContainer({
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
                   <ParticipantItem
-                    blurs={settings}
+                    settings={settings}
                     toSettings={toSettingGeneral}
                     messageApi={messageApi}
+                    setUserStatus={setUserStatus}
                   ></ParticipantItem>
                 </GridLayout>
               </div>
@@ -181,11 +189,16 @@ export function VideoContainer({
               <div className="lk-focus-layout-wrapper">
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
-                    <ParticipantItem blurs={settings} messageApi={messageApi}></ParticipantItem>
+                    <ParticipantItem
+                      settings={settings}
+                      messageApi={messageApi}
+                      setUserStatus={setUserStatus}
+                    ></ParticipantItem>
                   </CarouselLayout>
                   {focusTrack && (
                     <ParticipantItem
-                      blurs={settings}
+                      setUserStatus={setUserStatus}
+                      settings={settings}
                       trackRef={focusTrack}
                       messageApi={messageApi}
                     ></ParticipantItem>
