@@ -3,13 +3,10 @@ import {
   CarouselLayout,
   Chat,
   ConnectionStateToast,
-  ControlBar,
-  FocusLayout,
   FocusLayoutContainer,
   GridLayout,
   isTrackReference,
   LayoutContextProvider,
-  ParticipantTile,
   RoomAudioRenderer,
   TrackReference,
   useCreateLayoutContext,
@@ -19,30 +16,32 @@ import {
   VideoConferenceProps,
   WidgetState,
 } from '@livekit/components-react';
-import {
-  ConnectionState,
-  Participant,
-  Room,
-  RoomEvent,
-  RpcInvocationData,
-  Track,
-} from 'livekit-client';
-import React, { useEffect } from 'react';
-import { Controls } from './controls/bar';
+import { ConnectionState, Participant, RoomEvent, RpcInvocationData, Track } from 'livekit-client';
+import React, { useEffect, useState } from 'react';
+import { ControlBarExport, Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
-import { deviceState } from '../rooms/[roomName]/PageClientImpl';
+import { userState } from '../rooms/[roomName]/PageClientImpl';
 import { ParticipantItem } from '../pages/participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
+import { MessageInstance } from 'antd/es/message/interface';
+import { NotificationInstance } from 'antd/es/notification/interface';
+import { useI18n } from '@/lib/i18n/i18n';
 
 export function VideoContainer({
   chatMessageFormatter,
   chatMessageDecoder,
   chatMessageEncoder,
   SettingsComponent,
+  noteApi,
+  messageApi,
   ...props
-}: VideoConferenceProps) {
+}: VideoConferenceProps & { messageApi: MessageInstance; noteApi: NotificationInstance }) {
   const room = useMaybeRoomContext();
-  const [device, setDevice] = useRecoilState(deviceState);
+  const { t } = useI18n();
+  const [device, setDevice] = useRecoilState(userState);
+  const controlsRef = React.useRef<ControlBarExport>(null);
+  const waveAudioRef = React.useRef<HTMLAudioElement>(null);
+  const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
   const { settings, updateSettings, fetchSettings, setSettings } = useRoomSettings(
     room?.name || '', // 房间 ID
     room?.localParticipant?.identity || '', // 参与者 ID
@@ -60,6 +59,20 @@ export function VideoContainer({
       setSettings(newSettings);
     };
 
+    // 注册 提醒的 RPC 方法
+    if (!device.rpc) {
+      room.registerRpcMethod('wave', async (data: RpcInvocationData) => {
+        if (waveAudioRef.current) {
+          waveAudioRef.current.play();
+          const payload = JSON.parse(data.payload) as { name: string };
+
+          noteApi.info({
+            message: `${payload.name} ${t('common.wave_msg')}`,
+          });
+        }
+        return JSON.stringify(true);
+      });
+    }
     syncSettings();
   }, [room?.state]);
 
@@ -79,8 +92,13 @@ export function VideoContainer({
   );
 
   const widgetUpdate = (state: WidgetState) => {
-    console.debug('updating widget state', state);
-    setWidgetState(state);
+    if (cacheWidgetState && cacheWidgetState == state) {
+      return;
+    } else {
+      console.debug('updating widget state', state);
+      setCacheWidgetState(state);
+      setWidgetState(state);
+    }
   };
 
   const layoutContext = useCreateLayoutContext();
@@ -133,8 +151,12 @@ export function VideoContainer({
 
   //   useWarnAboutMissingStyles();
   const audioVolume = React.useMemo(() => {
-    return device.volme / 100.0;
-  }, [device.volme]);
+    return device.volume / 100.0;
+  }, [device.volume]);
+
+  const toSettingGeneral = () => {
+    controlsRef.current?.openSettings('general');
+  };
 
   return (
     <div className="lk-video-conference" {...props}>
@@ -148,23 +170,34 @@ export function VideoContainer({
             {!focusTrack ? (
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
-                  {/* <ParticipantTile /> */}
-                  <ParticipantItem blurs={settings}></ParticipantItem>
+                  <ParticipantItem
+                    blurs={settings}
+                    toSettings={toSettingGeneral}
+                    messageApi={messageApi}
+                  ></ParticipantItem>
                 </GridLayout>
               </div>
             ) : (
               <div className="lk-focus-layout-wrapper">
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
-                    {/* <ParticipantTile /> */}
-                    <ParticipantItem blurs={settings}></ParticipantItem>
+                    <ParticipantItem blurs={settings} messageApi={messageApi}></ParticipantItem>
                   </CarouselLayout>
-                  {focusTrack && <FocusLayout trackRef={focusTrack} />}
+                  {focusTrack && (
+                    <ParticipantItem
+                      blurs={settings}
+                      trackRef={focusTrack}
+                      messageApi={messageApi}
+                    ></ParticipantItem>
+                  )}
                 </FocusLayoutContainer>
               </div>
             )}
-            {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
-            <Controls controls={{ chat: true, settings: !!SettingsComponent }}></Controls>
+            <Controls
+              ref={controlsRef}
+              controls={{ chat: true, settings: !!SettingsComponent }}
+              updateSettings={updateSettings}
+            ></Controls>
           </div>
           <Chat
             style={{ display: widgetState.showChat ? 'grid' : 'none' }}
@@ -182,6 +215,11 @@ export function VideoContainer({
       )}
       <RoomAudioRenderer volume={audioVolume} />
       <ConnectionStateToast />
+      <audio
+        ref={waveAudioRef}
+        style={{ display: 'none' }}
+        src={`${process.env.NEXT_PUBLIC_BASE_PATH}/audios/vocespacewave.m4a`}
+      ></audio>
     </div>
   );
 }

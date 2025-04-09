@@ -24,7 +24,10 @@
     "recoil": "^0.7.7",
     "rxjs": "^7.8.2",
     "tinykeys": "^3.0.0",
-    "ulid": "^3.0.0"
+    "face-api.js": "^0.22.2",
+    "pixi-live2d-display": "^0.4.0",
+    "pixi.js": "6.5.10",
+    "live2d-motionsync": "^0.0.4"
   },
   "devDependencies": {
     "@types/node": "22.10.7",

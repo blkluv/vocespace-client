@@ -5,6 +5,7 @@ import styles from '@/styles/Home.module.css';
 import { useI18n } from '@/lib/i18n/i18n';
 import { DemoMeetingTab } from './pages/pre_join/demo';
 import { src } from '@/lib/std';
+import { LangSelect } from './devices/controls/lang_select';
 
 export default function Page() {
   const { t } = useI18n();
@@ -12,9 +13,12 @@ export default function Page() {
   return (
     <>
       <main className={styles.main} data-lk-theme="default">
+        <span className={styles.lang_select}>
+          <LangSelect></LangSelect>
+        </span>
         <div className="header">
           <img
-            src={src("/images/vocespace.svg")}
+            src={src('/images/vocespace.svg')}
             alt="VoceSpace"
             width="360"
             height="45"

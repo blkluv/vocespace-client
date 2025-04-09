@@ -30,17 +30,30 @@ import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, RecoilRoot, useRecoilState } from 'recoil';
-import { connect_endpoint } from '@/lib/std';
+import { connect_endpoint, UserStatus } from '@/lib/std';
+import { ModelBg, ModelRole } from '@/lib/std/virtual';
 
-export const deviceState = atom({
-  key: 'deviceState',
+export const userState = atom({
+  key: 'userState',
   default: {
-    volme: 80,
+    volume: 80,
     blur: 0.15,
+    screenBlur: 0.15,
+    virtualRole: {
+      enabled: false,
+      role: ModelRole.Haru,
+      bg: ModelBg.ClassRoom,
+    },
+    status: UserStatus.Online,
+    rpc: {
+      wave: false
+    }
   },
 });
 
-const CONN_DETAILS_ENDPOINT = connect_endpoint(process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details');
+const CONN_DETAILS_ENDPOINT = connect_endpoint(
+  process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details',
+);
 const SHOW_SETTINGS_MENU = process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU == 'true';
 
 export function PageClientImpl(props: {
@@ -191,7 +204,10 @@ function VideoConferenceComponent(props: {
   }, []);
 
   const router = useRouter();
-  const handleOnLeave = React.useCallback(() => router.push('/'), [router]);
+  const handleOnLeave = React.useCallback(() => {
+    room.unregisterRpcMethod('wave');
+    router.push('/');
+  }, [router]);
   const handleError = React.useCallback((error: Error) => {
     console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
     if (error.name === 'ConnectionError') {
@@ -305,6 +321,8 @@ function VideoConferenceComponent(props: {
         <VideoContainer
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
+          messageApi={messageApi}
+          noteApi={notApi}
         ></VideoContainer>
         <DebugMode />
         <RecordingIndicator />

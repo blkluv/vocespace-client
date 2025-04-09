@@ -12,12 +12,14 @@ export default {
     loading: 'Loading...',
     no_data: 'No data available',
     no_more: 'No more data',
-    demo: 'Demo',
-    custom: 'Custom',
+    demo: 'New meeting',
+    custom: 'Meeting space',
     start_metting: 'Start Meeting',
     join_room: 'Join Room',
     passphrase: 'Password',
     username: 'Username',
+    setting: 'Setting',
+    compare: 'Compare Effect',
     device: {
       microphone: 'Microphone',
       volume: 'Microphone Volume',
@@ -33,6 +35,60 @@ export default {
     leave: 'Leave',
     share_screen: 'Share Screen',
     stop_share: 'Stop Share Share',
+    wave_msg: "sent you a reminder!",
+  },
+  settings: {
+    title: 'Settings',
+    general: {
+      title: 'General',
+      username: 'Username',
+      lang: 'Language',
+      status: {
+        title: 'Status',
+        online: 'Online',
+        online_desc: 'Online, user can receive any messages',
+        idot: 'Offline',
+        idot_desc: 'Offline, user will not receive any messages',
+        busy: 'Busy',
+        busy_desc: 'Busy, do not disturb, user will not receive any messages but still appears online',
+        invisible: 'Invisible',
+        invisible_desc: 'Invisible, user will not appear online but can use all Vocespace features',
+      },
+    },
+    audio: {
+      title: 'Audio',
+      volume: 'Volume',
+      device: 'Audio Device',
+    },
+    video: {
+      title: 'Video',
+      video_blur: 'Video Blur',
+      screen_blur: 'Screen Blur',
+      device: 'Video Device',
+    },
+    virtual: {
+      title: 'Virtual Role',
+      open: 'Enable Virtual Role',
+    },
+    about_us: {
+      title: 'About Us',
+      brief: 'Secure Video Calls Under Your Domain and Brand',
+      desc: 'We will help you host your own secure video and audio conferencing platform under your subdomain with your own logo and branding. Complete control over your data with enterprise-grade encryption.',
+    },
+    device: {
+      audio: {
+        title: '音频设备',
+        desc: '选择您的音频输入和输出设备。',
+      },
+      video: {
+        title: '视频设备',
+        desc: '选择您的视频输入设备。',
+      },
+      screen: {
+        title: '屏幕共享',
+        desc: '选择要共享的屏幕或窗口。',
+      },
+    },
   },
   msg: {
     info: {
@@ -41,11 +97,17 @@ export default {
       contact: 'Contact',
       learn_more: 'Learn More',
       try_free: 'Try Voce Space for free through our live demo project.',
+      try_enter_room: 'Enter a name to join or create a space.',
       connect_with_server: 'Connect Voce Space with a custom server using Voce Space Server.',
       enabled_e2ee: 'End-to-end encryption enabled',
-      enter_room: 'Please enter the room',
+      enter_room: 'Please enter the space name or link',
+      virtual_loading: 'Loading virtual role, please wait...',
     },
     error: {
+      virtual: {
+        video_stream: "Virtual camera stream construction error",
+        model: "Model or video unavailable",
+      },
       e2ee: {
         unsupport:
           'You are trying to join an encrypted meeting, but your browser does not support this feature. Please update it to the latest version and try again.',
@@ -54,6 +116,7 @@ export default {
         unexpect:
           'An unexpected error has occurred. Please check the console logs for more details.',
         network: 'Connection error. Please check your network connection and try again.',
+        invalid: 'Room does not exist. Please check the room name or link.',
       },
       device: {
         in_use: 'The device is currently in use. Please check if other applications are using it.',
@@ -68,6 +131,11 @@ export default {
       },
       other: {
         permission: 'Failed to request permission.',
+      },
+      user: {
+        username: {
+          change: 'Username changed failed',
+        },
       },
     },
     request: {
@@ -110,6 +178,12 @@ export default {
     success: {
       device: {
         granted: 'Media permissions have been successfully granted.',
+      },
+      user: {
+        username: {
+          change: 'Username changed successfully',
+        },
+        lang: "Language changed successfully",
       },
     },
   },

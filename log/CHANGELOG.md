@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## v0.1.3
+
+- date: 2025-04-01
+- branch: dev_0.1.3
+
+### Features
+
+- Settings
+  - General
+    - Username
+    - language
+    - User status
+  - Audio
+    - Volume
+    - Selection
+  - Video
+    - Blur
+    - Selection
+    - Screen Blur
+  - Virtual
+    - Models
+    - Backgrounds
+    - Active or not
+    - Detect check
+  - About Us
+- language change
+- tab for different way to room
+- enter room by using link
+- Rpc
+  - Wave｜Remind others
+- Participant
+  - Virtual role video stream
+
+
 ## v0.1.2
 
 - date: 2025-03-28

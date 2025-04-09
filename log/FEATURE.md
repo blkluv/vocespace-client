@@ -34,27 +34,28 @@
 
 #### Settings
 
-- [ ] General
-  - [ ] Username
-  - [ ] User status
-- [ ] Audio
-  - [ ] Volume
-  - [ ] Selection
-- [ ] Video
-  - [ ] Blur
-  - [ ] Selection
-  - [ ] Screen Blur
-- [ ] Virtual
-  - [ ] Models
-  - [ ] Backgrounds
-  - [ ] Active or not
-  - [ ] Detect check
-- [ ] About Us
+- [x] General
+  - [x] Username
+  - [x] language
+  - [x] User status
+- [x] Audio
+  - [x] Volume
+  - [x] Selection
+- [x] Video
+  - [x] Blur
+  - [x] Selection
+  - [x] Screen Blur
+- [x] Virtual
+  - [x] Models
+  - [x] Backgrounds
+  - [x] Active or not
+  - [x] Detect check
+- [x] About Us
 
 #### RPC
 
 - [ ] Others cursors focus
-- [ ] Wave｜Remind others
+- [x] Wave｜Remind others
 
 ## Permission 
 
@@ -63,13 +64,14 @@
 
 ## Participant
 
-- [ ] Status
-- [ ] Settings
+- [x] Status
+- [x] Settings
+- [x] Virtual role video stream
 
 ## AI
 
 - [x] Noice cancellation
-- [ ] Virtual role
+- [x] Virtual role
 
 ## i18n
 

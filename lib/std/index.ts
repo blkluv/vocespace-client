@@ -25,7 +25,14 @@ export interface UserItemProp {
   status: UserStatus;
 }
 
-export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';
+// export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';
+
+export enum UserStatus {
+  Online = 'online',
+  Idot = 'offline',
+  Busy = 'busy',
+  Invisible = 'away',
+}
 
 export function is_web(): boolean {
   return typeof window !== 'undefined';
@@ -45,4 +52,14 @@ export function connect_endpoint(url: string): string {
     return url;
   }
   return `${prefix}${url}`;
+}
+
+/// 生成随机4个字符
+export function ulid(): string {
+  const char = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  let res = "";
+  for (let i = 0; i < 4; i++) {
+    res += char[Math.floor(Math.random() * char.length)];
+  }
+  return res;
 }
