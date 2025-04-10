@@ -26,6 +26,9 @@ import { useRoomSettings } from '@/lib/hooks/room_settings';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
+import io from "socket.io-client";
+
+export const socket = io();
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -54,27 +57,33 @@ export function VideoContainer({
       await updateSettings({
         blur: device.blur,
         status: UserStatus.Online,
+        socketId: socket.id
       });
 
       const newSettings = await fetchSettings();
       setSettings(newSettings);
     };
 
-    // 注册 提醒的 RPC 方法
-    if (!device.rpc) {
-      room.registerRpcMethod('wave', async (data: RpcInvocationData) => {
-        if (waveAudioRef.current) {
-          waveAudioRef.current.play();
-          const payload = JSON.parse(data.payload) as { name: string };
-
-          noteApi.info({
-            message: `${payload.name} ${t('common.wave_msg')}`,
-          });
-        }
-        return JSON.stringify(true);
-      });
-    }
     syncSettings();
+
+    socket.on("wave_response", (msg: {
+      senderId: string;
+      senderName: string;
+      receiverId: string;
+    }) => {
+      console.log("receive wave", msg);
+      if (msg.receiverId === room.localParticipant.identity) {
+        waveAudioRef.current?.play();
+        noteApi.info({
+          message: `${msg.senderName} ${t('common.wave_msg')}`,
+        });
+      }
+    })
+
+    return () => {
+      socket.off("wave");
+    }
+
   }, [room?.state]);
 
   const [widgetState, setWidgetState] = React.useState<WidgetState>({

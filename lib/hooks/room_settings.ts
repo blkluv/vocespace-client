@@ -6,6 +6,7 @@ export interface ParticipantSettings {
   blur: number;
   screenBlur: number;
   status: UserStatus;
+  socketId: string;
 }
 
 export interface RoomSettings {

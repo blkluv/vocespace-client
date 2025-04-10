@@ -10,6 +10,7 @@ interface RoomSettings {
         blur: number;
         screenBlur: number;
         status: UserStatus;
+        socketId: string;
       };
     };
   };

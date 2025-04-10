@@ -1,4 +1,4 @@
-import { isTrackReferencePlaceholder } from '@/app/devices/video_container';
+import { isTrackReferencePlaceholder, socket } from '@/app/devices/video_container';
 import { useVideoBlur } from '@/lib/std/device';
 import {
   AudioTrack,
@@ -264,20 +264,27 @@ export const ParticipantItem: (
     // 使用rpc向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {
       // 注册rpc方法来发送用户之间的提醒, 用户之间可以点击"打招呼"按钮来触发
-      console.warn(trackReference.participant.identity);
-      try {
-        const response = await localParticipant.performRpc({
-          destinationIdentity: trackReference.participant.identity,
-          method: 'wave',
-          payload: JSON.stringify({
-            name: localParticipant.name || localParticipant.identity,
-          }),
-        });
+      console.warn(settings[trackReference.participant.identity]?.socketId);
+      // try {
+      //   const response = await localParticipant.performRpc({
+      //     destinationIdentity: trackReference.participant.identity,
+      //     method: 'wave',
+      //     payload: JSON.stringify({
+      //       name: localParticipant.name || localParticipant.identity,
+      //     }),
+      //   });
 
-        console.log('wave response', response);
-      } catch (e) {
-        console.error('wave error', e);
-      }
+      //   console.log('wave response', response);
+      // } catch (e) {
+      //   console.error('wave error', e);
+      // }
+      
+      socket.emit("wave", {
+        senderName: localParticipant.name,
+        senderId: localParticipant.identity,
+        receiverId: trackReference.participant.identity,
+        socketId: settings[trackReference.participant.identity]?.socketId,
+      })
     };
 
     return (
