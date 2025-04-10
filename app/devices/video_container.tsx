@@ -55,6 +55,7 @@ export function VideoContainer({
     const syncSettings = async () => {
       // 将当前参与者的摄像头模糊度发送到服务器
       await updateSettings({
+        name: room.localParticipant.name || room.localParticipant.identity,
         blur: device.blur,
         status: UserStatus.Online,
         socketId: socket.id

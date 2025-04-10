@@ -18,9 +18,7 @@ import { connect_endpoint, src, ulid } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
 import { LangSelect } from '@/app/devices/controls/lang_select';
 
-const CONN_DETAILS_ENDPOINT = connect_endpoint(
-  process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/room/participant',
-);
+const CONN_DETAILS_ENDPOINT = connect_endpoint('/api/room-settings');
 /**
  * # PreJoin
  * PreJoin component for the app, which use before join a room
@@ -151,20 +149,21 @@ export function PreJoin({
     };
 
     if (username === '') {
-      messageApi.loading(t("msg.request.user.name"), 2);
+      messageApi.loading(t('msg.request.user.name'), 2);
       // 向服务器请求一个唯一的用户名
       const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
       // 获取roomId，从当前的url中
       const roomId = getRoomIdFromUrl();
       if (!roomId) return;
       url.searchParams.append('roomId', roomId);
+      url.searchParams.append('pre', 'true');
       const response = await fetch(url.toString());
       if (response.ok) {
         const { name } = await response.json();
         finalUserChoices.username = name;
         setUsername(name);
-      }else{
-        messageApi.error(`${t("msg.error.user.username.request")}: ${response.statusText}`);
+      } else {
+        messageApi.error(`${t('msg.error.user.username.request')}: ${response.statusText}`);
       }
     }
 
@@ -198,7 +197,6 @@ export function PreJoin({
     }
   };
   return (
-    
     <div className={styles.view}>
       {contextHolder}
       <span className={styles.view__lang_select}>

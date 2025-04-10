@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { connect_endpoint, UserStatus } from '../std';
 
 export interface ParticipantSettings {
+  name: string;
   blur: number;
   screenBlur: number;
   status: UserStatus;

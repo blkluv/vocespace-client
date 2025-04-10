@@ -26,11 +26,13 @@ export function DemoMeetingTab(props: { label: string }) {
   const [e2ee, setE2ee] = useState(false);
   const [roomUrl, setRoomUrl] = useState('');
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+  // tab options -----------------------------------------------------------------------------
   const options: CheckboxGroupProps<string>['options'] = [
     { label: t('common.demo'), value: 'demo' },
     { label: t('common.custom'), value: 'custom' },
   ];
   const [optionVal, setOptionVal] = useState('demo');
+  // start meeting if valid ------------------------------------------------------------------
   const startMeeting = () => {
     if (e2ee) {
       router.push(`/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
