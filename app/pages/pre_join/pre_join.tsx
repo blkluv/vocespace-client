@@ -9,15 +9,32 @@ import {
 import styles from '@/styles/pre_join.module.scss';
 import React from 'react';
 import { facingModeFromLocalTrack, LocalAudioTrack, LocalVideoTrack, Track } from 'livekit-client';
-import { Input, Slider } from 'antd';
+import { Input, message, Slider } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
-import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
-import { src, ulid } from '@/lib/std';
+import { roomIdTmpState, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { connect_endpoint, src, ulid } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
 import { LangSelect } from '@/app/devices/controls/lang_select';
 
+const CONN_DETAILS_ENDPOINT = connect_endpoint(
+  process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/room/participant',
+);
+/**
+ * # PreJoin
+ * PreJoin component for the app, which use before join a room
+ * ## Features
+ * - check and adjust their microphone and camera settings
+ *   - test microphone and camera
+ *   - test audio volume
+ *   - test camera blur
+ * - set username as a unique name (if not ask for server to generate an available name)
+ * - set audio and video device
+ * - set audio and video enabled
+ * - set audio and video track
+ * @param PreJoinProps
+ */
 export function PreJoin({
   defaults = {},
   persistUserChoices = true,
@@ -27,7 +44,6 @@ export function PreJoin({
   micLabel,
   camLabel,
   userLabel,
-  onValidate,
   joinLabel,
 }: PreJoinProps) {
   const { t } = useI18n();
@@ -52,6 +68,7 @@ export function PreJoin({
   const [audioDeviceId, setAudioDeviceId] = React.useState<string>(userChoices.audioDeviceId);
   const [videoDeviceId, setVideoDeviceId] = React.useState<string>(userChoices.videoDeviceId);
   const [username, setUsername] = React.useState(userChoices.username);
+  const [messageApi, contextHolder] = message.useMessage();
   // Save user choices to persistent storage ---------------------------------------------------------
   React.useEffect(() => {
     saveAudioInputEnabled(audioEnabled);
@@ -123,11 +140,10 @@ export function PreJoin({
       setUserChoices(newUserChoices);
     }
   }, [username, videoEnabled, videoDeviceId, audioEnabled, audioDeviceId]);
-
-  const handleSubmit = () => {
-    const effectiveUsername = username === '' ? `user${ulid()}` : username;
+  // handle submit --------------------------------------------------------------------------------
+  const handleSubmit = async () => {
     const finalUserChoices = {
-      username: effectiveUsername,
+      username,
       videoEnabled,
       videoDeviceId,
       audioEnabled,
@@ -135,7 +151,21 @@ export function PreJoin({
     };
 
     if (username === '') {
-      setUsername(effectiveUsername);
+      messageApi.loading(t("msg.request.user.name"), 2);
+      // 向服务器请求一个唯一的用户名
+      const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
+      // 获取roomId，从当前的url中
+      const roomId = getRoomIdFromUrl();
+      if (!roomId) return;
+      url.searchParams.append('roomId', roomId);
+      const response = await fetch(url.toString());
+      if (response.ok) {
+        const { name } = await response.json();
+        finalUserChoices.username = name;
+        setUsername(name);
+      }else{
+        messageApi.error(`${t("msg.error.user.username.request")}: ${response.statusText}`);
+      }
     }
 
     if (typeof onSubmit === 'function') {
@@ -168,7 +198,9 @@ export function PreJoin({
     }
   };
   return (
+    
     <div className={styles.view}>
+      {contextHolder}
       <span className={styles.view__lang_select}>
         <LangSelect></LangSelect>
       </span>
@@ -307,3 +339,21 @@ export function PreJoin({
     </div>
   );
 }
+
+// 从当前浏览器的URL中获取房间ID
+const getRoomIdFromUrl = (): string | undefined => {
+  // 获取当前URL
+  const url = window.location.href;
+  // 要获取roomId只需找到url中rooms/后面的部分到下一个/为止
+  let end = url.indexOf('/', url.indexOf('rooms/') + 6);
+  if (end == -1) {
+    end = url.length;
+  }
+  const roomId = url.substring(url.indexOf('rooms/') + 6, end);
+
+  if (roomId === '') {
+    return undefined;
+  } else {
+    return roomId;
+  }
+};

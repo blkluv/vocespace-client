@@ -46,9 +46,14 @@ export const userState = atom({
     },
     status: UserStatus.Online,
     rpc: {
-      wave: false
-    }
+      wave: false,
+    },
   },
+});
+
+export const roomIdTmpState = atom({
+  key: 'roomIdTmpState',
+  default: '',
 });
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint(
