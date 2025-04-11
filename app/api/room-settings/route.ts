@@ -51,8 +51,12 @@ export async function GET(request: NextRequest) {
     });
 
     // 直接进行排序并获取最大值，+ 1之后就是可以使用的参与者名字
-    usedUserNames.sort((a, b) => a - b);
-    let suffix = usedUserNames[usedUserNames.length - 1] + 1;
+    let suffix = 1; // 默认从 1 开始
+    if (usedUserNames.length > 0) {
+      usedUserNames.sort((a, b) => a - b);
+      suffix = usedUserNames[usedUserNames.length - 1] + 1;
+    }
+    
     let suffix_str = suffix.toString();
     if (suffix < 10) {
       suffix_str = `0${suffix}`;

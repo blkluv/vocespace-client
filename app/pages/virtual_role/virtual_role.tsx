@@ -9,7 +9,7 @@ import { VirtualRoleProps } from './live2d';
 import { ModelRole } from '@/lib/std/virtual';
 import { src } from '@/lib/std';
 import { isTrackReference, useLocalParticipant } from '@livekit/components-react';
-import { LocalTrackPublication, Track } from 'livekit-client';
+import { LocalTrack, LocalTrackPublication, Track } from 'livekit-client';
 import { loadVideo } from '@/lib/std/device';
 import { useI18n } from '@/lib/i18n/i18n';
 
@@ -34,7 +34,7 @@ export const Live2DComponent = ({
   const [lastPosition, setLastPosition] = useState<{ x: number; y: number } | null>(null);
   const smoothnessFactorRef = useRef(0.25); // 添加平滑过渡因子 (0-1之间，越小越平滑)
   // 存储发布的虚拟轨道
-  const virtualTrackRef = useRef<LocalTrackPublication | null>(null);
+  const originTrackRef = useRef<LocalTrack<Track.Kind> | null>(null);
   const { t } = useI18n();
 
   // 状态机来控制流程
@@ -57,12 +57,10 @@ export const Live2DComponent = ({
       trackingRef.current = null;
     }
     // 清理虚拟轨道
-    if (virtualTrackRef.current?.track && localParticipant) {
+    if (originTrackRef.current && localParticipant) {
       try {
-        localParticipant
-          .unpublishTrack(virtualTrackRef.current.track)
-          .catch((err) => console.error(err));
-        virtualTrackRef.current = null;
+        originTrackRef.current.restartTrack();
+        originTrackRef.current = null;
       } catch (error) {
         console.error('Error unpublishing track:', error);
       }
@@ -246,8 +244,9 @@ export const Live2DComponent = ({
       const originalTrack = cameraPub.track;
       const virtualTrack = virtualStream.getVideoTracks()[0];
       originalTrack.replaceTrack(virtualTrack);
+
       // await localParticipant.publishTrack(virtualTrack, {
-      //   name: 
+      //   name:
       // });
 
       // await localParticipant.unpublishTrack(cameraPub.track);
@@ -256,7 +255,7 @@ export const Live2DComponent = ({
       //   // await localParticipant.publishTrack(virtualTrack);
       // }, 300);
 
-      // virtualTrackRef.current = virtualPub;
+      originTrackRef.current = originalTrack;
       // console.log('虚拟摄像头流创建成功');
     } catch (error) {
       console.error('虚拟摄像头流构建失败:', error);
