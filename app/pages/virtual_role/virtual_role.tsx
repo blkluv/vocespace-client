@@ -245,28 +245,17 @@ export const Live2DComponent = ({
       }
       const originalTrack = cameraPub.track;
       const virtualTrack = virtualStream.getVideoTracks()[0];
-      // console.warn('虚拟摄像头流:', virtualTrack, cameraPub.track);
-      // if (originalTrack) {
-      //   originalTrack.stop();
-      //   originalTrack.restartTrack(virtualTrack);
-      // }
-
-      // const unPubTrack = await localParticipant.unpublishTrack(cameraPub.track);
-      // console.warn('取消发布:', unPubTrack);
-
-      await localParticipant.publishTrack(virtualTrack);
+      originalTrack.replaceTrack(virtualTrack);
+      // await localParticipant.publishTrack(virtualTrack, {
+      //   name: 
+      // });
 
       // await localParticipant.unpublishTrack(cameraPub.track);
-      // const virtualPub = await localParticipant.publishTrack(virtualTrack, {
-      //   name: 'virtual_camera',
-      //   source: Track.Source.Camera,
-      //   simulcast: true,
-      //   videoEncoding: {
-      //     maxBitrate: 1500000,
-      //     maxFramerate:24
-      //   },
-      //   videoCodec: 'vp8'
-      // });
+      // setTimeout(async () => {
+      //   console.log('发布虚拟摄像头流');
+      //   // await localParticipant.publishTrack(virtualTrack);
+      // }, 300);
+
       // virtualTrackRef.current = virtualPub;
       // console.log('虚拟摄像头流创建成功');
     } catch (error) {
@@ -292,7 +281,7 @@ export const Live2DComponent = ({
   const startFaceTracking = async () => {
     // 防止重复启动
     if (!enabled || cState.trackingActive || trackingRef.current !== null) return;
-    if ( !videoRef.current) return;
+    if (!videoRef.current) return;
     let realVideoTrack = videoRef.current;
     if (fakeVideoRef.current && trackRef) {
       console.log('使用虚拟视频流进行追踪');
@@ -479,7 +468,9 @@ export const Live2DComponent = ({
 
   return (
     <div ref={containerRef} className={styles.virtual_role}>
-      {cState.isLoading && <div className={styles.virtual_role_msgbox}>{t('msg.info.virtual_loading')}</div>}
+      {cState.isLoading && (
+        <div className={styles.virtual_role_msgbox}>{t('msg.info.virtual_loading')}</div>
+      )}
       <canvas
         ref={canvasEle}
         id="virtual_role_canvas"
