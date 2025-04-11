@@ -130,6 +130,7 @@ export default {
       user: {
         username: {
           change: '用户名修改失败',
+          request: "请求用户名失败",
         },
       },
     },
@@ -167,6 +168,9 @@ export default {
           other: '请查看浏览器帮助文档以获取更多信息。',
         },
       },
+      user: {
+        name: "正在为您请求可用的用户名...",
+      }
     },
     success: {
       device: {

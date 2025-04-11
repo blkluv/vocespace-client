@@ -10,7 +10,7 @@ import { AudioSelect } from './audio_select';
 import { VideoSelect } from './video_select';
 import { LangSelect } from './lang_select';
 import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
-import { src } from '@/lib/std';
+import { src, UserStatus } from '@/lib/std';
 import { StatusSelect } from './status_select';
 
 export interface SettingsProps {
@@ -38,6 +38,7 @@ export interface SettingsProps {
   };
   saveChanges: (tab_key: TabKey) => void;
   messageApi: MessageInstance;
+  setUserStatus?: (status: UserStatus) => Promise<void>;
 }
 
 export interface SettingsExports {
@@ -70,6 +71,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       },
       saveChanges,
       messageApi,
+      setUserStatus
     }: SettingsProps,
     ref,
   ) => {
@@ -100,7 +102,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             <div className={styles.common_space}>{t('settings.general.lang')}:</div>
             <LangSelect style={{ width: '100%' }}></LangSelect>
             <div className={styles.common_space}>{t('settings.general.status.title')}:</div>
-            <StatusSelect style={{ width: '100%' }}></StatusSelect>
+            <StatusSelect style={{ width: '100%' }} setUserStatus={setUserStatus}></StatusSelect>
           </div>
         ),
       },

@@ -44,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         components: {
           Dropdown: {
             colorBgElevated: '#1E1E1E',
+            controlItemBgHover: "#333",
           },
           Radio: {
             buttonBg: '#1E1E1E',
@@ -69,11 +70,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             hoverBorderColor: '#1E1E1E',
             optionSelectedBg: '#22CCEE',
             optionSelectedColor: '#fff',
-            optionActiveBg: '#1E1E1E',
+            optionActiveBg: '#333',
             colorBgBase: '#1E1E1E',
             multipleItemBg: '#1E1E1E',
             colorBorder: '#1E1E1E',
-            colorBgContainer: '#1E1E1E',
             colorBgLayout: '#1E1E1E',
             colorBgElevated: '#1E1E1E',
           },

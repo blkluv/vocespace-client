@@ -1,4 +1,4 @@
-import { is_web } from '@/lib/std';
+import { is_web, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   Chat,
@@ -20,7 +20,7 @@ import { ConnectionState, Participant, RoomEvent, RpcInvocationData, Track } fro
 import React, { useEffect, useState } from 'react';
 import { ControlBarExport, Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
-import { userState } from '../rooms/[roomName]/PageClientImpl';
+import { socket, userState } from '../rooms/[roomName]/PageClientImpl';
 import { ParticipantItem } from '../pages/participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
 import { MessageInstance } from 'antd/es/message/interface';
@@ -50,30 +50,52 @@ export function VideoContainer({
     if (!room || room.state !== ConnectionState.Connected) return;
 
     const syncSettings = async () => {
-      // 将当前参与者的摄像头模糊度发送到服务器
+      // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
       await updateSettings({
+        name: room.localParticipant.name || room.localParticipant.identity,
         blur: device.blur,
+        status: UserStatus.Online,
+        socketId: socket.id,
       });
 
-      const newSettings = await fetchSettings();
-      setSettings(newSettings);
+      // const newSettings = await fetchSettings();
+      // setSettings(newSettings);
     };
 
-    // 注册 提醒的 RPC 方法
-    if (!device.rpc) {
-      room.registerRpcMethod('wave', async (data: RpcInvocationData) => {
-        if (waveAudioRef.current) {
-          waveAudioRef.current.play();
-          const payload = JSON.parse(data.payload) as { name: string };
+    syncSettings();
 
+    // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
+    socket.on(
+      'wave_response',
+      (msg: { senderId: string; senderName: string; receiverId: string }) => {
+        console.log('receive wave', msg);
+        if (msg.receiverId === room.localParticipant.identity) {
+          waveAudioRef.current?.play();
           noteApi.info({
-            message: `${payload.name} ${t('common.wave_msg')}`,
+            message: `${msg.senderName} ${t('common.wave_msg')}`,
           });
         }
-        return JSON.stringify(true);
-      });
-    }
-    syncSettings();
+      },
+    );
+
+    // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
+    socket.on('user_status_updated', async () => {
+      // 调用fetchSettings
+      await fetchSettings();
+    });
+
+    // 房间事件监听器 --------------------------------------------------------------------------------
+    const onParticipantConnected = async (participant: Participant) => {
+      await fetchSettings();
+    };
+
+    room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+
+    return () => {
+      socket.off('wave_response');
+      socket.off('user_status_updated');
+      room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
+    };
   }, [room?.state]);
 
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
@@ -158,6 +180,13 @@ export function VideoContainer({
     controlsRef.current?.openSettings('general');
   };
 
+  const setUserStatus = async (status: UserStatus) => {
+    await updateSettings({
+      status,
+    });
+    socket.emit('update_user_status');
+  };
+
   return (
     <div className="lk-video-conference" {...props}>
       {is_web() && (
@@ -171,9 +200,10 @@ export function VideoContainer({
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
                   <ParticipantItem
-                    blurs={settings}
+                    settings={settings}
                     toSettings={toSettingGeneral}
                     messageApi={messageApi}
+                    setUserStatus={setUserStatus}
                   ></ParticipantItem>
                 </GridLayout>
               </div>
@@ -181,11 +211,16 @@ export function VideoContainer({
               <div className="lk-focus-layout-wrapper">
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
-                    <ParticipantItem blurs={settings} messageApi={messageApi}></ParticipantItem>
+                    <ParticipantItem
+                      settings={settings}
+                      messageApi={messageApi}
+                      setUserStatus={setUserStatus}
+                    ></ParticipantItem>
                   </CarouselLayout>
                   {focusTrack && (
                     <ParticipantItem
-                      blurs={settings}
+                      setUserStatus={setUserStatus}
+                      settings={settings}
                       trackRef={focusTrack}
                       messageApi={messageApi}
                     ></ParticipantItem>

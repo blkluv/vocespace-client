@@ -1,13 +1,16 @@
 // lib/hooks/useRoomSettings.ts
 import { useState, useEffect, useCallback } from 'react';
-import { connect_endpoint } from '../std';
+import { connect_endpoint, UserStatus } from '../std';
 
 export interface ParticipantSettings {
+  name: string;
   blur: number;
   screenBlur: number;
+  status: UserStatus;
+  socketId: string;
 }
 
-interface RoomSettings {
+export interface RoomSettings {
   [participantId: string]: ParticipantSettings;
 }
 
@@ -64,17 +67,10 @@ export function useRoomSettings(roomId: string, participantId: string) {
         if (!response.ok) {
           throw new Error(`Failed to update settings: ${response.status}`);
         }
+        // 直接执行fetchSettings以获取最新设置
+        const data = await fetchSettings();
 
-        // 更新本地状态
-        setSettings((prev) => ({
-          ...prev,
-          [participantId]: {
-            ...prev[participantId],
-            ...newSettings,
-          },
-        }));
-
-        return true;
+        return Boolean(data);
       } catch (err) {
         console.error('Error updating settings:', err);
         setError(err instanceof Error ? err : new Error(String(err)));
@@ -100,17 +96,9 @@ export function useRoomSettings(roomId: string, participantId: string) {
     }
   }, [roomId, participantId]);
 
-  //   // 初始加载设置
-  //   useEffect(() => {
-  //     fetchSettings();
-
-  //     // 设置轮询以获取更新（或者可以使用 WebSocket）
-  //     const interval = setInterval(fetchSettings, 5000); // 每 5 秒更新一次
-
-  //     return () => {
-  //       clearInterval(interval);
-  //     };
-  //   }, [fetchSettings]);
+  // useEffect(() => {
+  //   console.log(settings);
+  // }, [settings]);
 
   return {
     settings,

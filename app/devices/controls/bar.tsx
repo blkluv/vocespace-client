@@ -21,8 +21,9 @@ import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
-import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings } from '@/lib/hooks/room_settings';
+import { UserStatus } from '@/lib/std';
 
 /** @public */
 export type ControlBarControls = {
@@ -181,10 +182,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           bg: modelBg,
         },
       });
-      setVirtualEnabled(false);
-      setTimeout(() => {
-        setVirtualEnabled(true);
-      }, 100);
+      if (virtualEnabled) {
+        setVirtualEnabled(false);
+        setTimeout(() => {
+          setVirtualEnabled(true);
+        }, 100);
+      }
     }, [modelBg]);
 
     React.useEffect(() => {
@@ -195,10 +198,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           role: modelRole,
         },
       });
-      setVirtualEnabled(false);
-      setTimeout(() => {
-        setVirtualEnabled(true);
-      }, 100);
+      if (virtualEnabled) {
+        setVirtualEnabled(false);
+        setTimeout(() => {
+          setVirtualEnabled(true);
+        }, 100);
+      }
     }, [modelRole]);
 
     React.useEffect(() => {
@@ -263,6 +268,14 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           openSettings,
         } as ControlBarExport),
     );
+
+    const setUserStatus = async (status: UserStatus) => {
+      await updateSettings({
+        status,
+      });
+      // 通知socket，进行状态的更新
+      socket.emit('update_user_status');
+    };
 
     return (
       <div {...htmlProps}>
@@ -382,6 +395,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               username={userChoices.username}
               tab={{ key, setKey }}
               saveChanges={saveChanges}
+              setUserStatus={setUserStatus}
             ></Settings>
           </div>
         </Drawer>

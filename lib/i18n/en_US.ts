@@ -35,7 +35,7 @@ export default {
     leave: 'Leave',
     share_screen: 'Share Screen',
     stop_share: 'Stop Share Share',
-    wave_msg: "sent you a reminder!",
+    wave_msg: 'sent you a reminder!',
   },
   settings: {
     title: 'Settings',
@@ -50,7 +50,8 @@ export default {
         idot: 'Offline',
         idot_desc: 'Offline, user will not receive any messages',
         busy: 'Busy',
-        busy_desc: 'Busy, do not disturb, user will not receive any messages but still appears online',
+        busy_desc:
+          'Busy, do not disturb, user will not receive any messages but still appears online',
         invisible: 'Invisible',
         invisible_desc: 'Invisible, user will not appear online but can use all Vocespace features',
       },
@@ -105,8 +106,8 @@ export default {
     },
     error: {
       virtual: {
-        video_stream: "Virtual camera stream construction error",
-        model: "Model or video unavailable",
+        video_stream: 'Virtual camera stream construction error',
+        model: 'Model or video unavailable',
       },
       e2ee: {
         unsupport:
@@ -135,6 +136,7 @@ export default {
       user: {
         username: {
           change: 'Username changed failed',
+          request: "Failed to request username",
         },
       },
     },
@@ -174,6 +176,9 @@ export default {
           other: "Please refer to your browser's help documentation for more information.",
         },
       },
+      user: {
+        name: 'Requesting available username for you...',
+      },
     },
     success: {
       device: {
@@ -183,7 +188,7 @@ export default {
         username: {
           change: 'Username changed successfully',
         },
-        lang: "Language changed successfully",
+        lang: 'Language changed successfully',
       },
     },
   },
