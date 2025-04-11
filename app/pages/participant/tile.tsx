@@ -1,4 +1,4 @@
-import { isTrackReferencePlaceholder, socket } from '@/app/devices/video_container';
+import { isTrackReferencePlaceholder } from '@/app/devices/video_container';
 import { useVideoBlur } from '@/lib/std/device';
 import {
   AudioTrack,
@@ -25,7 +25,7 @@ import { Track } from 'livekit-client';
 import React, { useEffect } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
-import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
@@ -263,12 +263,12 @@ export const ParticipantItem: (
 
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {
-      socket.emit("wave", {
+      socket.emit('wave', {
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
         socketId: settings[trackReference.participant.identity]?.socketId,
-      })
+      });
     };
 
     return (

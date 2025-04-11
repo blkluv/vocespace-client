@@ -32,6 +32,9 @@ import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, RecoilRoot, useRecoilState } from 'recoil';
 import { connect_endpoint, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
+import io from 'socket.io-client';
+
+export const socket = io();
 
 export const userState = atom({
   key: 'userState',

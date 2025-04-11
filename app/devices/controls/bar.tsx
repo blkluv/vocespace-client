@@ -21,7 +21,7 @@ import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
-import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings } from '@/lib/hooks/room_settings';
 import { UserStatus } from '@/lib/std';
 
@@ -273,6 +273,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       await updateSettings({
         status,
       });
+      // 通知socket，进行状态的更新
+      socket.emit('update_user_status');
     };
 
     return (

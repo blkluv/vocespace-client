@@ -19,13 +19,15 @@ app.prepare().then(() => {
 
     socket.on('wave', (msg) => {
       console.log('wave', msg);
-      socket
-        .to(msg.socketId)
-        .emit('wave_response', {
-          senderId: msg.senderId,
-          senderName: msg.senderName,
-          receiverId: msg.receiverId,
-        });
+      socket.to(msg.socketId).emit('wave_response', {
+        senderId: msg.senderId,
+        senderName: msg.senderName,
+        receiverId: msg.receiverId,
+      });
+    });
+    // 有用户更新自己的状态，发送给所有人
+    socket.on('update_user_status', () => {
+      socket.broadcast.emit('user_status_updated');
     });
   });
 

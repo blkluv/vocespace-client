@@ -20,15 +20,12 @@ import { ConnectionState, Participant, RoomEvent, RpcInvocationData, Track } fro
 import React, { useEffect, useState } from 'react';
 import { ControlBarExport, Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
-import { userState } from '../rooms/[roomName]/PageClientImpl';
+import { socket, userState } from '../rooms/[roomName]/PageClientImpl';
 import { ParticipantItem } from '../pages/participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
-import io from "socket.io-client";
-
-export const socket = io();
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -53,38 +50,52 @@ export function VideoContainer({
     if (!room || room.state !== ConnectionState.Connected) return;
 
     const syncSettings = async () => {
-      // 将当前参与者的摄像头模糊度发送到服务器
+      // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
       await updateSettings({
         name: room.localParticipant.name || room.localParticipant.identity,
         blur: device.blur,
         status: UserStatus.Online,
-        socketId: socket.id
+        socketId: socket.id,
       });
 
-      const newSettings = await fetchSettings();
-      setSettings(newSettings);
+      // const newSettings = await fetchSettings();
+      // setSettings(newSettings);
     };
 
     syncSettings();
 
-    socket.on("wave_response", (msg: {
-      senderId: string;
-      senderName: string;
-      receiverId: string;
-    }) => {
-      console.log("receive wave", msg);
-      if (msg.receiverId === room.localParticipant.identity) {
-        waveAudioRef.current?.play();
-        noteApi.info({
-          message: `${msg.senderName} ${t('common.wave_msg')}`,
-        });
-      }
-    })
+    // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
+    socket.on(
+      'wave_response',
+      (msg: { senderId: string; senderName: string; receiverId: string }) => {
+        console.log('receive wave', msg);
+        if (msg.receiverId === room.localParticipant.identity) {
+          waveAudioRef.current?.play();
+          noteApi.info({
+            message: `${msg.senderName} ${t('common.wave_msg')}`,
+          });
+        }
+      },
+    );
+
+    // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
+    socket.on('user_status_updated', async () => {
+      // 调用fetchSettings
+      await fetchSettings();
+    });
+
+    // 房间事件监听器 --------------------------------------------------------------------------------
+    const onParticipantConnected = async (participant: Participant) => {
+      await fetchSettings();
+    };
+
+    room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
 
     return () => {
-      socket.off("wave");
-    }
-
+      socket.off('wave_response');
+      socket.off('user_status_updated');
+      room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
+    };
   }, [room?.state]);
 
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
@@ -173,6 +184,7 @@ export function VideoContainer({
     await updateSettings({
       status,
     });
+    socket.emit('update_user_status');
   };
 
   return (
