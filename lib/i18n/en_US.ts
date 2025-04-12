@@ -70,6 +70,8 @@ export default {
     virtual: {
       title: 'Virtual Role',
       open: 'Enable Virtual Role',
+      model: "Virtual Role Model",
+      background: "Virtual Role Background",
     },
     about_us: {
       title: 'About Us',

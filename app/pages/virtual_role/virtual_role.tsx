@@ -59,6 +59,7 @@ export const Live2DComponent = ({
     // 清理虚拟轨道
     if (originTrackRef.current && localParticipant) {
       try {
+        originTrackRef.current.stop();
         originTrackRef.current.restartTrack();
         originTrackRef.current = null;
       } catch (error) {
@@ -69,15 +70,46 @@ export const Live2DComponent = ({
     // 清理PIXI应用
     if (appRef.current) {
       try {
-        appRef.current.destroy(true);
+        // 移除所有子元素
+        if (appRef.current.stage) {
+          while (appRef.current.stage.children.length > 0) {
+            const child = appRef.current.stage.children[0];
+            appRef.current.stage.removeChild(child);
+            if (child instanceof PIXI.Sprite) {
+              child.destroy();
+            }
+          }
+        }
+
+        // ticker
+        if (appRef.current.ticker) {
+          appRef.current.ticker.stop();
+          appRef.current.ticker.destroy();
+        }
+
+        appRef.current.destroy(true, {
+          children: true,
+          texture: true,
+          baseTexture: true,
+        });
         appRef.current = null;
       } catch (e) {
         console.error('清理 PIXI 应用出错:', e);
       }
     }
 
-    // 重置模型
-    modelRef.current = null;
+    if (modelRef.current) {
+      try {
+        if (modelRef.current.destroy) {
+          modelRef.current.destroy();
+        }
+        // 重置模型
+        modelRef.current = null;
+      } catch (e) {
+        console.error('清理模型出错:', e);
+      }
+    }
+
     // 恢复状态机
     setCState({
       isLoading: false,
