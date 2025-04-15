@@ -30,7 +30,7 @@ import styles from '@/styles/controls.module.scss';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
-import { UserStatus } from '@/lib/std';
+import { randomColor, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
 import { RoomSettings } from '@/lib/hooks/room_settings';
 
@@ -65,6 +65,16 @@ export const ParticipantItem: (
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
     const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
+    // 存储所有观众的鼠标位置
+    const [remoteCursors, setRemoteCursors] = React.useState<{
+      [participantId: string]: {
+        x: number;
+        y: number;
+        name: string;
+        color: string;
+        timestamp: number;
+      };
+    }>({});
     const { blurValue, setVideoBlur } = useVideoBlur({
       videoRef,
       initialBlur: 100.0,
@@ -126,16 +136,78 @@ export const ParticipantItem: (
             </div>
           );
         } else if (trackReference.source === Track.Source.ScreenShare) {
+          // 包含远程鼠标位置
           return (
-            <VideoTrack
-              ref={videoRef}
-              style={{
-                filter: `blur(${blurValue}px)`,
-              }}
-              trackRef={trackReference}
-              onSubscriptionStatusChanged={handleSubscribe}
-              manageSubscription={autoManageSubscription}
-            />
+            <div style={{ height: '100%', width: '100%', position: 'relative' }}>
+              <VideoTrack
+                ref={videoRef}
+                style={{
+                  filter: `blur(${blurValue}px)`,
+                }}
+                trackRef={trackReference}
+                onSubscriptionStatusChanged={handleSubscribe}
+                manageSubscription={autoManageSubscription}
+              />
+              { is_focus &&
+                trackReference.participant.identity === localParticipant.identity &&
+                Object.entries(remoteCursors).map(([participantId, cursor]) => {
+                  // 计算视频元素上的绝对位置
+                  const videoRect = videoRef.current?.getBoundingClientRect();
+                  if (!videoRect) return null;
+
+                  const absoluteX = cursor.x * videoRect.width;
+                  const absoluteY = cursor.y * videoRect.height;
+                  console.warn(absoluteX, absoluteY);
+                  // 检查时间戳，如果超过10秒没有更新，则不显示
+                  // const now = Date.now();
+                  // if (now - cursor.timestamp > 10000) return null;
+
+                  return (
+                    <div
+                      key={participantId}
+                      className={styles.remote_cursor}
+                      style={{
+                        position: 'absolute',
+                        left: `${absoluteX}px`,
+                        top: `${absoluteY}px`,
+                        pointerEvents: 'none', // 确保鼠标事件穿透
+                        zIndex: 1000,
+                        transform: 'translate(-50%, -50%)', // 使鼠标指针居中
+                      }}
+                    >
+                      {/* 鼠标指针 */}
+                      <div className={styles.cursor_icon}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M7 2L18 13H11L7 20V2Z"
+                            fill={cursor.color}
+                            stroke="white"
+                            strokeWidth="1.5"
+                          />
+                        </svg>
+                      </div>
+
+                      {/* 用户名标签 */}
+                      <div
+                        className={styles.cursor_label}
+                        style={{
+                          backgroundColor: cursor.color,
+                          color: 'white',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          position: 'absolute',
+                          top: '-22px',
+                          left: '10px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {cursor.name}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
           );
         } else {
           return (
@@ -143,7 +215,7 @@ export const ParticipantItem: (
           );
         }
       }
-    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole]);
+    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors]);
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {
@@ -312,16 +384,17 @@ export const ParticipantItem: (
               setLastMousePos({ x, y });
             }
 
-            if (trackReference.participant.identity !== localParticipant.identity) {
-              socket.emit('mouse_move', {
-                x,
-                y,
-                senderName: localParticipant.name,
-                senderId: localParticipant.identity,
-                receiverId: trackReference.participant.identity,
-                receSocketId: settings[trackReference.participant.identity]?.socketId,
-              });
-            }
+            // if (trackReference.participant.identity !== localParticipant.identity) {
+              
+            // }
+            socket.emit('mouse_move', {
+              x,
+              y,
+              senderName: localParticipant.name,
+              senderId: localParticipant.identity,
+              receiverId: trackReference.participant.identity,
+              receSocketId: settings[trackReference.participant.identity]?.socketId,
+            });
           }
         };
         // 300ms触发一次, 节流
@@ -336,10 +409,26 @@ export const ParticipantItem: (
 
       // 如果当前用户是演讲者并且当前track source是screen share，那么就需要获取其他用户的鼠标位置
       if (localParticipant.isSpeaking && trackReference.source === Track.Source.ScreenShare) {
-        console.warn('is speaking and screen share');
+        // console.warn('is speaking and screen share');
 
         socket.on('mouse_move_response', (data) => {
-          console.log('mouse_move_response', data);
+          // 获取之后需要将别人的鼠标位置在演讲者的屏幕上进行显示
+          const { senderId, senderName, x, y } = data;
+
+          // 为每个用户生成一个固定的颜色
+          const color = randomColor(senderId);
+          console.log(senderId, senderName, x, y, color);
+          // 更新状态
+          setRemoteCursors((prev) => ({
+            ...prev,
+            [senderId]: {
+              x,
+              y,
+              name: senderName,
+              color,
+              timestamp: Date.now(),
+            },
+          }));
         });
       }
     }, [trackReference.source, localParticipant.isSpeaking, is_focus]);

@@ -180,3 +180,42 @@
       font-weight: 500;
   }
 }
+
+
+.remote_cursor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+  transition: left 0.1s ease, top 0.1s ease;
+  
+  .cursor_icon {
+    transform: translate(-50%, -50%);
+  }
+  
+  .cursor_label {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    transition: opacity 0.3s;
+    
+    &:hover {
+      opacity: 1 !important;
+    }
+  }
+  
+  &:hover .cursor_label {
+    opacity: 1;
+  }
+  
+  // 添加鼠标点击动画
+  &.cursor_click {
+    .cursor_icon {
+      animation: cursor-pulse 0.5s ease;
+    }
+  }
+}
+
+@keyframes cursor-pulse {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.2); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
