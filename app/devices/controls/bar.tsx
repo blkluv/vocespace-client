@@ -207,13 +207,19 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     }, [modelRole]);
 
     React.useEffect(() => {
-      console.warn('virtualEnabled', virtualEnabled);
       setDevice({
         ...device,
         virtualRole: {
           ...device.virtualRole,
           enabled: virtualEnabled,
         },
+      });
+      // 更新设置
+      updateSettings({
+        virtual: virtualEnabled,
+      }).then(() => {
+        console.warn('更新设置成功', virtualEnabled);
+        socket.emit('update_user_status');
       });
     }, [virtualEnabled]);
 
@@ -254,6 +260,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           break;
         }
       }
+      // 通知socket，进行状态的更新
+      socket.emit('update_user_status');
     };
 
     const openSettings = (tab: TabKey) => {

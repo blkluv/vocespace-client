@@ -56,6 +56,7 @@ export function VideoContainer({
         blur: device.blur,
         status: UserStatus.Online,
         socketId: socket.id,
+        virtual: false,
       });
 
       // const newSettings = await fetchSettings();
@@ -223,6 +224,7 @@ export function VideoContainer({
                       settings={settings}
                       trackRef={focusTrack}
                       messageApi={messageApi}
+                      is_focus
                     ></ParticipantItem>
                   )}
                 </FocusLayoutContainer>

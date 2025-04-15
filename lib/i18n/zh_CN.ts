@@ -69,6 +69,8 @@ export default {
     virtual: {
       title: '虚拟形象',
       open: '开启虚拟形象',
+      model: "虚拟形象模型",
+      background: "虚拟形象背景"
     },
     about_us: {
       title: '关于我们',

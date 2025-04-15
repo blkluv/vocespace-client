@@ -2,7 +2,7 @@
 
 ## v0.1.3
 
-- date: 2025-04-01
+- date: 2025-04-14
 - branch: dev_0.1.3
 
 ### Features
@@ -24,12 +24,14 @@
     - Backgrounds
     - Active or not
     - Detect check
+    - Compare
   - About Us
 - language change
 - tab for different way to room
 - enter room by using link
-- Rpc
+- Ws
   - Wave｜Remind others
+  - Others cursors focus
 - Participant
   - Virtual role video stream
 

@@ -1,4 +1,4 @@
-import { Input, List, Slider, Switch, Tabs, TabsProps } from 'antd';
+import { Button, Input, List, Slider, Switch, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
@@ -71,7 +71,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       },
       saveChanges,
       messageApi,
-      setUserStatus
+      setUserStatus,
     }: SettingsProps,
     ref,
   ) => {
@@ -369,6 +369,7 @@ export const VirtualSettings = forwardRef<
         label: <TabItem type="model" label="Model"></TabItem>,
         children: (
           <div>
+            <h4>{t("settings.virtual.model")}</h4>
             <List
               grid={{
                 gutter: 16,
@@ -391,7 +392,7 @@ export const VirtualSettings = forwardRef<
                     }}
                   >
                     {model_selected_index == index && <SelectedMask></SelectedMask>}
-                    <h4>{item.name}</h4>
+                    {/* <h4>{item.name}</h4> */}
                     <img src={src(`/images/models/${item.src}`)} alt="" />
                   </div>
                 </List.Item>
@@ -405,6 +406,7 @@ export const VirtualSettings = forwardRef<
         label: <TabItem type="bg" label="Background"></TabItem>,
         children: (
           <div>
+            <h4>{t("settings.virtual.background")}</h4>
             <List
               grid={{
                 gutter: 16,
@@ -418,7 +420,7 @@ export const VirtualSettings = forwardRef<
                     onClick={() => {
                       set_bg_selected_index(index);
                       setModelBg(item.src as ModelBg);
-                      if (enabled) {
+                      if (compare) {
                         setCompare(false);
                         setTimeout(() => {
                           setCompare(true);
@@ -427,7 +429,7 @@ export const VirtualSettings = forwardRef<
                     }}
                   >
                     {bg_selected_index == index && <SelectedMask></SelectedMask>}
-                    <h4>{item.name}</h4>
+                    {/* <h4>{item.name}</h4> */}
                     <img src={src(`/images/bg/${item.src}`)} alt="" />
                   </div>
                 </List.Item>
@@ -461,18 +463,15 @@ export const VirtualSettings = forwardRef<
             }}
           ></Switch>
         </div>
-        <div className={styles.virtual_settings_header}>
-          <span>{t('common.compare')}:</span>
-          <Switch
-            style={{ background: '#22CCEE' }}
-            value={compare}
-            onClick={() => {
+        <div className={styles.virtual_video_box}>
+          <div className={styles.virtual_video_box_compare}>
+            <Button color="default" variant="solid" style={{padding: "8px"}} onClick={() => {
               const val = !compare;
               setCompare(val);
-            }}
-          ></Switch>
-        </div>
-        <div className={styles.virtual_video_box}>
+            }}>
+              <SvgResource type="switch" color='#fff' svgSize={14}></SvgResource>
+            </Button>
+          </div>
           <video
             className={compare ? '' : styles.virtual_video_box_video}
             style={{
@@ -508,7 +507,7 @@ export const VirtualSettings = forwardRef<
 function SelectedMask() {
   return (
     <div className={styles.selected_mask}>
-      <SvgResource type="check" svgSize={24} color="#44de4f"></SvgResource>
+      <SvgResource type="check" svgSize={24} color="#22CCEE"></SvgResource>
     </div>
   );
 }

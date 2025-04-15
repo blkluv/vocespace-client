@@ -30,6 +30,10 @@ app.prepare().then(() => {
     socket.on('update_user_status', () => {
       socket.broadcast.emit('user_status_updated');
     });
+    // 鼠标位置移动
+    socket.on('mouse_move', (msg) => {
+      socket.to(msg.receSocketId).emit('mouse_move_response', msg);
+    });
   });
 
   httpServer
