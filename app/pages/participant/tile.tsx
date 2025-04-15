@@ -158,7 +158,7 @@ export const ParticipantItem: (
 
                   const absoluteX = cursor.x * videoRect.width;
                   const absoluteY = cursor.y * videoRect.height;
-                  console.warn(absoluteX, absoluteY);
+                  // console.warn(absoluteX, absoluteY);
                   // 检查时间戳，如果超过10秒没有更新，则不显示
                   // const now = Date.now();
                   // if (now - cursor.timestamp > 10000) return null;
@@ -356,7 +356,7 @@ export const ParticipantItem: (
     // 处理当前用户如果是演讲者并且当前track source是screen share，那么就需要获取其他用户的鼠标位置
     useEffect(() => {
       // 如果当前用户是观看者，并且当前的屏幕主视口是screen share，且is_focus为true
-      console.log(is_focus, trackReference.source, localParticipant.isSpeaking);
+      // console.log(is_focus, trackReference.source, localParticipant.isSpeaking);
       if (
         is_focus &&
         trackReference.source === Track.Source.ScreenShare &&
@@ -418,7 +418,7 @@ export const ParticipantItem: (
 
           // 为每个用户生成一个固定的颜色
           const color = randomColor(senderId);
-          console.log(senderId, senderName, x, y, color);
+          // console.log(senderId, senderName, x, y, color);
           // 更新状态
           setRemoteCursors((prev) => ({
             ...prev,

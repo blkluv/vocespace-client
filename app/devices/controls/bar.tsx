@@ -161,7 +161,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
 
     const [key, setKey] = React.useState<TabKey>('general');
     const [virtualEnabled, setVirtualEnabled] = React.useState(false);
-    const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.Haru);
+    const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.None);
     const [modelBg, setModelBg] = React.useState<ModelBg>(ModelBg.ClassRoom);
     const [compare, setCompare] = React.useState(false);
     const settingsRef = React.useRef<SettingsExports>(null);
@@ -172,6 +172,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
     const closeSetting = () => {
       setCompare(false);
+      console.warn('关闭设置');
+      if (modelRole !== ModelRole.None) {
+        setVirtualEnabled(true);
+      } else {
+        setVirtualEnabled(false);
+      }
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
     React.useEffect(() => {
@@ -363,11 +369,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           title={t('common.setting')}
           placement="right"
           closable={false}
-          onClose={closeSetting}
           width={'640px'}
           open={settingVis}
           extra={setting_drawer_header({
-            on_clicked: () => setSettingVis(false),
+            on_clicked: () => {
+              setSettingVis(false);
+              closeSetting();
+            },
           })}
         >
           <div className={styles.setting_container}>
