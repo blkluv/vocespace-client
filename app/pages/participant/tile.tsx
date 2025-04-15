@@ -121,18 +121,19 @@ export const ParticipantItem: (
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {uState.virtualRole.enabled && (
-                <div className={styles.virtual_video_box_canvas}>
-                  <VirtualRoleCanvas
-                    video_ele={videoRef}
-                    model_bg={uState.virtualRole.bg}
-                    model_role={uState.virtualRole.role}
-                    enabled={uState.virtualRole.enabled}
-                    messageApi={messageApi}
-                    trackRef={trackReference}
-                  ></VirtualRoleCanvas>
-                </div>
-              )}
+              {uState.virtualRole.enabled &&
+                settings[trackReference.participant.identity]?.virtual && (
+                  <div className={styles.virtual_video_box_canvas}>
+                    <VirtualRoleCanvas
+                      video_ele={videoRef}
+                      model_bg={uState.virtualRole.bg}
+                      model_role={uState.virtualRole.role}
+                      enabled={uState.virtualRole.enabled}
+                      messageApi={messageApi}
+                      trackRef={trackReference}
+                    ></VirtualRoleCanvas>
+                  </div>
+                )}
             </div>
           );
         } else if (trackReference.source === Track.Source.ScreenShare) {
@@ -148,7 +149,7 @@ export const ParticipantItem: (
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              { is_focus &&
+              {is_focus &&
                 trackReference.participant.identity === localParticipant.identity &&
                 Object.entries(remoteCursors).map(([participantId, cursor]) => {
                   // 计算视频元素上的绝对位置
@@ -215,7 +216,7 @@ export const ParticipantItem: (
           );
         }
       }
-    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors]);
+    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors, settings]);
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {
@@ -385,7 +386,7 @@ export const ParticipantItem: (
             }
 
             // if (trackReference.participant.identity !== localParticipant.identity) {
-              
+
             // }
             socket.emit('mouse_move', {
               x,

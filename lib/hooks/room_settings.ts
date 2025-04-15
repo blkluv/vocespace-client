@@ -8,6 +8,7 @@ export interface ParticipantSettings {
   screenBlur: number;
   status: UserStatus;
   socketId: string;
+  virtual: boolean;
 }
 
 export interface RoomSettings {

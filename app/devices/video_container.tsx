@@ -56,6 +56,7 @@ export function VideoContainer({
         blur: device.blur,
         status: UserStatus.Online,
         socketId: socket.id,
+        virtual: false,
       });
 
       // const newSettings = await fetchSettings();

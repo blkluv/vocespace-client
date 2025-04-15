@@ -12,6 +12,7 @@ interface RoomSettings {
         screenBlur: number;
         status: UserStatus;
         socketId: string;
+        virtual: boolean;
       };
     };
   };

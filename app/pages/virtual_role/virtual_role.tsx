@@ -330,7 +330,7 @@ export const Live2DComponent = ({
       const detection = await faceapi
         .detectSingleFace(realVideoTrack, new faceapi.TinyFaceDetectorOptions())
         .withFaceLandmarks();
-      console.log('1212121212:', detection);
+  
       // 限制检测频率，减少资源占用
       const now = Date.now();
       if (!lastDetectionAt || now - lastDetectionAt > 200) {
