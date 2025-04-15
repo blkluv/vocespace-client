@@ -15,8 +15,11 @@
 
 - [x] 虚拟形象页面UI优化
 - [x] 虚拟形象丢失（重更新后消失）
-- [ ] 屏幕分享时传输其他用户鼠标位置
 
+- [x] 屏幕分享时传输其他用户鼠标位置
+- [x] 区分用户显示虚拟形象
+- [x] 同步修改用户视频模糊
+- [x] 同步修改用户屏幕分享模糊度
 
 
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.

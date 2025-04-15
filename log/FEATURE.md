@@ -52,9 +52,9 @@
   - [x] Detect check
 - [x] About Us
 
-#### RPC
+#### Ws
 
-- [ ] Others cursors focus
+- [x] Others cursors focus
 - [x] Wave｜Remind others
 
 ## Permission 
