@@ -39,7 +39,7 @@ export interface ParticipantItemProps extends ParticipantTileProps {
   setUserStatus: (status: UserStatus) => Promise<void>;
   toSettings?: () => void;
   messageApi: MessageInstance;
-  is_focus?: boolean;
+  isFocus?: boolean;
 }
 
 export const ParticipantItem: (
@@ -52,7 +52,7 @@ export const ParticipantItem: (
       toSettings,
       messageApi,
       setUserStatus,
-      is_focus = false,
+      isFocus
     }: ParticipantItemProps,
     ref,
   ) {
@@ -154,7 +154,7 @@ export const ParticipantItem: (
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {is_focus &&
+              {isFocus &&
                 trackReference.participant.identity === localParticipant.identity &&
                 Object.entries(remoteCursors).map(([participantId, cursor]) => {
                   // 计算视频元素上的绝对位置
@@ -361,9 +361,9 @@ export const ParticipantItem: (
     // 处理当前用户如果是演讲者并且当前track source是screen share，那么就需要获取其他用户的鼠标位置
     useEffect(() => {
       // 如果当前用户是观看者，并且当前的屏幕主视口是screen share，且is_focus为true
-      // console.log(is_focus, trackReference.source, localParticipant.isSpeaking);
+      // console.log(isFocus, trackReference.source, localParticipant.isSpeaking);
       if (
-        is_focus &&
+        isFocus &&
         trackReference.source === Track.Source.ScreenShare &&
         !localParticipant.isSpeaking
       ) {
@@ -437,7 +437,7 @@ export const ParticipantItem: (
           }));
         });
       }
-    }, [trackReference.source, localParticipant.isSpeaking, is_focus]);
+    }, [trackReference.source, localParticipant.isSpeaking, isFocus]);
 
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
