@@ -69,6 +69,10 @@ export default {
     },
     virtual: {
       title: 'Virtual Role',
+      tab: {
+        model: "Model",
+        background: "Background",
+      },
       open: 'Enable Virtual Role',
       model: "Virtual Role Model",
       background: "Virtual Role Background",

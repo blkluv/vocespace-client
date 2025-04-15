@@ -370,7 +370,7 @@ export const VirtualSettings = forwardRef<
     const items: TabsProps['items'] = [
       {
         key: 'model',
-        label: <TabItem type="model" label="Model"></TabItem>,
+        label: <TabItem type="model" label={t('settings.virtual.tab.model')}></TabItem>,
         children: (
           <div>
             <h4>{t('settings.virtual.model')}</h4>
@@ -419,7 +419,7 @@ export const VirtualSettings = forwardRef<
       },
       {
         key: 'background',
-        label: <TabItem type="bg" label="Background"></TabItem>,
+        label: <TabItem type="bg" label={t('settings.virtual.tab.background')}></TabItem>,
         children: (
           <div>
             <h4>{t('settings.virtual.background')}</h4>

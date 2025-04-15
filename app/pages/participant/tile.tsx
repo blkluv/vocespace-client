@@ -107,6 +107,7 @@ export const ParticipantItem: (
     );
 
     const deviceTrack = React.useMemo(() => {
+      console.log(isTrackReference(trackReference), loading, trackReference.source);
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
@@ -115,7 +116,11 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter: `blur(${blurValue}px)`,
-                  visibility: uState.virtualRole.enabled ? 'hidden' : 'visible',
+                  visibility:
+                    uState.virtualRole.enabled &&
+                    settings[trackReference.participant.identity]?.virtual
+                      ? 'hidden'
+                      : 'visible',
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}

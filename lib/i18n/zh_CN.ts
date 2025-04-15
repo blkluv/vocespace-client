@@ -68,6 +68,10 @@ export default {
     },
     virtual: {
       title: '虚拟形象',
+      tab: {
+        model: "模型",
+        background: "背景",
+      },
       open: '开启虚拟形象',
       model: "虚拟形象模型",
       background: "虚拟形象背景",
