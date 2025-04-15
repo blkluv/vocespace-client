@@ -39,13 +39,21 @@ export interface ParticipantItemProps extends ParticipantTileProps {
   setUserStatus: (status: UserStatus) => Promise<void>;
   toSettings?: () => void;
   messageApi: MessageInstance;
+  is_focus?: boolean;
 }
 
 export const ParticipantItem: (
   props: ParticipantItemProps & React.RefAttributes<HTMLDivElement>,
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
   function ParticipantItem(
-    { trackRef, settings, toSettings, messageApi, setUserStatus }: ParticipantItemProps,
+    {
+      trackRef,
+      settings,
+      toSettings,
+      messageApi,
+      setUserStatus,
+      is_focus = false,
+    }: ParticipantItemProps,
     ref,
   ) {
     const { t } = useI18n();
@@ -56,6 +64,7 @@ export const ParticipantItem: (
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
+    const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
     const { blurValue, setVideoBlur } = useVideoBlur({
       videoRef,
       initialBlur: 100.0,
@@ -271,6 +280,70 @@ export const ParticipantItem: (
       });
     };
 
+    // 处理当前用户如果是演讲者并且当前track source是screen share，那么就需要获取其他用户的鼠标位置
+    useEffect(() => {
+      // 如果当前用户是观看者，并且当前的屏幕主视口是screen share，且is_focus为true
+      console.log(is_focus, trackReference.source, localParticipant.isSpeaking);
+      if (
+        is_focus &&
+        trackReference.source === Track.Source.ScreenShare &&
+        !localParticipant.isSpeaking
+      ) {
+        // 此时说明当前参与者正在观看屏幕共享，当这个观看者希望引导演讲者时（鼠标在窗口中移动，点击），需要将鼠标位置发送给演讲者
+        const handleMouseMove = (e: MouseEvent) => {
+          if (!videoRef.current) return;
+          const videoRect = videoRef.current?.getBoundingClientRect();
+
+          // 检查鼠标位置
+          if (
+            e.clientX >= videoRect.left &&
+            e.clientX <= videoRect.right &&
+            e.clientY >= videoRect.top &&
+            e.clientY <= videoRect.bottom
+          ) {
+            // 需要计算相对位置，因为屏幕尺寸每个人都不一样，也可能是缩放的 （归一）
+            const x = (e.clientX - videoRect.left) / videoRect.width;
+            const y = (e.clientY - videoRect.top) / videoRect.height;
+
+            // 判断位置是否发生变化， 变化才发送
+            if (Math.abs(x - lastMousePos.x) < 0.01 && Math.abs(y - lastMousePos.y) < 0.01) {
+              return;
+            } else {
+              setLastMousePos({ x, y });
+            }
+
+            if (trackReference.participant.identity !== localParticipant.identity) {
+              socket.emit('mouse_move', {
+                x,
+                y,
+                senderName: localParticipant.name,
+                senderId: localParticipant.identity,
+                receiverId: trackReference.participant.identity,
+                receSocketId: settings[trackReference.participant.identity]?.socketId,
+              });
+            }
+          }
+        };
+        // 300ms触发一次, 节流
+        const throttledMouseMove = throttle(handleMouseMove, 300);
+        document.addEventListener('mousemove', throttledMouseMove);
+
+        return () => {
+          // 清除事件监听器
+          document.removeEventListener('mousemove', handleMouseMove);
+        };
+      }
+
+      // 如果当前用户是演讲者并且当前track source是screen share，那么就需要获取其他用户的鼠标位置
+      if (localParticipant.isSpeaking && trackReference.source === Track.Source.ScreenShare) {
+        console.warn('is speaking and screen share');
+
+        socket.on('mouse_move_response', (data) => {
+          console.log('mouse_move_response', data);
+        });
+      }
+    }, [trackReference.source, localParticipant.isSpeaking, is_focus]);
+
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
         {deviceTrack}
@@ -360,4 +433,28 @@ export function isTrackReferencePinned(
   } else {
     return false;
   }
+}
+
+// 节流函数 - 限制函数调用频率
+function throttle<T extends (...args: any[]) => any>(func: T, limit: number) {
+  let lastFunc: ReturnType<typeof setTimeout>;
+  let lastRan: number = 0;
+
+  return function (this: any, ...args: Parameters<T>) {
+    const context = this;
+    const now = Date.now();
+
+    if (now - lastRan >= limit) {
+      func.apply(context, args);
+      lastRan = now;
+    } else {
+      clearTimeout(lastFunc);
+      lastFunc = setTimeout(() => {
+        if (Date.now() - lastRan >= limit) {
+          func.apply(context, args);
+          lastRan = Date.now();
+        }
+      }, limit - (now - lastRan));
+    }
+  };
 }

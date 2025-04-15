@@ -254,6 +254,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           break;
         }
       }
+      // 通知socket，进行状态的更新
+      socket.emit('update_user_status');
     };
 
     const openSettings = (tab: TabKey) => {

@@ -223,6 +223,7 @@ export function VideoContainer({
                       settings={settings}
                       trackRef={focusTrack}
                       messageApi={messageApi}
+                      is_focus
                     ></ParticipantItem>
                   )}
                 </FocusLayoutContainer>
