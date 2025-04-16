@@ -107,7 +107,7 @@ export const ParticipantItem: (
     );
 
     const deviceTrack = React.useMemo(() => {
-      console.log(isTrackReference(trackReference), loading, trackReference.source);
+      // console.log(isTrackReference(trackReference), loading, trackReference.source);
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
@@ -154,8 +154,7 @@ export const ParticipantItem: (
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {isFocus &&
-                trackReference.participant.identity === localParticipant.identity &&
+              {isFocus  &&
                 Object.entries(remoteCursors).map(([participantId, cursor]) => {
                   // 计算视频元素上的绝对位置
                   const videoRect = videoRef.current?.getBoundingClientRect();
@@ -178,7 +177,7 @@ export const ParticipantItem: (
                         top: `${absoluteY}px`,
                         pointerEvents: 'none', // 确保鼠标事件穿透
                         zIndex: 1000,
-                        transform: 'translate(-50%, -50%)', // 使鼠标指针居中
+                        transform: 'translate(3px, 10.5px)', // 使鼠标指针居中
                       }}
                     >
                       {/* 鼠标指针 */}
@@ -371,7 +370,6 @@ export const ParticipantItem: (
         const handleMouseMove = (e: MouseEvent) => {
           if (!videoRef.current) return;
           const videoRect = videoRef.current?.getBoundingClientRect();
-
           // 检查鼠标位置
           if (
             e.clientX >= videoRect.left &&
@@ -389,18 +387,28 @@ export const ParticipantItem: (
             } else {
               setLastMousePos({ x, y });
             }
-
-            // if (trackReference.participant.identity !== localParticipant.identity) {
-
-            // }
-            socket.emit('mouse_move', {
+            let data = {
               x,
               y,
-              senderName: localParticipant.name,
+              color: randomColor(localParticipant.identity),
+              senderName: localParticipant.name || localParticipant.identity,
               senderId: localParticipant.identity,
               receiverId: trackReference.participant.identity,
               receSocketId: settings[trackReference.participant.identity]?.socketId,
-            });
+            };
+           
+            setRemoteCursors((prev) => ({
+              ...prev,
+              [data.senderId]: {
+                x: data.x,
+                y: data.y,
+                name: data.senderName ,
+                color: data.color,
+                timestamp: Date.now(),
+              },
+            }));
+            
+            socket.emit('mouse_move', data);
           }
         };
         // 300ms触发一次, 节流
@@ -419,11 +427,8 @@ export const ParticipantItem: (
 
         socket.on('mouse_move_response', (data) => {
           // 获取之后需要将别人的鼠标位置在演讲者的屏幕上进行显示
-          const { senderId, senderName, x, y } = data;
+          const { senderId, senderName, x, y, color } = data;
 
-          // 为每个用户生成一个固定的颜色
-          const color = randomColor(senderId);
-          // console.log(senderId, senderName, x, y, color);
           // 更新状态
           setRemoteCursors((prev) => ({
             ...prev,

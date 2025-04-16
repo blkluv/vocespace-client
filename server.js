@@ -31,7 +31,8 @@ app.prepare().then(() => {
     });
     // 鼠标位置移动
     socket.on('mouse_move', (msg) => {
-      socket.to(msg.receSocketId).emit('mouse_move_response', msg);
+      // socket.to(msg.receSocketId).emit('mouse_move_response', msg);
+      socket.broadcast.emit('mouse_move_response', msg);
     });
   });
 
