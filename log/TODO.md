@@ -26,6 +26,12 @@
 - [x] 开启虚拟形象之后其他用户会变黑
 - [x] 开启按钮改为model - none
 
+- [ ] 鼠标位置同步(cover content获取video组件的宽高进行映射比例)
+- [ ] wave 双方都要发出声音提示
+- [ ] 设置页，点击外部遮罩关闭
+- [ ] 声音改为用户输入声音音量
+- [x] 进入房间i18n修改
+
 
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
 WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
