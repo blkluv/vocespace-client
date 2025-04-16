@@ -41,6 +41,7 @@ export function VideoContainer({
   const [device, setDevice] = useRecoilState(userState);
   const controlsRef = React.useRef<ControlBarExport>(null);
   const waveAudioRef = React.useRef<HTMLAudioElement>(null);
+  const [isFocus, setIsFocus] = useState(false);
   const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
   const { settings, updateSettings, fetchSettings, setSettings } = useRoomSettings(
     room?.name || '', // 房间 ID
@@ -139,7 +140,8 @@ export function VideoContainer({
       screenShareTracks.some((track) => track.publication.isSubscribed) &&
       lastAutoFocusedScreenShareTrack.current === null
     ) {
-      console.debug('Auto set screen share focus:', { newScreenShareTrack: screenShareTracks[0] });
+      console.warn('show focus');
+      setIsFocus(true);
       layoutContext.pin.dispatch?.({ msg: 'set_pin', trackReference: screenShareTracks[0] });
       lastAutoFocusedScreenShareTrack.current = screenShareTracks[0];
     } else if (
@@ -224,7 +226,7 @@ export function VideoContainer({
                       settings={settings}
                       trackRef={focusTrack}
                       messageApi={messageApi}
-                      is_focus
+                      isFocus={isFocus}
                     ></ParticipantItem>
                   )}
                 </FocusLayoutContainer>

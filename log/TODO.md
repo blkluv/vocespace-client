@@ -21,6 +21,11 @@
 - [x] 同步修改用户视频模糊
 - [x] 同步修改用户屏幕分享模糊度
 
+- [x] focus视图无需点击就能传输用户鼠标位置
+- [x] 让所有人共享鼠标位置视图
+- [x] 开启虚拟形象之后其他用户会变黑
+- [x] 开启按钮改为model - none
+
 
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
 WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3

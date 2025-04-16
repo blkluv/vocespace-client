@@ -1,4 +1,5 @@
 export enum ModelRole {
+  None = "None",
   Haru = 'Haru',
   Hiyori = 'Hiyori',
   Mao = 'Mao',

@@ -69,7 +69,7 @@ export function count_video_blur(video_blur: number, size: SizeNum): number {
   const { height, width } = size;
   const h_blur = (height / 10.0) * video_blur;
   const w_blur = (width / 10.0) * video_blur;
-  console.warn(h_blur, w_blur, height, width);
+  // console.warn(h_blur, w_blur, height, width);
 
   return Math.max(h_blur, w_blur);
 }
@@ -184,14 +184,14 @@ export const loadVideo = async (videoRef: RefObject<HTMLVideoElement>) => {
       }
     });
 
-    console.log('视频元数据加载完成');
+    // console.log('视频元数据加载完成');
     await videoRef.current.play();
-    console.log(
-      '视频开始播放，视频尺寸:',
-      videoRef.current.videoWidth,
-      'x',
-      videoRef.current.videoHeight,
-    );
+    // console.log(
+    //   '视频开始播放，视频尺寸:',
+    //   videoRef.current.videoWidth,
+    //   'x',
+    //   videoRef.current.videoHeight,
+    // );
 
     // 确保视频已真正开始播放
     if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
@@ -210,12 +210,12 @@ export const loadVideo = async (videoRef: RefObject<HTMLVideoElement>) => {
       });
     }
 
-    console.log(
-      '视频准备完成，尺寸确认:',
-      videoRef.current.videoWidth,
-      'x',
-      videoRef.current.videoHeight,
-    );
+    // console.log(
+    //   '视频准备完成，尺寸确认:',
+    //   videoRef.current.videoWidth,
+    //   'x',
+    //   videoRef.current.videoHeight,
+    // );
   } catch (err) {
     console.error('Failed to initialize video:', err);
   }

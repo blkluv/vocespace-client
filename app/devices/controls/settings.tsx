@@ -315,6 +315,10 @@ export const VirtualSettings = forwardRef<
 
     const modelDatas = [
       {
+        name: 'None',
+        src: 'none.png',
+      },
+      {
         name: 'Haru',
         src: 'Haru.png',
       },
@@ -366,10 +370,10 @@ export const VirtualSettings = forwardRef<
     const items: TabsProps['items'] = [
       {
         key: 'model',
-        label: <TabItem type="model" label="Model"></TabItem>,
+        label: <TabItem type="model" label={t('settings.virtual.tab.model')}></TabItem>,
         children: (
           <div>
-            <h4>{t("settings.virtual.model")}</h4>
+            <h4>{t('settings.virtual.model')}</h4>
             <List
               grid={{
                 gutter: 16,
@@ -388,12 +392,24 @@ export const VirtualSettings = forwardRef<
                         setTimeout(() => {
                           setCompare(true);
                         }, 200);
+                      } else {
+                        setCompare(true);
                       }
                     }}
                   >
                     {model_selected_index == index && <SelectedMask></SelectedMask>}
                     {/* <h4>{item.name}</h4> */}
-                    <img src={src(`/images/models/${item.src}`)} alt="" />
+                    {item.name == ModelRole.None ? (
+                      <div style={{
+                        height: "120px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: '700',
+                      }}>{t('settings.virtual.none')}</div>
+                    ) : (
+                      <img src={src(`/images/models/${item.src}`)} alt="" />
+                    )}
                   </div>
                 </List.Item>
               )}
@@ -403,10 +419,10 @@ export const VirtualSettings = forwardRef<
       },
       {
         key: 'background',
-        label: <TabItem type="bg" label="Background"></TabItem>,
+        label: <TabItem type="bg" label={t('settings.virtual.tab.background')}></TabItem>,
         children: (
           <div>
-            <h4>{t("settings.virtual.background")}</h4>
+            <h4>{t('settings.virtual.background')}</h4>
             <List
               grid={{
                 gutter: 16,
@@ -425,6 +441,8 @@ export const VirtualSettings = forwardRef<
                         setTimeout(() => {
                           setCompare(true);
                         }, 200);
+                      } else {
+                        setCompare(true);
                       }
                     }}
                   >
@@ -452,24 +470,18 @@ export const VirtualSettings = forwardRef<
 
     return (
       <div className={styles.virtual_settings}>
-        <div className={styles.virtual_settings_header}>
-          <span>{t('settings.virtual.open')}:</span>
-          <Switch
-            style={{ background: '#22CCEE' }}
-            value={enabled}
-            onClick={() => {
-              const val = !enabled;
-              setEnabled(val);
-            }}
-          ></Switch>
-        </div>
         <div className={styles.virtual_video_box}>
           <div className={styles.virtual_video_box_compare}>
-            <Button color="default" variant="solid" style={{padding: "8px"}} onClick={() => {
-              const val = !compare;
-              setCompare(val);
-            }}>
-              <SvgResource type="switch" color='#fff' svgSize={14}></SvgResource>
+            <Button
+              color="default"
+              variant="solid"
+              style={{ padding: '8px' }}
+              onClick={() => {
+                const val = !compare;
+                setCompare(val);
+              }}
+            >
+              <SvgResource type="switch" color="#fff" svgSize={14}></SvgResource>
             </Button>
           </div>
           <video

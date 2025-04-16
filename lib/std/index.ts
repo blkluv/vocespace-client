@@ -80,7 +80,7 @@ export const randomColor = (participantId: string): string => {
     '#F033FF', // 紫色
     '#FF33F0', // 粉色
     '#33FFF0', // 青色
-    '#F0FF33', // 黄色
+    '#f5a623', // 橙色
   ];
 
   const index = Math.abs(hash) % colors.length;
