@@ -1,4 +1,4 @@
-import { is_web, UserStatus } from '@/lib/std';
+import { is_web, src, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   Chat,
@@ -257,7 +257,7 @@ export function VideoContainer({
       <audio
         ref={waveAudioRef}
         style={{ display: 'none' }}
-        src={`${process.env.NEXT_PUBLIC_BASE_PATH}/audios/vocespacewave.m4a`}
+        src={src('/audios/vocespacewave.m4a')}
       ></audio>
     </div>
   );

@@ -30,7 +30,7 @@ import styles from '@/styles/controls.module.scss';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
-import { randomColor, UserStatus } from '@/lib/std';
+import { randomColor, src, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
 import { RoomSettings } from '@/lib/hooks/room_settings';
 
@@ -354,6 +354,17 @@ export const ParticipantItem: (
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
         socketId: settings[trackReference.participant.identity]?.socketId,
+      });
+      // 创建一个虚拟的audio元素并播放音频，然后移除
+      const audioSrc = src('/audios/vocespacewave.m4a');
+      const audio = new Audio(audioSrc);
+      audio.volume = 1.0;
+      audio.play().then(() => {
+        setTimeout(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.remove();
+        }, 2000);
       });
     };
 
