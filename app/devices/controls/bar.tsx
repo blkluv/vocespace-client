@@ -172,7 +172,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
     const closeSetting = () => {
       setCompare(false);
-      console.warn('关闭设置');
       if (modelRole !== ModelRole.None) {
         setVirtualEnabled(true);
       } else {
@@ -371,6 +370,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           closable={false}
           width={'640px'}
           open={settingVis}
+          onClose={()=> {
+            setSettingVis(false);
+            closeSetting();
+          }}
           extra={setting_drawer_header({
             on_clicked: () => {
               setSettingVis(false);
