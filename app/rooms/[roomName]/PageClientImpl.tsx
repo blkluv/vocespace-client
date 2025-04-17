@@ -11,7 +11,6 @@ import {
   formatChatMessageLinks,
   LiveKitRoom,
   LocalUserChoices,
-  VideoConference,
 } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
 import {

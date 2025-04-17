@@ -224,7 +224,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       updateSettings({
         virtual: virtualEnabled,
       }).then(() => {
-        console.warn('更新设置成功', virtualEnabled);
         socket.emit('update_user_status');
       });
     }, [virtualEnabled]);
@@ -247,11 +246,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           break;
         }
         case 'audio': {
-          console.warn('音频设置', volume);
           setDevice({ ...device, volume });
           await updateSettings({
             volume,
           });
+
           break;
         }
         case 'video': {
@@ -374,7 +373,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           closable={false}
           width={'640px'}
           open={settingVis}
-          onClose={()=> {
+          onClose={() => {
             setSettingVis(false);
             closeSetting();
           }}

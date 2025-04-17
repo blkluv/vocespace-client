@@ -85,6 +85,14 @@ export function VideoContainer({
     socket.on('user_status_updated', async () => {
       // 调用fetchSettings
       await fetchSettings();
+      room.remoteParticipants.forEach((rp) => {
+        let volume = settings[rp.identity]?.volume / 100.0;
+        if (isNaN(volume)) {
+          volume = 1.0;
+        }
+        console.log('set volume', volume, rp.name || rp.identity);
+        rp.setVolume(volume);
+      });
     });
 
     // 房间事件监听器 --------------------------------------------------------------------------------
@@ -99,7 +107,7 @@ export function VideoContainer({
       socket.off('user_status_updated');
       room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
     };
-  }, [room?.state]);
+  }, [room?.state, settings]);
 
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
     showChat: false,
@@ -248,7 +256,7 @@ export function VideoContainer({
           )}
         </LayoutContextProvider>
       )}
-      <RoomAudioRenderer/>
+      <RoomAudioRenderer />
       <ConnectionStateToast />
       <audio
         ref={waveAudioRef}

@@ -207,28 +207,12 @@ export const ParticipantItem: (
             </div>
           );
         } else {
-          let volume = 0.0;
-          if (localParticipant.identity === trackReference.participant.identity) {
-            volume = 1.0;
-          } else {
-            const tmpV = settings[trackReference.participant.identity]?.volume;
-            if (isNaN(tmpV)) {
-              volume = 1.0;
-            } else {
-              volume = tmpV / 100.0;
-            }
-          }
-          console.log('volume', volume);
           return (
-            <AudioTrack
-              trackRef={trackReference}
-              onSubscriptionStatusChanged={handleSubscribe}
-              volume={volume}
-            />
+            <AudioTrack trackRef={trackReference} onSubscriptionStatusChanged={handleSubscribe} />
           );
         }
       }
-    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors, settings, localParticipant]);
+    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors, settings]);
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {
@@ -462,7 +446,7 @@ export const ParticipantItem: (
         });
       }
     }, [trackReference.source, localParticipant.isSpeaking, isFocus]);
-    
+
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
         {deviceTrack}
