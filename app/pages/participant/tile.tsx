@@ -66,6 +66,12 @@ export const ParticipantItem: (
         name: string;
         color: string;
         timestamp: number;
+        realVideoRect: {
+          left: number;
+          top: number;
+          width: number;
+          height: number;
+        };
       };
     }>({});
     const { blurValue, setVideoBlur } = useVideoBlur({
@@ -149,12 +155,58 @@ export const ParticipantItem: (
               {isFocus &&
                 Object.entries(remoteCursors).map(([participantId, cursor]) => {
                   // 计算视频元素上的绝对位置
-                  const videoRect = videoRef.current?.getBoundingClientRect();
-                  if (!videoRect) return null;
+                  if (!videoRef.current) return null;
+                  const containerRect = videoRef.current?.getBoundingClientRect();
+                  if (!containerRect) return null;
 
-                  const absoluteX = cursor.x * videoRect.width;
-                  const absoluteY = cursor.y * videoRect.height;
-                  // console.warn(absoluteX, absoluteY);
+                  // 获取视频元素的实际尺寸
+                  const videoElement = videoRef.current;
+                  // 视频没有加载完成时，可能没有宽高
+                  if (!videoElement.videoWidth || !videoElement.videoHeight) return null;
+
+                  // 计算视频在容器中的实际显示区域
+                  const actualVideoRect = {
+                    width: 0,
+                    height: 0,
+                    left: 0,
+                    top: 0,
+                  };
+
+                  // 计算视频的宽高比
+                  const videoRatio = videoElement.videoWidth / videoElement.videoHeight;
+
+                  // 正确计算视频在容器中的实际显示尺寸
+                  // 1. 首先尝试使用容器的宽度
+                  let computedHeight = containerRect.width / videoRatio;
+                  if (computedHeight <= containerRect.height) {
+                    // 如果计算出的高度不超过容器高度，则使用容器宽度作为基准
+                    actualVideoRect.width = containerRect.width;
+                    actualVideoRect.height = computedHeight;
+                    actualVideoRect.left = 0;
+                    actualVideoRect.top = (containerRect.height - actualVideoRect.height) / 2;
+                  } else {
+                    // 如果计算出的高度超过容器高度，则使用容器高度作为基准
+                    actualVideoRect.height = containerRect.height;
+                    actualVideoRect.width = containerRect.height * videoRatio;
+                    actualVideoRect.left = (containerRect.width - actualVideoRect.width) / 2;
+                    actualVideoRect.top = 0;
+                  }
+
+                  // 用于调试
+                  console.log('视频容器:', {
+                    width: containerRect.width,
+                    height: containerRect.height,
+                  });
+                  console.log('视频原始尺寸:', {
+                    width: videoElement.videoWidth,
+                    height: videoElement.videoHeight,
+                    ratio: videoRatio,
+                  });
+                  console.log('视频实际显示区域:', actualVideoRect);
+
+                  // 从归一化坐标计算实际像素坐标
+                  const absoluteX = cursor.x * actualVideoRect.width + actualVideoRect.left;
+                  const absoluteY = cursor.y * actualVideoRect.height + actualVideoRect.top;
                   // 检查时间戳，如果超过10秒没有更新，则不显示
                   // const now = Date.now();
                   // if (now - cursor.timestamp > 10000) return null;
@@ -169,7 +221,7 @@ export const ParticipantItem: (
                         top: `${absoluteY}px`,
                         pointerEvents: 'none', // 确保鼠标事件穿透
                         zIndex: 1000,
-                        transform: 'translate(3px, 10.5px)', // 使鼠标指针居中
+                        transform: 'translate(3px, 9.5px)', // 使鼠标指针居中
                       }}
                     >
                       {/* 鼠标指针 */}
@@ -372,20 +424,45 @@ export const ParticipantItem: (
         // 此时说明当前参与者正在观看屏幕共享，当这个观看者希望引导演讲者时（鼠标在窗口中移动，点击），需要将鼠标位置发送给演讲者
         const handleMouseMove = (e: MouseEvent) => {
           if (!videoRef.current) return;
-          const videoRect = videoRef.current?.getBoundingClientRect();
-          // 检查鼠标位置
-          if (
-            e.clientX >= videoRect.left &&
-            e.clientX <= videoRect.right &&
-            e.clientY >= videoRect.top &&
-            e.clientY <= videoRect.bottom
-          ) {
-            // 需要计算相对位置，因为屏幕尺寸每个人都不一样，也可能是缩放的 （归一）
-            const x = (e.clientX - videoRect.left) / videoRect.width;
-            const y = (e.clientY - videoRect.top) / videoRect.height;
+          const containerRect = videoRef.current?.getBoundingClientRect();
+          const videoElement = videoRef.current;
+          const actualVideoRect = {
+            width: 0,
+            height: 0,
+            left: 0,
+            top: 0,
+          };
 
-            // 判断位置是否发生变化， 变化才发送
-            if (Math.abs(x - lastMousePos.x) < 0.01 && Math.abs(y - lastMousePos.y) < 0.01) {
+          const videoRatio = videoElement.videoWidth / videoElement.videoHeight;
+          let computedHeight = containerRect.width / videoRatio;
+
+          if (computedHeight <= containerRect.height) {
+            actualVideoRect.width = containerRect.width;
+            actualVideoRect.height = computedHeight;
+            actualVideoRect.left = 0;
+            actualVideoRect.top = (containerRect.height - actualVideoRect.height) / 2;
+          } else {
+            actualVideoRect.height = containerRect.height;
+            actualVideoRect.width = containerRect.height * videoRatio;
+            actualVideoRect.left = (containerRect.width - actualVideoRect.width) / 2;
+            actualVideoRect.top = 0;
+          }
+
+          // 检查鼠标是否在视频显示区域内
+          if (
+            e.clientX >= containerRect.left + actualVideoRect.left &&
+            e.clientX <= containerRect.left + actualVideoRect.left + actualVideoRect.width &&
+            e.clientY >= containerRect.top + actualVideoRect.top &&
+            e.clientY <= containerRect.top + actualVideoRect.top + actualVideoRect.height
+          ) {
+            // 计算归一化坐标 (0-1范围内)
+            const x =
+              (e.clientX - (containerRect.left + actualVideoRect.left)) / actualVideoRect.width;
+            const y =
+              (e.clientY - (containerRect.top + actualVideoRect.top)) / actualVideoRect.height;
+
+            // 降低变化阈值，提高灵敏度
+            if (Math.abs(x - lastMousePos.x) < 0.005 && Math.abs(y - lastMousePos.y) < 0.005) {
               return;
             } else {
               setLastMousePos({ x, y });
@@ -398,6 +475,7 @@ export const ParticipantItem: (
               senderId: localParticipant.identity,
               receiverId: trackReference.participant.identity,
               receSocketId: settings[trackReference.participant.identity]?.socketId,
+              realVideoRect: actualVideoRect,
             };
 
             setRemoteCursors((prev) => ({
@@ -408,10 +486,13 @@ export const ParticipantItem: (
                 name: data.senderName,
                 color: data.color,
                 timestamp: Date.now(),
+                realVideoRect: data.realVideoRect,
               },
             }));
 
             socket.emit('mouse_move', data);
+          }else{
+            setLastMousePos({ x: 0, y: 0 });
           }
         };
         // 300ms触发一次, 节流
@@ -430,7 +511,7 @@ export const ParticipantItem: (
 
         socket.on('mouse_move_response', (data) => {
           // 获取之后需要将别人的鼠标位置在演讲者的屏幕上进行显示
-          const { senderId, senderName, x, y, color } = data;
+          const { senderId, senderName, x, y, color, realVideoRect } = data;
 
           // 更新状态
           setRemoteCursors((prev) => ({
@@ -441,6 +522,7 @@ export const ParticipantItem: (
               name: senderName,
               color,
               timestamp: Date.now(),
+              realVideoRect,
             },
           }));
         });

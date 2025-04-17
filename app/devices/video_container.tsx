@@ -71,7 +71,6 @@ export function VideoContainer({
     socket.on(
       'wave_response',
       (msg: { senderId: string; senderName: string; receiverId: string }) => {
-        console.log('receive wave', msg);
         if (msg.receiverId === room.localParticipant.identity) {
           waveAudioRef.current?.play();
           noteApi.info({
@@ -85,14 +84,6 @@ export function VideoContainer({
     socket.on('user_status_updated', async () => {
       // 调用fetchSettings
       await fetchSettings();
-      room.remoteParticipants.forEach((rp) => {
-        let volume = settings[rp.identity]?.volume / 100.0;
-        if (isNaN(volume)) {
-          volume = 1.0;
-        }
-        console.log('set volume', volume, rp.name || rp.identity);
-        rp.setVolume(volume);
-      });
     });
 
     // 房间事件监听器 --------------------------------------------------------------------------------
@@ -107,7 +98,18 @@ export function VideoContainer({
       socket.off('user_status_updated');
       room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
     };
-  }, [room?.state, settings]);
+  }, [room?.state]);
+
+  useEffect(() => {
+    if (!room || room.state !== ConnectionState.Connected) return;
+    room.remoteParticipants.forEach((rp) => {
+      let volume = settings[rp.identity]?.volume / 100.0;
+      if (isNaN(volume)) {
+        volume = 1.0;
+      }
+      rp.setVolume(volume);
+    });
+  }, [room, settings]);
 
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
     showChat: false,
@@ -128,7 +130,6 @@ export function VideoContainer({
     if (cacheWidgetState && cacheWidgetState == state) {
       return;
     } else {
-      console.debug('updating widget state', state);
       setCacheWidgetState(state);
       setWidgetState(state);
     }
@@ -149,7 +150,6 @@ export function VideoContainer({
       screenShareTracks.some((track) => track.publication.isSubscribed) &&
       lastAutoFocusedScreenShareTrack.current === null
     ) {
-      console.warn('show focus');
       setIsFocus(true);
       layoutContext.pin.dispatch?.({ msg: 'set_pin', trackReference: screenShareTracks[0] });
       lastAutoFocusedScreenShareTrack.current = screenShareTracks[0];
@@ -161,7 +161,6 @@ export function VideoContainer({
           lastAutoFocusedScreenShareTrack.current?.publication?.trackSid,
       )
     ) {
-      console.debug('Auto clearing screen share focus.');
       layoutContext.pin.dispatch?.({ msg: 'clear_pin' });
       lastAutoFocusedScreenShareTrack.current = null;
     }
@@ -188,6 +187,7 @@ export function VideoContainer({
   };
 
   const setUserStatus = async (status: UserStatus) => {
+    console.error('1');
     await updateSettings({
       status,
     });
