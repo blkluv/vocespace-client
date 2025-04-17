@@ -1,5 +1,5 @@
 - [x] 服务器落地页更新脚本
-- [ ] 录屏
+- [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
 - [ ] 聊天，文件传输
 
 
@@ -25,6 +25,12 @@
 - [x] 让所有人共享鼠标位置视图
 - [x] 开启虚拟形象之后其他用户会变黑
 - [x] 开启按钮改为model - none
+
+- [x] 鼠标位置同步(cover content获取video组件的宽高进行映射比例)
+- [x] wave 双方都要发出声音提示
+- [x] 设置页，点击外部遮罩关闭
+- [x] 声音改为用户输入声音音量
+- [x] 进入房间i18n修改
 
 
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.

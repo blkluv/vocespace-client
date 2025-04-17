@@ -11,6 +11,7 @@ import {
   useMaybeLayoutContext,
   useMaybeRoomContext,
   usePersistentUserChoices,
+  useTrackVolume,
 } from '@livekit/components-react';
 import { Button, Drawer, message } from 'antd';
 import { Track } from 'livekit-client';
@@ -172,7 +173,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
     const closeSetting = () => {
       setCompare(false);
-      console.warn('关闭设置');
       if (modelRole !== ModelRole.None) {
         setVirtualEnabled(true);
       } else {
@@ -224,11 +224,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       updateSettings({
         virtual: virtualEnabled,
       }).then(() => {
-        console.warn('更新设置成功', virtualEnabled);
         socket.emit('update_user_status');
       });
     }, [virtualEnabled]);
-
     const saveChanges = async (key: TabKey) => {
       switch (key) {
         case 'general': {
@@ -249,6 +247,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         }
         case 'audio': {
           setDevice({ ...device, volume });
+          await updateSettings({
+            volume,
+          });
+
           break;
         }
         case 'video': {
@@ -371,6 +373,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           closable={false}
           width={'640px'}
           open={settingVis}
+          onClose={() => {
+            setSettingVis(false);
+            closeSetting();
+          }}
           extra={setting_drawer_header({
             on_clicked: () => {
               setSettingVis(false);
