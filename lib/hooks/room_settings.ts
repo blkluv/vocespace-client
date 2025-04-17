@@ -4,6 +4,7 @@ import { connect_endpoint, UserStatus } from '../std';
 
 export interface ParticipantSettings {
   name: string;
+  volume: number;
   blur: number;
   screenBlur: number;
   status: UserStatus;

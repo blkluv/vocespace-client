@@ -12,9 +12,9 @@ export default {
     loading: 'Loading...',
     no_data: 'No data available',
     no_more: 'No more data',
-    demo: 'New meeting',
-    custom: 'Meeting space',
-    start_metting: 'Start Meeting',
+    demo: 'New Space',
+    custom: 'Enter Space Name',
+    start_metting: 'Join',
     join_room: 'Join Room',
     passphrase: 'Password',
     username: 'Username',
@@ -101,11 +101,11 @@ export default {
   msg: {
     info: {
       title:
-        'An open-source, self-hosted video conferencing application based on LiveKit developed by Privoce',
+        'Your cyber co-working space developed by Privoce',
       contact: 'Contact',
       learn_more: 'Learn More',
-      try_free: 'Try Voce Space for free through our live demo project.',
-      try_enter_room: 'Enter a name to join or create a space.',
+      try_free: 'Create a one-time new VoceSpace.',
+      try_enter_room: 'Enter your VoceSpace name or link to join or create.',
       connect_with_server: 'Connect Voce Space with a custom server using Voce Space Server.',
       enabled_e2ee: 'End-to-end encryption enabled',
       enter_room: 'Please enter the space name or link',

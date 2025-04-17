@@ -1,4 +1,4 @@
-import { is_web, UserStatus } from '@/lib/std';
+import { is_web, src, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   Chat,
@@ -55,6 +55,7 @@ export function VideoContainer({
       await updateSettings({
         name: room.localParticipant.name || room.localParticipant.identity,
         blur: device.blur,
+        volume: device.volume,
         status: UserStatus.Online,
         socketId: socket.id,
         virtual: false,
@@ -70,7 +71,6 @@ export function VideoContainer({
     socket.on(
       'wave_response',
       (msg: { senderId: string; senderName: string; receiverId: string }) => {
-        console.log('receive wave', msg);
         if (msg.receiverId === room.localParticipant.identity) {
           waveAudioRef.current?.play();
           noteApi.info({
@@ -100,6 +100,17 @@ export function VideoContainer({
     };
   }, [room?.state]);
 
+  useEffect(() => {
+    if (!room || room.state !== ConnectionState.Connected) return;
+    room.remoteParticipants.forEach((rp) => {
+      let volume = settings[rp.identity]?.volume / 100.0;
+      if (isNaN(volume)) {
+        volume = 1.0;
+      }
+      rp.setVolume(volume);
+    });
+  }, [room, settings]);
+
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
     showChat: false,
     unreadMessages: 0,
@@ -119,7 +130,6 @@ export function VideoContainer({
     if (cacheWidgetState && cacheWidgetState == state) {
       return;
     } else {
-      console.debug('updating widget state', state);
       setCacheWidgetState(state);
       setWidgetState(state);
     }
@@ -140,7 +150,6 @@ export function VideoContainer({
       screenShareTracks.some((track) => track.publication.isSubscribed) &&
       lastAutoFocusedScreenShareTrack.current === null
     ) {
-      console.warn('show focus');
       setIsFocus(true);
       layoutContext.pin.dispatch?.({ msg: 'set_pin', trackReference: screenShareTracks[0] });
       lastAutoFocusedScreenShareTrack.current = screenShareTracks[0];
@@ -152,7 +161,6 @@ export function VideoContainer({
           lastAutoFocusedScreenShareTrack.current?.publication?.trackSid,
       )
     ) {
-      console.debug('Auto clearing screen share focus.');
       layoutContext.pin.dispatch?.({ msg: 'clear_pin' });
       lastAutoFocusedScreenShareTrack.current = null;
     }
@@ -174,16 +182,12 @@ export function VideoContainer({
     tracks,
   ]);
 
-  //   useWarnAboutMissingStyles();
-  const audioVolume = React.useMemo(() => {
-    return device.volume / 100.0;
-  }, [device.volume]);
-
   const toSettingGeneral = () => {
     controlsRef.current?.openSettings('general');
   };
 
   const setUserStatus = async (status: UserStatus) => {
+    console.error('1');
     await updateSettings({
       status,
     });
@@ -252,12 +256,12 @@ export function VideoContainer({
           )}
         </LayoutContextProvider>
       )}
-      <RoomAudioRenderer volume={audioVolume} />
+      <RoomAudioRenderer />
       <ConnectionStateToast />
       <audio
         ref={waveAudioRef}
         style={{ display: 'none' }}
-        src={`${process.env.NEXT_PUBLIC_BASE_PATH}/audios/vocespacewave.m4a`}
+        src={src('/audios/vocespacewave.m4a')}
       ></audio>
     </div>
   );
