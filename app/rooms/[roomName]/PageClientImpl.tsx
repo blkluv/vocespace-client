@@ -11,8 +11,6 @@ import {
   formatChatMessageLinks,
   LiveKitRoom,
   LocalUserChoices,
-  PreJoin,
-  VideoConference,
 } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
 import {
@@ -24,12 +22,45 @@ import {
   DeviceUnsupportedError,
   RoomConnectOptions,
   MediaDeviceFailure,
+  RpcInvocationData,
+  ConnectionState,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
+import { PreJoin } from '@/app/pages/pre_join/pre_join';
+import { atom, RecoilRoot, useRecoilState } from 'recoil';
+import { connect_endpoint, UserStatus } from '@/lib/std';
+import { ModelBg, ModelRole } from '@/lib/std/virtual';
+import io from 'socket.io-client';
 
-const CONN_DETAILS_ENDPOINT =
-  process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
+export const socket = io();
+
+export const userState = atom({
+  key: 'userState',
+  default: {
+    volume: 80,
+    blur: 0.15,
+    screenBlur: 0.15,
+    virtualRole: {
+      enabled: false,
+      role: ModelRole.Haru,
+      bg: ModelBg.ClassRoom,
+    },
+    status: UserStatus.Online,
+    rpc: {
+      wave: false,
+    },
+  },
+});
+
+export const roomIdTmpState = atom({
+  key: 'roomIdTmpState',
+  default: '',
+});
+
+const CONN_DETAILS_ENDPOINT = connect_endpoint(
+  process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details',
+);
 const SHOW_SETTINGS_MENU = process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU == 'true';
 
 export function PageClientImpl(props: {
@@ -68,26 +99,29 @@ export function PageClientImpl(props: {
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
   return (
-    <main data-lk-theme="default" style={{ height: '100%' }}>
-      {connectionDetails === undefined || preJoinChoices === undefined ? (
-        <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
-          <PreJoin
-            defaults={preJoinDefaults}
-            onSubmit={handlePreJoinSubmit}
-            onError={handlePreJoinError}
-            joinLabel={t('common.join_room')}
-            micLabel={t('common.device.microphone')}
-            camLabel={t('common.device.camera')}
+    <RecoilRoot>
+      <main data-lk-theme="default" style={{ height: '100%' }}>
+        {connectionDetails === undefined || preJoinChoices === undefined ? (
+          <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
+            <PreJoin
+              defaults={preJoinDefaults}
+              onSubmit={handlePreJoinSubmit}
+              onError={handlePreJoinError}
+              joinLabel={t('common.join_room')}
+              micLabel={t('common.device.microphone')}
+              camLabel={t('common.device.camera')}
+              userLabel={t('common.username')}
+            />
+          </div>
+        ) : (
+          <VideoConferenceComponent
+            connectionDetails={connectionDetails}
+            userChoices={preJoinChoices}
+            options={{ codec: props.codec, hq: props.hq }}
           />
-        </div>
-      ) : (
-        <VideoConferenceComponent
-          connectionDetails={connectionDetails}
-          userChoices={preJoinChoices}
-          options={{ codec: props.codec, hq: props.hq }}
-        />
-      )}
-    </main>
+        )}
+      </main>
+    </RecoilRoot>
   );
 }
 
@@ -149,7 +183,6 @@ function VideoConferenceComponent(props: {
   }, [props.userChoices, props.options.hq, props.options.codec]);
 
   const room = React.useMemo(() => new Room(roomOptions), []);
-
   React.useEffect(() => {
     if (e2eeEnabled) {
       keyProvider
@@ -178,7 +211,10 @@ function VideoConferenceComponent(props: {
   }, []);
 
   const router = useRouter();
-  const handleOnLeave = React.useCallback(() => router.push('/'), [router]);
+  const handleOnLeave = React.useCallback(() => {
+    room.unregisterRpcMethod('wave');
+    router.push('/');
+  }, [router]);
   const handleError = React.useCallback((error: Error) => {
     console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
     if (error.name === 'ConnectionError') {
@@ -289,13 +325,11 @@ function VideoConferenceComponent(props: {
         onError={handleError}
         onMediaDeviceFailure={handleMediaDeviceFailure}
       >
-        {/* <VideoConference
-          chatMessageFormatter={formatChatMessageLinks}
-          SettingsComponent={undefined}
-        /> */}
         <VideoContainer
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
+          messageApi={messageApi}
+          noteApi={notApi}
         ></VideoContainer>
         <DebugMode />
         <RecordingIndicator />

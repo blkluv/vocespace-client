@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import styles from '@/styles/pre_join.module.scss';
+import { src } from '@/lib/std';
 
 interface ScreenPreviewProps {
   enabled: boolean;
@@ -81,11 +82,7 @@ export function ScreenPreview({ enabled, blur, onError, onClose }: ScreenPreview
         />
       ) : (
         <div className={styles['pre_join_main_device_right_video_empty']}>
-          <img
-            height={48}
-            src={`/images/vocespace.svg`}
-            alt=""
-          />
+          <img height={48} src={src('/images/vocespace.svg')} alt="" />
           <p>Screen Share</p>
         </div>
       )}

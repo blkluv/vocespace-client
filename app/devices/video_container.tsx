@@ -1,34 +1,116 @@
-import { is_web } from '@/lib/std';
+import { is_web, src, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   Chat,
   ConnectionStateToast,
-  ControlBar,
-  FocusLayout,
   FocusLayoutContainer,
   GridLayout,
   isTrackReference,
   LayoutContextProvider,
-  ParticipantTile,
   RoomAudioRenderer,
   TrackReference,
   useCreateLayoutContext,
+  useMaybeRoomContext,
   usePinnedTracks,
   useTracks,
   VideoConferenceProps,
   WidgetState,
 } from '@livekit/components-react';
-import { Participant, RoomEvent, Track } from 'livekit-client';
-import React from 'react';
-import { Controls } from './controls/bar';
+import { ConnectionState, Participant, RoomEvent, RpcInvocationData, Track } from 'livekit-client';
+import React, { useEffect, useState } from 'react';
+import { ControlBarExport, Controls } from './controls/bar';
+import { useRecoilState } from 'recoil';
+import { socket, userState } from '../rooms/[roomName]/PageClientImpl';
+import { ParticipantItem } from '../pages/participant/tile';
+import { useRoomSettings } from '@/lib/hooks/room_settings';
+import { MessageInstance } from 'antd/es/message/interface';
+import { NotificationInstance } from 'antd/es/notification/interface';
+import { useI18n } from '@/lib/i18n/i18n';
 
 export function VideoContainer({
   chatMessageFormatter,
   chatMessageDecoder,
   chatMessageEncoder,
   SettingsComponent,
+  noteApi,
+  messageApi,
   ...props
-}: VideoConferenceProps) {
+}: VideoConferenceProps & { messageApi: MessageInstance; noteApi: NotificationInstance }) {
+  const room = useMaybeRoomContext();
+  const { t } = useI18n();
+  const [device, setDevice] = useRecoilState(userState);
+  const controlsRef = React.useRef<ControlBarExport>(null);
+  const waveAudioRef = React.useRef<HTMLAudioElement>(null);
+  const [isFocus, setIsFocus] = useState(false);
+  const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
+  const { settings, updateSettings, fetchSettings, setSettings } = useRoomSettings(
+    room?.name || '', // 房间 ID
+    room?.localParticipant?.identity || '', // 参与者 ID
+  );
+  useEffect(() => {
+    if (!room || room.state !== ConnectionState.Connected) return;
+
+    const syncSettings = async () => {
+      // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
+      await updateSettings({
+        name: room.localParticipant.name || room.localParticipant.identity,
+        blur: device.blur,
+        volume: device.volume,
+        status: UserStatus.Online,
+        socketId: socket.id,
+        virtual: false,
+      });
+
+      // const newSettings = await fetchSettings();
+      // setSettings(newSettings);
+    };
+
+    syncSettings();
+
+    // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
+    socket.on(
+      'wave_response',
+      (msg: { senderId: string; senderName: string; receiverId: string }) => {
+        if (msg.receiverId === room.localParticipant.identity) {
+          waveAudioRef.current?.play();
+          noteApi.info({
+            message: `${msg.senderName} ${t('common.wave_msg')}`,
+          });
+        }
+      },
+    );
+
+    // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
+    socket.on('user_status_updated', async () => {
+      // 调用fetchSettings
+      await fetchSettings();
+    });
+
+    // 房间事件监听器 --------------------------------------------------------------------------------
+    const onParticipantConnected = async (participant: Participant) => {
+      await fetchSettings();
+    };
+
+    room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+
+    return () => {
+      socket.off('wave_response');
+      socket.off('user_status_updated');
+      room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
+    };
+  }, [room?.state]);
+
+  useEffect(() => {
+    if (!room || room.state !== ConnectionState.Connected) return;
+    room.remoteParticipants.forEach((rp) => {
+      let volume = settings[rp.identity]?.volume / 100.0;
+      if (isNaN(volume)) {
+        volume = 1.0;
+      }
+      rp.setVolume(volume);
+    });
+  }, [room, settings]);
+
   const [widgetState, setWidgetState] = React.useState<WidgetState>({
     showChat: false,
     unreadMessages: 0,
@@ -45,8 +127,12 @@ export function VideoContainer({
   );
 
   const widgetUpdate = (state: WidgetState) => {
-    console.debug('updating widget state', state);
-    setWidgetState(state);
+    if (cacheWidgetState && cacheWidgetState == state) {
+      return;
+    } else {
+      setCacheWidgetState(state);
+      setWidgetState(state);
+    }
   };
 
   const layoutContext = useCreateLayoutContext();
@@ -64,7 +150,7 @@ export function VideoContainer({
       screenShareTracks.some((track) => track.publication.isSubscribed) &&
       lastAutoFocusedScreenShareTrack.current === null
     ) {
-      console.debug('Auto set screen share focus:', { newScreenShareTrack: screenShareTracks[0] });
+      setIsFocus(true);
       layoutContext.pin.dispatch?.({ msg: 'set_pin', trackReference: screenShareTracks[0] });
       lastAutoFocusedScreenShareTrack.current = screenShareTracks[0];
     } else if (
@@ -75,7 +161,6 @@ export function VideoContainer({
           lastAutoFocusedScreenShareTrack.current?.publication?.trackSid,
       )
     ) {
-      console.debug('Auto clearing screen share focus.');
       layoutContext.pin.dispatch?.({ msg: 'clear_pin' });
       lastAutoFocusedScreenShareTrack.current = null;
     }
@@ -97,7 +182,17 @@ export function VideoContainer({
     tracks,
   ]);
 
-  //   useWarnAboutMissingStyles();
+  const toSettingGeneral = () => {
+    controlsRef.current?.openSettings('general');
+  };
+
+  const setUserStatus = async (status: UserStatus) => {
+    console.error('1');
+    await updateSettings({
+      status,
+    });
+    socket.emit('update_user_status');
+  };
 
   return (
     <div className="lk-video-conference" {...props}>
@@ -111,21 +206,41 @@ export function VideoContainer({
             {!focusTrack ? (
               <div className="lk-grid-layout-wrapper">
                 <GridLayout tracks={tracks}>
-                  <ParticipantTile />
+                  <ParticipantItem
+                    settings={settings}
+                    toSettings={toSettingGeneral}
+                    messageApi={messageApi}
+                    setUserStatus={setUserStatus}
+                  ></ParticipantItem>
                 </GridLayout>
               </div>
             ) : (
               <div className="lk-focus-layout-wrapper">
                 <FocusLayoutContainer>
                   <CarouselLayout tracks={carouselTracks}>
-                    <ParticipantTile />
+                    <ParticipantItem
+                      settings={settings}
+                      messageApi={messageApi}
+                      setUserStatus={setUserStatus}
+                    ></ParticipantItem>
                   </CarouselLayout>
-                  {focusTrack && <FocusLayout trackRef={focusTrack} />}
+                  {focusTrack && (
+                    <ParticipantItem
+                      setUserStatus={setUserStatus}
+                      settings={settings}
+                      trackRef={focusTrack}
+                      messageApi={messageApi}
+                      isFocus={isFocus}
+                    ></ParticipantItem>
+                  )}
                 </FocusLayoutContainer>
               </div>
             )}
-            {/* <ControlBar controls={{ chat: true, settings: !!SettingsComponent }} /> */}
-            <Controls controls={{ chat: true, settings: !!SettingsComponent }}></Controls>
+            <Controls
+              ref={controlsRef}
+              controls={{ chat: true, settings: !!SettingsComponent }}
+              updateSettings={updateSettings}
+            ></Controls>
           </div>
           <Chat
             style={{ display: widgetState.showChat ? 'grid' : 'none' }}
@@ -143,6 +258,11 @@ export function VideoContainer({
       )}
       <RoomAudioRenderer />
       <ConnectionStateToast />
+      <audio
+        ref={waveAudioRef}
+        style={{ display: 'none' }}
+        src={src('/audios/vocespacewave.m4a')}
+      ></audio>
     </div>
   );
 }
