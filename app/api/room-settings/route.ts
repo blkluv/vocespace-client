@@ -8,6 +8,7 @@ interface RoomSettings {
     participants: {
       [participantId: string]: {
         name: string;
+        volume: number;
         blur: number;
         screenBlur: number;
         status: UserStatus;

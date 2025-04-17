@@ -21,7 +21,7 @@ import {
   useMaybeLayoutContext,
   VideoTrack,
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import { isRemoteTrack, Track } from 'livekit-client';
 import React, { useEffect } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
@@ -46,14 +46,7 @@ export const ParticipantItem: (
   props: ParticipantItemProps & React.RefAttributes<HTMLDivElement>,
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
   function ParticipantItem(
-    {
-      trackRef,
-      settings,
-      toSettings,
-      messageApi,
-      setUserStatus,
-      isFocus
-    }: ParticipantItemProps,
+    { trackRef, settings, toSettings, messageApi, setUserStatus, isFocus }: ParticipantItemProps,
     ref,
   ) {
     const { t } = useI18n();
@@ -107,7 +100,6 @@ export const ParticipantItem: (
     );
 
     const deviceTrack = React.useMemo(() => {
-      // console.log(isTrackReference(trackReference), loading, trackReference.source);
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
@@ -154,7 +146,7 @@ export const ParticipantItem: (
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {isFocus  &&
+              {isFocus &&
                 Object.entries(remoteCursors).map(([participantId, cursor]) => {
                   // 计算视频元素上的绝对位置
                   const videoRect = videoRef.current?.getBoundingClientRect();
@@ -215,12 +207,28 @@ export const ParticipantItem: (
             </div>
           );
         } else {
+          let volume = 0.0;
+          if (localParticipant.identity === trackReference.participant.identity) {
+            volume = 1.0;
+          } else {
+            const tmpV = settings[trackReference.participant.identity]?.volume;
+            if (isNaN(tmpV)) {
+              volume = 1.0;
+            } else {
+              volume = tmpV / 100.0;
+            }
+          }
+          console.log('volume', volume);
           return (
-            <AudioTrack trackRef={trackReference} onSubscriptionStatusChanged={handleSubscribe} />
+            <AudioTrack
+              trackRef={trackReference}
+              onSubscriptionStatusChanged={handleSubscribe}
+              volume={volume}
+            />
           );
         }
       }
-    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors, settings]);
+    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors, settings, localParticipant]);
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {
@@ -407,18 +415,18 @@ export const ParticipantItem: (
               receiverId: trackReference.participant.identity,
               receSocketId: settings[trackReference.participant.identity]?.socketId,
             };
-           
+
             setRemoteCursors((prev) => ({
               ...prev,
               [data.senderId]: {
                 x: data.x,
                 y: data.y,
-                name: data.senderName ,
+                name: data.senderName,
                 color: data.color,
                 timestamp: Date.now(),
               },
             }));
-            
+
             socket.emit('mouse_move', data);
           }
         };
@@ -454,7 +462,7 @@ export const ParticipantItem: (
         });
       }
     }, [trackReference.source, localParticipant.isSpeaking, isFocus]);
-
+    
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
         {deviceTrack}

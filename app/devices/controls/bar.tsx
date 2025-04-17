@@ -11,6 +11,7 @@ import {
   useMaybeLayoutContext,
   useMaybeRoomContext,
   usePersistentUserChoices,
+  useTrackVolume,
 } from '@livekit/components-react';
 import { Button, Drawer, message } from 'antd';
 import { Track } from 'livekit-client';
@@ -227,7 +228,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         socket.emit('update_user_status');
       });
     }, [virtualEnabled]);
-
     const saveChanges = async (key: TabKey) => {
       switch (key) {
         case 'general': {
@@ -247,7 +247,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           break;
         }
         case 'audio': {
+          console.warn('音频设置', volume);
           setDevice({ ...device, volume });
+          await updateSettings({
+            volume,
+          });
           break;
         }
         case 'video': {

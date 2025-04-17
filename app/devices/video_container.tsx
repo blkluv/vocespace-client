@@ -55,6 +55,7 @@ export function VideoContainer({
       await updateSettings({
         name: room.localParticipant.name || room.localParticipant.identity,
         blur: device.blur,
+        volume: device.volume,
         status: UserStatus.Online,
         socketId: socket.id,
         virtual: false,
@@ -174,11 +175,6 @@ export function VideoContainer({
     tracks,
   ]);
 
-  //   useWarnAboutMissingStyles();
-  const audioVolume = React.useMemo(() => {
-    return device.volume / 100.0;
-  }, [device.volume]);
-
   const toSettingGeneral = () => {
     controlsRef.current?.openSettings('general');
   };
@@ -252,7 +248,7 @@ export function VideoContainer({
           )}
         </LayoutContextProvider>
       )}
-      <RoomAudioRenderer volume={audioVolume} />
+      <RoomAudioRenderer/>
       <ConnectionStateToast />
       <audio
         ref={waveAudioRef}
