@@ -141,7 +141,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             <div className={styles.setting_box}>
               <span>{t('settings.video.video_blur')}:</span>
               <Slider
-                defaultValue={0.15}
+                defaultValue={0.0}
                 className={`${styles.common_space} ${styles.slider}`}
                 value={video_blur}
                 min={0.0}
@@ -159,7 +159,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             <div className={styles.setting_box}>
               <span>{t('settings.video.screen_blur')}:</span>
               <Slider
-                defaultValue={0.15}
+                defaultValue={0.0}
                 className={`${styles.common_space} ${styles.slider}`}
                 value={screen_blur}
                 min={0.0}
