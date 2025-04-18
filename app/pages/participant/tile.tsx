@@ -535,7 +535,7 @@ export const ParticipantItem: (
         <div className="lk-participant-placeholder">
           <ParticipantPlaceholder />
         </div>
-        <div className="lk-participant-metadata">
+        <div className="lk-participant-metadata" style={{zIndex:1000}}>
           <Dropdown
             placement="topLeft"
             trigger={['click']}
