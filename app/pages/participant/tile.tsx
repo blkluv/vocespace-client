@@ -271,12 +271,12 @@ export const ParticipantItem: (
       switch (settings[trackReference.participant.identity]?.status) {
         case UserStatus.Online:
           return 'online_dot';
-        case UserStatus.Idot:
+        case UserStatus.Offline:
           return 'offline_dot';
         case UserStatus.Busy:
           return 'busy_dot';
-        case UserStatus.Invisible:
-          return 'away_dot';
+        case UserStatus.Leisure:
+          return 'leisure_dot';
       }
     }, [settings]);
     const statusFromSvgType = (svgType: SvgType): UserStatus => {
@@ -284,11 +284,11 @@ export const ParticipantItem: (
         case 'online_dot':
           return UserStatus.Online;
         case 'offline_dot':
-          return UserStatus.Idot;
+          return UserStatus.Offline;
         case 'busy_dot':
           return UserStatus.Busy;
-        case 'away_dot':
-          return UserStatus.Invisible;
+        case 'leisure_dot':
+          return UserStatus.Leisure;
         default:
           return UserStatus.Online;
       }
@@ -298,11 +298,11 @@ export const ParticipantItem: (
         case 'online_dot':
           return t('settings.general.status.online');
         case 'offline_dot':
-          return t('settings.general.status.idot');
+          return t('settings.general.status.offline');
         case 'busy_dot':
           return t('settings.general.status.busy');
-        case 'away_dot':
-          return t('settings.general.status.invisible');
+        case 'leisure_dot':
+          return t('settings.general.status.leisure');
         default:
           return t('settings.general.status.online');
       }
@@ -320,12 +320,12 @@ export const ParticipantItem: (
         ),
       },
       {
-        key: 'offline_dot',
+        key: 'leisure_dot',
         label: (
           <div className={styles.status_item}>
-            <SvgResource type="offline_dot" svgSize={14}></SvgResource>
-            <span>{t('settings.general.status.idot')}</span>
-            <div>{t('settings.general.status.idot_desc')}</div>
+            <SvgResource type="leisure_dot" svgSize={14}></SvgResource>
+            <span>{t('settings.general.status.leisure')}</span>
+            <div>{t('settings.general.status.leisure_desc')}</div>
           </div>
         ),
       },
@@ -340,12 +340,12 @@ export const ParticipantItem: (
         ),
       },
       {
-        key: 'away_dot',
+        key: 'offline_dot',
         label: (
           <div className={styles.status_item}>
-            <SvgResource type="away_dot" svgSize={14}></SvgResource>
-            <span>{t('settings.general.status.invisible')}</span>
-            <div>{t('settings.general.status.invisible_desc')}</div>
+            <SvgResource type="offline_dot" svgSize={14}></SvgResource>
+            <span>{t('settings.general.status.offline')}</span>
+            <div>{t('settings.general.status.offline_desc')}</div>
           </div>
         ),
       },

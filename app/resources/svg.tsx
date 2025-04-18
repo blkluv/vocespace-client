@@ -15,9 +15,9 @@ export type SvgType =
   | 'user_lk'
   | 'logo'
   | 'online_dot'
-  | 'offline_dot'
+  | 'leisure_dot'
   | 'busy_dot'
-  | 'away_dot'
+  | 'offline_dot'
   | 'model'
   | 'bg'
   | 'check'
@@ -387,7 +387,7 @@ export function SvgResource({ type, svgSize = 24, color = '#ffffff' }: SvgResour
           ></path>
         </svg>
       );
-    case 'away_dot':
+    case 'leisure_dot':
       return (
         <svg
           viewBox="0 0 1024 1024"

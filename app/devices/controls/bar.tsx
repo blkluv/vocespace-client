@@ -286,9 +286,60 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     );
 
     const setUserStatus = async (status: UserStatus) => {
-      await updateSettings({
-        status,
-      });
+      let newStatus = {
+        status: status,
+      };
+      switch (status) {
+        case UserStatus.Online: {
+          if (room) {
+            room.localParticipant.setMicrophoneEnabled(true);
+            room.localParticipant.setCameraEnabled(true);
+            room.localParticipant.setScreenShareEnabled(false);
+          }
+          break;
+        }
+        case UserStatus.Leisure: {
+          setDevice({ ...device, blur: 0.15, screenBlur: 0.15 });
+          setVideoBlur(0.15);
+          setScreenBlur(0.15);
+          Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15 });
+          break;
+        }
+        case UserStatus.Busy: {
+          setDevice({
+            ...device,
+            blur: 0.15,
+            screenBlur: 0.15,
+            volume: 0,
+            virtualRole: {
+              ...device.virtualRole,
+              enabled: false,
+            },
+          });
+          setVideoBlur(0.15);
+          setScreenBlur(0.15);
+          setVolume(0);
+          Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15, volume: 0 });
+          break;
+        }
+        case UserStatus.Offline: {
+          if (room) {
+            room.localParticipant.setMicrophoneEnabled(false);
+            room.localParticipant.setCameraEnabled(false);
+            room.localParticipant.setScreenShareEnabled(false);
+            setDevice((prev) => ({
+              ...prev,
+              virtualRole: {
+                ...prev.virtualRole,
+                enabled: false,
+              },
+            }));
+          }
+          break;
+        }
+      }
+
+      await updateSettings(newStatus);
       // 通知socket，进行状态的更新
       socket.emit('update_user_status');
     };

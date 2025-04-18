@@ -46,14 +46,13 @@ export default {
       status: {
         title: 'Status',
         online: 'Online',
-        online_desc: 'Online, user can receive any messages',
-        idot: 'Offline',
-        idot_desc: 'Offline, user will not receive any messages',
+        online_desc: 'Online, user\'s video and audio will work normally',
+        leisure: 'Leisure',
+        leisure_desc: 'Leisure, user\'s video will be blurred, audio will not be adjusted',
         busy: 'Busy',
-        busy_desc:
-          'Busy, do not disturb, user will not receive any messages but still appears online',
-        invisible: 'Invisible',
-        invisible_desc: 'Invisible, user will not appear online but can use all Vocespace features',
+        busy_desc: 'Busy, user\'s video will be blurred, audio will be muted',
+        offline: 'Offline',
+        offline_desc: 'Offline, user\'s video and audio will be turned off',
       },
     },
     audio: {

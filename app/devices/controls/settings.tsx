@@ -76,7 +76,6 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
     ref,
   ) => {
     const { t } = useI18n();
-    const virtual_settings_ref = useRef<VirtualSettingsExports>(null);
     const [username, setUsername] = useState(uname);
 
     const items: TabsProps['items'] = [

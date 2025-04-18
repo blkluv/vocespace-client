@@ -29,9 +29,9 @@ export interface UserItemProp {
 
 export enum UserStatus {
   Online = 'online',
-  Idot = 'offline',
+  Leisure = "leisure",
   Busy = 'busy',
-  Invisible = 'away',
+  Offline = 'offline',
 }
 
 export function is_web(): boolean {
