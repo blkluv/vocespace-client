@@ -1,7 +1,7 @@
 - [x] 服务器落地页更新脚本
 - [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
 - [ ] 聊天，文件传输
-
+- [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 
 - [x] 用户状态使用用户id隔离 (服务器)
 - [x] wave hand该用服务器通信
@@ -32,6 +32,13 @@
 - [x] 声音改为用户输入声音音量
 - [x] 进入房间i18n修改
 
+- [ ] 鼠标离开去除
+- [ ] 默认prejoin页面聚焦用户名输入框
+- [ ] 多个人开启虚拟形象之后，上一个人的会消失
+- [ ] 虚拟形象层级低于触发层
+- [ ] 用户状态处理
+- [x] PreJoin骨架屏
+- [x] tradition，去除Screen Share模糊度
 
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
 WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
