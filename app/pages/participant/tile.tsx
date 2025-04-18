@@ -491,8 +491,20 @@ export const ParticipantItem: (
             }));
 
             socket.emit('mouse_move', data);
-          }else{
-            setLastMousePos({ x: 0, y: 0 });
+          } else {
+            // 去除鼠标位置, 在remoteCursors中删除当前用户
+            setRemoteCursors((prev) => {
+              const newCursors = { ...prev };
+              delete newCursors[localParticipant.identity];
+              return newCursors;
+            });
+            // 发送socket, 只需要知道去除者的id
+            socket.emit('mouse_remove', {
+              senderName: localParticipant.name || localParticipant.identity,
+              senderId: localParticipant.identity,
+              receiverId: trackReference.participant.identity,
+              receSocketId: settings[trackReference.participant.identity]?.socketId,
+            });
           }
         };
         // 300ms触发一次, 节流
@@ -526,6 +538,15 @@ export const ParticipantItem: (
             },
           }));
         });
+        socket.on('mouse_move_response', (data) => {
+          const { senderId } = data;
+          // 删除状态
+          setRemoteCursors((prev) => {
+            const newCursors = { ...prev };
+            delete newCursors[senderId];
+            return newCursors;
+          });
+        });
       }
     }, [trackReference.source, localParticipant.isSpeaking, isFocus]);
 
@@ -535,7 +556,7 @@ export const ParticipantItem: (
         <div className="lk-participant-placeholder">
           <ParticipantPlaceholder />
         </div>
-        <div className="lk-participant-metadata" style={{zIndex:1000}}>
+        <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
           <Dropdown
             placement="topLeft"
             trigger={['click']}

@@ -34,6 +34,9 @@ app.prepare().then(() => {
       // socket.to(msg.receSocketId).emit('mouse_move_response', msg);
       socket.broadcast.emit('mouse_move_response', msg);
     });
+    socket.on('mouse_remove', (msg) => {
+      socket.broadcast.emit('mouse_move_response', msg);
+    });
   });
 
   httpServer

@@ -96,6 +96,8 @@ export function VideoContainer({
     return () => {
       socket.off('wave_response');
       socket.off('user_status_updated');
+      socket.off("mouse_move_response");
+      socket.off("mouse_remove_response");
       room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
     };
   }, [room?.state]);
