@@ -9,7 +9,7 @@ import {
 import styles from '@/styles/pre_join.module.scss';
 import React from 'react';
 import { facingModeFromLocalTrack, LocalAudioTrack, LocalVideoTrack, Track } from 'livekit-client';
-import { Flex, Input, message, Skeleton, Slider, Space } from 'antd';
+import { Flex, Input, InputRef, message, Skeleton, Slider, Space } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
@@ -58,7 +58,6 @@ export function PreJoin({
     preventSave: !persistUserChoices,
     preventLoad: !persistUserChoices,
   });
-
   const [userChoices, setUserChoices] = React.useState(initialUserChoices);
   // Initialize device settings -----------------------------------------------------------------------
   const [audioEnabled, setAudioEnabled] = React.useState<boolean>(userChoices.audioEnabled);
@@ -96,7 +95,7 @@ export function PreJoin({
   );
   // video track --------------------------------------------------------------------------------
   const videoEl = React.useRef(null);
-
+  const inputRef = React.useRef<InputRef>(null);
   const videoTrack = React.useMemo(
     () => tracks?.filter((track) => track.kind === Track.Kind.Video)[0] as LocalVideoTrack,
     [tracks],
@@ -115,13 +114,17 @@ export function PreJoin({
     if (videoEl.current && videoTrack) {
       videoTrack.unmute();
       videoTrack.attach(videoEl.current);
+      // 自动聚焦input
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
       setLoading(false);
     }
 
     return () => {
       videoTrack?.detach();
     };
-  }, [videoTrack]);
+  }, [videoTrack, inputRef]);
   // audio track --------------------------------------------------------------------------------------
   const audioTrack = React.useMemo(
     () => tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack,
@@ -329,6 +332,7 @@ export function PreJoin({
             ></Slider>
           </div>
           <Input
+            ref={inputRef}
             size="large"
             style={{ width: '100%' }}
             id="username"
