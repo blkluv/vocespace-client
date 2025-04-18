@@ -39,6 +39,7 @@
 - [x] 用户状态处理
 - [x] PreJoin骨架屏
 - [x] tradition，去除Screen Share模糊度
+- [x] 用户鼠标颜色
 
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
 WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
