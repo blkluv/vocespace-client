@@ -275,7 +275,7 @@ export const Live2DComponent = ({
       }
       const originalTrack = cameraPub.track;
       const virtualTrack = virtualStream.getVideoTracks()[0];
-      originalTrack.replaceTrack(virtualTrack);
+      await originalTrack.replaceTrack(virtualTrack);
 
       // await localParticipant.publishTrack(virtualTrack, {
       //   name:

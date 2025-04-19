@@ -114,29 +114,27 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter: `blur(${blurValue}px)`,
-                  visibility:
-                    uState.virtualRole.enabled &&
-                    settings[trackReference.participant.identity]?.virtual
-                      ? 'hidden'
-                      : 'visible',
+                  visibility: (localParticipant.identity === trackReference.participant.identity) && uState.virtualRole.enabled
+                    ? 'hidden'
+                    : 'visible',
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {uState.virtualRole.enabled &&
-                settings[trackReference.participant.identity]?.virtual && (
-                  <div className={styles.virtual_video_box_canvas}>
-                    <VirtualRoleCanvas
-                      video_ele={videoRef}
-                      model_bg={uState.virtualRole.bg}
-                      model_role={uState.virtualRole.role}
-                      enabled={uState.virtualRole.enabled}
-                      messageApi={messageApi}
-                      trackRef={trackReference}
-                    ></VirtualRoleCanvas>
-                  </div>
-                )}
+              {(localParticipant.identity === trackReference.participant.identity) && uState.virtualRole.enabled && (
+                <div className={styles.virtual_video_box_canvas}>
+                  <VirtualRoleCanvas
+                    video_ele={videoRef}
+                    model_bg={uState.virtualRole.bg}
+                    model_role={uState.virtualRole.role}
+                    enabled={uState.virtualRole.enabled}
+                    messageApi={messageApi}
+                    trackRef={trackReference}
+                    isLocal={trackReference.participant.identity === localParticipant.identity}
+                  ></VirtualRoleCanvas>
+                </div>
+              )}
             </div>
           );
         } else if (trackReference.source === Track.Source.ScreenShare) {

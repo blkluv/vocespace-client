@@ -27,6 +27,7 @@ import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
 import { EnhancedChat } from '../pages/chat/chat';
+import { ModelBg, ModelRole } from '@/lib/std/virtual';
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -59,7 +60,11 @@ export function VideoContainer({
         volume: device.volume,
         status: UserStatus.Online,
         socketId: socket.id,
-        virtual: false,
+        virtual: {
+          enabled: false,
+          role: ModelRole.None,
+          bg: ModelBg.ClassRoom
+        },
       });
 
       // const newSettings = await fetchSettings();

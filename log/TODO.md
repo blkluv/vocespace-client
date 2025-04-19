@@ -40,10 +40,17 @@
 - [x] tradition，去除Screen Share模糊度
 - [x] 用户鼠标颜色
 
-- [ ] 多个人开启虚拟形象之后，上一个人的会消失
+- [x] 多个人开启虚拟形象之后，上一个人的会消失
 - [ ] 聊天传输文件
-  - [ ] 重写Chat组件
+  - [x] 重写Chat组件
   - [ ] socket传输
+- [ ] 视图模糊同步问题 可能是identity判断有问题或者是视图切换时同步不及时 (尝试本地模糊后传输视频流)
+
+原始  -> 跟踪本地用户的脸 -> 模型 -> texture + canvas  -> 虚拟视频流 -> 替换原始视频流
+
+远程流 -> (跟踪本地用户的脸 -> 模型 -> texture + canvas  -> 虚拟视频流 ) -> 顶掉本地用户
+
+判断 远程｜原始
 
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
 WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3

@@ -1,6 +1,7 @@
 // lib/hooks/useRoomSettings.ts
 import { useState, useEffect, useCallback } from 'react';
 import { connect_endpoint, UserStatus } from '../std';
+import { ModelBg, ModelRole } from '../std/virtual';
 
 export interface ParticipantSettings {
   name: string;
@@ -9,7 +10,11 @@ export interface ParticipantSettings {
   screenBlur: number;
   status: UserStatus;
   socketId: string;
-  virtual: boolean;
+  virtual: {
+    role: ModelRole;
+    bg: ModelBg;
+    enabled: boolean;
+  };
 }
 
 export interface RoomSettings {

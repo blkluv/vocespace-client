@@ -223,7 +223,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       });
       // 更新设置
       updateSettings({
-        virtual: virtualEnabled,
+        virtual: {
+          enabled: virtualEnabled,
+          role: modelRole,
+          bg: modelBg,
+        },
       }).then(() => {
         socket.emit('update_user_status');
       });

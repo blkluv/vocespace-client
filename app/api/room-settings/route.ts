@@ -1,5 +1,6 @@
 // /app/api/room-settings/route.ts
 import { UserStatus } from '@/lib/std';
+import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { NextRequest, NextResponse } from 'next/server';
 
 // 内存中存储房间设置 (实际应用中可能需要使用数据库或 Redis)
@@ -13,7 +14,11 @@ interface RoomSettings {
         screenBlur: number;
         status: UserStatus;
         socketId: string;
-        virtual: boolean;
+        virtual: {
+          role: ModelRole;
+          bg: ModelBg;
+          enabled: boolean;
+        };
       };
     };
   };
@@ -58,7 +63,7 @@ export async function GET(request: NextRequest) {
       usedUserNames.sort((a, b) => a - b);
       suffix = usedUserNames[usedUserNames.length - 1] + 1;
     }
-    
+
     let suffix_str = suffix.toString();
     if (suffix < 10) {
       suffix_str = `0${suffix}`;
