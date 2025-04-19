@@ -7,7 +7,7 @@ import {
   usePreviewTracks,
 } from '@livekit/components-react';
 import styles from '@/styles/pre_join.module.scss';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { facingModeFromLocalTrack, LocalAudioTrack, LocalVideoTrack, Track } from 'livekit-client';
 import { Flex, Input, InputRef, message, Skeleton, Slider, Space } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
@@ -83,6 +83,14 @@ export function PreJoin({
   React.useEffect(() => {
     saveUsername(username);
   }, [username, saveUsername]);
+
+  useEffect(()=>{
+    setTimeout(()=>{
+      setLoading(false);
+    }, 1500)
+  }, []);
+
+
   // Preview tracks -----------------------------------------------------------------------------------
   const tracks = usePreviewTracks(
     {
@@ -118,7 +126,6 @@ export function PreJoin({
       if (inputRef.current) {
         inputRef.current.focus();
       }
-      setLoading(false);
     }
 
     return () => {

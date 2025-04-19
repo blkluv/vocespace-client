@@ -33,6 +33,10 @@ import { connect_endpoint, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_PATH ? {
+  path: process.env.NEXT_PUBLIC_BASE_PATH,
+}: {}
+
 export const socket = io();
 
 export const userState = atom({

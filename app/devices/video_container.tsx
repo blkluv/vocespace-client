@@ -26,6 +26,7 @@ import { useRoomSettings } from '@/lib/hooks/room_settings';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
+import { EnhancedChat } from '../pages/chat/chat';
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -96,8 +97,8 @@ export function VideoContainer({
     return () => {
       socket.off('wave_response');
       socket.off('user_status_updated');
-      socket.off("mouse_move_response");
-      socket.off("mouse_remove_response");
+      socket.off('mouse_move_response');
+      socket.off('mouse_remove_response');
       room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
     };
   }, [room?.state]);
@@ -119,7 +120,7 @@ export function VideoContainer({
     showSettings: false,
   });
   const lastAutoFocusedScreenShareTrack = React.useRef<TrackReferenceOrPlaceholder | null>(null);
-
+  // [track] -----------------------------------------------------------------------------------------------------
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -127,7 +128,7 @@ export function VideoContainer({
     ],
     { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false },
   );
-
+  // [widget update and layout adjust] --------------------------------------------------------------------------
   const widgetUpdate = (state: WidgetState) => {
     if (cacheWidgetState && cacheWidgetState == state) {
       return;
@@ -187,7 +188,7 @@ export function VideoContainer({
   const toSettingGeneral = () => {
     controlsRef.current?.openSettings('general');
   };
-
+  // [user status] ------------------------------------------------------------------------------------------
   const setUserStatus = async (status: UserStatus) => {
     let newStatus = {
       status: status,
@@ -240,6 +241,7 @@ export function VideoContainer({
     socket.emit('update_user_status');
   };
 
+
   return (
     <div className="lk-video-conference" {...props}>
       {is_web() && (
@@ -288,10 +290,6 @@ export function VideoContainer({
               updateSettings={updateSettings}
             ></Controls>
           </div>
-          <Chat
-            style={{ display: widgetState.showChat ? 'grid' : 'none' }}
-            messageFormatter={chatMessageFormatter}
-          />
           {SettingsComponent && (
             <div
               className="lk-settings-menu-modal"

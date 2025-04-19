@@ -2,9 +2,11 @@ import { createServer } from 'node:http';
 import next from 'next';
 import { Server } from 'socket.io';
 
-const dev = process.env.NODE_ENV !== 'production';
+const dev = true;
 const hostname = 'localhost';
 const port = 3000;
+const basePath = '/chat'; // 添加 basePath 配置
+
 // when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
@@ -40,11 +42,11 @@ app.prepare().then(() => {
   });
 
   httpServer
-    .once('error', (err) => {
-      console.error(err);
-      process.exit(1);
-    })
-    .listen(port, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
-    });
+  .once('error', (err) => {
+    console.error(err);
+    process.exit(1);
+  })
+  .listen(port, () => {
+    console.log(`> Ready on http://${hostname}:${port}${basePath}`);
+  });
 });

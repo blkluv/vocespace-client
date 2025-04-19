@@ -34,12 +34,16 @@
 
 - [x] 鼠标离开去除
 - [x] 默认prejoin页面聚焦用户名输入框
-- [ ] 多个人开启虚拟形象之后，上一个人的会消失
 - [x] 虚拟形象层级低于触发层
 - [x] 用户状态处理
 - [x] PreJoin骨架屏
 - [x] tradition，去除Screen Share模糊度
 - [x] 用户鼠标颜色
+
+- [ ] 多个人开启虚拟形象之后，上一个人的会消失
+- [ ] 聊天传输文件
+  - [ ] 重写Chat组件
+  - [ ] socket传输
 
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
 WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3

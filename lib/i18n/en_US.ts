@@ -32,6 +32,8 @@ export default {
       screen: 'Screen',
     },
     chat: 'Chat',
+    chat_placeholder: 'Please enter a message',
+    send: 'Send',
     leave: 'Leave',
     share_screen: 'Share Screen',
     stop_share: 'Stop Share Share',
@@ -51,8 +53,8 @@ export default {
         leisure_desc: 'Leisure, user\'s video will be blurred, audio will not be adjusted',
         busy: 'Busy',
         busy_desc: 'Busy, user\'s video will be blurred, audio will be muted',
-        offline: 'Offline',
-        offline_desc: 'Offline, user\'s video and audio will be turned off',
+        offline: 'Away',
+        offline_desc: 'Away, user\'s video and audio will be turned off',
       },
     },
     audio: {
@@ -84,16 +86,16 @@ export default {
     },
     device: {
       audio: {
-        title: '音频设备',
-        desc: '选择您的音频输入和输出设备。',
+        title: 'Audio Device',
+        desc: 'Select your audio input device.',
       },
       video: {
-        title: '视频设备',
-        desc: '选择您的视频输入设备。',
+        title: 'Video Device',
+        desc: 'Select your video input device.',
       },
       screen: {
-        title: '屏幕共享',
-        desc: '选择要共享的屏幕或窗口。',
+        title: 'Screen Sharing',
+        desc: 'Select your screen sharing device.',
       },
     },
   },

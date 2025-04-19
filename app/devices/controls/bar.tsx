@@ -1,7 +1,6 @@
 import { useI18n } from '@/lib/i18n/i18n';
 import {
   ChatIcon,
-  ChatToggle,
   DisconnectButton,
   LeaveIcon,
   MediaDeviceMenu,
@@ -25,6 +24,8 @@ import { useRecoilState } from 'recoil';
 import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings } from '@/lib/hooks/room_settings';
 import { UserStatus } from '@/lib/std';
+import { EnhancedChat } from '@/app/pages/chat/chat';
+import { ChatToggle } from './chat_toggle';
 
 /** @public */
 export type ControlBarControls = {
@@ -344,6 +345,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       socket.emit('update_user_status');
     };
 
+    // [chat] -----------------------------------------------------------------------------------------------------
+    const [chatOpen, setChatOpen] = React.useState(false);
+    const onChatClose = () => {
+      setChatOpen(false);
+    };
+
     return (
       <div {...htmlProps}>
         {contextHolder}
@@ -399,10 +406,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           </TrackToggle>
         )}
         {visibleControls.chat && (
-          <ChatToggle>
-            {showIcon && <ChatIcon />}
-            {showText && t('common.chat')}
-          </ChatToggle>
+          <ChatToggle
+            enabled={chatOpen}
+            onClicked={() => {
+              setChatOpen(!chatOpen);
+            }}
+          ></ChatToggle>
         )}
         <SettingToggle
           enabled={settingVis}
@@ -417,6 +426,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           </DisconnectButton>
         )}
         <StartMediaButton />
+        <EnhancedChat open={chatOpen} setOpen={setChatOpen} onClose={onChatClose}></EnhancedChat>
         <Drawer
           style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
           title={t('common.setting')}
@@ -526,7 +536,7 @@ export function supportsScreenSharing(): boolean {
   );
 }
 
-const setting_drawer_header = ({ on_clicked }: { on_clicked: () => void }): React.ReactNode => {
+export const setting_drawer_header = ({ on_clicked }: { on_clicked: () => void }): React.ReactNode => {
   return (
     <div>
       <Button type="text" shape="circle" onClick={on_clicked}>
