@@ -160,7 +160,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
 
     // settings ------------------------------------------------------------------------------------------
     const room = useMaybeRoomContext();
-
     const [key, setKey] = React.useState<TabKey>('general');
     const [virtualEnabled, setVirtualEnabled] = React.useState(false);
     const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.None);
@@ -300,30 +299,50 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             room.localParticipant.setMicrophoneEnabled(true);
             room.localParticipant.setCameraEnabled(true);
             room.localParticipant.setScreenShareEnabled(false);
+            if (volume == 0) {
+              const newVolume = 80;
+              setVolume(newVolume);
+              // 确保设备状态同步更新
+              setDevice((prev) => ({
+                ...prev,
+                volume: newVolume,
+              }));
+              Object.assign(newStatus, { volume: newVolume });
+            }
           }
           break;
         }
         case UserStatus.Leisure: {
-          setDevice({ ...device, blur: 0.15, screenBlur: 0.15 });
           setVideoBlur(0.15);
           setScreenBlur(0.15);
+          setDevice((prev) => ({
+            ...prev,
+            blur: 0.15,
+            screenBlur: 0.15,
+          }));
           Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15 });
           break;
         }
         case UserStatus.Busy: {
-          setDevice({
-            ...device,
+          setVideoBlur(0.15);
+          setScreenBlur(0.15);
+          setVolume(0);
+          setVirtualEnabled(false);
+          setModelRole(ModelRole.None);
+          setModelBg(ModelBg.ClassRoom);
+          setDevice((prev) => ({
+            ...prev,
             blur: 0.15,
             screenBlur: 0.15,
             volume: 0,
             virtualRole: {
-              ...device.virtualRole,
+              ...prev.virtualRole,
               enabled: false,
+              bg: ModelBg.ClassRoom,
+              role: ModelRole.None,
             },
-          });
-          setVideoBlur(0.15);
-          setScreenBlur(0.15);
-          setVolume(0);
+          }));
+
           Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15, volume: 0 });
           break;
         }
@@ -337,6 +356,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               virtualRole: {
                 ...prev.virtualRole,
                 enabled: false,
+                bg: ModelBg.ClassRoom,
+                role: ModelRole.None,
               },
             }));
           }
@@ -540,7 +561,11 @@ export function supportsScreenSharing(): boolean {
   );
 }
 
-export const setting_drawer_header = ({ on_clicked }: { on_clicked: () => void }): React.ReactNode => {
+export const setting_drawer_header = ({
+  on_clicked,
+}: {
+  on_clicked: () => void;
+}): React.ReactNode => {
   return (
     <div>
       <Button type="text" shape="circle" onClick={on_clicked}>

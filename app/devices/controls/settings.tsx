@@ -117,7 +117,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             <div className={styles.setting_box}>
               <div>{t('settings.audio.volume')}:</div>
               <Slider
-                defaultValue={volume}
+                value={volume}
                 className={styles.common_space}
                 onChange={(e) => {
                   setVolume(e);
@@ -399,13 +399,17 @@ export const VirtualSettings = forwardRef<
                     {model_selected_index == index && <SelectedMask></SelectedMask>}
                     {/* <h4>{item.name}</h4> */}
                     {item.name == ModelRole.None ? (
-                      <div style={{
-                        height: "120px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: '700',
-                      }}>{t('settings.virtual.none')}</div>
+                      <div
+                        style={{
+                          height: '120px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '700',
+                        }}
+                      >
+                        {t('settings.virtual.none')}
+                      </div>
                     ) : (
                       <img src={src(`/images/models/${item.src}`)} alt="" />
                     )}
@@ -500,6 +504,7 @@ export const VirtualSettings = forwardRef<
                 model_role={modelRole}
                 enabled={compare}
                 messageApi={messageApi}
+                isLocal={true}
               ></VirtualRoleCanvas>
             </div>
           )}

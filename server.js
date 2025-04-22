@@ -37,7 +37,7 @@ app.prepare().then(() => {
       socket.broadcast.emit('mouse_move_response', msg);
     });
     socket.on('mouse_remove', (msg) => {
-      socket.broadcast.emit('mouse_move_response', msg);
+      socket.broadcast.emit('mouse_remove_response', msg);
     });
   });
 

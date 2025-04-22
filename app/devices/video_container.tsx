@@ -63,7 +63,7 @@ export function VideoContainer({
         virtual: {
           enabled: false,
           role: ModelRole.None,
-          bg: ModelBg.ClassRoom
+          bg: ModelBg.ClassRoom,
         },
       });
 
@@ -204,25 +204,39 @@ export function VideoContainer({
           room.localParticipant.setMicrophoneEnabled(true);
           room.localParticipant.setCameraEnabled(true);
           room.localParticipant.setScreenShareEnabled(false);
+          if (device.volume == 0) {
+            const newVolume = 80;
+            setDevice((prev) => ({
+              ...prev,
+              volume: newVolume,
+            }));
+            Object.assign(newStatus, { volume: newVolume });
+          }
         }
         break;
       }
       case UserStatus.Leisure: {
-        setDevice({ ...device, blur: 0.15, screenBlur: 0.15 });
+        setDevice((prev) => ({
+          ...prev,
+          blur: 0.15,
+          screenBlur: 0.15,
+        }));
         Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15 });
         break;
       }
       case UserStatus.Busy: {
-        setDevice({
-          ...device,
+        setDevice((prev) => ({
+          ...prev,
           blur: 0.15,
           screenBlur: 0.15,
           volume: 0,
           virtualRole: {
-            ...device.virtualRole,
+            ...prev.virtualRole,
             enabled: false,
+            bg: ModelBg.ClassRoom,
+            role: ModelRole.None,
           },
-        });
+        }));
         Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15, volume: 0 });
         break;
       }
@@ -236,6 +250,8 @@ export function VideoContainer({
             virtualRole: {
               ...prev.virtualRole,
               enabled: false,
+              bg: ModelBg.ClassRoom,
+              role: ModelRole.None,
             },
           }));
         }
@@ -245,7 +261,6 @@ export function VideoContainer({
     await updateSettings(newStatus);
     socket.emit('update_user_status');
   };
-
 
   return (
     <div className="lk-video-conference" {...props}>

@@ -114,27 +114,30 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter: `blur(${blurValue}px)`,
-                  visibility: (localParticipant.identity === trackReference.participant.identity) && uState.virtualRole.enabled
-                    ? 'hidden'
-                    : 'visible',
+                  visibility:
+                    localParticipant.identity === trackReference.participant.identity &&
+                    uState.virtualRole.enabled
+                      ? 'hidden'
+                      : 'visible',
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {(localParticipant.identity === trackReference.participant.identity) && uState.virtualRole.enabled && (
-                <div className={styles.virtual_video_box_canvas}>
-                  <VirtualRoleCanvas
-                    video_ele={videoRef}
-                    model_bg={uState.virtualRole.bg}
-                    model_role={uState.virtualRole.role}
-                    enabled={uState.virtualRole.enabled}
-                    messageApi={messageApi}
-                    trackRef={trackReference}
-                    isLocal={trackReference.participant.identity === localParticipant.identity}
-                  ></VirtualRoleCanvas>
-                </div>
-              )}
+              {localParticipant.identity === trackReference.participant.identity &&
+                uState.virtualRole.enabled && (
+                  <div className={styles.virtual_video_box_canvas}>
+                    <VirtualRoleCanvas
+                      video_ele={videoRef}
+                      model_bg={uState.virtualRole.bg}
+                      model_role={uState.virtualRole.role}
+                      enabled={uState.virtualRole.enabled}
+                      messageApi={messageApi}
+                      trackRef={trackReference}
+                      isLocal={trackReference.participant.identity === localParticipant.identity}
+                    ></VirtualRoleCanvas>
+                  </div>
+                )}
             </div>
           );
         } else if (trackReference.source === Track.Source.ScreenShare) {
@@ -190,24 +193,12 @@ export const ParticipantItem: (
                     actualVideoRect.top = 0;
                   }
 
-                  // 用于调试
-                  console.log('视频容器:', {
-                    width: containerRect.width,
-                    height: containerRect.height,
-                  });
-                  console.log('视频原始尺寸:', {
-                    width: videoElement.videoWidth,
-                    height: videoElement.videoHeight,
-                    ratio: videoRatio,
-                  });
-                  console.log('视频实际显示区域:', actualVideoRect);
-
                   // 从归一化坐标计算实际像素坐标
                   const absoluteX = cursor.x * actualVideoRect.width + actualVideoRect.left;
                   const absoluteY = cursor.y * actualVideoRect.height + actualVideoRect.top;
                   // 检查时间戳，如果超过10秒没有更新，则不显示
-                  // const now = Date.now();
-                  // if (now - cursor.timestamp > 10000) return null;
+                  const now = Date.now();
+                  if (now - cursor.timestamp > 10000) return null;
 
                   return (
                     <div
@@ -487,7 +478,6 @@ export const ParticipantItem: (
                 realVideoRect: data.realVideoRect,
               },
             }));
-
             socket.emit('mouse_move', data);
           } else {
             // 去除鼠标位置, 在remoteCursors中删除当前用户
@@ -517,12 +507,9 @@ export const ParticipantItem: (
 
       // 如果当前用户是演讲者并且当前track source是screen share，那么就需要获取其他用户的鼠标位置
       if (localParticipant.isSpeaking && trackReference.source === Track.Source.ScreenShare) {
-        // console.warn('is speaking and screen share');
-
         socket.on('mouse_move_response', (data) => {
           // 获取之后需要将别人的鼠标位置在演讲者的屏幕上进行显示
           const { senderId, senderName, x, y, color, realVideoRect } = data;
-
           // 更新状态
           setRemoteCursors((prev) => ({
             ...prev,
@@ -536,8 +523,9 @@ export const ParticipantItem: (
             },
           }));
         });
-        socket.on('mouse_move_response', (data) => {
+        socket.on('mouse_remove_response', (data) => {
           const { senderId } = data;
+          console.log('remove mouse', senderId);
           // 删除状态
           setRemoteCursors((prev) => {
             const newCursors = { ...prev };
@@ -546,7 +534,13 @@ export const ParticipantItem: (
           });
         });
       }
+
+      // return () => {
+      //   socket.off('mouse_move_response');
+      //   socket.off('mouse_remove_response');
+      // };
     }, [trackReference.source, localParticipant.isSpeaking, isFocus]);
+
 
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
