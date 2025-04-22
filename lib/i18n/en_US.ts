@@ -77,7 +77,8 @@ export default {
       open: 'Enable Virtual Role',
       model: "Virtual Role Model",
       background: "Virtual Role Background",
-      none: "None"
+      none: "None",
+      none_warning: "Please select a virtual role model before comparing",
     },
     about_us: {
       title: 'About Us',

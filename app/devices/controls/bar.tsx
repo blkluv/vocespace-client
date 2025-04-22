@@ -178,6 +178,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       } else {
         setVirtualEnabled(false);
       }
+      if(settingsRef.current) {
+        settingsRef.current.removeVideo();
+      }
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
     React.useEffect(() => {

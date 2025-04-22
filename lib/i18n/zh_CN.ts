@@ -77,7 +77,8 @@ export default {
       open: '开启虚拟形象',
       model: "虚拟形象模型",
       background: "虚拟形象背景",
-      none: "无"
+      none: "无",
+      none_warning: "请先选择虚拟形象模型再进行对比",
     },
     about_us: {
       title: '关于我们',
