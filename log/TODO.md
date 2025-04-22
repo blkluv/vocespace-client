@@ -54,12 +54,6 @@
 - [x] 退出设置后关闭视频获取
 - [x] 限制虚拟形象对比
 
-原始  -> 跟踪本地用户的脸 -> 模型 -> texture + canvas  -> 虚拟视频流 -> 替换原始视频流
-
-远程流 -> (跟踪本地用户的脸 -> 模型 -> texture + canvas  -> 虚拟视频流 ) -> 顶掉本地用户
-
-判断 远程｜原始
-
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
 WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
 WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.

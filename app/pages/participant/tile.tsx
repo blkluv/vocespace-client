@@ -33,6 +33,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, src, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
 import { RoomSettings } from '@/lib/hooks/room_settings';
+import { BlurVideo } from '../blur/video';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: RoomSettings;
@@ -113,17 +114,22 @@ export const ParticipantItem: (
               <VideoTrack
                 ref={videoRef}
                 style={{
-                  filter: `blur(${blurValue}px)`,
-                  visibility:
-                    localParticipant.identity === trackReference.participant.identity &&
-                    uState.virtualRole.enabled
-                      ? 'hidden'
-                      : 'visible',
+                  // filter: `blur(${blurValue}px)`,
+                  // visibility:
+                  //   localParticipant.identity === trackReference.participant.identity &&
+                  //   uState.virtualRole.enabled
+                  //     ? 'hidden'
+                  //     : 'visible',
+                  visibility: 'visible'
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
+              {localParticipant.identity === trackReference.participant.identity &&
+                !uState.virtualRole.enabled &&
+                videoRef.current?.videoHeight &&
+                blurValue > 0 && <BlurVideo blur={blurValue}></BlurVideo>}
               {localParticipant.identity === trackReference.participant.identity &&
                 uState.virtualRole.enabled && (
                   <div className={styles.virtual_video_box_canvas}>
@@ -540,7 +546,6 @@ export const ParticipantItem: (
       //   socket.off('mouse_remove_response');
       // };
     }, [trackReference.source, localParticipant.isSpeaking, isFocus]);
-
 
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
