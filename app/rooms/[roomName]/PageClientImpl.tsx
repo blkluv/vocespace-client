@@ -220,6 +220,7 @@ function VideoConferenceComponent(props: {
       receiverId: '',
       receSocketId: '',
     });
+    socket.disconnect();
     router.push('/');
   }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {

@@ -39,14 +39,18 @@ app.prepare().then(() => {
     socket.on('mouse_remove', (msg) => {
       socket.broadcast.emit('mouse_remove_response', msg);
     });
+
+    socket.on('chat_msg', (msg) => {
+      socket.broadcast.emit('chat_msg_response', msg);
+    });
   });
 
   httpServer
-  .once('error', (err) => {
-    console.error(err);
-    process.exit(1);
-  })
-  .listen(port, () => {
-    console.log(`> Ready on http://${hostname}:${port}${basePath}`);
-  });
+    .once('error', (err) => {
+      console.error(err);
+      process.exit(1);
+    })
+    .listen(port, () => {
+      console.log(`> Ready on http://${hostname}:${port}${basePath}`);
+    });
 });

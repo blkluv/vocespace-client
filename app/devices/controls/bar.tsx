@@ -178,7 +178,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       } else {
         setVirtualEnabled(false);
       }
-      if(settingsRef.current) {
+      if (settingsRef.current) {
         settingsRef.current.removeVideo();
       }
     };
@@ -454,7 +454,14 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           </DisconnectButton>
         )}
         <StartMediaButton />
-        <EnhancedChat open={chatOpen} setOpen={setChatOpen} onClose={onChatClose}></EnhancedChat>
+        {room && (
+          <EnhancedChat
+            open={chatOpen}
+            setOpen={setChatOpen}
+            onClose={onChatClose}
+            room={room}
+          ></EnhancedChat>
+        )}
         <Drawer
           style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
           title={t('common.setting')}
