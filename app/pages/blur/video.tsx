@@ -1,4 +1,9 @@
-import { isTrackReference, TrackReference, useLocalParticipant } from '@livekit/components-react';
+import {
+  isTrackReference,
+  ParticipantPlaceholder,
+  TrackReference,
+  useLocalParticipant,
+} from '@livekit/components-react';
 import { LocalTrack, Track } from 'livekit-client';
 import { forwardRef, RefObject, useEffect, useRef, useState } from 'react';
 
@@ -372,23 +377,13 @@ export const BlurVideo = forwardRef<{}, BlurVideoProps>(({ blur, deviceId }, ref
     }
   };
 
-  // 响应blur变化
-  useEffect(() => {
-    if (isProcessing && programRef.current) {
-      const gl = glRef.current!;
-      gl.useProgram(programRef.current);
-      const blurLoc = gl.getUniformLocation(programRef.current, 'u_blurAmount');
-      gl.uniform1f(blurLoc, blur);
-    }
-  }, [blur]);
-
   // 启动和清理
   useEffect(() => {
     startVideoProcessing();
     return () => {
-      // stopVideoProcessing();
+      stopVideoProcessing();
     };
-  }, []);
+  }, [blur]);
 
   return (
     <>

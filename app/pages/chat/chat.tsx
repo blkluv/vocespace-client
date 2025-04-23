@@ -43,7 +43,6 @@ export function EnhancedChat({ open, setOpen, onClose }: EnhancedChatProps) {
 
   const sendFile = async (file: FileType) => {
     // 使用socket发送文件, todo
-    
   };
 
   const sendMsg = async () => {
@@ -55,7 +54,7 @@ export function EnhancedChat({ open, setOpen, onClose }: EnhancedChatProps) {
       setValue('');
     } else if (!msg && uploadFile) {
       await sendFile(uploadFile);
-    } else if(msg && uploadFile) {
+    } else if (msg && uploadFile) {
       await send?.(value);
       await sendFile(uploadFile);
       setValue('');
@@ -96,9 +95,6 @@ export function EnhancedChat({ open, setOpen, onClose }: EnhancedChatProps) {
             isLocal(msg.from?.identity) ? (
               <li key={ulid()} className={styles.msg_item}>
                 <div className={styles.msg_item_wrapper}>
-                  <Avatar style={{ backgroundColor: '#22CCEE' }} size={42}>
-                    {(msg.from?.name || 'unknown').slice(0, 1).toUpperCase()}
-                  </Avatar>
                   <div className={styles.msg_item_content}>
                     <h4 className={styles.msg_item_content_name}>{msg.from?.name || 'unknown'}</h4>
                     <p className={styles.msg_item_content_msg}>{msg.message}</p>
@@ -116,9 +112,6 @@ export function EnhancedChat({ open, setOpen, onClose }: EnhancedChatProps) {
                       {msg.message}
                     </p>
                   </div>
-                  <Avatar style={{ backgroundColor: '#22CCEE' }} size={42}>
-                    {(msg.from?.name || 'unknown').slice(0, 1).toUpperCase()}
-                  </Avatar>
                 </div>
               </li>
             ),

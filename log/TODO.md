@@ -39,14 +39,7 @@
 - [x] PreJoin骨架屏
 - [x] tradition，去除Screen Share模糊度
 - [x] 用户鼠标颜色
-
 - [x] 多个人开启虚拟形象之后，上一个人的会消失
-- [ ] 聊天传输文件
-  - [x] 重写Chat组件
-  - [ ] socket传输
-- [ ] 视图模糊同步问题 可能是identity判断有问题或者是视图切换时同步不及时 (尝试本地模糊后传输视频流)
-- [ ] 用户自定义状态，提供其他用户被选，其他用户只有可读，不可写 (socket)
-- [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
 
 - [x] 用户状态同步失败
 - [x] 鼠标移除，用户10s超时移除
@@ -54,25 +47,14 @@
 - [x] 退出设置后关闭视频获取
 - [x] 限制虚拟形象对比
 
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-After reporting 32, no further warnings will be reported for this WebGL context.
-WebGL warning: drawElementsInstanced: Index buffer not bound. 32
-After reporting 32, no further warnings will be reported for this WebGL context.
-Failed to loadMotionSync(). Use default fallback. 2 stream.es.js:147
-virtualEnabled false bar.tsx:210:14
-WebGL context was lost.
+- [x] 客户端性能检测
+- [x] 服务端性能检测
+- [x] 本地模糊 
+  - [x] video
+  - [ ] screen
+- [ ] 聊天传输文件
+  - [x] 重写Chat组件
+  - [ ] socket传输
+
+- [ ] 用户自定义状态，提供其他用户被选，其他用户只有可读，不可写 (socket)
+- [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
