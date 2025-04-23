@@ -120,30 +120,28 @@ export const ParticipantItem: (
                   //   uState.virtualRole.enabled
                   //     ? 'hidden'
                   //     : 'visible',
-                  visibility: 'visible'
+                  visibility: 'visible',
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
               {localParticipant.identity === trackReference.participant.identity &&
-                !uState.virtualRole.enabled &&
-                videoRef.current?.videoHeight &&
-                blurValue > 0 && <BlurVideo blur={blurValue}></BlurVideo>}
-              {localParticipant.identity === trackReference.participant.identity &&
-                uState.virtualRole.enabled && (
-                  <div className={styles.virtual_video_box_canvas}>
-                    <VirtualRoleCanvas
-                      video_ele={videoRef}
-                      model_bg={uState.virtualRole.bg}
-                      model_role={uState.virtualRole.role}
-                      enabled={uState.virtualRole.enabled}
-                      messageApi={messageApi}
-                      trackRef={trackReference}
-                      isLocal={trackReference.participant.identity === localParticipant.identity}
-                    ></VirtualRoleCanvas>
-                  </div>
-                )}
+              uState.virtualRole.enabled ? (
+                <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
+                  <VirtualRoleCanvas
+                    video_ele={videoRef}
+                    model_bg={uState.virtualRole.bg}
+                    model_role={uState.virtualRole.role}
+                    enabled={uState.virtualRole.enabled}
+                    messageApi={messageApi}
+                    trackRef={trackReference}
+                    isLocal={trackReference.participant.identity === localParticipant.identity}
+                  ></VirtualRoleCanvas>
+                </div>
+              ) : (
+                blurValue > 0 && <BlurVideo blur={blurValue}></BlurVideo>
+              )}
             </div>
           );
         } else if (trackReference.source === Track.Source.ScreenShare) {

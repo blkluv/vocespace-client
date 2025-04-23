@@ -16,7 +16,15 @@ import {
   VideoConferenceProps,
   WidgetState,
 } from '@livekit/components-react';
-import { ConnectionState, Participant, RoomEvent, RpcInvocationData, Track } from 'livekit-client';
+import {
+  ConnectionState,
+  Participant,
+  ParticipantEvent,
+  RoomEvent,
+  RpcInvocationData,
+  Track,
+  TrackPublication,
+} from 'livekit-client';
 import React, { useEffect, useState } from 'react';
 import { ControlBarExport, Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
@@ -96,8 +104,37 @@ export function VideoContainer({
     const onParticipantConnected = async (participant: Participant) => {
       await fetchSettings();
     };
-
+    // 监听远程参与者连接事件 --------------------------------------------------------------------------
     room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+
+    // 监听本地用户开关摄像头事件 ----------------------------------------------------------------------
+    const onTrackHandler = (track: TrackPublication) => {
+      if (track.source === Track.Source.Camera) {
+        // 需要判断虚拟形象是否开启，若开启则需要关闭
+        if (
+          device.virtualRole.enabled ||
+          settings[room.localParticipant.identity]?.virtual.enabled
+        ) {
+          setDevice((prev) => ({
+            ...prev,
+            virtualRole: {
+              ...prev.virtualRole,
+              enabled: false,
+            },
+          }));
+          updateSettings({
+            virtual: {
+              ...device.virtualRole,
+              enabled: false,
+            },
+          }).then(() => {
+            socket.emit('update_user_status');
+          });
+        }
+      }
+    };
+
+    room.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
 
     return () => {
       socket.off('wave_response');
@@ -105,8 +142,9 @@ export function VideoContainer({
       socket.off('mouse_move_response');
       socket.off('mouse_remove_response');
       room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
+      room.off(ParticipantEvent.TrackMuted, onTrackHandler);
     };
-  }, [room?.state]);
+  }, [room?.state, room?.localParticipant, device]);
 
   useEffect(() => {
     if (!room || room.state !== ConnectionState.Connected) return;
