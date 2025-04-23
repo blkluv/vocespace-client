@@ -16,7 +16,15 @@ import {
   VideoConferenceProps,
   WidgetState,
 } from '@livekit/components-react';
-import { ConnectionState, Participant, RoomEvent, RpcInvocationData, Track } from 'livekit-client';
+import {
+  ConnectionState,
+  Participant,
+  ParticipantEvent,
+  RoomEvent,
+  RpcInvocationData,
+  Track,
+  TrackPublication,
+} from 'livekit-client';
 import React, { useEffect, useState } from 'react';
 import { ControlBarExport, Controls } from './controls/bar';
 import { useRecoilState } from 'recoil';
@@ -26,6 +34,8 @@ import { useRoomSettings } from '@/lib/hooks/room_settings';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
+import { EnhancedChat } from '../pages/chat/chat';
+import { ModelBg, ModelRole } from '@/lib/std/virtual';
 
 export function VideoContainer({
   chatMessageFormatter,
@@ -58,7 +68,11 @@ export function VideoContainer({
         volume: device.volume,
         status: UserStatus.Online,
         socketId: socket.id,
-        virtual: false,
+        virtual: {
+          enabled: false,
+          role: ModelRole.None,
+          bg: ModelBg.ClassRoom,
+        },
       });
 
       // const newSettings = await fetchSettings();
@@ -90,15 +104,47 @@ export function VideoContainer({
     const onParticipantConnected = async (participant: Participant) => {
       await fetchSettings();
     };
-
+    // 监听远程参与者连接事件 --------------------------------------------------------------------------
     room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+
+    // 监听本地用户开关摄像头事件 ----------------------------------------------------------------------
+    const onTrackHandler = (track: TrackPublication) => {
+      if (track.source === Track.Source.Camera) {
+        // 需要判断虚拟形象是否开启，若开启则需要关闭
+        if (
+          device.virtualRole.enabled ||
+          settings[room.localParticipant.identity]?.virtual.enabled
+        ) {
+          setDevice((prev) => ({
+            ...prev,
+            virtualRole: {
+              ...prev.virtualRole,
+              enabled: false,
+            },
+          }));
+          updateSettings({
+            virtual: {
+              ...device.virtualRole,
+              enabled: false,
+            },
+          }).then(() => {
+            socket.emit('update_user_status');
+          });
+        }
+      }
+    };
+
+    room.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
 
     return () => {
       socket.off('wave_response');
       socket.off('user_status_updated');
+      socket.off('mouse_move_response');
+      socket.off('mouse_remove_response');
       room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
+      room.off(ParticipantEvent.TrackMuted, onTrackHandler);
     };
-  }, [room?.state]);
+  }, [room?.state, room?.localParticipant, device]);
 
   useEffect(() => {
     if (!room || room.state !== ConnectionState.Connected) return;
@@ -117,7 +163,7 @@ export function VideoContainer({
     showSettings: false,
   });
   const lastAutoFocusedScreenShareTrack = React.useRef<TrackReferenceOrPlaceholder | null>(null);
-
+  // [track] -----------------------------------------------------------------------------------------------------
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -125,7 +171,7 @@ export function VideoContainer({
     ],
     { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false },
   );
-
+  // [widget update and layout adjust] --------------------------------------------------------------------------
   const widgetUpdate = (state: WidgetState) => {
     if (cacheWidgetState && cacheWidgetState == state) {
       return;
@@ -185,12 +231,72 @@ export function VideoContainer({
   const toSettingGeneral = () => {
     controlsRef.current?.openSettings('general');
   };
-
+  // [user status] ------------------------------------------------------------------------------------------
   const setUserStatus = async (status: UserStatus) => {
-    console.error('1');
-    await updateSettings({
-      status,
-    });
+    let newStatus = {
+      status: status,
+    };
+    switch (status) {
+      case UserStatus.Online: {
+        if (room) {
+          room.localParticipant.setMicrophoneEnabled(true);
+          room.localParticipant.setCameraEnabled(true);
+          room.localParticipant.setScreenShareEnabled(false);
+          if (device.volume == 0) {
+            const newVolume = 80;
+            setDevice((prev) => ({
+              ...prev,
+              volume: newVolume,
+            }));
+            Object.assign(newStatus, { volume: newVolume });
+          }
+        }
+        break;
+      }
+      case UserStatus.Leisure: {
+        setDevice((prev) => ({
+          ...prev,
+          blur: 0.15,
+          screenBlur: 0.15,
+        }));
+        Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15 });
+        break;
+      }
+      case UserStatus.Busy: {
+        setDevice((prev) => ({
+          ...prev,
+          blur: 0.15,
+          screenBlur: 0.15,
+          volume: 0,
+          virtualRole: {
+            ...prev.virtualRole,
+            enabled: false,
+            bg: ModelBg.ClassRoom,
+            role: ModelRole.None,
+          },
+        }));
+        Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15, volume: 0 });
+        break;
+      }
+      case UserStatus.Offline: {
+        if (room) {
+          room.localParticipant.setMicrophoneEnabled(false);
+          room.localParticipant.setCameraEnabled(false);
+          room.localParticipant.setScreenShareEnabled(false);
+          setDevice((prev) => ({
+            ...prev,
+            virtualRole: {
+              ...prev.virtualRole,
+              enabled: false,
+              bg: ModelBg.ClassRoom,
+              role: ModelRole.None,
+            },
+          }));
+        }
+        break;
+      }
+    }
+    await updateSettings(newStatus);
     socket.emit('update_user_status');
   };
 
@@ -242,10 +348,6 @@ export function VideoContainer({
               updateSettings={updateSettings}
             ></Controls>
           </div>
-          <Chat
-            style={{ display: widgetState.showChat ? 'grid' : 'none' }}
-            messageFormatter={chatMessageFormatter}
-          />
           {SettingsComponent && (
             <div
               className="lk-settings-menu-modal"

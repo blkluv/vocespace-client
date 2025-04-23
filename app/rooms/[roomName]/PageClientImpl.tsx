@@ -7,11 +7,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from '@/lib/RecordingIndicator';
 import { SettingsMenu } from '@/lib/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
-import {
-  formatChatMessageLinks,
-  LiveKitRoom,
-  LocalUserChoices,
-} from '@livekit/components-react';
+import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
 import {
   ExternalE2EEKeyProvider,
@@ -32,6 +28,12 @@ import { atom, RecoilRoot, useRecoilState } from 'recoil';
 import { connect_endpoint, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_PATH
+  ? {
+      path: process.env.NEXT_PUBLIC_BASE_PATH,
+    }
+  : {};
 
 export const socket = io();
 
@@ -212,9 +214,14 @@ function VideoConferenceComponent(props: {
 
   const router = useRouter();
   const handleOnLeave = React.useCallback(() => {
-    room.unregisterRpcMethod('wave');
+    socket.emit('mouse_remove', {
+      senderName: room.localParticipant.name || room.localParticipant.identity,
+      senderId: room.localParticipant.identity,
+      receiverId: '',
+      receSocketId: '',
+    });
     router.push('/');
-  }, [router]);
+  }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {
     console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
     if (error.name === 'ConnectionError') {

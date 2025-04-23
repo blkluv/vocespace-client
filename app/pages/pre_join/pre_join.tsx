@@ -7,9 +7,9 @@ import {
   usePreviewTracks,
 } from '@livekit/components-react';
 import styles from '@/styles/pre_join.module.scss';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { facingModeFromLocalTrack, LocalAudioTrack, LocalVideoTrack, Track } from 'livekit-client';
-import { Input, message, Slider } from 'antd';
+import { Flex, Input, InputRef, message, Skeleton, Slider, Space } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
@@ -58,7 +58,6 @@ export function PreJoin({
     preventSave: !persistUserChoices,
     preventLoad: !persistUserChoices,
   });
-
   const [userChoices, setUserChoices] = React.useState(initialUserChoices);
   // Initialize device settings -----------------------------------------------------------------------
   const [audioEnabled, setAudioEnabled] = React.useState<boolean>(userChoices.audioEnabled);
@@ -67,6 +66,7 @@ export function PreJoin({
   const [videoDeviceId, setVideoDeviceId] = React.useState<string>(userChoices.videoDeviceId);
   const [username, setUsername] = React.useState(userChoices.username);
   const [messageApi, contextHolder] = message.useMessage();
+  const [loading, setLoading] = React.useState(true);
   // Save user choices to persistent storage ---------------------------------------------------------
   React.useEffect(() => {
     saveAudioInputEnabled(audioEnabled);
@@ -83,6 +83,14 @@ export function PreJoin({
   React.useEffect(() => {
     saveUsername(username);
   }, [username, saveUsername]);
+
+  useEffect(()=>{
+    setTimeout(()=>{
+      setLoading(false);
+    }, 1500)
+  }, []);
+
+
   // Preview tracks -----------------------------------------------------------------------------------
   const tracks = usePreviewTracks(
     {
@@ -95,7 +103,7 @@ export function PreJoin({
   );
   // video track --------------------------------------------------------------------------------
   const videoEl = React.useRef(null);
-
+  const inputRef = React.useRef<InputRef>(null);
   const videoTrack = React.useMemo(
     () => tracks?.filter((track) => track.kind === Track.Kind.Video)[0] as LocalVideoTrack,
     [tracks],
@@ -114,12 +122,16 @@ export function PreJoin({
     if (videoEl.current && videoTrack) {
       videoTrack.unmute();
       videoTrack.attach(videoEl.current);
+      // 自动聚焦input
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
 
     return () => {
       videoTrack?.detach();
     };
-  }, [videoTrack]);
+  }, [videoTrack, inputRef]);
   // audio track --------------------------------------------------------------------------------------
   const audioTrack = React.useMemo(
     () => tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack,
@@ -220,120 +232,136 @@ export function PreJoin({
           </div>
         )}
       </div>
-      <div className={styles.view__controls}>
-        <div className={`${styles.view__controls__group} audio lk-button-group`}>
-          <TrackToggle
-            className={styles.view__controls__toggle}
-            initialState={audioEnabled}
-            source={Track.Source.Microphone}
-            onChange={(enabled) => setAudioEnabled(enabled)}
-          >
-            {micLabel}
-          </TrackToggle>
-          <div className="lk-button-group-menu">
-            <MediaDeviceMenu
-              initialSelection={audioDeviceId}
-              kind="audioinput"
-              disabled={!audioTrack}
-              tracks={{ audioinput: audioTrack }}
-              onActiveDeviceChange={(_, id) => setAudioDeviceId(id)}
-            />
-          </div>
+      {loading ? (
+        <div className={styles.view__controls}>
+          <Space direction="vertical" size={'small'} style={{ width: '100%' }}>
+            {[44, 136, 44, 92.4, 44, 44].map((h) => (
+              <Skeleton.Input
+                key={ulid()}
+                active
+                style={{ height: `${h}px`, backgroundColor: '#333' }}
+                block
+              ></Skeleton.Input>
+            ))}
+          </Space>
         </div>
-        <div className={styles.view__controls__group_volume}>
-          <div className={styles.view__controls__group_volume__header}>
-            <div className={styles.view__controls__group_volume__header__left}>
-              <SvgResource type="volume" svgSize={18}></SvgResource>
-              <span>{t('common.device.volume')}</span>
+      ) : (
+        <div className={styles.view__controls}>
+          <div className={`${styles.view__controls__group} audio lk-button-group`}>
+            <TrackToggle
+              className={styles.view__controls__toggle}
+              initialState={audioEnabled}
+              source={Track.Source.Microphone}
+              onChange={(enabled) => setAudioEnabled(enabled)}
+            >
+              {micLabel}
+            </TrackToggle>
+            <div className="lk-button-group-menu">
+              <MediaDeviceMenu
+                initialSelection={audioDeviceId}
+                kind="audioinput"
+                disabled={!audioTrack}
+                tracks={{ audioinput: audioTrack }}
+                onActiveDeviceChange={(_, id) => setAudioDeviceId(id)}
+              />
             </div>
-            <span>{volume}</span>
-            <audio
-              ref={audio_play_ref}
-              src={src('/audios/pre_test.mp3')}
-              style={{ display: 'none' }}
-            ></audio>
           </div>
-          <Slider
-            min={0.0}
-            max={100.0}
-            step={1}
-            defaultValue={80}
-            value={volume}
-            onChange={(e) => {
-              setVolume(e);
-              setDevice({ ...device, volume: e });
+          <div className={styles.view__controls__group_volume}>
+            <div className={styles.view__controls__group_volume__header}>
+              <div className={styles.view__controls__group_volume__header__left}>
+                <SvgResource type="volume" svgSize={18}></SvgResource>
+                <span>{t('common.device.volume')}</span>
+              </div>
+              <span>{volume}</span>
+              <audio
+                ref={audio_play_ref}
+                src={src('/audios/pre_test.mp3')}
+                style={{ display: 'none' }}
+              ></audio>
+            </div>
+            <Slider
+              min={0.0}
+              max={100.0}
+              step={1}
+              defaultValue={80}
+              value={volume}
+              onChange={(e) => {
+                setVolume(e);
+                setDevice({ ...device, volume: e });
+              }}
+            ></Slider>
+            <button
+              style={{ backgroundColor: '#22CCEE' }}
+              className={styles.view__controls__group_volume__button}
+              onClick={play_sound}
+            >
+              {!play ? t('common.device.test.audio') : t('common.device.test.close_audio')}
+            </button>
+          </div>
+          <div className={`${styles.view__controls__group} video lk-button-group`}>
+            <TrackToggle
+              className={styles.view__controls__toggle}
+              initialState={videoEnabled}
+              source={Track.Source.Camera}
+              onChange={(enabled) => setVideoEnabled(enabled)}
+            >
+              {camLabel}
+            </TrackToggle>
+            <div className="lk-button-group-menu">
+              <MediaDeviceMenu
+                initialSelection={videoDeviceId}
+                kind="videoinput"
+                disabled={!videoTrack}
+                tracks={{ videoinput: videoTrack }}
+                onActiveDeviceChange={(_, id) => setVideoDeviceId(id)}
+              />
+            </div>
+          </div>
+          <div className={styles.view__controls__group_volume}>
+            <div className={styles.view__controls__group_volume__header}>
+              <div className={styles.view__controls__group_volume__header__left}>
+                <SvgResource type="video" svgSize={18}></SvgResource>
+                <span>{t('common.device.blur')}</span>
+              </div>
+              <span>{Math.round(blur * 100.0)}%</span>
+            </div>
+            <Slider
+              min={0.0}
+              max={1.0}
+              step={0.01}
+              defaultValue={0.15}
+              value={blur}
+              onChange={(e) => {
+                setBlur(e);
+                setVideoBlur(e);
+                setDevice({ ...device, blur: e });
+              }}
+            ></Slider>
+          </div>
+          <Input
+            ref={inputRef}
+            size="large"
+            style={{ width: '100%' }}
+            id="username"
+            name="username"
+            type="text"
+            placeholder={userLabel}
+            value={username}
+            onChange={(inputEl) => {
+              setUsername(inputEl.target.value);
             }}
-          ></Slider>
+            autoComplete="off"
+          />
           <button
             style={{ backgroundColor: '#22CCEE' }}
-            className={styles.view__controls__group_volume__button}
-            onClick={play_sound}
+            className={styles.view__controls__form__button}
+            type="submit"
+            onClick={handleSubmit}
           >
-            {!play ? t('common.device.test.audio') : t('common.device.test.close_audio')}
+            {joinLabel}
           </button>
         </div>
-        <div className={`${styles.view__controls__group} video lk-button-group`}>
-          <TrackToggle
-            className={styles.view__controls__toggle}
-            initialState={videoEnabled}
-            source={Track.Source.Camera}
-            onChange={(enabled) => setVideoEnabled(enabled)}
-          >
-            {camLabel}
-          </TrackToggle>
-          <div className="lk-button-group-menu">
-            <MediaDeviceMenu
-              initialSelection={videoDeviceId}
-              kind="videoinput"
-              disabled={!videoTrack}
-              tracks={{ videoinput: videoTrack }}
-              onActiveDeviceChange={(_, id) => setVideoDeviceId(id)}
-            />
-          </div>
-        </div>
-        <div className={styles.view__controls__group_volume}>
-          <div className={styles.view__controls__group_volume__header}>
-            <div className={styles.view__controls__group_volume__header__left}>
-              <SvgResource type="video" svgSize={18}></SvgResource>
-              <span>{t('common.device.blur')}</span>
-            </div>
-            <span>{Math.round(blur * 100.0)}%</span>
-          </div>
-          <Slider
-            min={0.0}
-            max={1.0}
-            step={0.01}
-            defaultValue={0.15}
-            value={blur}
-            onChange={(e) => {
-              setBlur(e);
-              setVideoBlur(e);
-              setDevice({ ...device, blur: e });
-            }}
-          ></Slider>
-        </div>
-        <Input
-          size="large"
-          style={{ width: '100%' }}
-          id="username"
-          name="username"
-          type="text"
-          placeholder={userLabel}
-          value={username}
-          onChange={(inputEl) => {
-            setUsername(inputEl.target.value);
-          }}
-          autoComplete="off"
-        />
-        <button
-          style={{ backgroundColor: '#22CCEE' }}
-          className={styles.view__controls__form__button}
-          type="submit"
-          onClick={handleSubmit}
-        >
-          {joinLabel}
-        </button>
-      </div>
+      )}
     </div>
   );
 }

@@ -35,14 +35,17 @@ app.prepare().then(() => {
       // socket.to(msg.receSocketId).emit('mouse_move_response', msg);
       socket.broadcast.emit('mouse_move_response', msg);
     });
+    socket.on('mouse_remove', (msg) => {
+      socket.broadcast.emit('mouse_remove_response', msg);
+    });
   });
 
   httpServer
-    .once('error', (err) => {
-      console.error(err);
-      process.exit(1);
-    })
-    .listen(port, () => {
-      console.log(`> Ready on http://${hostname}:${port}`);
-    });
+  .once('error', (err) => {
+    console.error(err);
+    process.exit(1);
+  })
+  .listen(port, () => {
+    console.log(`> Ready on http://${hostname}:${port}${basePath}`);
+  });
 });

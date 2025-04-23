@@ -29,9 +29,9 @@ export interface UserItemProp {
 
 export enum UserStatus {
   Online = 'online',
-  Idot = 'offline',
+  Leisure = 'leisure',
   Busy = 'busy',
-  Invisible = 'away',
+  Offline = 'offline',
 }
 
 export function is_web(): boolean {
@@ -75,12 +75,35 @@ export const randomColor = (participantId: string): string => {
   // 根据哈希值选择预定义的颜色
   const colors = [
     '#FF5733', // 红色
+    '#d54941',
+    '#ff9285',
+    '#881f1c',
     '#33FF57', // 绿色
+    '#2ba471',
+    '#92dbb2',
+    '#006c45',
     '#3357FF', // 蓝色
+    '#0052d9',
+    '#3663f4',
+    '002a7c',
     '#F033FF', // 紫色
+    '#8e56dd',
+    '#c69cff',
+    '#8e56dd',
+    '#3b007b',
     '#FF33F0', // 粉色
+    '#e851b3',
+    '#ffaedc',
+    '#800a5f',
     '#33FFF0', // 青色
     '#f5a623', // 橙色
+    '#f5ba18',
+    '#029cd4',
+    '#00668e',
+    '#85d3ff',
+    '#e37318',
+    '#fa9550',
+    '#954500',
   ];
 
   const index = Math.abs(hash) % colors.length;

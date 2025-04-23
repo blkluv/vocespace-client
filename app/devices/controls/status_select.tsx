@@ -34,10 +34,10 @@ export function StatusSelect({
       value: UserStatus.Online,
     },
     {
-      title: t('settings.general.status.idot'),
-      desc: t('settings.general.status.idot_desc'),
-      icon: 'offline_dot',
-      value: UserStatus.Idot,
+      title: t('settings.general.status.leisure'),
+      desc: t('settings.general.status.leisure_desc'),
+      icon: 'leisure_dot',
+      value: UserStatus.Leisure
     },
     {
       title: t('settings.general.status.busy'),
@@ -46,10 +46,10 @@ export function StatusSelect({
       value: UserStatus.Busy,
     },
     {
-      title: t('settings.general.status.invisible'),
-      desc: t('settings.general.status.invisible_desc'),
-      icon: 'away_dot',
-      value: UserStatus.Invisible,
+      title: t('settings.general.status.offline'),
+      desc: t('settings.general.status.offline_desc'),
+      icon: 'offline_dot',
+      value: UserStatus.Offline,
     },
   ];
 

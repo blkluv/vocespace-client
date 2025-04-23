@@ -24,5 +24,6 @@ export interface VirtualRoleProps {
   model_bg: ModelBg;
   enabled: boolean;
   trackRef?: TrackReference,
-  messageApi: MessageInstance
+  messageApi: MessageInstance,
+  isLocal: boolean,
 }

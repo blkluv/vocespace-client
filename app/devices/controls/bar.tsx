@@ -1,7 +1,6 @@
 import { useI18n } from '@/lib/i18n/i18n';
 import {
   ChatIcon,
-  ChatToggle,
   DisconnectButton,
   LeaveIcon,
   MediaDeviceMenu,
@@ -25,6 +24,8 @@ import { useRecoilState } from 'recoil';
 import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings } from '@/lib/hooks/room_settings';
 import { UserStatus } from '@/lib/std';
+import { EnhancedChat } from '@/app/pages/chat/chat';
+import { ChatToggle } from './chat_toggle';
 
 /** @public */
 export type ControlBarControls = {
@@ -159,7 +160,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
 
     // settings ------------------------------------------------------------------------------------------
     const room = useMaybeRoomContext();
-
     const [key, setKey] = React.useState<TabKey>('general');
     const [virtualEnabled, setVirtualEnabled] = React.useState(false);
     const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.None);
@@ -177,6 +177,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         setVirtualEnabled(true);
       } else {
         setVirtualEnabled(false);
+      }
+      if(settingsRef.current) {
+        settingsRef.current.removeVideo();
       }
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
@@ -222,7 +225,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       });
       // 更新设置
       updateSettings({
-        virtual: virtualEnabled,
+        virtual: {
+          enabled: virtualEnabled,
+          role: modelRole,
+          bg: modelBg,
+        },
       }).then(() => {
         socket.emit('update_user_status');
       });
@@ -286,11 +293,90 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     );
 
     const setUserStatus = async (status: UserStatus) => {
-      await updateSettings({
-        status,
-      });
+      let newStatus = {
+        status: status,
+      };
+      switch (status) {
+        case UserStatus.Online: {
+          if (room) {
+            room.localParticipant.setMicrophoneEnabled(true);
+            room.localParticipant.setCameraEnabled(true);
+            room.localParticipant.setScreenShareEnabled(false);
+            if (volume == 0) {
+              const newVolume = 80;
+              setVolume(newVolume);
+              // 确保设备状态同步更新
+              setDevice((prev) => ({
+                ...prev,
+                volume: newVolume,
+              }));
+              Object.assign(newStatus, { volume: newVolume });
+            }
+          }
+          break;
+        }
+        case UserStatus.Leisure: {
+          setVideoBlur(0.15);
+          setScreenBlur(0.15);
+          setDevice((prev) => ({
+            ...prev,
+            blur: 0.15,
+            screenBlur: 0.15,
+          }));
+          Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15 });
+          break;
+        }
+        case UserStatus.Busy: {
+          setVideoBlur(0.15);
+          setScreenBlur(0.15);
+          setVolume(0);
+          setVirtualEnabled(false);
+          setModelRole(ModelRole.None);
+          setModelBg(ModelBg.ClassRoom);
+          setDevice((prev) => ({
+            ...prev,
+            blur: 0.15,
+            screenBlur: 0.15,
+            volume: 0,
+            virtualRole: {
+              ...prev.virtualRole,
+              enabled: false,
+              bg: ModelBg.ClassRoom,
+              role: ModelRole.None,
+            },
+          }));
+
+          Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15, volume: 0 });
+          break;
+        }
+        case UserStatus.Offline: {
+          if (room) {
+            room.localParticipant.setMicrophoneEnabled(false);
+            room.localParticipant.setCameraEnabled(false);
+            room.localParticipant.setScreenShareEnabled(false);
+            setDevice((prev) => ({
+              ...prev,
+              virtualRole: {
+                ...prev.virtualRole,
+                enabled: false,
+                bg: ModelBg.ClassRoom,
+                role: ModelRole.None,
+              },
+            }));
+          }
+          break;
+        }
+      }
+
+      await updateSettings(newStatus);
       // 通知socket，进行状态的更新
       socket.emit('update_user_status');
+    };
+
+    // [chat] -----------------------------------------------------------------------------------------------------
+    const [chatOpen, setChatOpen] = React.useState(false);
+    const onChatClose = () => {
+      setChatOpen(false);
     };
 
     return (
@@ -348,10 +434,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           </TrackToggle>
         )}
         {visibleControls.chat && (
-          <ChatToggle>
-            {showIcon && <ChatIcon />}
-            {showText && t('common.chat')}
-          </ChatToggle>
+          <ChatToggle
+            enabled={chatOpen}
+            onClicked={() => {
+              setChatOpen(!chatOpen);
+            }}
+          ></ChatToggle>
         )}
         <SettingToggle
           enabled={settingVis}
@@ -366,6 +454,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           </DisconnectButton>
         )}
         <StartMediaButton />
+        <EnhancedChat open={chatOpen} setOpen={setChatOpen} onClose={onChatClose}></EnhancedChat>
         <Drawer
           style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
           title={t('common.setting')}
@@ -475,7 +564,11 @@ export function supportsScreenSharing(): boolean {
   );
 }
 
-const setting_drawer_header = ({ on_clicked }: { on_clicked: () => void }): React.ReactNode => {
+export const setting_drawer_header = ({
+  on_clicked,
+}: {
+  on_clicked: () => void;
+}): React.ReactNode => {
   return (
     <div>
       <Button type="text" shape="circle" onClick={on_clicked}>
