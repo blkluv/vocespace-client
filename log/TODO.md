@@ -1,6 +1,5 @@
 - [x] 服务器落地页更新脚本
 - [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
-- [ ] 聊天，文件传输
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 
 - [x] 用户状态使用用户id隔离 (服务器)
@@ -46,15 +45,23 @@
 - [x] 设置音量绑定失效
 - [x] 退出设置后关闭视频获取
 - [x] 限制虚拟形象对比
+- [x] 本地模糊 (webGL)
+  - [x] video
+  - [ ] screen
+
+- [x] css虚化
+- [x] 虚拟形象暂停追踪(该用动画)
+- [ ] 服务器room数据接口
+- [x] 搜索时www.会加上 (在DNS设置中，添加一个CNAME记录，将www.vocespace.com指向vocespace.com)
+
+--- 0.1.4
 
 - [x] 客户端性能检测
 - [x] 服务端性能检测
-- [x] 本地模糊 
-  - [x] video
-  - [ ] screen
 - [ ] 聊天传输文件
   - [x] 重写Chat组件
   - [ ] socket传输
 
 - [ ] 用户自定义状态，提供其他用户被选，其他用户只有可读，不可写 (socket)
 - [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
+- [x] 离开按钮移动到最右边

@@ -380,80 +380,87 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
 
     return (
-      <div {...htmlProps}>
+      <div {...htmlProps} className={styles.controls}>
         {contextHolder}
-        {visibleControls.microphone && (
-          <div className="lk-button-group">
-            <TrackToggle
-              source={Track.Source.Microphone}
-              showIcon={showIcon}
-              onChange={microphoneOnChange}
-              onDeviceError={(error) => onDeviceError?.({ source: Track.Source.Microphone, error })}
-            >
-              {showText && t('common.device.microphone')}
-            </TrackToggle>
-            <div className="lk-button-group-menu">
-              <MediaDeviceMenu
-                kind="audioinput"
-                onActiveDeviceChange={(_kind, deviceId) =>
-                  saveAudioInputDeviceId(deviceId ?? 'default')
+        <div className={styles.controls_left}>
+          {visibleControls.microphone && (
+            <div className="lk-button-group">
+              <TrackToggle
+                source={Track.Source.Microphone}
+                showIcon={showIcon}
+                onChange={microphoneOnChange}
+                onDeviceError={(error) =>
+                  onDeviceError?.({ source: Track.Source.Microphone, error })
                 }
-              />
+              >
+                {showText && t('common.device.microphone')}
+              </TrackToggle>
+              <div className="lk-button-group-menu">
+                <MediaDeviceMenu
+                  kind="audioinput"
+                  onActiveDeviceChange={(_kind, deviceId) =>
+                    saveAudioInputDeviceId(deviceId ?? 'default')
+                  }
+                />
+              </div>
             </div>
-          </div>
-        )}
-        {visibleControls.camera && (
-          <div className="lk-button-group">
+          )}
+          {visibleControls.camera && (
+            <div className="lk-button-group">
+              <TrackToggle
+                source={Track.Source.Camera}
+                showIcon={showIcon}
+                onChange={cameraOnChange}
+                onDeviceError={(error) => onDeviceError?.({ source: Track.Source.Camera, error })}
+              >
+                {showText && t('common.device.camera')}
+              </TrackToggle>
+              <div className="lk-button-group-menu">
+                <MediaDeviceMenu
+                  kind="videoinput"
+                  onActiveDeviceChange={(_kind, deviceId) =>
+                    saveVideoInputDeviceId(deviceId ?? 'default')
+                  }
+                />
+              </div>
+            </div>
+          )}
+          {visibleControls.screenShare && browserSupportsScreenSharing && (
             <TrackToggle
-              source={Track.Source.Camera}
+              source={Track.Source.ScreenShare}
+              captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
               showIcon={showIcon}
-              onChange={cameraOnChange}
-              onDeviceError={(error) => onDeviceError?.({ source: Track.Source.Camera, error })}
+              onChange={onScreenShareChange}
+              onDeviceError={(error) =>
+                onDeviceError?.({ source: Track.Source.ScreenShare, error })
+              }
             >
-              {showText && t('common.device.camera')}
+              {showText &&
+                (isScreenShareEnabled ? t('common.stop_share') : t('common.share_screen'))}
             </TrackToggle>
-            <div className="lk-button-group-menu">
-              <MediaDeviceMenu
-                kind="videoinput"
-                onActiveDeviceChange={(_kind, deviceId) =>
-                  saveVideoInputDeviceId(deviceId ?? 'default')
-                }
-              />
-            </div>
-          </div>
-        )}
-        {visibleControls.screenShare && browserSupportsScreenSharing && (
-          <TrackToggle
-            source={Track.Source.ScreenShare}
-            captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
-            showIcon={showIcon}
-            onChange={onScreenShareChange}
-            onDeviceError={(error) => onDeviceError?.({ source: Track.Source.ScreenShare, error })}
-          >
-            {showText && (isScreenShareEnabled ? t('common.stop_share') : t('common.share_screen'))}
-          </TrackToggle>
-        )}
-        {visibleControls.chat && (
-          <ChatToggle
-            enabled={chatOpen}
+          )}
+          {visibleControls.chat && (
+            <ChatToggle
+              enabled={chatOpen}
+              onClicked={() => {
+                setChatOpen(!chatOpen);
+              }}
+            ></ChatToggle>
+          )}
+          <SettingToggle
+            enabled={settingVis}
             onClicked={() => {
-              setChatOpen(!chatOpen);
+              setSettingVis(true);
             }}
-          ></ChatToggle>
-        )}
-        <SettingToggle
-          enabled={settingVis}
-          onClicked={() => {
-            setSettingVis(true);
-          }}
-        ></SettingToggle>
+          ></SettingToggle>
+        </div>
         {visibleControls.leave && (
           <DisconnectButton>
             {showIcon && <LeaveIcon />}
             {showText && t('common.leave')}
           </DisconnectButton>
         )}
-        <StartMediaButton />
+        {/* <StartMediaButton /> */}
         {room && (
           <EnhancedChat
             open={chatOpen}
