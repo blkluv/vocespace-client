@@ -214,15 +214,15 @@ function VideoConferenceComponent(props: {
   }, []);
 
   const router = useRouter();
-  const handleOnLeave = React.useCallback(() => {
+  const handleOnLeave = React.useCallback(async () => {
     socket.emit('mouse_remove', {
       senderName: room.localParticipant.name || room.localParticipant.identity,
       senderId: room.localParticipant.identity,
       receiverId: '',
       receSocketId: '',
     });
+    await videoContainerRef.current?.removeLocalSettings();
     socket.disconnect();
-    videoContainerRef.current?.removeLocalSettings();
     router.push('/');
   }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {

@@ -43,7 +43,7 @@ export interface VideoContainerProps extends VideoConferenceProps {
 }
 
 export interface VideoContainerExports {
-  removeLocalSettings: () => void;
+  removeLocalSettings: () => Promise<void>;
 }
 
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
@@ -314,9 +314,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     };
 
     useImperativeHandle(ref, () => ({
-      removeLocalSettings: () => {
-        clearSettings();
-      },
+      removeLocalSettings: () => clearSettings(),
     }));
 
     return (

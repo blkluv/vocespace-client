@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const roomId = request.nextUrl.searchParams.get('roomId');
   const participantId = request.nextUrl.searchParams.get('participantId');
-
+  let clearRoom;
   if (!roomId || !participantId) {
     return NextResponse.json({ error: 'Room ID and Participant ID are required' }, { status: 400 });
   }
@@ -138,9 +138,10 @@ export async function DELETE(request: NextRequest) {
     // 如果房间为空，清除整个房间
     if (Object.keys(roomSettings[roomId].participants).length === 0) {
       delete roomSettings[roomId];
+      clearRoom = roomId;
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, clearRoom });
   }
 
   return NextResponse.json({ success: false, message: 'Participant not found' });

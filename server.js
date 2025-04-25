@@ -6,7 +6,6 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import express from 'express';
 
-
 const dev = true;
 const hostname = 'localhost';
 const port = 3000;
@@ -116,16 +115,16 @@ app.prepare().then(() => {
       }
     });
 
-    socket.on('disconnect', (msg) => {
-      const { clear, roomName } = msg;
-      if (clear) {
-        // 删除uploads下的对应roomName的文件夹
-        const roomDir = path.join(uploadDir, roomName);
-        if (fs.existsSync(roomDir)) {
-          fs.rmdirSync(roomDir, { recursive: true });
-          console.log(`Deleted directory: ${roomDir}`);
-        }
+    socket.on('clear_room_resources', async (msg) => {
+      const { roomName } = msg;
+      // 删除uploads下的对应roomName的文件夹
+      const roomDir = path.join(uploadDir, roomName);
+      if (fs.existsSync(roomDir)) {
+        fs.rmdirSync(roomDir, { recursive: true });
       }
+    });
+
+    socket.on('disconnect', (msg) => {
       console.log('Socket disconnected', socket.id);
     });
   });
