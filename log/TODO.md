@@ -51,7 +51,7 @@
 
 - [x] css虚化
 - [x] 虚拟形象暂停追踪(该用动画)
-- [ ] 服务器room数据接口
+- [x] 服务器room数据接口 http://localhost:3000/chat/api/room-settings?all="true"
 - [x] 搜索时www.会加上 (在DNS设置中，添加一个CNAME记录，将www.vocespace.com指向vocespace.com)
 
 --- 0.1.4

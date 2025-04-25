@@ -1,6 +1,6 @@
 'use client';
 
-import { VideoContainer } from '@/app/devices/video_container';
+import { VideoContainer, VideoContainerExports } from '@/app/devices/video_container';
 import { decodePassphrase } from '@/lib/client-utils';
 import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
@@ -152,6 +152,7 @@ function VideoConferenceComponent(props: {
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const videoContainerRef = React.useRef<VideoContainerExports>(null);
   const roomOptions = React.useMemo((): RoomOptions => {
     let videoCodec: VideoCodec | undefined = props.options.codec ? props.options.codec : 'vp9';
     if (e2eeEnabled && (videoCodec === 'av1' || videoCodec === 'vp9')) {
@@ -221,6 +222,7 @@ function VideoConferenceComponent(props: {
       receSocketId: '',
     });
     socket.disconnect();
+    videoContainerRef.current?.removeLocalSettings();
     router.push('/');
   }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {
@@ -334,6 +336,7 @@ function VideoConferenceComponent(props: {
         onMediaDeviceFailure={handleMediaDeviceFailure}
       >
         <VideoContainer
+        ref={videoContainerRef}
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
           messageApi={messageApi}
