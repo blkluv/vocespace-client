@@ -22,7 +22,7 @@ import {
   VideoTrack,
 } from '@livekit/components-react';
 import { isRemoteTrack, Track } from 'livekit-client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
 import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
@@ -361,45 +361,51 @@ export const ParticipantItem: (
       },
     ];
 
-    const user_menu: MenuProps['items'] = [
-      {
-        key: 'user_info',
-        label: (
-          <div className={styles.user_info_wrap} onClick={toSettings}>
-            <div className={styles.user_info_wrap_name}>{trackReference.participant.name}</div>
-            <SvgResource type="modify" svgSize={14} color="#fff"></SvgResource>
-            {/* <div className={styles.user_info_wrap_identity}>{trackReference.participant.identity}</div> */}
-          </div>
-        ),
-      },
-      {
-        key: 'user_status',
-        label: (
-          <Dropdown
-            placement="topLeft"
-            menu={{
-              items: status_menu,
-              onClick: async (e) => {
-                let status = statusFromSvgType(e.key as SvgType);
-                setUState({
-                  ...uState,
-                  status,
-                });
-                await setUserStatus(status);
-              },
-            }}
-          >
-            <div className={styles.status_item_inline} style={{ width: '100%' }}>
-              <div className={styles.status_item_inline}>
-                <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
-                <div>{setStatusLabel()}</div>
-              </div>
-              <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
+    useEffect(()=>{
+      console.warn(settings[trackReference.participant.identity]?.name);
+    }, [settings])
+
+    const user_menu: MenuProps['items'] = useMemo(()=>{
+      return [
+        {
+          key: 'user_info',
+          label: (
+            <div className={styles.user_info_wrap} onClick={toSettings}>
+              <div className={styles.user_info_wrap_name}>{settings[trackReference.participant.identity]?.name || localParticipant.name}</div>
+              <SvgResource type="modify" svgSize={14} color="#fff"></SvgResource>
+              {/* <div className={styles.user_info_wrap_identity}>{trackReference.participant.identity}</div> */}
             </div>
-          </Dropdown>
-        ),
-      },
-    ];
+          ),
+        },
+        {
+          key: 'user_status',
+          label: (
+            <Dropdown
+              placement="topLeft"
+              menu={{
+                items: status_menu,
+                onClick: async (e) => {
+                  let status = statusFromSvgType(e.key as SvgType);
+                  setUState({
+                    ...uState,
+                    status,
+                  });
+                  await setUserStatus(status);
+                },
+              }}
+            >
+              <div className={styles.status_item_inline} style={{ width: '100%' }}>
+                <div className={styles.status_item_inline}>
+                  <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
+                  <div>{setStatusLabel()}</div>
+                </div>
+                <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
+              </div>
+            </Dropdown>
+          ),
+        },
+      ];
+    }, [settings])
 
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {

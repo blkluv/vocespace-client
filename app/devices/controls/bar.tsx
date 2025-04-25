@@ -235,6 +235,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       });
     }, [virtualEnabled]);
     const saveChanges = async (key: TabKey) => {
+      let update;
       switch (key) {
         case 'general': {
           const new_name = settingsRef.current?.username;
@@ -244,6 +245,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               try {
                 await room.localParticipant?.setMetadata(JSON.stringify({ name: new_name }));
                 await room.localParticipant.setName(new_name);
+                update = {
+                  name: new_name,
+                };
                 messageApi.success(t('msg.success.user.username.change'));
               } catch (error) {
                 messageApi.error(t('msg.error.user.username.change'));
@@ -254,27 +258,27 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         }
         case 'audio': {
           setDevice({ ...device, volume });
-          await updateSettings({
+          update = {
             volume,
-          });
-
+          };
           break;
         }
         case 'video': {
           setDevice({ ...device, blur: videoBlur });
-          await updateSettings({
+          update = {
             blur: videoBlur,
-          });
+          };
           break;
         }
         case 'screen': {
-          setDevice({ ...device, screenBlur: screenBlur });
-          await updateSettings({
-            screenBlur: screenBlur,
-          });
+          setDevice({ ...device, screenBlur });
+          update = {
+            screenBlur,
+          };
           break;
         }
       }
+      await updateSettings({...update});
       // 通知socket，进行状态的更新
       socket.emit('update_user_status');
     };
