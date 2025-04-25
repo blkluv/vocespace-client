@@ -32,6 +32,9 @@ export default {
       screen: 'Screen',
     },
     chat: 'Chat',
+    chat_placeholder: 'Please enter a message',
+    send: 'Send',
+    send_file_or: 'Do you want to send this file?',
     leave: 'Leave',
     share_screen: 'Share Screen',
     stop_share: 'Stop Share Share',
@@ -46,14 +49,13 @@ export default {
       status: {
         title: 'Status',
         online: 'Online',
-        online_desc: 'Online, user can receive any messages',
-        idot: 'Offline',
-        idot_desc: 'Offline, user will not receive any messages',
+        online_desc: "Online, user's video and audio will work normally",
+        leisure: 'Leisure',
+        leisure_desc: "Leisure, user's video will be blurred, audio will not be adjusted",
         busy: 'Busy',
-        busy_desc:
-          'Busy, do not disturb, user will not receive any messages but still appears online',
-        invisible: 'Invisible',
-        invisible_desc: 'Invisible, user will not appear online but can use all Vocespace features',
+        busy_desc: "Busy, user's video will be blurred, audio will be muted",
+        offline: 'Away',
+        offline_desc: "Away, user's video and audio will be turned off",
       },
     },
     audio: {
@@ -70,13 +72,14 @@ export default {
     virtual: {
       title: 'Virtual Role',
       tab: {
-        model: "Model",
-        background: "Background",
+        model: 'Model',
+        background: 'Background',
       },
       open: 'Enable Virtual Role',
-      model: "Virtual Role Model",
-      background: "Virtual Role Background",
-      none: "None"
+      model: 'Virtual Role Model',
+      background: 'Virtual Role Background',
+      none: 'None',
+      none_warning: 'Please select a virtual role model before comparing',
     },
     about_us: {
       title: 'About Us',
@@ -85,23 +88,22 @@ export default {
     },
     device: {
       audio: {
-        title: '音频设备',
-        desc: '选择您的音频输入和输出设备。',
+        title: 'Audio Device',
+        desc: 'Select your audio input device.',
       },
       video: {
-        title: '视频设备',
-        desc: '选择您的视频输入设备。',
+        title: 'Video Device',
+        desc: 'Select your video input device.',
       },
       screen: {
-        title: '屏幕共享',
-        desc: '选择要共享的屏幕或窗口。',
+        title: 'Screen Sharing',
+        desc: 'Select your screen sharing device.',
       },
     },
   },
   msg: {
     info: {
-      title:
-        'Your cyber co-working space developed by Privoce',
+      title: 'Your cyber co-working space developed by Privoce',
       contact: 'Contact',
       learn_more: 'Learn More',
       try_free: 'Create a one-time new VoceSpace.',
@@ -143,7 +145,7 @@ export default {
       user: {
         username: {
           change: 'Username changed failed',
-          request: "Failed to request username",
+          request: 'Failed to request username',
         },
       },
     },

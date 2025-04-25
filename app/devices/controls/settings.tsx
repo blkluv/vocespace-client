@@ -43,6 +43,7 @@ export interface SettingsProps {
 
 export interface SettingsExports {
   username: string;
+  removeVideo: () => void;
 }
 
 export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'virtual' | 'about_us';
@@ -76,9 +77,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
     ref,
   ) => {
     const { t } = useI18n();
-    const virtual_settings_ref = useRef<VirtualSettingsExports>(null);
     const [username, setUsername] = useState(uname);
-
+    const virtualSettingsRef = useRef<VirtualSettingsExports>(null);
     const items: TabsProps['items'] = [
       {
         key: 'general',
@@ -118,7 +118,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             <div className={styles.setting_box}>
               <div>{t('settings.audio.volume')}:</div>
               <Slider
-                defaultValue={volume}
+                value={volume}
                 className={styles.common_space}
                 onChange={(e) => {
                   setVolume(e);
@@ -182,6 +182,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         label: <TabItem type="user" label={t('settings.virtual.title')}></TabItem>,
         children: (
           <VirtualSettings
+            ref={virtualSettingsRef}
             messageApi={messageApi}
             modelRole={modelRole}
             setModelRole={setModelRole}
@@ -243,6 +244,11 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
 
     useImperativeHandle(ref, () => ({
       username,
+      removeVideo: () => {
+        if (virtualSettingsRef.current) {
+          virtualSettingsRef.current.removeVideo();
+        }
+      },
     }));
 
     return (
@@ -288,7 +294,9 @@ export interface VirtualSettingsProps {
   setCompare: (e: boolean) => void;
 }
 
-export interface VirtualSettingsExports {}
+export interface VirtualSettingsExports {
+  removeVideo: () => void;
+}
 
 export const VirtualSettings = forwardRef<
   VirtualSettingsExports,
@@ -387,11 +395,13 @@ export const VirtualSettings = forwardRef<
                     onClick={() => {
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
-                      if (compare) {
+                      if (compare && item.name != ModelRole.None) {
                         setCompare(false);
                         setTimeout(() => {
                           setCompare(true);
                         }, 200);
+                      } else if (item.name == ModelRole.None) {
+                        setCompare(false);
                       } else {
                         setCompare(true);
                       }
@@ -400,13 +410,17 @@ export const VirtualSettings = forwardRef<
                     {model_selected_index == index && <SelectedMask></SelectedMask>}
                     {/* <h4>{item.name}</h4> */}
                     {item.name == ModelRole.None ? (
-                      <div style={{
-                        height: "120px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: '700',
-                      }}>{t('settings.virtual.none')}</div>
+                      <div
+                        style={{
+                          height: '120px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '700',
+                        }}
+                      >
+                        {t('settings.virtual.none')}
+                      </div>
                     ) : (
                       <img src={src(`/images/models/${item.src}`)} alt="" />
                     )}
@@ -458,15 +472,24 @@ export const VirtualSettings = forwardRef<
       },
     ];
 
+    const removeVideo = () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    };
+
     useEffect(() => {
       loadVideo(videoRef);
       return () => {
-        if (videoRef.current && videoRef.current.srcObject) {
-          const stream = videoRef.current.srcObject as MediaStream;
-          stream.getTracks().forEach((track) => track.stop());
-        }
+        removeVideo();
       };
     }, [loadVideo, compare]);
+
+    useImperativeHandle(ref, () => ({
+      removeVideo,
+    }));
 
     return (
       <div className={styles.virtual_settings}>
@@ -477,8 +500,15 @@ export const VirtualSettings = forwardRef<
               variant="solid"
               style={{ padding: '8px' }}
               onClick={() => {
-                const val = !compare;
-                setCompare(val);
+                if (modelRole != ModelRole.None) {
+                  const val = !compare;
+                  setCompare(val);
+                } else {
+                  messageApi.warning({
+                    content: t('settings.virtual.none_warning'),
+                    duration: 1,
+                  });
+                }
               }}
             >
               <SvgResource type="switch" color="#fff" svgSize={14}></SvgResource>
@@ -493,7 +523,7 @@ export const VirtualSettings = forwardRef<
             playsInline
             muted
           />
-          {compare && (
+          {compare && modelRole != ModelRole.None && (
             <div className={styles.virtual_video_box_canvas}>
               <VirtualRoleCanvas
                 video_ele={videoRef}
@@ -501,6 +531,7 @@ export const VirtualSettings = forwardRef<
                 model_role={modelRole}
                 enabled={compare}
                 messageApi={messageApi}
+                isLocal={true}
               ></VirtualRoleCanvas>
             </div>
           )}

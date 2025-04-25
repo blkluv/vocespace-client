@@ -275,7 +275,7 @@ export const Live2DComponent = ({
       }
       const originalTrack = cameraPub.track;
       const virtualTrack = virtualStream.getVideoTracks()[0];
-      originalTrack.replaceTrack(virtualTrack);
+      await originalTrack.replaceTrack(virtualTrack);
 
       // await localParticipant.publishTrack(virtualTrack, {
       //   name:
@@ -477,7 +477,7 @@ export const Live2DComponent = ({
       !cState.trackingActive
     ) {
       // console.log('屏幕尺寸已更新，开始追踪', screenSize);
-      startFaceTracking();
+      // startFaceTracking(); 暂时停用
       startVirtualCamera();
     }
   }, [screenSize, enabled, cState.trackingActive]);

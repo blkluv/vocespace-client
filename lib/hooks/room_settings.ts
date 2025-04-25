@@ -1,6 +1,8 @@
 // lib/hooks/useRoomSettings.ts
 import { useState, useEffect, useCallback } from 'react';
 import { connect_endpoint, UserStatus } from '../std';
+import { ModelBg, ModelRole } from '../std/virtual';
+import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
 
 export interface ParticipantSettings {
   name: string;
@@ -9,7 +11,11 @@ export interface ParticipantSettings {
   screenBlur: number;
   status: UserStatus;
   socketId: string;
-  virtual: boolean;
+  virtual: {
+    role: ModelRole;
+    bg: ModelBg;
+    enabled: boolean;
+  };
 }
 
 export interface RoomSettings {
@@ -92,6 +98,14 @@ export function useRoomSettings(roomId: string, participantId: string) {
       url.searchParams.append('participantId', participantId);
       await fetch(url.toString(), {
         method: 'DELETE',
+      }).then(async (res) => {
+        if (res.ok) {
+          const data: { success: boolean; clearRoom?: string } = await res.json();
+          if (data.clearRoom && data.clearRoom !== '') {
+            socket.emit('clear_room_resources', { roomName: data.clearRoom });
+            console.warn("clear room resources", data.clearRoom);
+          }
+        }
       });
     } catch (err) {
       console.error('Error clearing settings:', err);
