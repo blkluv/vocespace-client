@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { Chat, useChat, useLocalParticipant } from '@livekit/components-react';
-import { Avatar, Button, Drawer, Input, Upload } from 'antd';
+import { Avatar, Button, Drawer, Input, Modal, Upload } from 'antd';
 import type { GetProp, UploadProps } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { setting_drawer_header } from '@/app/devices/controls/bar';
 import { ulid } from '@/lib/std';
+import { Room } from 'livekit-client';
+import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
@@ -14,52 +16,111 @@ export interface EnhancedChatProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   onClose: () => void;
+  room: Room;
+  sendFileConfirm: (onOk: () => Promise<void>) => void;
 }
 
-export function EnhancedChat({ open, setOpen, onClose }: EnhancedChatProps) {
+export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: EnhancedChatProps) {
   const { t } = useI18n();
   const ulRef = React.useRef<HTMLUListElement>(null);
-  const { send, chatMessages } = useChat();
+  const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
   const [value, setValue] = React.useState('');
-  const [uploadFile, setUploadFile] = React.useState<FileType | null>(null);
+  // const [uploadFile, setUploadFile] = React.useState<FileType | null>(null);
+  // [socket] ----------------------------------------------------------------------------------
+  React.useEffect(() => {
+    socket.on('chat_msg_response', (msg: ChatMsgItem) => {
+      if (msg.roomName == room.name) {
+        setMessages((prev) => [...prev, msg]);
+      }
+    });
 
+    socket.on('chat_file_response', (msg: ChatMsgItem) => {
+      if (msg.roomName == room.name) {
+        setMessages((prev) => [...prev, msg]);
+      }
+    });
+
+    return () => {
+      socket.off('chat_msg');
+      socket.off('chat_msg_response');
+    };
+  }, [socket]);
+  // [send methods] ----------------------------------------------------------------------------
+  const sendMsg = async () => {
+    const msg = value.trim();
+    if (msg === '') {
+      return;
+    }
+
+    const chatMsg: ChatMsgItem = {
+      sender: {
+        id: room.localParticipant.identity,
+        name: room.localParticipant.name || room.localParticipant.identity,
+      },
+      message: msg,
+      type: 'text',
+      roomName: room.name,
+      file: null,
+    };
+
+    setMessages((prev) => [...prev, chatMsg]);
+    setValue('');
+    socket.emit('chat_msg', chatMsg);
+  };
+
+  // [upload] ----------------------------------------------------------------------------------
   const handleBeforeUpload = (file: FileType) => {
-    console.log('file', file);
-    setUploadFile(file);
+    sendFileConfirm(async () => {
+      const reader = new FileReader();
+      try {
+        reader.onload = (e) => {
+          const fileData = e.target?.result;
+          // 更新本地消息记录
+          const fileMessage: ChatMsgItem = {
+            sender: {
+              id: localParticipant.identity,
+              name: localParticipant.name || localParticipant.identity,
+            },
+            message: null,
+            type: 'file',
+            roomName: room.name,
+            file: {
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              data: fileData,
+            },
+          };
+
+          // 发送文件消息
+          socket.emit('chat_file', fileMessage);
+        };
+        if (file.size < 5 * 1024 * 1024) {
+          // 小于5MB的文件
+          reader.readAsDataURL(file);
+        } else {
+          reader.readAsArrayBuffer(file);
+        }
+      } catch (e) {
+        console.error('Error reading file:', e);
+      }
+    });
     return false; // 阻止自动上传
   };
 
   const scrollToBottom = () => {
     const el = ulRef.current;
     if (el) {
-      console.log(chatMessages);
       el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
   };
 
   React.useEffect(() => {
     scrollToBottom();
-  }, [chatMessages]);
+  }, [messages]);
 
   const sendFile = async (file: FileType) => {
     // 使用socket发送文件, todo
-  };
-
-  const sendMsg = async () => {
-    const msg = value.trim();
-    if (!msg && !uploadFile) {
-      return;
-    } else if (msg && !uploadFile) {
-      await send?.(value);
-      setValue('');
-    } else if (!msg && uploadFile) {
-      await sendFile(uploadFile);
-    } else if (msg && uploadFile) {
-      await send?.(value);
-      await sendFile(uploadFile);
-      setValue('');
-      setUploadFile(null);
-    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -71,6 +132,7 @@ export function EnhancedChat({ open, setOpen, onClose }: EnhancedChatProps) {
   const { localParticipant } = useLocalParticipant();
   const isLocal = (identity?: string): boolean => {
     if (identity) {
+      console.log('localParticipant', identity, localParticipant.identity);
       return localParticipant.identity === identity;
     } else {
       return false;
@@ -91,26 +153,44 @@ export function EnhancedChat({ open, setOpen, onClose }: EnhancedChatProps) {
     >
       <div className={styles.msg}>
         <ul ref={ulRef} className={styles.msg_list}>
-          {chatMessages.map((msg) =>
-            isLocal(msg.from?.identity) ? (
+          {messages.map((msg) =>
+            isLocal(msg.sender.id) ? (
               <li key={ulid()} className={styles.msg_item}>
                 <div className={styles.msg_item_wrapper}>
                   <div className={styles.msg_item_content}>
-                    <h4 className={styles.msg_item_content_name}>{msg.from?.name || 'unknown'}</h4>
-                    <p className={styles.msg_item_content_msg}>{msg.message}</p>
+                    <h4 className={styles.msg_item_content_name}>{msg.sender.name || 'unknown'}</h4>
+                    {msg.type === 'text' ? (
+                      <p className={styles.msg_item_content_msg}>{msg.message}</p>
+                    ) : (
+                      msg.file && (
+                        <p className={styles.msg_item_content_msg}>
+                          <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
+                            📎 {msg.file.name} ({Math.round(msg.file.size / 1024)}KB)
+                          </a>
+                        </p>
+                      )
+                    )}
                   </div>
                 </div>
               </li>
             ) : (
               <li key={ulid()} className={styles.msg_item__remote}>
                 <div className={styles.msg_item_wrapper}>
-                  <div className={styles.msg_item_content}>
+                  <div className={styles.msg_item_content} style={{ justifyContent: 'flex-end' }}>
                     <h4 className={styles.msg_item_content_name} style={{ textAlign: 'end' }}>
-                      {msg.from?.name || 'unknown'}
+                      {msg.sender.name}
                     </h4>
-                    <p className={styles.msg_item_content_msg} style={{ textAlign: 'end' }}>
-                      {msg.message}
-                    </p>
+                    {msg.type === 'text' ? (
+                      <p className={styles.msg_item_content_msg}>{msg.message}</p>
+                    ) : (
+                      msg.file && (
+                        <p className={styles.msg_item_content_msg}>
+                          <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
+                            📎 {msg.file.name} ({Math.round(msg.file.size / 1024)}KB)
+                          </a>
+                        </p>
+                      )
+                    )}
                   </div>
                 </div>
               </li>
@@ -142,4 +222,23 @@ export function EnhancedChat({ open, setOpen, onClose }: EnhancedChatProps) {
       </div>
     </Drawer>
   );
+}
+
+interface ChatMsgItem {
+  id?: string;
+  sender: {
+    id: string;
+    name: string;
+  };
+  message: string | null;
+  type: 'text' | 'file';
+  roomName: string;
+  timestamp?: string;
+  file: {
+    name: string;
+    size: number;
+    type: string;
+    url?: string;
+    data?: string | ArrayBuffer | null;
+  } | null;
 }

@@ -114,7 +114,9 @@ export const ParticipantItem: (
               <VideoTrack
                 ref={videoRef}
                 style={{
-                  // filter: `blur(${blurValue}px)`,
+                  filter: settings[trackReference.participant.identity]?.virtual.enabled
+                    ? 'none'
+                    : `blur(${blurValue}px)`,
                   // visibility:
                   //   localParticipant.identity === trackReference.participant.identity &&
                   //   uState.virtualRole.enabled
@@ -127,6 +129,21 @@ export const ParticipantItem: (
                 manageSubscription={autoManageSubscription}
               />
               {localParticipant.identity === trackReference.participant.identity &&
+                uState.virtualRole.enabled && (
+                  <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
+                    <VirtualRoleCanvas
+                      video_ele={videoRef}
+                      model_bg={uState.virtualRole.bg}
+                      model_role={uState.virtualRole.role}
+                      enabled={uState.virtualRole.enabled}
+                      messageApi={messageApi}
+                      trackRef={trackReference}
+                      isLocal={trackReference.participant.identity === localParticipant.identity}
+                    ></VirtualRoleCanvas>
+                  </div>
+                )}
+              {/** 暂停使用WebGL虚化 */}
+              {/* {localParticipant.identity === trackReference.participant.identity &&
               uState.virtualRole.enabled ? (
                 <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
                   <VirtualRoleCanvas
@@ -141,7 +158,7 @@ export const ParticipantItem: (
                 </div>
               ) : (
                 blurValue > 0 && <BlurVideo blur={blurValue}></BlurVideo>
-              )}
+              )} */}
             </div>
           );
         } else if (trackReference.source === Track.Source.ScreenShare) {

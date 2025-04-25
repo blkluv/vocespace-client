@@ -477,7 +477,7 @@ export const Live2DComponent = ({
       !cState.trackingActive
     ) {
       // console.log('屏幕尺寸已更新，开始追踪', screenSize);
-      startFaceTracking();
+      // startFaceTracking(); 暂时停用
       startVirtualCamera();
     }
   }, [screenSize, enabled, cState.trackingActive]);

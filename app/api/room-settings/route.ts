@@ -3,7 +3,7 @@ import { UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { NextRequest, NextResponse } from 'next/server';
 
-// 内存中存储房间设置 (实际应用中可能需要使用数据库或 Redis)
+// 内存中存储房间设置
 interface RoomSettings {
   [roomId: string]: {
     participants: {
@@ -28,11 +28,26 @@ const roomSettings: RoomSettings = {};
 
 // 获取房间所有参与者设置
 export async function GET(request: NextRequest) {
+  const all = request.nextUrl.searchParams.get('all') === 'true';
   const roomId = request.nextUrl.searchParams.get('roomId');
-  const is_pre = Boolean(request.nextUrl.searchParams.get('pre'));
+  const is_pre = request.nextUrl.searchParams.get('pre') === 'true';
+  
+  if (all) {
+    const detail = request.nextUrl.searchParams.get('detail') === 'true';
+    if (detail) {
+      return NextResponse.json(roomSettings);
+    }else{
+      // 将roomSettings转为Map形式 Map<roomId, participants>
+      const roomSettingsMap = Object.entries(roomSettings).reduce((acc, [roomId, { participants }]) => {
+        acc[roomId] = Object.keys(participants);
+        return acc;
+      }, {} as Record<string, string[]>);
 
-  if (!roomId) {
-    return NextResponse.json({ error: 'Room ID is required' }, { status: 400 });
+      return NextResponse.json(roomSettingsMap);
+    }
+  }
+  if (roomId == "" || !roomId) {
+    return NextResponse.json({ error: 'Missing roomId' }, { status: 400 });
   }
   const settings = roomSettings[roomId]?.participants || {};
   if (is_pre) {
@@ -45,7 +60,6 @@ export async function GET(request: NextRequest) {
 
     // 接下来需要便利参与者，获取所有为`User [01~99]`的参与者，得到新参与者可以使用的名字进行返回
     let usedUserNames: number[] = [];
-    console.log(participants);
     participants.forEach((participant) => {
       if (participant.name.startsWith('User')) {
         const userName = participant.name.split(' ')[1];

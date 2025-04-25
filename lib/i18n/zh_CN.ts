@@ -34,6 +34,7 @@ export default {
     chat: '聊天',
     chat_placeholder: '请输入消息',
     send: '发送',
+    send_file_or: '是否发送文件？',
     leave: '离开',
     share_screen: '共享屏幕',
     stop_share: '停止共享',
