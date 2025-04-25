@@ -361,10 +361,6 @@ export const ParticipantItem: (
       },
     ];
 
-    useEffect(()=>{
-      console.warn(settings[trackReference.participant.identity]?.name);
-    }, [settings])
-
     const user_menu: MenuProps['items'] = useMemo(()=>{
       return [
         {
@@ -386,10 +382,10 @@ export const ParticipantItem: (
                 items: status_menu,
                 onClick: async (e) => {
                   let status = statusFromSvgType(e.key as SvgType);
-                  setUState({
-                    ...uState,
-                    status,
-                  });
+                  // setUState({
+                  //   ...uState,
+                  //   status,
+                  // });
                   await setUserStatus(status);
                 },
               }}
@@ -405,7 +401,7 @@ export const ParticipantItem: (
           ),
         },
       ];
-    }, [settings])
+    }, [settings, userStatusDisply])
 
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {
@@ -552,7 +548,6 @@ export const ParticipantItem: (
         });
         socket.on('mouse_remove_response', (data) => {
           const { senderId } = data;
-          console.log('remove mouse', senderId);
           // 删除状态
           setRemoteCursors((prev) => {
             const newCursors = { ...prev };

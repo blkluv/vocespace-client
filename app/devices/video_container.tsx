@@ -60,6 +60,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     ref,
   ) => {
     const room = useMaybeRoomContext();
+    const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [device, setDevice] = useRecoilState(userState);
     const controlsRef = React.useRef<ControlBarExport>(null);
@@ -92,7 +93,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         // setSettings(newSettings);
       };
 
-      syncSettings();
+      if (init) {
+        syncSettings();
+        setInit(false);
+      }
 
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
       socket.on(
@@ -157,7 +161,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
       };
-    }, [room?.state, room?.localParticipant, device]);
+    }, [room?.state, room?.localParticipant, device, init]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
@@ -247,7 +251,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     // [user status] ------------------------------------------------------------------------------------------
     const setUserStatus = async (status: UserStatus) => {
       let newStatus = {
-        status: status,
+        status,
       };
       switch (status) {
         case UserStatus.Online: {
