@@ -12,7 +12,7 @@ import {
   usePersistentUserChoices,
   useTrackVolume,
 } from '@livekit/components-react';
-import { Button, Drawer, message } from 'antd';
+import { Button, Drawer, message, Modal } from 'antd';
 import { Track } from 'livekit-client';
 import * as React from 'react';
 import { SettingToggle } from './setting_toggle';
@@ -378,6 +378,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const onChatClose = () => {
       setChatOpen(false);
     };
+    const sendFileConfirm = (onOk: () => Promise<void>) => {
+      Modal.confirm({
+        title: t('common.send'),
+        content: t('common.send_file_or'),
+        onOk,
+      });
+    };
 
     return (
       <div {...htmlProps} className={styles.controls}>
@@ -467,6 +474,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             setOpen={setChatOpen}
             onClose={onChatClose}
             room={room}
+            sendFileConfirm={sendFileConfirm}
           ></EnhancedChat>
         )}
         <Drawer

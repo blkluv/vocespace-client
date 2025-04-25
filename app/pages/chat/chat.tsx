@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Chat, useChat, useLocalParticipant } from '@livekit/components-react';
-import { Avatar, Button, Drawer, Input, Upload } from 'antd';
+import { Avatar, Button, Drawer, Input, Modal, Upload } from 'antd';
 import type { GetProp, UploadProps } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
@@ -17,9 +17,10 @@ export interface EnhancedChatProps {
   setOpen: (open: boolean) => void;
   onClose: () => void;
   room: Room;
+  sendFileConfirm: (onOk: () => Promise<void>) => void;
 }
 
-export function EnhancedChat({ open, setOpen, onClose, room }: EnhancedChatProps) {
+export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: EnhancedChatProps) {
   const { t } = useI18n();
   const ulRef = React.useRef<HTMLUListElement>(null);
   const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
@@ -31,7 +32,12 @@ export function EnhancedChat({ open, setOpen, onClose, room }: EnhancedChatProps
       if (msg.roomName == room.name) {
         setMessages((prev) => [...prev, msg]);
       }
-      
+    });
+
+    socket.on('chat_file_response', (msg: ChatMsgItem) => {
+      if (msg.roomName == room.name) {
+        setMessages((prev) => [...prev, msg]);
+      }
     });
 
     return () => {
@@ -64,8 +70,41 @@ export function EnhancedChat({ open, setOpen, onClose, room }: EnhancedChatProps
 
   // [upload] ----------------------------------------------------------------------------------
   const handleBeforeUpload = (file: FileType) => {
-    console.log('file', file);
-    // setUploadFile(file);
+    sendFileConfirm(async () => {
+      const reader = new FileReader();
+      try {
+        reader.onload = (e) => {
+          const fileData = e.target?.result;
+          // 更新本地消息记录
+          const fileMessage: ChatMsgItem = {
+            sender: {
+              id: localParticipant.identity,
+              name: localParticipant.name || localParticipant.identity,
+            },
+            message: null,
+            type: 'file',
+            roomName: room.name,
+            file: {
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              data: fileData,
+            },
+          };
+
+          // 发送文件消息
+          socket.emit('chat_file', fileMessage);
+        };
+        if (file.size < 5 * 1024 * 1024) {
+          // 小于5MB的文件
+          reader.readAsDataURL(file);
+        } else {
+          reader.readAsArrayBuffer(file);
+        }
+      } catch (e) {
+        console.error('Error reading file:', e);
+      }
+    });
     return false; // 阻止自动上传
   };
 
@@ -93,6 +132,7 @@ export function EnhancedChat({ open, setOpen, onClose, room }: EnhancedChatProps
   const { localParticipant } = useLocalParticipant();
   const isLocal = (identity?: string): boolean => {
     if (identity) {
+      console.log('localParticipant', identity, localParticipant.identity);
       return localParticipant.identity === identity;
     } else {
       return false;
@@ -122,7 +162,13 @@ export function EnhancedChat({ open, setOpen, onClose, room }: EnhancedChatProps
                     {msg.type === 'text' ? (
                       <p className={styles.msg_item_content_msg}>{msg.message}</p>
                     ) : (
-                      <div>图片</div>
+                      msg.file && (
+                        <p className={styles.msg_item_content_msg}>
+                          <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
+                            📎 {msg.file.name} ({Math.round(msg.file.size / 1024)}KB)
+                          </a>
+                        </p>
+                      )
                     )}
                   </div>
                 </div>
@@ -130,16 +176,20 @@ export function EnhancedChat({ open, setOpen, onClose, room }: EnhancedChatProps
             ) : (
               <li key={ulid()} className={styles.msg_item__remote}>
                 <div className={styles.msg_item_wrapper}>
-                  <div className={styles.msg_item_content} style={{justifyContent: "flex-end"}}>
+                  <div className={styles.msg_item_content} style={{ justifyContent: 'flex-end' }}>
                     <h4 className={styles.msg_item_content_name} style={{ textAlign: 'end' }}>
                       {msg.sender.name}
                     </h4>
                     {msg.type === 'text' ? (
-                      <p className={styles.msg_item_content_msg} >
-                        {msg.message}
-                      </p>
+                      <p className={styles.msg_item_content_msg}>{msg.message}</p>
                     ) : (
-                      <div>图片</div>
+                      msg.file && (
+                        <p className={styles.msg_item_content_msg}>
+                          <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
+                            📎 {msg.file.name} ({Math.round(msg.file.size / 1024)}KB)
+                          </a>
+                        </p>
+                      )
                     )}
                   </div>
                 </div>
@@ -175,6 +225,7 @@ export function EnhancedChat({ open, setOpen, onClose, room }: EnhancedChatProps
 }
 
 interface ChatMsgItem {
+  id?: string;
   sender: {
     id: string;
     name: string;
@@ -182,5 +233,12 @@ interface ChatMsgItem {
   message: string | null;
   type: 'text' | 'file';
   roomName: string;
-  file: FileType | null;
+  timestamp?: string;
+  file: {
+    name: string;
+    size: number;
+    type: string;
+    url?: string;
+    data?: string | ArrayBuffer | null;
+  } | null;
 }
