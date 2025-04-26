@@ -187,40 +187,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setDevice({
         ...device,
         virtualRole: {
-          ...device.virtualRole,
-          bg: modelBg,
-        },
-      });
-      if (virtualEnabled) {
-        setVirtualEnabled(false);
-        setTimeout(() => {
-          setVirtualEnabled(true);
-        }, 100);
-      }
-    }, [modelBg]);
-
-    React.useEffect(() => {
-      setDevice({
-        ...device,
-        virtualRole: {
-          ...device.virtualRole,
-          role: modelRole,
-        },
-      });
-      if (virtualEnabled) {
-        setVirtualEnabled(false);
-        setTimeout(() => {
-          setVirtualEnabled(true);
-        }, 100);
-      }
-    }, [modelRole]);
-
-    React.useEffect(() => {
-      setDevice({
-        ...device,
-        virtualRole: {
-          ...device.virtualRole,
           enabled: virtualEnabled,
+          role: modelRole,
+          bg: modelBg,
         },
       });
       // 更新设置
@@ -233,7 +202,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       }).then(() => {
         socket.emit('update_user_status');
       });
-    }, [virtualEnabled]);
+    }, [virtualEnabled, modelRole, modelBg]);
     const saveChanges = async (key: TabKey) => {
       let update;
       switch (key) {
@@ -278,7 +247,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           break;
         }
       }
-      await updateSettings({...update});
+      await updateSettings({ ...update });
       // 通知socket，进行状态的更新
       socket.emit('update_user_status');
     };
@@ -461,6 +430,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <SettingToggle
             enabled={settingVis}
             onClicked={() => {
+              // setVirtualEnabled(false);
               setSettingVis(true);
             }}
           ></SettingToggle>

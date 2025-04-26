@@ -106,6 +106,8 @@ export const ParticipantItem: (
       [trackReference, layoutContext],
     );
 
+
+
     const deviceTrack = React.useMemo(() => {
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
@@ -139,6 +141,7 @@ export const ParticipantItem: (
                       messageApi={messageApi}
                       trackRef={trackReference}
                       isLocal={trackReference.participant.identity === localParticipant.identity}
+                      isReplace={true}
                     ></VirtualRoleCanvas>
                   </div>
                 )}
@@ -361,13 +364,15 @@ export const ParticipantItem: (
       },
     ];
 
-    const user_menu: MenuProps['items'] = useMemo(()=>{
+    const user_menu: MenuProps['items'] = useMemo(() => {
       return [
         {
           key: 'user_info',
           label: (
             <div className={styles.user_info_wrap} onClick={toSettings}>
-              <div className={styles.user_info_wrap_name}>{settings[trackReference.participant.identity]?.name || localParticipant.name}</div>
+              <div className={styles.user_info_wrap_name}>
+                {settings[trackReference.participant.identity]?.name || localParticipant.name}
+              </div>
               <SvgResource type="modify" svgSize={14} color="#fff"></SvgResource>
               {/* <div className={styles.user_info_wrap_identity}>{trackReference.participant.identity}</div> */}
             </div>
@@ -401,7 +406,7 @@ export const ParticipantItem: (
           ),
         },
       ];
-    }, [settings, userStatusDisply])
+    }, [settings, userStatusDisply]);
 
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {

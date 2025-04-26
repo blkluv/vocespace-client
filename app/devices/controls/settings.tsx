@@ -526,12 +526,12 @@ export const VirtualSettings = forwardRef<
           {compare && modelRole != ModelRole.None && (
             <div className={styles.virtual_video_box_canvas}>
               <VirtualRoleCanvas
-                video_ele={videoRef}
                 model_bg={modelBg}
                 model_role={modelRole}
                 enabled={compare}
                 messageApi={messageApi}
                 isLocal={true}
+                isReplace={false}
               ></VirtualRoleCanvas>
             </div>
           )}
