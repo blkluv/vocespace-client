@@ -67,6 +67,7 @@ export const ParticipantItem: (
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
     const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
+
     // 存储所有观众的鼠标位置
     const [remoteCursors, setRemoteCursors] = React.useState<{
       [participantId: string]: {
@@ -128,7 +129,12 @@ export const ParticipantItem: (
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
-            <div style={{ height: '100%', width: '100%' }}>
+            <div
+              style={{
+                height: '100%',
+                width: '100%',
+              }}
+            >
               <VideoTrack
                 ref={videoRef}
                 style={{
@@ -136,12 +142,8 @@ export const ParticipantItem: (
                     settings[trackReference.participant.identity]?.virtual.enabled ?? false
                       ? 'none'
                       : `blur(${blurValue}px)`,
-                  // visibility:
-                  //   localParticipant.identity === trackReference.participant.identity &&
-                  //   uState.virtualRole.enabled
-                  //     ? 'hidden'
-                  //     : 'visible',
                   visibility: 'visible',
+                  transition: 'filter 0.2s ease-in-out'
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
