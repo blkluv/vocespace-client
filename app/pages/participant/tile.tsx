@@ -33,7 +33,6 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, src, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
 import { RoomSettings } from '@/lib/hooks/room_settings';
-import { BlurVideo } from '../blur/video';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: RoomSettings;
@@ -41,13 +40,22 @@ export interface ParticipantItemProps extends ParticipantTileProps {
   toSettings?: () => void;
   messageApi: MessageInstance;
   isFocus?: boolean;
+  room?: string;
 }
 
 export const ParticipantItem: (
   props: ParticipantItemProps & React.RefAttributes<HTMLDivElement>,
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
   function ParticipantItem(
-    { trackRef, settings, toSettings, messageApi, setUserStatus, isFocus }: ParticipantItemProps,
+    {
+      trackRef,
+      settings,
+      toSettings,
+      messageApi,
+      setUserStatus,
+      isFocus,
+      room,
+    }: ParticipantItemProps,
     ref,
   ) {
     const { t } = useI18n();
@@ -62,6 +70,7 @@ export const ParticipantItem: (
     // 存储所有观众的鼠标位置
     const [remoteCursors, setRemoteCursors] = React.useState<{
       [participantId: string]: {
+        room?: string;
         x: number;
         y: number;
         name: string;
@@ -105,8 +114,6 @@ export const ParticipantItem: (
       },
       [trackReference, layoutContext],
     );
-
-
 
     const deviceTrack = React.useMemo(() => {
       if (isTrackReference(trackReference) && !loading) {
@@ -411,6 +418,7 @@ export const ParticipantItem: (
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {
       socket.emit('wave', {
+        room,
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
@@ -485,6 +493,7 @@ export const ParticipantItem: (
               setLastMousePos({ x, y });
             }
             let data = {
+              room,
               x,
               y,
               color: randomColor(localParticipant.identity),
@@ -498,6 +507,7 @@ export const ParticipantItem: (
             setRemoteCursors((prev) => ({
               ...prev,
               [data.senderId]: {
+                room: data.room,
                 x: data.x,
                 y: data.y,
                 name: data.senderName,
@@ -516,6 +526,7 @@ export const ParticipantItem: (
             });
             // 发送socket, 只需要知道去除者的id
             socket.emit('mouse_remove', {
+              room,
               senderName: localParticipant.name || localParticipant.identity,
               senderId: localParticipant.identity,
               receiverId: trackReference.participant.identity,
@@ -537,28 +548,33 @@ export const ParticipantItem: (
       if (localParticipant.isSpeaking && trackReference.source === Track.Source.ScreenShare) {
         socket.on('mouse_move_response', (data) => {
           // 获取之后需要将别人的鼠标位置在演讲者的屏幕上进行显示
-          const { senderId, senderName, x, y, color, realVideoRect } = data;
+          const { senderId, senderName, x, y, color, realVideoRect, room: uRoom } = data;
           // 更新状态
-          setRemoteCursors((prev) => ({
-            ...prev,
-            [senderId]: {
-              x,
-              y,
-              name: senderName,
-              color,
-              timestamp: Date.now(),
-              realVideoRect,
-            },
-          }));
+          if (room == uRoom) {
+            setRemoteCursors((prev) => ({
+              ...prev,
+              [senderId]: {
+                room,
+                x,
+                y,
+                name: senderName,
+                color,
+                timestamp: Date.now(),
+                realVideoRect,
+              },
+            }));
+          }
         });
         socket.on('mouse_remove_response', (data) => {
-          const { senderId } = data;
+          const { senderId, room: uRoom } = data;
           // 删除状态
-          setRemoteCursors((prev) => {
-            const newCursors = { ...prev };
-            delete newCursors[senderId];
-            return newCursors;
-          });
+          if (room == uRoom) {
+            setRemoteCursors((prev) => {
+              const newCursors = { ...prev };
+              delete newCursors[senderId];
+              return newCursors;
+            });
+          }
         });
       }
 

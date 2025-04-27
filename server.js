@@ -33,11 +33,9 @@ app.prepare().then(() => {
   const io = new Server(httpServer);
 
   io.on('connection', (socket) => {
-    console.log('New socket connection', socket.id);
-
     socket.on('wave', (msg) => {
-      console.log('wave', msg);
       socket.to(msg.socketId).emit('wave_response', {
+        room: msg.room,
         senderId: msg.senderId,
         senderName: msg.senderName,
         receiverId: msg.receiverId,

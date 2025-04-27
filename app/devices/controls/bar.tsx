@@ -430,7 +430,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <SettingToggle
             enabled={settingVis}
             onClicked={() => {
-              // setVirtualEnabled(false);
+              setVirtualEnabled(false);
               setSettingVis(true);
             }}
           ></SettingToggle>

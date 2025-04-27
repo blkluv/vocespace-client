@@ -101,8 +101,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
       socket.on(
         'wave_response',
-        (msg: { senderId: string; senderName: string; receiverId: string }) => {
-          if (msg.receiverId === room.localParticipant.identity) {
+        (msg: { senderId: string; senderName: string; receiverId: string; room: string }) => {
+          if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
             waveAudioRef.current?.play();
             noteApi.info({
               message: `${msg.senderName} ${t('common.wave_msg')}`,
@@ -334,6 +334,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 <div className="lk-grid-layout-wrapper">
                   <GridLayout tracks={tracks}>
                     <ParticipantItem
+                      room={room?.name}
                       settings={settings}
                       toSettings={toSettingGeneral}
                       messageApi={messageApi}
@@ -346,6 +347,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   <FocusLayoutContainer>
                     <CarouselLayout tracks={carouselTracks}>
                       <ParticipantItem
+                        room={room?.name}
                         settings={settings}
                         messageApi={messageApi}
                         setUserStatus={setUserStatus}
@@ -353,6 +355,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                     </CarouselLayout>
                     {focusTrack && (
                       <ParticipantItem
+                        room={room?.name}
                         setUserStatus={setUserStatus}
                         settings={settings}
                         trackRef={focusTrack}
