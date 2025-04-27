@@ -46,7 +46,7 @@ export interface SettingsExports {
   removeVideo: () => void;
 }
 
-export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'virtual' | 'about_us';
+export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'about_us';
 
 export const Settings = forwardRef<SettingsExports, SettingsProps>(
   (
@@ -174,25 +174,22 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 }}
               />
             </div>
+            <div className={styles.setting_box}>
+              <div style={{marginBottom: "6px"}}>{t('settings.virtual.title')}:</div>
+              <VirtualSettings
+                ref={virtualSettingsRef}
+                messageApi={messageApi}
+                modelRole={modelRole}
+                setModelRole={setModelRole}
+                modelBg={modelBg}
+                setModelBg={setModelBg}
+                enabled={enabled}
+                setEnabled={setEnabled}
+                compare={compare}
+                setCompare={setCompare}
+              ></VirtualSettings>
+            </div>
           </div>
-        ),
-      },
-      {
-        key: 'virtual',
-        label: <TabItem type="user" label={t('settings.virtual.title')}></TabItem>,
-        children: (
-          <VirtualSettings
-            ref={virtualSettingsRef}
-            messageApi={messageApi}
-            modelRole={modelRole}
-            setModelRole={setModelRole}
-            modelBg={modelBg}
-            setModelBg={setModelBg}
-            enabled={enabled}
-            setEnabled={setEnabled}
-            compare={compare}
-            setCompare={setCompare}
-          ></VirtualSettings>
         ),
       },
       {

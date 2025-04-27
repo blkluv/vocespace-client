@@ -123,7 +123,7 @@ export const ParticipantItem: (
               <VideoTrack
                 ref={videoRef}
                 style={{
-                  filter: settings[trackReference.participant.identity]?.virtual.enabled
+                  filter: settings[trackReference.participant.identity]?.virtual.enabled ?? false
                     ? 'none'
                     : `blur(${blurValue}px)`,
                   // visibility:
