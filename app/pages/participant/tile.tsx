@@ -25,7 +25,7 @@ import { isRemoteTrack, Track } from 'livekit-client';
 import React, { useEffect, useMemo } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
-import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
@@ -114,8 +114,17 @@ export const ParticipantItem: (
       },
       [trackReference, layoutContext],
     );
-
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const deviceTrack = React.useMemo(() => {
+      if (virtualMask) {
+        console.log('virtualMask', virtualMask);
+        return (
+          <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
+            <ParticipantPlaceholder />
+          </div>
+        );
+      }
+
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
@@ -123,9 +132,10 @@ export const ParticipantItem: (
               <VideoTrack
                 ref={videoRef}
                 style={{
-                  filter: settings[trackReference.participant.identity]?.virtual.enabled ?? false
-                    ? 'none'
-                    : `blur(${blurValue}px)`,
+                  filter:
+                    settings[trackReference.participant.identity]?.virtual.enabled ?? false
+                      ? 'none'
+                      : `blur(${blurValue}px)`,
                   // visibility:
                   //   localParticipant.identity === trackReference.participant.identity &&
                   //   uState.virtualRole.enabled
@@ -284,7 +294,16 @@ export const ParticipantItem: (
           );
         }
       }
-    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors, settings]);
+    }, [
+      trackReference,
+      loading,
+      blurValue,
+      videoRef,
+      uState.virtualRole,
+      remoteCursors,
+      settings,
+      virtualMask,
+    ]);
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {

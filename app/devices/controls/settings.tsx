@@ -12,6 +12,8 @@ import { LangSelect } from './lang_select';
 import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
 import { src, UserStatus } from '@/lib/std';
 import { StatusSelect } from './status_select';
+import { useRecoilState } from 'recoil';
+import { virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 
 export interface SettingsProps {
   microphone: {
@@ -372,6 +374,8 @@ export const VirtualSettings = forwardRef<
       },
     ];
 
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
+
     const items: TabsProps['items'] = [
       {
         key: 'model',
@@ -393,6 +397,8 @@ export const VirtualSettings = forwardRef<
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
                       if (compare && item.name != ModelRole.None) {
+                        // 这里需要将外部视频进行遮罩
+                        setVirtualMask(true);
                         setCompare(false);
                         setTimeout(() => {
                           setCompare(true);

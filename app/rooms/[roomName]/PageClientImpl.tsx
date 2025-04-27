@@ -60,6 +60,11 @@ export const roomIdTmpState = atom({
   default: '',
 });
 
+export const virtualMaskState = atom({
+  key: 'virtualMaskState',
+  default: false
+});
+
 const CONN_DETAILS_ENDPOINT = connect_endpoint(
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details',
 );

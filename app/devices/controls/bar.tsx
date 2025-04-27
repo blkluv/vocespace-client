@@ -21,7 +21,7 @@ import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
-import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings } from '@/lib/hooks/room_settings';
 import { UserStatus } from '@/lib/std';
 import { EnhancedChat } from '@/app/pages/chat/chat';
@@ -171,6 +171,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [volume, setVolume] = React.useState(device.volume);
     const [videoBlur, setVideoBlur] = React.useState(device.blur);
     const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState)
     const closeSetting = () => {
       setCompare(false);
       if (modelRole !== ModelRole.None) {
@@ -181,6 +182,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       if (settingsRef.current) {
         settingsRef.current.removeVideo();
       }
+      setVirtualMask(false);
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
     React.useEffect(() => {
@@ -430,7 +432,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <SettingToggle
             enabled={settingVis}
             onClicked={() => {
-              setVirtualEnabled(false);
+              // setVirtualEnabled(false);
               setSettingVis(true);
             }}
           ></SettingToggle>
