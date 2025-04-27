@@ -99,7 +99,7 @@ export const ParticipantItem: (
         }
         setLoading(false);
       }
-    }, [settings, trackReference.source]);
+    }, [settings, trackReference]);
 
     const handleSubscribe = React.useCallback(
       (subscribed: boolean) => {
@@ -117,7 +117,7 @@ export const ParticipantItem: (
     );
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const deviceTrack = React.useMemo(() => {
-      if (virtualMask) {
+      if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
         console.log('virtualMask', virtualMask);
         return (
           <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
