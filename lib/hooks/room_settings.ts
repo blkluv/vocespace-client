@@ -89,13 +89,13 @@ export function useRoomSettings(roomId: string, participantId: string) {
   );
 
   // 清除参与者设置（离开时）
-  const clearSettings = useCallback(async () => {
+  const clearSettings = useCallback(async (id?: string) => {
     if (!roomId || !participantId) return;
-
+    let removeId = id || participantId;
     try {
       const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
       url.searchParams.append('roomId', roomId);
-      url.searchParams.append('participantId', participantId);
+      url.searchParams.append('participantId', removeId);
       await fetch(url.toString(), {
         method: 'DELETE',
       }).then(async (res) => {

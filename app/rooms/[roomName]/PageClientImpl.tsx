@@ -221,6 +221,7 @@ function VideoConferenceComponent(props: {
   const router = useRouter();
   const handleOnLeave = React.useCallback(async () => {
     socket.emit('mouse_remove', {
+      room: room.name,
       senderName: room.localParticipant.name || room.localParticipant.identity,
       senderId: room.localParticipant.identity,
       receiverId: '',

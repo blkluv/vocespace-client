@@ -121,6 +121,17 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       const onParticipantConnected = async (participant: Participant) => {
         await fetchSettings();
       };
+      const onParticipantDisConnected = async (participant: Participant) => {
+        socket.emit('mouse_remove', {
+          room: room.name,
+          senderName: participant.name || participant.identity,
+          senderId: participant.identity,
+          receiverId: '',
+          receSocketId: '',
+        });
+        // do clearSettings but use leave participant
+        await clearSettings(participant.identity);
+      };
       // 监听远程参与者连接事件 --------------------------------------------------------------------------
       room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
 
@@ -152,7 +163,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
 
       room.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
-
+      room.on(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       return () => {
         socket.off('wave_response');
         socket.off('user_status_updated');
@@ -160,6 +171,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('mouse_remove_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
+        room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
     }, [room?.state, room?.localParticipant, device, init]);
 
