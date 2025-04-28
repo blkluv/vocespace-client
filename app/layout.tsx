@@ -77,6 +77,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             colorBgLayout: '#1E1E1E',
             colorBgElevated: '#1E1E1E',
           },
+          Popover: {
+            colorBgElevated: '#1E1E1E',
+          }
         },
       }}
     >

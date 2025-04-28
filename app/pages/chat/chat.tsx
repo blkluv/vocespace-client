@@ -1,14 +1,15 @@
 import * as React from 'react';
 import { Chat, useChat, useLocalParticipant } from '@livekit/components-react';
-import { Avatar, Button, Drawer, Input, Modal, Upload } from 'antd';
+import { Avatar, Button, Drawer, Image, Input, message, Modal, Popover, Upload } from 'antd';
 import type { GetProp, UploadProps } from 'antd';
-import { SvgResource } from '@/app/resources/svg';
+import { pictureCallback, SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { setting_drawer_header } from '@/app/devices/controls/bar';
 import { ulid } from '@/lib/std';
 import { Room } from 'livekit-client';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
+import { MessageInstance } from 'antd/es/message/interface';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
@@ -18,9 +19,17 @@ export interface EnhancedChatProps {
   onClose: () => void;
   room: Room;
   sendFileConfirm: (onOk: () => Promise<void>) => void;
+  messageApi: MessageInstance;
 }
 
-export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: EnhancedChatProps) {
+export function EnhancedChat({
+  open,
+  setOpen,
+  onClose,
+  room,
+  sendFileConfirm,
+  messageApi,
+}: EnhancedChatProps) {
   const { t } = useI18n();
   const ulRef = React.useRef<HTMLUListElement>(null);
   const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
@@ -36,6 +45,7 @@ export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: 
 
     socket.on('chat_file_response', (msg: ChatMsgItem) => {
       if (msg.roomName == room.name) {
+        console.warn('chat_file_response', msg);
         setMessages((prev) => [...prev, msg]);
       }
     });
@@ -102,6 +112,10 @@ export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: 
           reader.readAsArrayBuffer(file);
         }
       } catch (e) {
+        messageApi.error({
+          content: `${t('msg.error.file.upload')}: ${e}`,
+          duration: 1,
+        });
         console.error('Error reading file:', e);
       }
     });
@@ -119,10 +133,6 @@ export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: 
     scrollToBottom();
   }, [messages]);
 
-  const sendFile = async (file: FileType) => {
-    // 使用socket发送文件, todo
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -136,6 +146,26 @@ export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: 
       return localParticipant.identity === identity;
     } else {
       return false;
+    }
+  };
+
+  const is_img = (type: string) => {
+    return type.startsWith('image/');
+  };
+
+  const downloadFile = async (url?: string) => {
+    if (url) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = url.split('/').pop() || 'file';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      messageApi.error({
+        content: t('msg.error.file.download'),
+        duration: 1,
+      });
     }
   };
 
@@ -162,13 +192,45 @@ export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: 
                     {msg.type === 'text' ? (
                       <p className={styles.msg_item_content_msg}>{msg.message}</p>
                     ) : (
-                      msg.file && (
-                        <p className={styles.msg_item_content_msg}>
-                          <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
-                            📎 {msg.file.name} ({Math.round(msg.file.size / 1024)}KB)
-                          </a>
-                        </p>
-                      )
+                      <Popover
+                        placement="right"
+                        style={{ background: '#1E1E1E' }}
+                        content={
+                          <Button
+                            shape="circle"
+                            type="text"
+                            onClick={() => downloadFile(msg?.file?.url)}
+                          >
+                            <SvgResource type="download" svgSize={16} color="#22CCEE"></SvgResource>
+                          </Button>
+                        }
+                      >
+                        {msg.file && (
+                          <p className={styles.msg_item_content_msg}>
+                            {is_img(msg.file.type) ? (
+                              <Image
+                                src={msg.file.url}
+                                height={42}
+                                fallback={pictureCallback}
+                              ></Image>
+                            ) : (
+                              <div className={styles.msg_item_content_msg_file}>
+                                <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
+                                  <SvgResource
+                                    type="file"
+                                    color="#22CCEE"
+                                    svgSize={42}
+                                  ></SvgResource>
+                                </a>
+                                <div className={styles.msg_item_content_msg_file_info}>
+                                  <h4>{msg.file.name}</h4>
+                                  <p>{Math.round(msg.file.size / 1024)}KB</p>
+                                </div>
+                              </div>
+                            )}
+                          </p>
+                        )}
+                      </Popover>
                     )}
                   </div>
                 </div>
@@ -183,13 +245,45 @@ export function EnhancedChat({ open, setOpen, onClose, room, sendFileConfirm }: 
                     {msg.type === 'text' ? (
                       <p className={styles.msg_item_content_msg}>{msg.message}</p>
                     ) : (
-                      msg.file && (
-                        <p className={styles.msg_item_content_msg}>
-                          <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
-                            📎 {msg.file.name} ({Math.round(msg.file.size / 1024)}KB)
-                          </a>
-                        </p>
-                      )
+                      <Popover
+                        placement="right"
+                        style={{ background: '#1E1E1E' }}
+                        content={
+                          <Button
+                            shape="circle"
+                            type="text"
+                            onClick={() => downloadFile(msg?.file?.url)}
+                          >
+                            <SvgResource type="download" svgSize={16} color="#22CCEE"></SvgResource>
+                          </Button>
+                        }
+                      >
+                        {msg.file && (
+                          <p className={styles.msg_item_content_msg}>
+                            {is_img(msg.file.type) ? (
+                              <Image
+                                src={msg.file.url}
+                                height={42}
+                                fallback={pictureCallback}
+                              ></Image>
+                            ) : (
+                              <div className={styles.msg_item_content_msg_file}>
+                                <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
+                                  <SvgResource
+                                    type="file"
+                                    color="#22CCEE"
+                                    svgSize={42}
+                                  ></SvgResource>
+                                </a>
+                                <div className={styles.msg_item_content_msg_file_info}>
+                                  <h4>{msg.file.name}</h4>
+                                  <p>{Math.round(msg.file.size / 1024)}KB</p>
+                                </div>
+                              </div>
+                            )}
+                          </p>
+                        )}
+                      </Popover>
                     )}
                   </div>
                 </div>

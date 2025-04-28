@@ -60,6 +60,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     ref,
   ) => {
     const room = useMaybeRoomContext();
+    const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [device, setDevice] = useRecoilState(userState);
     const controlsRef = React.useRef<ControlBarExport>(null);
@@ -92,13 +93,16 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         // setSettings(newSettings);
       };
 
-      syncSettings();
+      if (init) {
+        syncSettings();
+        setInit(false);
+      }
 
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
       socket.on(
         'wave_response',
-        (msg: { senderId: string; senderName: string; receiverId: string }) => {
-          if (msg.receiverId === room.localParticipant.identity) {
+        (msg: { senderId: string; senderName: string; receiverId: string; room: string }) => {
+          if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
             waveAudioRef.current?.play();
             noteApi.info({
               message: `${msg.senderName} ${t('common.wave_msg')}`,
@@ -116,6 +120,17 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       // 房间事件监听器 --------------------------------------------------------------------------------
       const onParticipantConnected = async (participant: Participant) => {
         await fetchSettings();
+      };
+      const onParticipantDisConnected = async (participant: Participant) => {
+        socket.emit('mouse_remove', {
+          room: room.name,
+          senderName: participant.name || participant.identity,
+          senderId: participant.identity,
+          receiverId: '',
+          receSocketId: '',
+        });
+        // do clearSettings but use leave participant
+        await clearSettings(participant.identity);
       };
       // 监听远程参与者连接事件 --------------------------------------------------------------------------
       room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
@@ -148,7 +163,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
 
       room.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
-
+      room.on(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       return () => {
         socket.off('wave_response');
         socket.off('user_status_updated');
@@ -156,8 +171,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('mouse_remove_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
+        room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, device]);
+    }, [room?.state, room?.localParticipant, device, init]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
@@ -247,7 +263,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     // [user status] ------------------------------------------------------------------------------------------
     const setUserStatus = async (status: UserStatus) => {
       let newStatus = {
-        status: status,
+        status,
       };
       switch (status) {
         case UserStatus.Online: {
@@ -330,6 +346,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 <div className="lk-grid-layout-wrapper">
                   <GridLayout tracks={tracks}>
                     <ParticipantItem
+                      room={room?.name}
                       settings={settings}
                       toSettings={toSettingGeneral}
                       messageApi={messageApi}
@@ -342,6 +359,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   <FocusLayoutContainer>
                     <CarouselLayout tracks={carouselTracks}>
                       <ParticipantItem
+                        room={room?.name}
                         settings={settings}
                         messageApi={messageApi}
                         setUserStatus={setUserStatus}
@@ -349,6 +367,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                     </CarouselLayout>
                     {focusTrack && (
                       <ParticipantItem
+                        room={room?.name}
                         setUserStatus={setUserStatus}
                         settings={settings}
                         trackRef={focusTrack}

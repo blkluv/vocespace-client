@@ -60,6 +60,11 @@ export const roomIdTmpState = atom({
   default: '',
 });
 
+export const virtualMaskState = atom({
+  key: 'virtualMaskState',
+  default: false
+});
+
 const CONN_DETAILS_ENDPOINT = connect_endpoint(
   process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details',
 );
@@ -216,6 +221,7 @@ function VideoConferenceComponent(props: {
   const router = useRouter();
   const handleOnLeave = React.useCallback(async () => {
     socket.emit('mouse_remove', {
+      room: room.name,
       senderName: room.localParticipant.name || room.localParticipant.identity,
       senderId: room.localParticipant.identity,
       receiverId: '',
