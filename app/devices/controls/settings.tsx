@@ -12,6 +12,8 @@ import { LangSelect } from './lang_select';
 import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
 import { src, UserStatus } from '@/lib/std';
 import { StatusSelect } from './status_select';
+import { useRecoilState } from 'recoil';
+import { virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 
 export interface SettingsProps {
   microphone: {
@@ -46,7 +48,7 @@ export interface SettingsExports {
   removeVideo: () => void;
 }
 
-export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'virtual' | 'about_us';
+export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'about_us';
 
 export const Settings = forwardRef<SettingsExports, SettingsProps>(
   (
@@ -174,25 +176,22 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 }}
               />
             </div>
+            <div className={styles.setting_box}>
+              <div style={{marginBottom: "6px"}}>{t('settings.virtual.title')}:</div>
+              <VirtualSettings
+                ref={virtualSettingsRef}
+                messageApi={messageApi}
+                modelRole={modelRole}
+                setModelRole={setModelRole}
+                modelBg={modelBg}
+                setModelBg={setModelBg}
+                enabled={enabled}
+                setEnabled={setEnabled}
+                compare={compare}
+                setCompare={setCompare}
+              ></VirtualSettings>
+            </div>
           </div>
-        ),
-      },
-      {
-        key: 'virtual',
-        label: <TabItem type="user" label={t('settings.virtual.title')}></TabItem>,
-        children: (
-          <VirtualSettings
-            ref={virtualSettingsRef}
-            messageApi={messageApi}
-            modelRole={modelRole}
-            setModelRole={setModelRole}
-            modelBg={modelBg}
-            setModelBg={setModelBg}
-            enabled={enabled}
-            setEnabled={setEnabled}
-            compare={compare}
-            setCompare={setCompare}
-          ></VirtualSettings>
         ),
       },
       {
@@ -375,6 +374,8 @@ export const VirtualSettings = forwardRef<
       },
     ];
 
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
+
     const items: TabsProps['items'] = [
       {
         key: 'model',
@@ -396,6 +397,8 @@ export const VirtualSettings = forwardRef<
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
                       if (compare && item.name != ModelRole.None) {
+                        // 这里需要将外部视频进行遮罩
+                        setVirtualMask(true);
                         setCompare(false);
                         setTimeout(() => {
                           setCompare(true);
@@ -526,12 +529,12 @@ export const VirtualSettings = forwardRef<
           {compare && modelRole != ModelRole.None && (
             <div className={styles.virtual_video_box_canvas}>
               <VirtualRoleCanvas
-                video_ele={videoRef}
                 model_bg={modelBg}
                 model_role={modelRole}
                 enabled={compare}
                 messageApi={messageApi}
                 isLocal={true}
+                isReplace={false}
               ></VirtualRoleCanvas>
             </div>
           )}

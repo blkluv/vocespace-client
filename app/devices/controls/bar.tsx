@@ -21,7 +21,7 @@ import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
-import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings } from '@/lib/hooks/room_settings';
 import { UserStatus } from '@/lib/std';
 import { EnhancedChat } from '@/app/pages/chat/chat';
@@ -171,6 +171,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [volume, setVolume] = React.useState(device.volume);
     const [videoBlur, setVideoBlur] = React.useState(device.blur);
     const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const closeSetting = () => {
       setCompare(false);
       if (modelRole !== ModelRole.None) {
@@ -181,46 +182,16 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       if (settingsRef.current) {
         settingsRef.current.removeVideo();
       }
+      setVirtualMask(false);
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
     React.useEffect(() => {
       setDevice({
         ...device,
         virtualRole: {
-          ...device.virtualRole,
-          bg: modelBg,
-        },
-      });
-      if (virtualEnabled) {
-        setVirtualEnabled(false);
-        setTimeout(() => {
-          setVirtualEnabled(true);
-        }, 100);
-      }
-    }, [modelBg]);
-
-    React.useEffect(() => {
-      setDevice({
-        ...device,
-        virtualRole: {
-          ...device.virtualRole,
-          role: modelRole,
-        },
-      });
-      if (virtualEnabled) {
-        setVirtualEnabled(false);
-        setTimeout(() => {
-          setVirtualEnabled(true);
-        }, 100);
-      }
-    }, [modelRole]);
-
-    React.useEffect(() => {
-      setDevice({
-        ...device,
-        virtualRole: {
-          ...device.virtualRole,
           enabled: virtualEnabled,
+          role: modelRole,
+          bg: modelBg,
         },
       });
       // 更新设置
@@ -233,8 +204,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       }).then(() => {
         socket.emit('update_user_status');
       });
-    }, [virtualEnabled]);
+    }, [virtualEnabled, modelRole, modelBg]);
     const saveChanges = async (key: TabKey) => {
+      let update;
       switch (key) {
         case 'general': {
           const new_name = settingsRef.current?.username;
@@ -244,6 +216,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               try {
                 await room.localParticipant?.setMetadata(JSON.stringify({ name: new_name }));
                 await room.localParticipant.setName(new_name);
+                update = {
+                  name: new_name,
+                };
                 messageApi.success(t('msg.success.user.username.change'));
               } catch (error) {
                 messageApi.error(t('msg.error.user.username.change'));
@@ -254,27 +229,27 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         }
         case 'audio': {
           setDevice({ ...device, volume });
-          await updateSettings({
+          update = {
             volume,
-          });
-
+          };
           break;
         }
         case 'video': {
           setDevice({ ...device, blur: videoBlur });
-          await updateSettings({
+          update = {
             blur: videoBlur,
-          });
+          };
           break;
         }
         case 'screen': {
-          setDevice({ ...device, screenBlur: screenBlur });
-          await updateSettings({
-            screenBlur: screenBlur,
-          });
+          setDevice({ ...device, screenBlur });
+          update = {
+            screenBlur,
+          };
           break;
         }
       }
+      await updateSettings({ ...update });
       // 通知socket，进行状态的更新
       socket.emit('update_user_status');
     };
@@ -457,6 +432,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <SettingToggle
             enabled={settingVis}
             onClicked={() => {
+              // setVirtualEnabled(false);
               setSettingVis(true);
             }}
           ></SettingToggle>
@@ -470,6 +446,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         {/* <StartMediaButton /> */}
         {room && (
           <EnhancedChat
+            messageApi={messageApi}
             open={chatOpen}
             setOpen={setChatOpen}
             onClose={onChatClose}
