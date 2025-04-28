@@ -1,7 +1,6 @@
 - [x] 服务器落地页更新脚本
 - [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
-- [ ] 聊天，文件传输
-
+- [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 
 - [x] 用户状态使用用户id隔离 (服务器)
 - [x] wave hand该用服务器通信
@@ -32,26 +31,50 @@
 - [x] 声音改为用户输入声音音量
 - [x] 进入房间i18n修改
 
+- [x] 鼠标离开去除
+- [x] 默认prejoin页面聚焦用户名输入框
+- [x] 虚拟形象层级低于触发层
+- [x] 用户状态处理
+- [x] PreJoin骨架屏
+- [x] tradition，去除Screen Share模糊度
+- [x] 用户鼠标颜色
+- [x] 多个人开启虚拟形象之后，上一个人的会消失
 
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-WebGL warning: bindTexture: `tex` is from a different (or lost) WebGL context.
-WebGL warning: bindBuffer: `buffer` is from a different (or lost) WebGL context. 3
-After reporting 32, no further warnings will be reported for this WebGL context.
-WebGL warning: drawElementsInstanced: Index buffer not bound. 32
-After reporting 32, no further warnings will be reported for this WebGL context.
-Failed to loadMotionSync(). Use default fallback. 2 stream.es.js:147
-virtualEnabled false bar.tsx:210:14
-WebGL context was lost.
+- [x] 用户状态同步失败
+- [x] 鼠标移除，用户10s超时移除
+- [x] 设置音量绑定失效
+- [x] 退出设置后关闭视频获取
+- [x] 限制虚拟形象对比
+- [x] 本地模糊 (webGL)
+
+- [x] css虚化
+- [x] 虚拟形象暂停追踪(该用动画)
+- [x] 服务器room数据接口 http://localhost:3000/chat/api/room-settings?all="true"
+- [x] 搜索时www.会加上 (在DNS设置中，添加一个CNAME记录，将www.vocespace.com指向vocespace.com)
+
+--- 0.1.4
+
+- [x] 客户端性能检测
+- [x] 服务端性能检测
+- [x] 聊天传输文件
+  - [x] 重写Chat组件
+  - [x] socket传输
+
+- [ ] 用户自定义状态，提供其他用户被选，其他用户只有可读，不可写 (socket)
+- [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
+- [x] 离开按钮移动到最右边
+- [x] 状态图标没有正确修改 (设置时正常的，状态没有同步)
+- [x] 虚拟形象是否可以去除视频 (实际是不行的，因为虚拟视频的流替换需要原始视频流持续流入)
+- [x] 名字修改后没有同步到组件上
+- [ ] chunk文件过期
+- [ ] 测试服务器瓶颈
+
+--- 
+
+- [x] 切换布局或开启摄像头时有一瞬间清晰 ❗️
+- [x] Blur布局切换时异常 ❗️
+- [x] 模型在切换背景后消失 ❗️
+- [x] 虚拟形象设置和视频合并 ❗️
+- [x] 房间区分
+- [x] API用户下线清理
+- [x] 完善chat-file

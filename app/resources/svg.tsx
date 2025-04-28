@@ -15,9 +15,9 @@ export type SvgType =
   | 'user_lk'
   | 'logo'
   | 'online_dot'
-  | 'offline_dot'
+  | 'leisure_dot'
   | 'busy_dot'
-  | 'away_dot'
+  | 'offline_dot'
   | 'model'
   | 'bg'
   | 'check'
@@ -25,7 +25,12 @@ export type SvgType =
   | 'modify'
   | 'volume'
   | 'lang'
-  | 'switch';
+  | 'switch'
+  | 'file_upload'
+  | 'chat'
+  | 'add'
+  | 'file'
+  | 'download';
 
 export interface SvgResourceProps {
   type: SvgType;
@@ -387,7 +392,7 @@ export function SvgResource({ type, svgSize = 24, color = '#ffffff' }: SvgResour
           ></path>
         </svg>
       );
-    case 'away_dot':
+    case 'leisure_dot':
       return (
         <svg
           viewBox="0 0 1024 1024"
@@ -579,5 +584,124 @@ export function SvgResource({ type, svgSize = 24, color = '#ffffff' }: SvgResour
           ></path>
         </svg>
       );
+    case 'file_upload':
+      return (
+        <svg
+          viewBox="0 0 1024 1024"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          p-id="6118"
+          width={svgSize}
+          height={svgSize}
+        >
+          <path
+            d="M321.6 346.5h381c21.4 0 39-17.5 39-39 0-21.4-17.5-39-39-39h-381c-21.4 0-39 17.5-39 39 0 21.4 17.5 39 39 39zM282.6 488.5c0 21.4 17.5 39 39 39H606c21.4 0 39-17.5 39-39 0-21.4-17.5-39-39-39H321.6c-21.5 0-39 17.5-39 39z"
+            p-id="6119"
+            fill={color}
+          ></path>
+          <path
+            d="M908.5 113.9c0-27.6-22.4-50-50-50H166.8c-27.6 0-50 22.4-50 50v794.7c0 27.6 22.4 50 50 50h307.3c20.8-0.3 37.5-17.2 37.5-38s-16.7-37.7-37.5-38H192.8V139.9h639.7v400.8c0 21 17 38 38 38s38-17 38-38V113.9z"
+            p-id="6120"
+            fill={color}
+          ></path>
+          <path
+            d="M767.2 598.9c-15.8-15.8-41.8-15.8-57.6 0l-95.9 95.9c-15.9 15.9-15.9 41.8 0 57.6 15.8 15.8 41.8 15.8 57.6 0l26.3-26.3v188.1c0 22.4 18.3 40.7 40.7 40.7 22.4 0 40.7-18.3 40.7-40.7V726.1l26.3 26.3c15.8 15.8 41.8 15.8 57.6 0 15.8-15.8 15.8-41.8 0-57.6l-95.7-95.9z"
+            p-id="6121"
+            fill={color}
+          ></path>
+        </svg>
+      );
+    case 'chat':
+      return (
+        <svg
+          viewBox="0 0 1024 1024"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          p-id="3605"
+          width={svgSize}
+          height={svgSize}
+        >
+          <path
+            d="M240.83692308 809.34837607c-17.95719658 0-36.13866667-14.11500854-36.13866667-41.09128205V646.29825641h-53.29176069c-28.89299146 0-52.39576069-23.50276923-52.39576067-52.39466667V185.96102564c0-28.89189744 23.50386325-52.39466667 52.39576067-52.39466667H717.20478633c28.89299146 0 52.39576069 23.50276923 52.39576068 52.39466667v407.9425641c0 28.89189744-23.50386325 52.39466667-52.39576068 52.39466667h-275.38598291c-5.82454701 0-17.28547008 4.55439316-21.51931624 8.54755556L270.21565812 796.51008547c-11.24649572 10.61524787-22.18119658 12.83829059-29.37873504 12.8382906z m-84.66926496-220.21141881h53.29176068c28.89189744 0 52.39466667 23.50276923 52.39466667 52.39466667v84.26119658l119.20847863-112.51418803c14.82064957-13.98700854 40.37470085-24.14823931 60.75842736-24.14823932h270.61825641V190.72765812H156.16765812v398.40820513z"
+            fill={color}
+            p-id="3606"
+          ></path>
+          <path
+            d="M786.76348718 914.04362393c-10.05948718 0-20.35965812-4.29073505-29.2671453-12.49695726l-116.90666667-107.79241026c-4.3454359-4.01066667-16.03610256-8.576-21.95035897-8.576H497.00540171a28.58338462 28.58338462 0 1 1 0-57.16676923H618.64478633c20.27104274 0 45.80211966 9.97524787 60.70153846 23.71610256l86.46235897 79.71883761v-52.63097436c0-28.89189744 23.50386325-52.39466667 52.39576068-52.39466666h49.95829061V398.75719658H747.37558974a28.58338462 28.58338462 0 0 1 0-57.16786325h125.55377778c28.89299146 0 52.39576069 23.50386325 52.39576069 52.39576069v337.1968547c0 28.89189744-23.50386325 52.39466667-52.39576069 52.39466666h-49.9582906v89.27507693c0 17.85107692-8.31781197 32.15097436-22.25449572 38.25777777a34.40355556 34.40355556 0 0 1-13.95309402 2.93415385z"
+            fill={color}
+            p-id="3607"
+          ></path>
+        </svg>
+      );
+    case 'add':
+      return (
+        <svg
+          width={svgSize}
+          height={svgSize}
+          viewBox="0 0 48 48"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z"
+            fill="none"
+            stroke={color}
+            strokeWidth="4"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M24 16V32"
+            stroke={color}
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M16 24L32 24"
+            stroke={color}
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 'file':
+      return (
+        <svg
+          viewBox="0 0 1024 1024"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          p-id="3821"
+          width={svgSize}
+          height={svgSize}
+        >
+          <path
+            d="M842.24 312.746667l-189.44-213.333334a42.666667 42.666667 0 0 0-31.573333-14.08h-341.333334A107.946667 107.946667 0 0 0 170.666667 192v640A107.946667 107.946667 0 0 0 279.893333 938.666667h464.213334A107.946667 107.946667 0 0 0 853.333333 832V341.333333a42.666667 42.666667 0 0 0-11.093333-28.586666zM597.333333 170.666667l159.573334 170.666666h-128a33.706667 33.706667 0 0 1-31.573334-36.266666z"
+            p-id="3822"
+            fill={color}
+          ></path>
+        </svg>
+      );
+
+    case 'download':
+      return (
+        <svg
+          viewBox="0 0 1024 1024"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
+          p-id="4821"
+          width={svgSize}
+          height={svgSize}
+        >
+          <path
+            d="M1024 640.192C1024 782.912 919.872 896 787.648 896h-512C123.904 896 0 761.6 0 597.504 0 451.968 94.656 331.52 226.432 302.976 284.16 195.456 391.808 128 512 128c152.32 0 282.112 108.416 323.392 261.12C941.888 413.44 1024 519.04 1024 640.192zM341.312 570.176L512 756.48l170.688-186.24H341.312z m213.376 0v-256H469.312v256h85.376z"
+            fill={color}
+            p-id="4822"
+          ></path>
+        </svg>
+      );
   }
 }
+
+export const pictureCallback =
+  'data:image/png;base64,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';

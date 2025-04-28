@@ -1,7 +1,6 @@
 import { useI18n } from '@/lib/i18n/i18n';
 import {
   ChatIcon,
-  ChatToggle,
   DisconnectButton,
   LeaveIcon,
   MediaDeviceMenu,
@@ -13,7 +12,7 @@ import {
   usePersistentUserChoices,
   useTrackVolume,
 } from '@livekit/components-react';
-import { Button, Drawer, message } from 'antd';
+import { Button, Drawer, message, Modal } from 'antd';
 import { Track } from 'livekit-client';
 import * as React from 'react';
 import { SettingToggle } from './setting_toggle';
@@ -22,9 +21,11 @@ import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
-import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings } from '@/lib/hooks/room_settings';
 import { UserStatus } from '@/lib/std';
+import { EnhancedChat } from '@/app/pages/chat/chat';
+import { ChatToggle } from './chat_toggle';
 
 /** @public */
 export type ControlBarControls = {
@@ -159,7 +160,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
 
     // settings ------------------------------------------------------------------------------------------
     const room = useMaybeRoomContext();
-
     const [key, setKey] = React.useState<TabKey>('general');
     const [virtualEnabled, setVirtualEnabled] = React.useState(false);
     const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.None);
@@ -171,6 +171,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [volume, setVolume] = React.useState(device.volume);
     const [videoBlur, setVideoBlur] = React.useState(device.blur);
     const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const closeSetting = () => {
       setCompare(false);
       if (modelRole !== ModelRole.None) {
@@ -178,56 +179,34 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       } else {
         setVirtualEnabled(false);
       }
+      if (settingsRef.current) {
+        settingsRef.current.removeVideo();
+      }
+      setVirtualMask(false);
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
     React.useEffect(() => {
       setDevice({
         ...device,
         virtualRole: {
-          ...device.virtualRole,
-          bg: modelBg,
-        },
-      });
-      if (virtualEnabled) {
-        setVirtualEnabled(false);
-        setTimeout(() => {
-          setVirtualEnabled(true);
-        }, 100);
-      }
-    }, [modelBg]);
-
-    React.useEffect(() => {
-      setDevice({
-        ...device,
-        virtualRole: {
-          ...device.virtualRole,
-          role: modelRole,
-        },
-      });
-      if (virtualEnabled) {
-        setVirtualEnabled(false);
-        setTimeout(() => {
-          setVirtualEnabled(true);
-        }, 100);
-      }
-    }, [modelRole]);
-
-    React.useEffect(() => {
-      setDevice({
-        ...device,
-        virtualRole: {
-          ...device.virtualRole,
           enabled: virtualEnabled,
+          role: modelRole,
+          bg: modelBg,
         },
       });
       // 更新设置
       updateSettings({
-        virtual: virtualEnabled,
+        virtual: {
+          enabled: virtualEnabled,
+          role: modelRole,
+          bg: modelBg,
+        },
       }).then(() => {
         socket.emit('update_user_status');
       });
-    }, [virtualEnabled]);
+    }, [virtualEnabled, modelRole, modelBg]);
     const saveChanges = async (key: TabKey) => {
+      let update;
       switch (key) {
         case 'general': {
           const new_name = settingsRef.current?.username;
@@ -237,6 +216,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               try {
                 await room.localParticipant?.setMetadata(JSON.stringify({ name: new_name }));
                 await room.localParticipant.setName(new_name);
+                update = {
+                  name: new_name,
+                };
                 messageApi.success(t('msg.success.user.username.change'));
               } catch (error) {
                 messageApi.error(t('msg.error.user.username.change'));
@@ -247,27 +229,27 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         }
         case 'audio': {
           setDevice({ ...device, volume });
-          await updateSettings({
+          update = {
             volume,
-          });
-
+          };
           break;
         }
         case 'video': {
           setDevice({ ...device, blur: videoBlur });
-          await updateSettings({
+          update = {
             blur: videoBlur,
-          });
+          };
           break;
         }
         case 'screen': {
-          setDevice({ ...device, screenBlur: screenBlur });
-          await updateSettings({
-            screenBlur: screenBlur,
-          });
+          setDevice({ ...device, screenBlur });
+          update = {
+            screenBlur,
+          };
           break;
         }
       }
+      await updateSettings({ ...update });
       // 通知socket，进行状态的更新
       socket.emit('update_user_status');
     };
@@ -286,86 +268,192 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     );
 
     const setUserStatus = async (status: UserStatus) => {
-      await updateSettings({
-        status,
-      });
+      let newStatus = {
+        status: status,
+      };
+      switch (status) {
+        case UserStatus.Online: {
+          if (room) {
+            room.localParticipant.setMicrophoneEnabled(true);
+            room.localParticipant.setCameraEnabled(true);
+            room.localParticipant.setScreenShareEnabled(false);
+            if (volume == 0) {
+              const newVolume = 80;
+              setVolume(newVolume);
+              // 确保设备状态同步更新
+              setDevice((prev) => ({
+                ...prev,
+                volume: newVolume,
+              }));
+              Object.assign(newStatus, { volume: newVolume });
+            }
+          }
+          break;
+        }
+        case UserStatus.Leisure: {
+          setVideoBlur(0.15);
+          setScreenBlur(0.15);
+          setDevice((prev) => ({
+            ...prev,
+            blur: 0.15,
+            screenBlur: 0.15,
+          }));
+          Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15 });
+          break;
+        }
+        case UserStatus.Busy: {
+          setVideoBlur(0.15);
+          setScreenBlur(0.15);
+          setVolume(0);
+          setVirtualEnabled(false);
+          setModelRole(ModelRole.None);
+          setModelBg(ModelBg.ClassRoom);
+          setDevice((prev) => ({
+            ...prev,
+            blur: 0.15,
+            screenBlur: 0.15,
+            volume: 0,
+            virtualRole: {
+              ...prev.virtualRole,
+              enabled: false,
+              bg: ModelBg.ClassRoom,
+              role: ModelRole.None,
+            },
+          }));
+
+          Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15, volume: 0 });
+          break;
+        }
+        case UserStatus.Offline: {
+          if (room) {
+            room.localParticipant.setMicrophoneEnabled(false);
+            room.localParticipant.setCameraEnabled(false);
+            room.localParticipant.setScreenShareEnabled(false);
+            setDevice((prev) => ({
+              ...prev,
+              virtualRole: {
+                ...prev.virtualRole,
+                enabled: false,
+                bg: ModelBg.ClassRoom,
+                role: ModelRole.None,
+              },
+            }));
+          }
+          break;
+        }
+      }
+
+      await updateSettings(newStatus);
       // 通知socket，进行状态的更新
       socket.emit('update_user_status');
     };
 
+    // [chat] -----------------------------------------------------------------------------------------------------
+    const [chatOpen, setChatOpen] = React.useState(false);
+    const onChatClose = () => {
+      setChatOpen(false);
+    };
+    const sendFileConfirm = (onOk: () => Promise<void>) => {
+      Modal.confirm({
+        title: t('common.send'),
+        content: t('common.send_file_or'),
+        onOk,
+      });
+    };
+
     return (
-      <div {...htmlProps}>
+      <div {...htmlProps} className={styles.controls}>
         {contextHolder}
-        {visibleControls.microphone && (
-          <div className="lk-button-group">
-            <TrackToggle
-              source={Track.Source.Microphone}
-              showIcon={showIcon}
-              onChange={microphoneOnChange}
-              onDeviceError={(error) => onDeviceError?.({ source: Track.Source.Microphone, error })}
-            >
-              {showText && t('common.device.microphone')}
-            </TrackToggle>
-            <div className="lk-button-group-menu">
-              <MediaDeviceMenu
-                kind="audioinput"
-                onActiveDeviceChange={(_kind, deviceId) =>
-                  saveAudioInputDeviceId(deviceId ?? 'default')
+        <div className={styles.controls_left}>
+          {visibleControls.microphone && (
+            <div className="lk-button-group">
+              <TrackToggle
+                source={Track.Source.Microphone}
+                showIcon={showIcon}
+                onChange={microphoneOnChange}
+                onDeviceError={(error) =>
+                  onDeviceError?.({ source: Track.Source.Microphone, error })
                 }
-              />
+              >
+                {showText && t('common.device.microphone')}
+              </TrackToggle>
+              <div className="lk-button-group-menu">
+                <MediaDeviceMenu
+                  kind="audioinput"
+                  onActiveDeviceChange={(_kind, deviceId) =>
+                    saveAudioInputDeviceId(deviceId ?? 'default')
+                  }
+                />
+              </div>
             </div>
-          </div>
-        )}
-        {visibleControls.camera && (
-          <div className="lk-button-group">
+          )}
+          {visibleControls.camera && (
+            <div className="lk-button-group">
+              <TrackToggle
+                source={Track.Source.Camera}
+                showIcon={showIcon}
+                onChange={cameraOnChange}
+                onDeviceError={(error) => onDeviceError?.({ source: Track.Source.Camera, error })}
+              >
+                {showText && t('common.device.camera')}
+              </TrackToggle>
+              <div className="lk-button-group-menu">
+                <MediaDeviceMenu
+                  kind="videoinput"
+                  onActiveDeviceChange={(_kind, deviceId) =>
+                    saveVideoInputDeviceId(deviceId ?? 'default')
+                  }
+                />
+              </div>
+            </div>
+          )}
+          {visibleControls.screenShare && browserSupportsScreenSharing && (
             <TrackToggle
-              source={Track.Source.Camera}
+              source={Track.Source.ScreenShare}
+              captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
               showIcon={showIcon}
-              onChange={cameraOnChange}
-              onDeviceError={(error) => onDeviceError?.({ source: Track.Source.Camera, error })}
+              onChange={onScreenShareChange}
+              onDeviceError={(error) =>
+                onDeviceError?.({ source: Track.Source.ScreenShare, error })
+              }
             >
-              {showText && t('common.device.camera')}
+              {showText &&
+                (isScreenShareEnabled ? t('common.stop_share') : t('common.share_screen'))}
             </TrackToggle>
-            <div className="lk-button-group-menu">
-              <MediaDeviceMenu
-                kind="videoinput"
-                onActiveDeviceChange={(_kind, deviceId) =>
-                  saveVideoInputDeviceId(deviceId ?? 'default')
-                }
-              />
-            </div>
-          </div>
-        )}
-        {visibleControls.screenShare && browserSupportsScreenSharing && (
-          <TrackToggle
-            source={Track.Source.ScreenShare}
-            captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
-            showIcon={showIcon}
-            onChange={onScreenShareChange}
-            onDeviceError={(error) => onDeviceError?.({ source: Track.Source.ScreenShare, error })}
-          >
-            {showText && (isScreenShareEnabled ? t('common.stop_share') : t('common.share_screen'))}
-          </TrackToggle>
-        )}
-        {visibleControls.chat && (
-          <ChatToggle>
-            {showIcon && <ChatIcon />}
-            {showText && t('common.chat')}
-          </ChatToggle>
-        )}
-        <SettingToggle
-          enabled={settingVis}
-          onClicked={() => {
-            setSettingVis(true);
-          }}
-        ></SettingToggle>
+          )}
+          {visibleControls.chat && (
+            <ChatToggle
+              enabled={chatOpen}
+              onClicked={() => {
+                setChatOpen(!chatOpen);
+              }}
+            ></ChatToggle>
+          )}
+          <SettingToggle
+            enabled={settingVis}
+            onClicked={() => {
+              // setVirtualEnabled(false);
+              setSettingVis(true);
+            }}
+          ></SettingToggle>
+        </div>
         {visibleControls.leave && (
           <DisconnectButton>
             {showIcon && <LeaveIcon />}
             {showText && t('common.leave')}
           </DisconnectButton>
         )}
-        <StartMediaButton />
+        {/* <StartMediaButton /> */}
+        {room && (
+          <EnhancedChat
+            messageApi={messageApi}
+            open={chatOpen}
+            setOpen={setChatOpen}
+            onClose={onChatClose}
+            room={room}
+            sendFileConfirm={sendFileConfirm}
+          ></EnhancedChat>
+        )}
         <Drawer
           style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
           title={t('common.setting')}
@@ -475,7 +563,11 @@ export function supportsScreenSharing(): boolean {
   );
 }
 
-const setting_drawer_header = ({ on_clicked }: { on_clicked: () => void }): React.ReactNode => {
+export const setting_drawer_header = ({
+  on_clicked,
+}: {
+  on_clicked: () => void;
+}): React.ReactNode => {
   return (
     <div>
       <Button type="text" shape="circle" onClick={on_clicked}>

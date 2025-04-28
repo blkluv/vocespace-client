@@ -14,12 +14,13 @@ import { loadVideo } from '@/lib/std/device';
 import { useI18n } from '@/lib/i18n/i18n';
 
 export const Live2DComponent = ({
-  video_ele: videoRef,
+  // video_ele: videoRef,
   model_bg,
   model_role,
   enabled,
   trackRef,
   messageApi,
+  isReplace,
 }: VirtualRoleProps) => {
   // [ref] --------------------------------------------------------------------------------------------------------------------
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,35 +69,35 @@ export const Live2DComponent = ({
     }
 
     // 清理PIXI应用
-    if (appRef.current) {
-      try {
-        // 移除所有子元素
-        if (appRef.current.stage) {
-          while (appRef.current.stage.children.length > 0) {
-            const child = appRef.current.stage.children[0];
-            appRef.current.stage.removeChild(child);
-            if (child instanceof PIXI.Sprite) {
-              child.destroy();
-            }
-          }
-        }
+    // if (appRef.current) {
+    //   try {
+    //     // 移除所有子元素
+    //     if (appRef.current.stage) {
+    //       while (appRef.current.stage.children.length > 0) {
+    //         const child = appRef.current.stage.children[0];
+    //         appRef.current.stage.removeChild(child);
+    //         if (child instanceof PIXI.Sprite) {
+    //           child.destroy();
+    //         }
+    //       }
+    //     }
 
-        // ticker
-        if (appRef.current.ticker) {
-          appRef.current.ticker.stop();
-          appRef.current.ticker.destroy();
-        }
+    //     // ticker
+    //     if (appRef.current.ticker) {
+    //       appRef.current.ticker.stop();
+    //       appRef.current.ticker.destroy();
+    //     }
 
-        appRef.current.destroy(true, {
-          children: true,
-          texture: true,
-          baseTexture: true,
-        });
-        appRef.current = null;
-      } catch (e) {
-        console.error('清理 PIXI 应用出错:', e);
-      }
-    }
+    //     appRef.current.destroy(true, {
+    //       children: true,
+    //       texture: true,
+    //       baseTexture: true,
+    //     });
+    //     appRef.current = null;
+    //   } catch (e) {
+    //     console.error('清理 PIXI 应用出错:', e);
+    //   }
+    // }
 
     if (modelRef.current) {
       try {
@@ -118,7 +119,7 @@ export const Live2DComponent = ({
       detectorReady: false,
     });
 
-    if (fakeVideoRef.current) {
+    if (fakeVideoRef.current && fakeVideoRef.current.srcObject && isReplace) {
       const stream = fakeVideoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
     }
@@ -257,7 +258,7 @@ export const Live2DComponent = ({
   };
 
   const setupVirtualCamera = async () => {
-    if (!isTrackReference(trackRef)) return;
+    if (!isTrackReference(trackRef) || !isReplace) return;
     if (trackRef.source !== Track.Source.Camera) return;
     if (trackRef.participant.identity !== localParticipant.identity) return;
     if (!canvasEle.current) return;
@@ -275,7 +276,7 @@ export const Live2DComponent = ({
       }
       const originalTrack = cameraPub.track;
       const virtualTrack = virtualStream.getVideoTracks()[0];
-      originalTrack.replaceTrack(virtualTrack);
+      await originalTrack.replaceTrack(virtualTrack);
 
       // await localParticipant.publishTrack(virtualTrack, {
       //   name:
@@ -309,103 +310,103 @@ export const Live2DComponent = ({
   };
 
   // 实现连续头部追踪的函数
-  const startFaceTracking = async () => {
-    // 防止重复启动
-    if (!enabled || cState.trackingActive || trackingRef.current !== null) return;
-    if (!videoRef.current) return;
-    let realVideoTrack = videoRef.current;
-    if (fakeVideoRef.current && trackRef) {
-      console.log('使用虚拟视频流进行追踪');
-      await loadVideo(fakeVideoRef);
-      realVideoTrack = fakeVideoRef.current;
-    }
+  // const startFaceTracking = async () => {
+  //   // 防止重复启动
+  //   if (!enabled || cState.trackingActive || trackingRef.current !== null) return;
+  //   if (!videoRef.current) return;
+  //   let realVideoTrack = videoRef.current;
+  //   if (fakeVideoRef.current && trackRef) {
+  //     console.log('使用虚拟视频流进行追踪');
+  //     await loadVideo(fakeVideoRef);
+  //     realVideoTrack = fakeVideoRef.current;
+  //   }
 
-    // 创建追踪函数
-    const track = async () => {
-      // 这里如果有trackRef则需要使用fakeVideoRef，因为真实的已经被替换了
-      if (!realVideoTrack || !modelRef.current || !enabled) {
-        cleanupTracking();
-        return;
-      }
-      const detection = await faceapi
-        .detectSingleFace(realVideoTrack, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks();
+  //   // 创建追踪函数
+  //   const track = async () => {
+  //     // 这里如果有trackRef则需要使用fakeVideoRef，因为真实的已经被替换了
+  //     if (!realVideoTrack || !modelRef.current || !enabled) {
+  //       cleanupTracking();
+  //       return;
+  //     }
+  //     const detection = await faceapi
+  //       .detectSingleFace(realVideoTrack, new faceapi.TinyFaceDetectorOptions())
+  //       .withFaceLandmarks();
   
-      // 限制检测频率，减少资源占用
-      const now = Date.now();
-      if (!lastDetectionAt || now - lastDetectionAt > 200) {
-        try {
-          if (detection) {
-            // setIsLoading(false);
-            if (!cState.trackingActive) {
-              setCState((prev) => ({
-                ...prev,
-                trackingActive: true,
-              }));
-            }
-            // 设置追踪状态
-            const landmarks = detection.landmarks;
-            const leftEye = landmarks.getLeftEye();
-            const rightEye = landmarks.getRightEye();
-            const nose = landmarks.getNose();
-            // 计算眼睛中心点 (取左右眼和鼻尖三点加权平均)
-            const leftEyeCenter = {
-              x: leftEye.reduce((sum, point) => sum + point.x, 0) / leftEye.length,
-              y: leftEye.reduce((sum, point) => sum + point.y, 0) / leftEye.length,
-            };
+  //     // 限制检测频率，减少资源占用
+  //     const now = Date.now();
+  //     if (!lastDetectionAt || now - lastDetectionAt > 200) {
+  //       try {
+  //         if (detection) {
+  //           // setIsLoading(false);
+  //           if (!cState.trackingActive) {
+  //             setCState((prev) => ({
+  //               ...prev,
+  //               trackingActive: true,
+  //             }));
+  //           }
+  //           // 设置追踪状态
+  //           const landmarks = detection.landmarks;
+  //           const leftEye = landmarks.getLeftEye();
+  //           const rightEye = landmarks.getRightEye();
+  //           const nose = landmarks.getNose();
+  //           // 计算眼睛中心点 (取左右眼和鼻尖三点加权平均)
+  //           const leftEyeCenter = {
+  //             x: leftEye.reduce((sum, point) => sum + point.x, 0) / leftEye.length,
+  //             y: leftEye.reduce((sum, point) => sum + point.y, 0) / leftEye.length,
+  //           };
 
-            const rightEyeCenter = {
-              x: rightEye.reduce((sum, point) => sum + point.x, 0) / rightEye.length,
-              y: rightEye.reduce((sum, point) => sum + point.y, 0) / rightEye.length,
-            };
+  //           const rightEyeCenter = {
+  //             x: rightEye.reduce((sum, point) => sum + point.x, 0) / rightEye.length,
+  //             y: rightEye.reduce((sum, point) => sum + point.y, 0) / rightEye.length,
+  //           };
 
-            const noseTip = nose[nose.length - 1];
+  //           const noseTip = nose[nose.length - 1];
 
-            // 计算加权中心点 (眼睛位置权重较高)
-            const centerX = leftEyeCenter.x * 0.35 + rightEyeCenter.x * 0.35 + noseTip.x * 0.3;
-            const centerY = leftEyeCenter.y * 0.4 + rightEyeCenter.y * 0.4 + noseTip.y * 0.2;
+  //           // 计算加权中心点 (眼睛位置权重较高)
+  //           const centerX = leftEyeCenter.x * 0.35 + rightEyeCenter.x * 0.35 + noseTip.x * 0.3;
+  //           const centerY = leftEyeCenter.y * 0.4 + rightEyeCenter.y * 0.4 + noseTip.y * 0.2;
 
-            // 归一化坐标 (-1 到 1 的范围)
-            const normalizedX = (centerX / videoRef!.current!.videoWidth) * 2 - 1;
-            const normalizedY = (centerY / videoRef!.current!.videoHeight) * 2 - 1;
+  //           // 归一化坐标 (-1 到 1 的范围)
+  //           const normalizedX = (centerX / videoRef!.current!.videoWidth) * 2 - 1;
+  //           const normalizedY = (centerY / videoRef!.current!.videoHeight) * 2 - 1;
 
-            // 将归一化坐标与ScreenSize结合转为真实坐标
-            let realX = (normalizedX * screenSize.width) / 2 + screenSize.width / 2;
-            let realY = (-normalizedY * screenSize.height) / 2 + screenSize.height / 2;
+  //           // 将归一化坐标与ScreenSize结合转为真实坐标
+  //           let realX = (normalizedX * screenSize.width) / 2 + screenSize.width / 2;
+  //           let realY = (-normalizedY * screenSize.height) / 2 + screenSize.height / 2;
 
-            // 添加平滑过渡
-            if (lastPosition) {
-              const smoothness = smoothnessFactorRef.current;
-              realX = lastPosition.x * (1 - smoothness) + realX * smoothness;
-              realY = lastPosition.y * (1 - smoothness) + realY * smoothness;
-            }
+  //           // 添加平滑过渡
+  //           if (lastPosition) {
+  //             const smoothness = smoothnessFactorRef.current;
+  //             realX = lastPosition.x * (1 - smoothness) + realX * smoothness;
+  //             realY = lastPosition.y * (1 - smoothness) + realY * smoothness;
+  //           }
 
-            // 保存当前位置用于下次平滑计算
-            setLastPosition({ x: realX, y: realY });
+  //           // 保存当前位置用于下次平滑计算
+  //           setLastPosition({ x: realX, y: realY });
 
-            // 添加轻微的自然偏移来模拟人眼微动
-            const microMovementX = Math.sin(Date.now() / 2000) * 5;
-            const microMovementY = Math.cos(Date.now() / 2500) * 3;
-            console.log('微动:', realX + microMovementX, realY + microMovementY);
-            // 应用focus
-            modelRef.current.focus(realX + microMovementX, realY + microMovementY);
-          }
+  //           // 添加轻微的自然偏移来模拟人眼微动
+  //           const microMovementX = Math.sin(Date.now() / 2000) * 5;
+  //           const microMovementY = Math.cos(Date.now() / 2500) * 3;
+  //           console.log('微动:', realX + microMovementX, realY + microMovementY);
+  //           // 应用focus
+  //           modelRef.current.focus(realX + microMovementX, realY + microMovementY);
+  //         }
 
-          setLastDetectionAt(now);
-        } catch (e) {
-          console.error('人脸检测过程中出错:', e);
-        }
-      }
+  //         setLastDetectionAt(now);
+  //       } catch (e) {
+  //         console.error('人脸检测过程中出错:', e);
+  //       }
+  //     }
 
-      // 继续下一帧的追踪
-      if (enabled) {
-        trackingRef.current = requestAnimationFrame(track);
-      }
-    };
+  //     // 继续下一帧的追踪
+  //     if (enabled) {
+  //       trackingRef.current = requestAnimationFrame(track);
+  //     }
+  //   };
 
-    // 开始追踪循环
-    trackingRef.current = requestAnimationFrame(track);
-  };
+  //   // 开始追踪循环
+  //   trackingRef.current = requestAnimationFrame(track);
+  // };
 
   useEffect(() => {
     if (!enabled) {
@@ -461,6 +462,8 @@ export const Live2DComponent = ({
 
   // 添加一个新的 useEffect
   useEffect(() => {
+    if (!isReplace) return;
+
     const startVirtualCamera = async () => {
       if (trackRef) {
         // 设置虚拟摄像头
@@ -477,10 +480,10 @@ export const Live2DComponent = ({
       !cState.trackingActive
     ) {
       // console.log('屏幕尺寸已更新，开始追踪', screenSize);
-      startFaceTracking();
+      // startFaceTracking(); 暂时停用
       startVirtualCamera();
     }
-  }, [screenSize, enabled, cState.trackingActive]);
+  }, [screenSize, enabled, cState.trackingActive, isReplace]);
 
   //创建虚拟视频流
   const createVirtualCameraStream = async (canvasElement: HTMLCanvasElement) => {

@@ -1,17 +1,13 @@
 'use client';
 
-import { VideoContainer } from '@/app/devices/video_container';
+import { VideoContainer, VideoContainerExports } from '@/app/devices/video_container';
 import { decodePassphrase } from '@/lib/client-utils';
 import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from '@/lib/RecordingIndicator';
 import { SettingsMenu } from '@/lib/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
-import {
-  formatChatMessageLinks,
-  LiveKitRoom,
-  LocalUserChoices,
-} from '@livekit/components-react';
+import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
 import {
   ExternalE2EEKeyProvider,
@@ -32,6 +28,12 @@ import { atom, RecoilRoot, useRecoilState } from 'recoil';
 import { connect_endpoint, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_PATH
+  ? {
+      path: process.env.NEXT_PUBLIC_BASE_PATH,
+    }
+  : {};
 
 export const socket = io();
 
@@ -56,6 +58,11 @@ export const userState = atom({
 export const roomIdTmpState = atom({
   key: 'roomIdTmpState',
   default: '',
+});
+
+export const virtualMaskState = atom({
+  key: 'virtualMaskState',
+  default: false
 });
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint(
@@ -150,6 +157,7 @@ function VideoConferenceComponent(props: {
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const videoContainerRef = React.useRef<VideoContainerExports>(null);
   const roomOptions = React.useMemo((): RoomOptions => {
     let videoCodec: VideoCodec | undefined = props.options.codec ? props.options.codec : 'vp9';
     if (e2eeEnabled && (videoCodec === 'av1' || videoCodec === 'vp9')) {
@@ -211,10 +219,18 @@ function VideoConferenceComponent(props: {
   }, []);
 
   const router = useRouter();
-  const handleOnLeave = React.useCallback(() => {
-    room.unregisterRpcMethod('wave');
+  const handleOnLeave = React.useCallback(async () => {
+    socket.emit('mouse_remove', {
+      room: room.name,
+      senderName: room.localParticipant.name || room.localParticipant.identity,
+      senderId: room.localParticipant.identity,
+      receiverId: '',
+      receSocketId: '',
+    });
+    await videoContainerRef.current?.removeLocalSettings();
+    socket.disconnect();
     router.push('/');
-  }, [router]);
+  }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {
     console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
     if (error.name === 'ConnectionError') {
@@ -326,6 +342,7 @@ function VideoConferenceComponent(props: {
         onMediaDeviceFailure={handleMediaDeviceFailure}
       >
         <VideoContainer
+        ref={videoContainerRef}
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
           messageApi={messageApi}

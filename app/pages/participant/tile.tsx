@@ -22,10 +22,10 @@ import {
   VideoTrack,
 } from '@livekit/components-react';
 import { isRemoteTrack, Track } from 'livekit-client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
-import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
@@ -40,13 +40,22 @@ export interface ParticipantItemProps extends ParticipantTileProps {
   toSettings?: () => void;
   messageApi: MessageInstance;
   isFocus?: boolean;
+  room?: string;
 }
 
 export const ParticipantItem: (
   props: ParticipantItemProps & React.RefAttributes<HTMLDivElement>,
 ) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantItemProps>(
   function ParticipantItem(
-    { trackRef, settings, toSettings, messageApi, setUserStatus, isFocus }: ParticipantItemProps,
+    {
+      trackRef,
+      settings,
+      toSettings,
+      messageApi,
+      setUserStatus,
+      isFocus,
+      room,
+    }: ParticipantItemProps,
     ref,
   ) {
     const { t } = useI18n();
@@ -58,9 +67,11 @@ export const ParticipantItem: (
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
     const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
+
     // 存储所有观众的鼠标位置
     const [remoteCursors, setRemoteCursors] = React.useState<{
       [participantId: string]: {
+        room?: string;
         x: number;
         y: number;
         name: string;
@@ -88,7 +99,7 @@ export const ParticipantItem: (
         }
         setLoading(false);
       }
-    }, [settings, trackReference.source]);
+    }, [settings, trackReference]);
 
     const handleSubscribe = React.useCallback(
       (subscribed: boolean) => {
@@ -104,29 +115,43 @@ export const ParticipantItem: (
       },
       [trackReference, layoutContext],
     );
-
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const deviceTrack = React.useMemo(() => {
+      if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
+        console.log('virtualMask', virtualMask);
+        return (
+          <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
+            <ParticipantPlaceholder />
+          </div>
+        );
+      }
+
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
-            <div style={{ height: '100%', width: '100%' }}>
+            <div
+              style={{
+                height: '100%',
+                width: '100%',
+              }}
+            >
               <VideoTrack
                 ref={videoRef}
                 style={{
-                  filter: `blur(${blurValue}px)`,
-                  visibility:
-                    uState.virtualRole.enabled &&
-                    settings[trackReference.participant.identity]?.virtual
-                      ? 'hidden'
-                      : 'visible',
+                  filter:
+                    settings[trackReference.participant.identity]?.virtual.enabled ?? false
+                      ? 'none'
+                      : `blur(${blurValue}px)`,
+                  visibility: 'visible',
+                  transition: 'filter 0.2s ease-in-out'
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {uState.virtualRole.enabled &&
-                settings[trackReference.participant.identity]?.virtual && (
-                  <div className={styles.virtual_video_box_canvas}>
+              {localParticipant.identity === trackReference.participant.identity &&
+                uState.virtualRole.enabled && (
+                  <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
                     <VirtualRoleCanvas
                       video_ele={videoRef}
                       model_bg={uState.virtualRole.bg}
@@ -134,9 +159,28 @@ export const ParticipantItem: (
                       enabled={uState.virtualRole.enabled}
                       messageApi={messageApi}
                       trackRef={trackReference}
+                      isLocal={trackReference.participant.identity === localParticipant.identity}
+                      isReplace={true}
                     ></VirtualRoleCanvas>
                   </div>
                 )}
+              {/** 暂停使用WebGL虚化 */}
+              {/* {localParticipant.identity === trackReference.participant.identity &&
+              uState.virtualRole.enabled ? (
+                <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
+                  <VirtualRoleCanvas
+                    video_ele={videoRef}
+                    model_bg={uState.virtualRole.bg}
+                    model_role={uState.virtualRole.role}
+                    enabled={uState.virtualRole.enabled}
+                    messageApi={messageApi}
+                    trackRef={trackReference}
+                    isLocal={trackReference.participant.identity === localParticipant.identity}
+                  ></VirtualRoleCanvas>
+                </div>
+              ) : (
+                blurValue > 0 && <BlurVideo blur={blurValue}></BlurVideo>
+              )} */}
             </div>
           );
         } else if (trackReference.source === Track.Source.ScreenShare) {
@@ -192,24 +236,12 @@ export const ParticipantItem: (
                     actualVideoRect.top = 0;
                   }
 
-                  // 用于调试
-                  console.log('视频容器:', {
-                    width: containerRect.width,
-                    height: containerRect.height,
-                  });
-                  console.log('视频原始尺寸:', {
-                    width: videoElement.videoWidth,
-                    height: videoElement.videoHeight,
-                    ratio: videoRatio,
-                  });
-                  console.log('视频实际显示区域:', actualVideoRect);
-
                   // 从归一化坐标计算实际像素坐标
                   const absoluteX = cursor.x * actualVideoRect.width + actualVideoRect.left;
                   const absoluteY = cursor.y * actualVideoRect.height + actualVideoRect.top;
                   // 检查时间戳，如果超过10秒没有更新，则不显示
-                  // const now = Date.now();
-                  // if (now - cursor.timestamp > 10000) return null;
+                  const now = Date.now();
+                  if (now - cursor.timestamp > 10000) return null;
 
                   return (
                     <div
@@ -264,19 +296,28 @@ export const ParticipantItem: (
           );
         }
       }
-    }, [trackReference, loading, blurValue, videoRef, uState.virtualRole, remoteCursors, settings]);
+    }, [
+      trackReference,
+      loading,
+      blurValue,
+      videoRef,
+      uState.virtualRole,
+      remoteCursors,
+      settings,
+      virtualMask,
+    ]);
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {
       switch (settings[trackReference.participant.identity]?.status) {
         case UserStatus.Online:
           return 'online_dot';
-        case UserStatus.Idot:
+        case UserStatus.Offline:
           return 'offline_dot';
         case UserStatus.Busy:
           return 'busy_dot';
-        case UserStatus.Invisible:
-          return 'away_dot';
+        case UserStatus.Leisure:
+          return 'leisure_dot';
       }
     }, [settings]);
     const statusFromSvgType = (svgType: SvgType): UserStatus => {
@@ -284,11 +325,11 @@ export const ParticipantItem: (
         case 'online_dot':
           return UserStatus.Online;
         case 'offline_dot':
-          return UserStatus.Idot;
+          return UserStatus.Offline;
         case 'busy_dot':
           return UserStatus.Busy;
-        case 'away_dot':
-          return UserStatus.Invisible;
+        case 'leisure_dot':
+          return UserStatus.Leisure;
         default:
           return UserStatus.Online;
       }
@@ -298,11 +339,11 @@ export const ParticipantItem: (
         case 'online_dot':
           return t('settings.general.status.online');
         case 'offline_dot':
-          return t('settings.general.status.idot');
+          return t('settings.general.status.offline');
         case 'busy_dot':
           return t('settings.general.status.busy');
-        case 'away_dot':
-          return t('settings.general.status.invisible');
+        case 'leisure_dot':
+          return t('settings.general.status.leisure');
         default:
           return t('settings.general.status.online');
       }
@@ -320,12 +361,12 @@ export const ParticipantItem: (
         ),
       },
       {
-        key: 'offline_dot',
+        key: 'leisure_dot',
         label: (
           <div className={styles.status_item}>
-            <SvgResource type="offline_dot" svgSize={14}></SvgResource>
-            <span>{t('settings.general.status.idot')}</span>
-            <div>{t('settings.general.status.idot_desc')}</div>
+            <SvgResource type="leisure_dot" svgSize={14}></SvgResource>
+            <span>{t('settings.general.status.leisure')}</span>
+            <div>{t('settings.general.status.leisure_desc')}</div>
           </div>
         ),
       },
@@ -340,60 +381,65 @@ export const ParticipantItem: (
         ),
       },
       {
-        key: 'away_dot',
+        key: 'offline_dot',
         label: (
           <div className={styles.status_item}>
-            <SvgResource type="away_dot" svgSize={14}></SvgResource>
-            <span>{t('settings.general.status.invisible')}</span>
-            <div>{t('settings.general.status.invisible_desc')}</div>
+            <SvgResource type="offline_dot" svgSize={14}></SvgResource>
+            <span>{t('settings.general.status.offline')}</span>
+            <div>{t('settings.general.status.offline_desc')}</div>
           </div>
         ),
       },
     ];
 
-    const user_menu: MenuProps['items'] = [
-      {
-        key: 'user_info',
-        label: (
-          <div className={styles.user_info_wrap} onClick={toSettings}>
-            <div className={styles.user_info_wrap_name}>{trackReference.participant.name}</div>
-            <SvgResource type="modify" svgSize={14} color="#fff"></SvgResource>
-            {/* <div className={styles.user_info_wrap_identity}>{trackReference.participant.identity}</div> */}
-          </div>
-        ),
-      },
-      {
-        key: 'user_status',
-        label: (
-          <Dropdown
-            placement="topLeft"
-            menu={{
-              items: status_menu,
-              onClick: async (e) => {
-                let status = statusFromSvgType(e.key as SvgType);
-                setUState({
-                  ...uState,
-                  status,
-                });
-                await setUserStatus(status);
-              },
-            }}
-          >
-            <div className={styles.status_item_inline} style={{ width: '100%' }}>
-              <div className={styles.status_item_inline}>
-                <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
-                <div>{setStatusLabel()}</div>
+    const user_menu: MenuProps['items'] = useMemo(() => {
+      return [
+        {
+          key: 'user_info',
+          label: (
+            <div className={styles.user_info_wrap} onClick={toSettings}>
+              <div className={styles.user_info_wrap_name}>
+                {settings[trackReference.participant.identity]?.name || localParticipant.name}
               </div>
-              <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
+              <SvgResource type="modify" svgSize={14} color="#fff"></SvgResource>
+              {/* <div className={styles.user_info_wrap_identity}>{trackReference.participant.identity}</div> */}
             </div>
-          </Dropdown>
-        ),
-      },
-    ];
+          ),
+        },
+        {
+          key: 'user_status',
+          label: (
+            <Dropdown
+              placement="topLeft"
+              menu={{
+                items: status_menu,
+                onClick: async (e) => {
+                  let status = statusFromSvgType(e.key as SvgType);
+                  // setUState({
+                  //   ...uState,
+                  //   status,
+                  // });
+                  await setUserStatus(status);
+                },
+              }}
+            >
+              <div className={styles.status_item_inline} style={{ width: '100%' }}>
+                <div className={styles.status_item_inline}>
+                  <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
+                  <div>{setStatusLabel()}</div>
+                </div>
+                <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
+              </div>
+            </Dropdown>
+          ),
+        },
+      ];
+    }, [settings, userStatusDisply]);
 
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {
       socket.emit('wave', {
+        room,
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
@@ -468,6 +514,7 @@ export const ParticipantItem: (
               setLastMousePos({ x, y });
             }
             let data = {
+              room,
               x,
               y,
               color: randomColor(localParticipant.identity),
@@ -481,6 +528,7 @@ export const ParticipantItem: (
             setRemoteCursors((prev) => ({
               ...prev,
               [data.senderId]: {
+                room: data.room,
                 x: data.x,
                 y: data.y,
                 name: data.senderName,
@@ -489,10 +537,22 @@ export const ParticipantItem: (
                 realVideoRect: data.realVideoRect,
               },
             }));
-
             socket.emit('mouse_move', data);
-          }else{
-            setLastMousePos({ x: 0, y: 0 });
+          } else {
+            // 去除鼠标位置, 在remoteCursors中删除当前用户
+            setRemoteCursors((prev) => {
+              const newCursors = { ...prev };
+              delete newCursors[localParticipant.identity];
+              return newCursors;
+            });
+            // 发送socket, 只需要知道去除者的id
+            socket.emit('mouse_remove', {
+              room,
+              senderName: localParticipant.name || localParticipant.identity,
+              senderId: localParticipant.identity,
+              receiverId: trackReference.participant.identity,
+              receSocketId: settings[trackReference.participant.identity]?.socketId,
+            });
           }
         };
         // 300ms触发一次, 节流
@@ -507,26 +567,42 @@ export const ParticipantItem: (
 
       // 如果当前用户是演讲者并且当前track source是screen share，那么就需要获取其他用户的鼠标位置
       if (localParticipant.isSpeaking && trackReference.source === Track.Source.ScreenShare) {
-        // console.warn('is speaking and screen share');
-
         socket.on('mouse_move_response', (data) => {
           // 获取之后需要将别人的鼠标位置在演讲者的屏幕上进行显示
-          const { senderId, senderName, x, y, color, realVideoRect } = data;
-
+          const { senderId, senderName, x, y, color, realVideoRect, room: uRoom } = data;
           // 更新状态
-          setRemoteCursors((prev) => ({
-            ...prev,
-            [senderId]: {
-              x,
-              y,
-              name: senderName,
-              color,
-              timestamp: Date.now(),
-              realVideoRect,
-            },
-          }));
+          if (room == uRoom) {
+            setRemoteCursors((prev) => ({
+              ...prev,
+              [senderId]: {
+                room,
+                x,
+                y,
+                name: senderName,
+                color,
+                timestamp: Date.now(),
+                realVideoRect,
+              },
+            }));
+          }
+        });
+        socket.on('mouse_remove_response', (data) => {
+          const { senderId, room: uRoom } = data;
+          // 删除状态
+          if (room == uRoom) {
+            setRemoteCursors((prev) => {
+              const newCursors = { ...prev };
+              delete newCursors[senderId];
+              return newCursors;
+            });
+          }
         });
       }
+
+      // return () => {
+      //   socket.off('mouse_move_response');
+      //   socket.off('mouse_remove_response');
+      // };
     }, [trackReference.source, localParticipant.isSpeaking, isFocus]);
 
     return (
@@ -535,7 +611,7 @@ export const ParticipantItem: (
         <div className="lk-participant-placeholder">
           <ParticipantPlaceholder />
         </div>
-        <div className="lk-participant-metadata">
+        <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
           <Dropdown
             placement="topLeft"
             trigger={['click']}
