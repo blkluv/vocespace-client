@@ -117,17 +117,18 @@ export const ParticipantItem: (
     );
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const deviceTrack = React.useMemo(() => {
-      if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
-        console.log('virtualMask', virtualMask);
-        return (
-          <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
-            <ParticipantPlaceholder />
-          </div>
-        );
-      }
+      
 
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
+          if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
+            return (
+              <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
+                <ParticipantPlaceholder />
+              </div>
+            );
+          }
+
           return (
             <div
               style={{
@@ -191,6 +192,7 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter: `blur(${blurValue}px)`,
+                  transition: 'filter 0.2s ease-in-out'
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
