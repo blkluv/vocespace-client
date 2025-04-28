@@ -144,6 +144,11 @@ export default {
           request: "请求用户名失败",
         },
       },
+      file: {
+        upload: '文件上传失败',
+        download: '文件下载失败',
+        
+      }
     },
     request: {
       device: {

@@ -171,7 +171,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [volume, setVolume] = React.useState(device.volume);
     const [videoBlur, setVideoBlur] = React.useState(device.blur);
     const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
-    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState)
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const closeSetting = () => {
       setCompare(false);
       if (modelRole !== ModelRole.None) {
@@ -446,6 +446,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         {/* <StartMediaButton /> */}
         {room && (
           <EnhancedChat
+            messageApi={messageApi}
             open={chatOpen}
             setOpen={setChatOpen}
             onClose={onChatClose}
