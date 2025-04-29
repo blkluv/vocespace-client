@@ -182,7 +182,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       if (settingsRef.current) {
         settingsRef.current.removeVideo();
       }
-      setVirtualMask(false);
+      setTimeout(()=>{
+        setVirtualMask(false);
+      }, 300);
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
     React.useEffect(() => {
@@ -473,40 +475,44 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           })}
         >
           <div className={styles.setting_container}>
-            <Settings
-              virtual={{
-                enabled: virtualEnabled,
-                setEnabled: setVirtualEnabled,
-                modelRole: modelRole,
-                setModelRole: setModelRole,
-                modelBg: modelBg,
-                setModelBg: setModelBg,
-                compare,
-                setCompare,
-              }}
-              ref={settingsRef}
-              messageApi={messageApi}
-              microphone={{
-                audio: {
-                  volume: volume,
-                  setVolume,
-                },
-              }}
-              camera={{
-                video: {
-                  blur: videoBlur,
-                  setVideoBlur,
-                },
-                screen: {
-                  blur: screenBlur,
-                  setScreenBlur,
-                },
-              }}
-              username={userChoices.username}
-              tab={{ key, setKey }}
-              saveChanges={saveChanges}
-              setUserStatus={setUserStatus}
-            ></Settings>
+            {room && (
+              <Settings
+                virtual={{
+                  enabled: virtualEnabled,
+                  setEnabled: setVirtualEnabled,
+                  modelRole: modelRole,
+                  setModelRole: setModelRole,
+                  modelBg: modelBg,
+                  setModelBg: setModelBg,
+                  compare,
+                  setCompare,
+                }}
+                ref={settingsRef}
+                messageApi={messageApi}
+                microphone={{
+                  audio: {
+                    volume: volume,
+                    setVolume,
+                  },
+                }}
+                camera={{
+                  video: {
+                    blur: videoBlur,
+                    setVideoBlur,
+                  },
+                  screen: {
+                    blur: screenBlur,
+                    setScreenBlur,
+                  },
+                }}
+                room={room.name}
+                username={userChoices.username}
+                tab={{ key, setKey }}
+                saveChanges={saveChanges}
+                setUserStatus={setUserStatus}
+                localParticipant={room.localParticipant}
+              ></Settings>
+            )}
           </div>
         </Drawer>
       </div>

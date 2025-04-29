@@ -148,6 +148,10 @@ export default {
           request: 'Failed to request username',
         },
       },
+      file: {
+        upload: 'File upload failed',
+        download: 'File download failed',
+      }
     },
     request: {
       device: {

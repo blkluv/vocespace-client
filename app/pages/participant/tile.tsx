@@ -117,18 +117,16 @@ export const ParticipantItem: (
     );
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const deviceTrack = React.useMemo(() => {
-      
+      if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
+        return (
+          <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
+            <ParticipantPlaceholder />
+          </div>
+        );
+      }
 
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
-          if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
-            return (
-              <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
-                <ParticipantPlaceholder />
-              </div>
-            );
-          }
-
           return (
             <div
               style={{
@@ -136,23 +134,12 @@ export const ParticipantItem: (
                 width: '100%',
               }}
             >
-              <VideoTrack
-                ref={videoRef}
-                style={{
-                  filter:
-                    settings[trackReference.participant.identity]?.virtual.enabled ?? false
-                      ? 'none'
-                      : `blur(${blurValue}px)`,
-                  visibility: 'visible',
-                  transition: 'filter 0.2s ease-in-out'
-                }}
-                trackRef={trackReference}
-                onSubscriptionStatusChanged={handleSubscribe}
-                manageSubscription={autoManageSubscription}
-              />
               {localParticipant.identity === trackReference.participant.identity &&
                 uState.virtualRole.enabled && (
-                  <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
+                  <div
+                    className={styles.virtual_video_box_canvas}
+                    style={{ visibility: 'hidden', zIndex: '111' }}
+                  >
                     <VirtualRoleCanvas
                       video_ele={videoRef}
                       model_bg={uState.virtualRole.bg}
@@ -165,6 +152,22 @@ export const ParticipantItem: (
                     ></VirtualRoleCanvas>
                   </div>
                 )}
+              <VideoTrack
+                ref={videoRef}
+                style={{
+                  filter:
+                    settings[trackReference.participant.identity]?.virtual.enabled ?? false
+                      ? 'none'
+                      : `blur(${blurValue}px)`,
+                  visibility: 'visible',
+                  transition: 'filter 0.2s ease-in-out',
+                  zIndex: '11',
+                }}
+                trackRef={trackReference}
+                onSubscriptionStatusChanged={handleSubscribe}
+                manageSubscription={autoManageSubscription}
+              />
+
               {/** 暂停使用WebGL虚化 */}
               {/* {localParticipant.identity === trackReference.participant.identity &&
               uState.virtualRole.enabled ? (
@@ -192,7 +195,7 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter: `blur(${blurValue}px)`,
-                  transition: 'filter 0.2s ease-in-out'
+                  transition: 'filter 0.2s ease-in-out',
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}

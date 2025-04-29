@@ -1,4 +1,4 @@
-import { Button, Input, List, Slider, Switch, Tabs, TabsProps } from 'antd';
+import { Button, Input, List, Radio, Slider, Switch, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
@@ -10,10 +10,14 @@ import { AudioSelect } from './audio_select';
 import { VideoSelect } from './video_select';
 import { LangSelect } from './lang_select';
 import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
-import { src, UserStatus } from '@/lib/std';
+import { connect_endpoint, src, UserDefineStatus, UserStatus } from '@/lib/std';
 import { StatusSelect } from './status_select';
 import { useRecoilState } from 'recoil';
 import { virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import TextArea from 'antd/es/input/TextArea';
+import { LocalParticipant } from 'livekit-client';
+
+const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export interface SettingsProps {
   microphone: {
@@ -41,6 +45,8 @@ export interface SettingsProps {
   saveChanges: (tab_key: TabKey) => void;
   messageApi: MessageInstance;
   setUserStatus?: (status: UserStatus) => Promise<void>;
+  room: string;
+  localParticipant: LocalParticipant;
 }
 
 export interface SettingsExports {
@@ -75,11 +81,14 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       saveChanges,
       messageApi,
       setUserStatus,
+      room,
+      localParticipant,
     }: SettingsProps,
     ref,
   ) => {
     const { t } = useI18n();
     const [username, setUsername] = useState(uname);
+    const [appendStatus, setAppendStatus] = useState(false);
     const virtualSettingsRef = useRef<VirtualSettingsExports>(null);
     const items: TabsProps['items'] = [
       {
@@ -104,7 +113,29 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             <div className={styles.common_space}>{t('settings.general.lang')}:</div>
             <LangSelect style={{ width: '100%' }}></LangSelect>
             <div className={styles.common_space}>{t('settings.general.status.title')}:</div>
-            <StatusSelect style={{ width: '100%' }} setUserStatus={setUserStatus}></StatusSelect>
+            <div className={styles.setting_box_line}>
+              <StatusSelect
+                style={{ width: 'calc(100% - 52px)' }}
+                setUserStatus={setUserStatus}
+              ></StatusSelect>
+              <Button
+                type="primary"
+                shape="circle"
+                style={{ cursor: 'pointer' }}
+                onClick={() => {
+                  setAppendStatus(!appendStatus);
+                }}
+              >
+                <SvgResource type="add" svgSize={16}></SvgResource>
+              </Button>
+            </div>
+            {appendStatus && (
+              <BuildUserStatus
+                messageApi={messageApi}
+                room={room}
+                localParticipant={localParticipant}
+              ></BuildUserStatus>
+            )}
           </div>
         ),
       },
@@ -177,7 +208,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               />
             </div>
             <div className={styles.setting_box}>
-              <div style={{marginBottom: "6px"}}>{t('settings.virtual.title')}:</div>
+              <div style={{ marginBottom: '6px' }}>{t('settings.virtual.title')}:</div>
               <VirtualSettings
                 ref={virtualSettingsRef}
                 messageApi={messageApi}
@@ -396,9 +427,9 @@ export const VirtualSettings = forwardRef<
                     onClick={() => {
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
+                      setVirtualMask(true);
                       if (compare && item.name != ModelRole.None) {
                         // 这里需要将外部视频进行遮罩
-                        setVirtualMask(true);
                         setCompare(false);
                         setTimeout(() => {
                           setCompare(true);
@@ -452,6 +483,7 @@ export const VirtualSettings = forwardRef<
                     className={styles.virtual_model_box}
                     onClick={() => {
                       set_bg_selected_index(index);
+                      setVirtualMask(true);
                       setModelBg(item.src as ModelBg);
                       if (compare) {
                         setCompare(false);
@@ -554,6 +586,200 @@ function SelectedMask() {
   return (
     <div className={styles.selected_mask}>
       <SvgResource type="check" svgSize={24} color="#22CCEE"></SvgResource>
+    </div>
+  );
+}
+
+function BuildUserStatus({
+  messageApi,
+  room,
+  localParticipant,
+}: {
+  messageApi: MessageInstance;
+  room: string;
+  localParticipant: LocalParticipant;
+}) {
+  const { t } = useI18n();
+  const [name, setName] = useState('');
+  const [desc, setDesc] = useState('');
+  const status_icons: {
+    key: string;
+    color: string;
+  }[] = [
+    {
+      key: 'a',
+      color: '#3357FF',
+    },
+    {
+      key: 'b',
+      color: '#0052d9',
+    },
+    {
+      key: 'c',
+      color: '#8e56dd',
+    },
+    {
+      key: 'd',
+      color: '#ffaedc',
+    },
+    {
+      key: 'e',
+      color: '#f5ba18',
+    },
+    {
+      key: 'f',
+      color: '#85d3ff',
+    },
+    {
+      key: 'g',
+      color: '#d54941',
+    },
+    {
+      key: 'h',
+      color: '#92dbb2',
+    },
+  ];
+  const [selectedIcon, setSelectedIcon] = useState(status_icons[0].key);
+  const [videoBlur, setVideoBlur] = useState(0.15);
+  const [screenBlur, setScreenBlur] = useState(0.15);
+  const [volume, setVolume] = useState(80);
+
+  const saveStatus = async () => {
+    try {
+      const url = new URL(SAVE_STATUS_ENDPOINT, window.location.origin);
+
+      const status: UserDefineStatus = {
+        creator: {
+          name: localParticipant.name || localParticipant.identity,
+          id: localParticipant.identity,
+        },
+        name,
+        desc,
+        icon: {
+          key: selectedIcon,
+          color: status_icons.find((item) => item.key == selectedIcon)?.color || '#3357FF',
+        },
+        volume,
+        blur: videoBlur,
+        screenBlur,
+      };
+
+      const response = await fetch(url.toString(), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roomId: room,
+          status,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      console.warn('Save status:', data);
+      
+    } catch (e) {
+      messageApi.error({
+        content: `${e}`,
+      });
+    }
+  };
+
+  return (
+    <div className={styles.build_status}>
+      <hr />
+      <h4 style={{ fontSize: '16px', color: '#fff' }}>
+        {t('settings.general.status.define.title')}
+      </h4>
+      <div>
+        <div className={styles.common_space}>{t('settings.general.status.define.name')}:</div>
+        <Input
+          value={name}
+          placeholder={t('settings.general.status.define.placeholder.name')}
+          onChange={(e) => {
+            setName(e.target.value);
+          }}
+        ></Input>
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.general.status.define.desc')}:</div>
+        <TextArea
+          rows={3}
+          placeholder={t('settings.general.status.define.placeholder.desc')}
+          value={desc}
+          allowClear
+          onChange={(e) => {
+            setDesc(e.target.value);
+          }}
+          count={{
+            show: true,
+            max: 60,
+          }}
+        ></TextArea>
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.general.status.define.icon')}:</div>
+        <Radio.Group
+          value={selectedIcon}
+          size="large"
+          onChange={(e) => {
+            setSelectedIcon(e.target.value);
+          }}
+        >
+          {status_icons.map((item, index) => (
+            <Radio.Button value={item.key} key={index}>
+              <SvgResource type="dot" svgSize={16} color={item.color}></SvgResource>
+            </Radio.Button>
+          ))}
+        </Radio.Group>
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.audio.volume')}:</div>
+        <Slider
+          value={volume}
+          min={0.0}
+          max={100.0}
+          step={1}
+          onChange={(e) => {
+            setVolume(e);
+          }}
+        />
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.video.video_blur')}:</div>
+        <Slider
+          className={`${styles.slider}`}
+          value={videoBlur}
+          min={0.0}
+          max={1.0}
+          step={0.05}
+          onChange={(e) => {
+            setVideoBlur(e);
+          }}
+        />
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.video.screen_blur')}:</div>
+        <Slider
+          className={`${styles.slider}`}
+          value={screenBlur}
+          min={0.0}
+          max={1.0}
+          step={0.05}
+          onChange={(e) => {
+            setScreenBlur(e);
+          }}
+        />
+      </div>
+
+      <Button style={{ width: '100%', margin: '8px 0' }} type="primary" onClick={saveStatus}>
+        {t('settings.general.status.define.save')}
+      </Button>
     </div>
   );
 }

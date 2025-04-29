@@ -1,3 +1,5 @@
+import { EgressClient } from 'livekit-server-sdk';
+
 /**
  * Option<T>
  *
@@ -23,6 +25,22 @@ export interface SizeNum {
 export interface UserItemProp {
   name: string;
   status: UserStatus;
+}
+
+export interface UserDefineStatus {
+  creator: {
+    name: string;
+    id: string;
+  };
+  name: string;
+  desc: string;
+  icon: {
+    key: string;
+    color: string;
+  };
+  volume: number;
+  blur: number;
+  screenBlur: number;
 }
 
 // export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';

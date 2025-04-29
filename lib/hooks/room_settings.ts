@@ -1,6 +1,6 @@
 // lib/hooks/useRoomSettings.ts
 import { useState, useEffect, useCallback } from 'react';
-import { connect_endpoint, UserStatus } from '../std';
+import { connect_endpoint, UserDefineStatus, UserStatus } from '../std';
 import { ModelBg, ModelRole } from '../std/virtual';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
 
