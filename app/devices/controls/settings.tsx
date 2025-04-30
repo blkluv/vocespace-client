@@ -13,9 +13,10 @@ import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
 import { connect_endpoint, src, UserDefineStatus, UserStatus } from '@/lib/std';
 import { StatusSelect } from './status_select';
 import { useRecoilState } from 'recoil';
-import { virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import TextArea from 'antd/es/input/TextArea';
 import { LocalParticipant } from 'livekit-client';
+import { ulid } from 'ulid';
 
 const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
@@ -44,7 +45,7 @@ export interface SettingsProps {
   };
   saveChanges: (tab_key: TabKey) => void;
   messageApi: MessageInstance;
-  setUserStatus?: (status: UserStatus) => Promise<void>;
+  setUserStatus?: (status: UserStatus | string) => Promise<void>;
   room: string;
   localParticipant: LocalParticipant;
 }
@@ -649,6 +650,7 @@ function BuildUserStatus({
       const url = new URL(SAVE_STATUS_ENDPOINT, window.location.origin);
 
       const status: UserDefineStatus = {
+        id: ulid(),
         creator: {
           name: localParticipant.name || localParticipant.identity,
           id: localParticipant.identity,
@@ -680,9 +682,12 @@ function BuildUserStatus({
       }
 
       const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
-      console.warn('Save status:', data);
-      
+      // 服务器已经保存了状态，使用socket通知所有房间里的人
+      socket.emit('new_user_status', { status: data.status, room: data.roomId });
     } catch (e) {
       messageApi.error({
         content: `${e}`,

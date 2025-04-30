@@ -167,10 +167,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [compare, setCompare] = React.useState(false);
     const settingsRef = React.useRef<SettingsExports>(null);
     const [messageApi, contextHolder] = message.useMessage();
-    const [device, setDevice] = useRecoilState(userState);
-    const [volume, setVolume] = React.useState(device.volume);
-    const [videoBlur, setVideoBlur] = React.useState(device.blur);
-    const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
+    const [uState, setUState] = useRecoilState(userState);
+    const [volume, setVolume] = React.useState(uState.volume);
+    const [videoBlur, setVideoBlur] = React.useState(uState.blur);
+    const [screenBlur, setScreenBlur] = React.useState(uState.screenBlur);
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const closeSetting = () => {
       setCompare(false);
@@ -186,8 +186,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
     React.useEffect(() => {
-      setDevice({
-        ...device,
+      setUState({
+        ...uState,
         virtualRole: {
           enabled: virtualEnabled,
           role: modelRole,
@@ -228,21 +228,21 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           break;
         }
         case 'audio': {
-          setDevice({ ...device, volume });
+          setUState({ ...uState, volume });
           update = {
             volume,
           };
           break;
         }
         case 'video': {
-          setDevice({ ...device, blur: videoBlur });
+          setUState({ ...uState, blur: videoBlur });
           update = {
             blur: videoBlur,
           };
           break;
         }
         case 'screen': {
-          setDevice({ ...device, screenBlur });
+          setUState({ ...uState, screenBlur });
           update = {
             screenBlur,
           };
@@ -267,7 +267,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         } as ControlBarExport),
     );
 
-    const setUserStatus = async (status: UserStatus) => {
+    const setUserStatus = async (status: UserStatus | string) => {
       let newStatus = {
         status: status,
       };
@@ -281,7 +281,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               const newVolume = 80;
               setVolume(newVolume);
               // 确保设备状态同步更新
-              setDevice((prev) => ({
+              setUState((prev) => ({
                 ...prev,
                 volume: newVolume,
               }));
@@ -293,7 +293,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         case UserStatus.Leisure: {
           setVideoBlur(0.15);
           setScreenBlur(0.15);
-          setDevice((prev) => ({
+          setUState((prev) => ({
             ...prev,
             blur: 0.15,
             screenBlur: 0.15,
@@ -308,7 +308,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           setVirtualEnabled(false);
           setModelRole(ModelRole.None);
           setModelBg(ModelBg.ClassRoom);
-          setDevice((prev) => ({
+          setUState((prev) => ({
             ...prev,
             blur: 0.15,
             screenBlur: 0.15,
@@ -329,7 +329,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             room.localParticipant.setMicrophoneEnabled(false);
             room.localParticipant.setCameraEnabled(false);
             room.localParticipant.setScreenShareEnabled(false);
-            setDevice((prev) => ({
+            setUState((prev) => ({
               ...prev,
               virtualRole: {
                 ...prev.virtualRole,
@@ -338,6 +338,26 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 role: ModelRole.None,
               },
             }));
+          }
+          break;
+        }
+        default: {
+          if (room) {
+            const statusSettings = uState.roomStatus.find((item) => item.id === status);
+            if (statusSettings) {
+              setUState((prev) => ({
+                ...prev,
+                status,
+                volume: statusSettings.volume,
+                blur: statusSettings.blur,
+                screenBlur: statusSettings.screenBlur,
+              }));
+              Object.assign(newStatus, {
+                volume: statusSettings.volume,
+                blur: statusSettings.blur,
+                screenBlur: statusSettings.screenBlur,
+              });
+            }
           }
           break;
         }

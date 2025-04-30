@@ -9,7 +9,7 @@ export interface ParticipantSettings {
   volume: number;
   blur: number;
   screenBlur: number;
-  status: UserStatus;
+  status: UserStatus | string;
   socketId: string;
   virtual: {
     role: ModelRole;

@@ -25,7 +25,7 @@ import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, RecoilRoot, useRecoilState } from 'recoil';
-import { connect_endpoint, UserStatus } from '@/lib/std';
+import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 
@@ -48,10 +48,11 @@ export const userState = atom({
       role: ModelRole.Haru,
       bg: ModelBg.ClassRoom,
     },
-    status: UserStatus.Online,
+    status: UserStatus.Online as string,
     rpc: {
       wave: false,
     },
+    roomStatus: [] as UserDefineStatus[],
   },
 });
 

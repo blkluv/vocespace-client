@@ -1,4 +1,4 @@
-import { is_web, src, UserStatus } from '@/lib/std';
+import { is_web, src, UserDefineStatus, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   Chat,
@@ -62,7 +62,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const room = useMaybeRoomContext();
     const [init, setInit] = useState(true);
     const { t } = useI18n();
-    const [device, setDevice] = useRecoilState(userState);
+    const [uState, setUState] = useRecoilState(userState);
     const controlsRef = React.useRef<ControlBarExport>(null);
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
     const [isFocus, setIsFocus] = useState(false);
@@ -78,8 +78,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
         await updateSettings({
           name: room.localParticipant.name || room.localParticipant.identity,
-          blur: device.blur,
-          volume: device.volume,
+          blur: uState.blur,
+          volume: uState.volume,
           status: UserStatus.Online,
           socketId: socket.id,
           virtual: {
@@ -140,10 +140,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         if (track.source === Track.Source.Camera) {
           // 需要判断虚拟形象是否开启，若开启则需要关闭
           if (
-            device.virtualRole.enabled ||
+            uState.virtualRole.enabled ||
             settings[room.localParticipant.identity]?.virtual.enabled
           ) {
-            setDevice((prev) => ({
+            setUState((prev) => ({
               ...prev,
               virtualRole: {
                 ...prev.virtualRole,
@@ -152,7 +152,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             }));
             updateSettings({
               virtual: {
-                ...device.virtualRole,
+                ...uState.virtualRole,
                 enabled: false,
               },
             }).then(() => {
@@ -161,6 +161,16 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           }
         }
       };
+
+      // [用户定义新状态] ----------------------------------------------------------------------
+      socket.on('new_user_status_response', (msg: { status: UserDefineStatus[]; room: string }) => {
+        if (room.name === msg.room) {
+          setUState((prev) => ({
+            ...prev,
+            roomStatus: msg.status,
+          }));
+        }
+      });
 
       room.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
       room.on(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
@@ -173,7 +183,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, device, init]);
+    }, [room?.state, room?.localParticipant, uState, init]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
@@ -261,7 +271,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       controlsRef.current?.openSettings('general');
     };
     // [user status] ------------------------------------------------------------------------------------------
-    const setUserStatus = async (status: UserStatus) => {
+    const setUserStatus = async (status: UserStatus | string) => {
       let newStatus = {
         status,
       };
@@ -271,10 +281,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             room.localParticipant.setMicrophoneEnabled(true);
             room.localParticipant.setCameraEnabled(true);
             room.localParticipant.setScreenShareEnabled(false);
-            if (device.volume == 0) {
+            if (uState.volume == 0) {
               const newVolume = 80;
-              setDevice((prev) => ({
+              setUState((prev) => ({
                 ...prev,
+                status: UserStatus.Online,
                 volume: newVolume,
               }));
               Object.assign(newStatus, { volume: newVolume });
@@ -283,17 +294,19 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           break;
         }
         case UserStatus.Leisure: {
-          setDevice((prev) => ({
+          setUState((prev) => ({
             ...prev,
             blur: 0.15,
+            status: UserStatus.Leisure,
             screenBlur: 0.15,
           }));
           Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15 });
           break;
         }
         case UserStatus.Busy: {
-          setDevice((prev) => ({
+          setUState((prev) => ({
             ...prev,
+            status: UserStatus.Busy,
             blur: 0.15,
             screenBlur: 0.15,
             volume: 0,
@@ -312,8 +325,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             room.localParticipant.setMicrophoneEnabled(false);
             room.localParticipant.setCameraEnabled(false);
             room.localParticipant.setScreenShareEnabled(false);
-            setDevice((prev) => ({
+            setUState((prev) => ({
               ...prev,
+              status: UserStatus.Offline,
               virtualRole: {
                 ...prev.virtualRole,
                 enabled: false,
@@ -321,6 +335,26 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 role: ModelRole.None,
               },
             }));
+          }
+          break;
+        }
+        default: {
+          if (room) {
+            const statusSettings = uState.roomStatus.find((item) => item.id === status);
+            if (statusSettings) {
+              setUState((prev) => ({
+                ...prev,
+                status,
+                volume: statusSettings.volume,
+                blur: statusSettings.blur,
+                screenBlur: statusSettings.screenBlur,
+              }));
+              Object.assign(newStatus, {
+                volume: statusSettings.volume,
+                blur: statusSettings.blur,
+                screenBlur: statusSettings.screenBlur,
+              });
+            }
           }
           break;
         }

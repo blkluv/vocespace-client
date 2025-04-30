@@ -6,7 +6,7 @@ import { pictureCallback, SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { setting_drawer_header } from '@/app/devices/controls/bar';
-import { ulid } from '@/lib/std';
+import { ulid } from 'ulid';
 import { Room } from 'livekit-client';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
 import { MessageInstance } from 'antd/es/message/interface';
@@ -210,7 +210,7 @@ export function EnhancedChat({
                             {is_img(msg.file.type) ? (
                               <Image
                                 src={msg.file.url}
-                                width={"70%"}
+                                width={'70%'}
                                 fallback={pictureCallback}
                               ></Image>
                             ) : (

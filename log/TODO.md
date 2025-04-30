@@ -80,9 +80,12 @@
 - [x] 重新增加虚拟形象切换时的遮罩
 - [x] 更换压缩率较低的编解码器
 - [x] 调整chat时图片大小 = 文件大小
-- [ ] 用户自定义状态，提供其他用户被选，其他用户只有可读，不可写 (socket)
+- [x] 用户自定义状态，提供其他用户被选，其他用户只有可读，不可写 (socket)
 - [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
 - [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 - [ ] tradition环境进行速度缓慢
 - [ ] video blur 预览
+- [ ] socket
+- [ ] 编辑用户名字图标，位置调整
+- [ ] Docker部署

@@ -26,6 +26,7 @@ interface RoomSettings {
 }
 
 interface Status {
+  id: string;
   creator: {
     name: string;
     id: string;
@@ -168,7 +169,7 @@ export async function PUT(request: NextRequest) {
   } else {
     roomSettings[roomId].status.push(status);
     // 返回所有状态
-    return NextResponse.json({ success: true, status: roomSettings[roomId].status });
+    return NextResponse.json({ success: true, status: roomSettings[roomId].status, roomId });
   }
 }
 
