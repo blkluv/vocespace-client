@@ -13,7 +13,7 @@ import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
 import { connect_endpoint, src, UserDefineStatus, UserStatus } from '@/lib/std';
 import { StatusSelect } from './status_select';
 import { useRecoilState } from 'recoil';
-import { socket, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import TextArea from 'antd/es/input/TextArea';
 import { LocalParticipant } from 'livekit-client';
 import { ulid } from 'ulid';
@@ -21,29 +21,13 @@ import { ulid } from 'ulid';
 const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export interface SettingsProps {
-  microphone: {
-    audio: {
-      volume: number;
-      setVolume: (e: number) => void;
-    };
-  };
-  camera: {
-    video: {
-      blur: number;
-      setVideoBlur: (e: number) => void;
-    };
-    screen: {
-      blur: number;
-      setScreenBlur: (e: number) => void;
-    };
-  };
   username: string;
-  virtual: VirtualSettingsProps;
+
   tab: {
     key: TabKey;
     setKey: (e: TabKey) => void;
   };
-  saveChanges: (tab_key: TabKey) => void;
+  // saveChanges: (tab_key: TabKey) => void;
   messageApi: MessageInstance;
   setUserStatus?: (status: UserStatus | string) => Promise<void>;
   room: string;
@@ -53,6 +37,16 @@ export interface SettingsProps {
 export interface SettingsExports {
   username: string;
   removeVideo: () => void;
+  state: {
+    volume: number;
+    blur: number;
+    screenBlur: number;
+    virtual: {
+      enabled: boolean;
+      role: ModelRole;
+      bg: ModelBg;
+    };
+  };
 }
 
 export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'about_us';
@@ -60,26 +54,9 @@ export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'about_us';
 export const Settings = forwardRef<SettingsExports, SettingsProps>(
   (
     {
-      microphone: {
-        audio: { volume, setVolume },
-      },
-      camera: {
-        video: { blur: video_blur, setVideoBlur },
-        screen: { blur: screen_blur, setScreenBlur },
-      },
       username: uname,
       tab: { key, setKey },
-      virtual: {
-        enabled,
-        setEnabled,
-        modelRole,
-        setModelRole,
-        modelBg,
-        setModelBg,
-        compare,
-        setCompare,
-      },
-      saveChanges,
+      // saveChanges,
       messageApi,
       setUserStatus,
       room,
@@ -90,7 +67,25 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
     const { t } = useI18n();
     const [username, setUsername] = useState(uname);
     const [appendStatus, setAppendStatus] = useState(false);
+    const [uState, setUState] = useRecoilState(userState);
+    const [volume, setVolume] = useState(uState.volume);
+    const [videoBlur, setVideoBlur] = useState(uState.blur);
+    const [screenBlur, setScreenBlur] = useState(uState.screenBlur);
+    const [virtualEnabled, setVirtualEnabled] = useState(false);
+    const [modelRole, setModelRole] = useState<ModelRole>(ModelRole.None);
+    const [modelBg, setModelBg] = useState<ModelBg>(ModelBg.ClassRoom);
+    const [compare, setCompare] = useState(false);
     const virtualSettingsRef = useRef<VirtualSettingsExports>(null);
+
+    useEffect(() => {
+      setVolume(uState.volume);
+      setVideoBlur(uState.blur);
+      setScreenBlur(uState.screenBlur);
+      setVirtualEnabled(uState.virtual.enabled);
+      setModelRole(uState.virtual.role);
+      setModelBg(uState.virtual.bg);
+    }, [uState]);
+
     const items: TabsProps['items'] = [
       {
         key: 'general',
@@ -104,11 +99,6 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               value={username}
               onChange={(e: any) => {
                 setUsername(e.target.value);
-              }}
-              onBlur={() => {
-                if (username !== uname) {
-                  saveChanges('general');
-                }
               }}
             ></Input>
             <div className={styles.common_space}>{t('settings.general.lang')}:</div>
@@ -154,9 +144,12 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               <Slider
                 value={volume}
                 className={styles.common_space}
+                min={0.0}
+                max={100.0}
+                step={1.0}
                 onChange={(e) => {
                   setVolume(e);
-                  saveChanges('audio');
+                  // saveChanges('audio');
                 }}
               />
             </div>
@@ -177,7 +170,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               <Slider
                 defaultValue={0.15}
                 className={`${styles.common_space} ${styles.slider}`}
-                value={video_blur}
+                value={videoBlur}
                 min={0.0}
                 max={1.0}
                 step={0.05}
@@ -186,7 +179,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 }}
                 onChangeComplete={(e) => {
                   setVideoBlur(e);
-                  saveChanges('video');
+                  // saveChanges('video');
                 }}
               />
             </div>
@@ -195,7 +188,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               <Slider
                 defaultValue={0.15}
                 className={`${styles.common_space} ${styles.slider}`}
-                value={screen_blur}
+                value={screenBlur}
                 min={0.0}
                 max={1.0}
                 step={0.05}
@@ -204,7 +197,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 }}
                 onChangeComplete={(e) => {
                   setScreenBlur(e);
-                  saveChanges('screen');
+                  // saveChanges('screen');
                 }}
               />
             </div>
@@ -217,8 +210,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 setModelRole={setModelRole}
                 modelBg={modelBg}
                 setModelBg={setModelBg}
-                enabled={enabled}
-                setEnabled={setEnabled}
+                enabled={virtualEnabled}
+                setEnabled={setVirtualEnabled}
                 compare={compare}
                 setCompare={setCompare}
               ></VirtualSettings>
@@ -278,7 +271,18 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       removeVideo: () => {
         if (virtualSettingsRef.current) {
           virtualSettingsRef.current.removeVideo();
+          setCompare(false);
         }
+      },
+      state: {
+        volume,
+        blur: videoBlur,
+        screenBlur,
+        virtual: {
+          enabled: virtualEnabled,
+          role: modelRole,
+          bg: modelBg,
+        },
       },
     }));
 
@@ -685,12 +689,21 @@ function BuildUserStatus({
       if (data.error) {
         throw new Error(data.error);
       }
-
+      messageApi.success({
+        content: t('settings.general.status.define.success'),
+      });
       // 服务器已经保存了状态，使用socket通知所有房间里的人
       socket.emit('new_user_status', { status: data.status, room: data.roomId });
+      // 清空所有输入框
+      setName('');
+      setDesc('');
+      setSelectedIcon(status_icons[0].key);
+      setVolume(80);
+      setVideoBlur(0.15);
+      setScreenBlur(0.15);
     } catch (e) {
       messageApi.error({
-        content: `${e}`,
+        content: `${t('settings.general.status.define.fail')}: ${e}`,
       });
     }
   };

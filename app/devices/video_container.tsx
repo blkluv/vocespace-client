@@ -140,19 +140,19 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         if (track.source === Track.Source.Camera) {
           // 需要判断虚拟形象是否开启，若开启则需要关闭
           if (
-            uState.virtualRole.enabled ||
+            uState.virtual.enabled ||
             settings[room.localParticipant.identity]?.virtual.enabled
           ) {
             setUState((prev) => ({
               ...prev,
-              virtualRole: {
-                ...prev.virtualRole,
+              virtual: {
+                ...prev.virtual,
                 enabled: false,
               },
             }));
             updateSettings({
               virtual: {
-                ...uState.virtualRole,
+                ...uState.virtual,
                 enabled: false,
               },
             }).then(() => {
@@ -310,8 +310,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             blur: 0.15,
             screenBlur: 0.15,
             volume: 0,
-            virtualRole: {
-              ...prev.virtualRole,
+            virtual: {
+              ...prev.virtual,
               enabled: false,
               bg: ModelBg.ClassRoom,
               role: ModelRole.None,
@@ -328,8 +328,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             setUState((prev) => ({
               ...prev,
               status: UserStatus.Offline,
-              virtualRole: {
-                ...prev.virtualRole,
+              virtual: {
+                ...prev.virtual,
                 enabled: false,
                 bg: ModelBg.ClassRoom,
                 role: ModelRole.None,
@@ -414,6 +414,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
               )}
               <Controls
                 ref={controlsRef}
+                setUserStatus={setUserStatus}
                 controls={{ chat: true, settings: !!SettingsComponent }}
                 updateSettings={updateSettings}
               ></Controls>

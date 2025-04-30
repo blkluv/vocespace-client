@@ -66,6 +66,8 @@ export default {
             desc: "请输入状态描述",
           },
           save: "保存状态",
+          success: "创建新状态成功",
+          fail: "创建新状态失败",
         }
       },
     },

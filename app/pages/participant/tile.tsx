@@ -136,16 +136,16 @@ export const ParticipantItem: (
               }}
             >
               {localParticipant.identity === trackReference.participant.identity &&
-                uState.virtualRole.enabled && (
+                uState.virtual.enabled && (
                   <div
                     className={styles.virtual_video_box_canvas}
                     style={{ visibility: 'hidden', zIndex: '111' }}
                   >
                     <VirtualRoleCanvas
                       video_ele={videoRef}
-                      model_bg={uState.virtualRole.bg}
-                      model_role={uState.virtualRole.role}
-                      enabled={uState.virtualRole.enabled}
+                      model_bg={uState.virtual.bg}
+                      model_role={uState.virtual.role}
+                      enabled={uState.virtual.enabled}
                       messageApi={messageApi}
                       trackRef={trackReference}
                       isLocal={trackReference.participant.identity === localParticipant.identity}
@@ -170,13 +170,13 @@ export const ParticipantItem: (
 
               {/** 暂停使用WebGL虚化 */}
               {/* {localParticipant.identity === trackReference.participant.identity &&
-              uState.virtualRole.enabled ? (
+              uState.virtual.enabled ? (
                 <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
                   <VirtualRoleCanvas
                     video_ele={videoRef}
-                    model_bg={uState.virtualRole.bg}
-                    model_role={uState.virtualRole.role}
-                    enabled={uState.virtualRole.enabled}
+                    model_bg={uState.virtual.bg}
+                    model_role={uState.virtual.role}
+                    enabled={uState.virtual.enabled}
                     messageApi={messageApi}
                     trackRef={trackReference}
                     isLocal={trackReference.participant.identity === localParticipant.identity}
@@ -306,7 +306,7 @@ export const ParticipantItem: (
       loading,
       blurValue,
       videoRef,
-      uState.virtualRole,
+      uState.virtual,
       remoteCursors,
       settings,
       virtualMask,
@@ -377,18 +377,17 @@ export const ParticipantItem: (
       return uState.roomStatus.find(
         (item) => item.id === settings[trackReference.participant.identity]?.status,
       );
-    }, [uState.roomStatus]);
+    }, [uState.roomStatus, settings]);
     const user_menu: MenuProps['items'] = useMemo(() => {
       return [
         {
           key: 'user_info',
           label: (
             <div className={styles.user_info_wrap} onClick={toSettings}>
+              <SvgResource type="modify" svgSize={16} color="#fff"></SvgResource>
               <div className={styles.user_info_wrap_name}>
                 {settings[trackReference.participant.identity]?.name || localParticipant.name}
               </div>
-              <SvgResource type="modify" svgSize={14} color="#fff"></SvgResource>
-              {/* <div className={styles.user_info_wrap_identity}>{trackReference.participant.identity}</div> */}
             </div>
           ),
         },

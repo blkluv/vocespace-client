@@ -1,5 +1,5 @@
 import { Select, SelectProps } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Trans, useI18n } from '@/lib/i18n/i18n';
 import { UserStatus } from '@/lib/std';
 import { useRecoilState } from 'recoil';
@@ -29,6 +29,13 @@ export function StatusSelect({
   const { t } = useI18n();
   const [state, setState] = useRecoilState(userState);
   const [active, setActive] = useState<string>(state.status);
+
+  useEffect(()=> {
+    if (state.status !== active) {
+      setActive(state.status);
+    }
+  }, [state.status]);
+
   const items = useMemo(() => {
     const list = statusDefaultList(t);
     if (state.roomStatus.length > 0) {

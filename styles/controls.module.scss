@@ -180,15 +180,12 @@
   width: 200px;
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px;
+  justify-content: flex-start;
+  padding: 8px 0;
+  gap: 8px;
   &_name{
       font-weight: 700;
       font-size: 14px;
-  }
-  &_identity{
-      font-size: 14px;
-      font-weight: 500;
   }
 }
 
