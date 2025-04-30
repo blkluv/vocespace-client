@@ -308,7 +308,7 @@ export function EnhancedChat({
             </Upload>
           }
           suffix={
-            <Button style={{ border: 'none' }} type="primary" onClick={sendMsg}>
+            <Button style={{ border: 'none', marginRight: "0.5rem" }} type="primary" onClick={sendMsg}>
               {t('common.send')}
             </Button>
           }
