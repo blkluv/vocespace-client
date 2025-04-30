@@ -182,9 +182,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       if (settingsRef.current) {
         settingsRef.current.removeVideo();
       }
-      setTimeout(()=>{
-        setVirtualMask(false);
-      }, 300);
+      setVirtualMask(false);
     };
     // 监听虚拟角色相关的变化 -------------------------------------------------
     React.useEffect(() => {

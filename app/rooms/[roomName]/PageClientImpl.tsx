@@ -166,13 +166,13 @@ function VideoConferenceComponent(props: {
     return {
       videoCaptureDefaults: {
         deviceId: props.userChoices.videoDeviceId ?? undefined,
-        resolution: props.options.hq ? VideoPresets.h2160 : VideoPresets.h720,
+        resolution: props.options.hq ? VideoPresets.h2160 : VideoPresets.h1080,
       },
       publishDefaults: {
         dtx: false,
         videoSimulcastLayers: props.options.hq
-          ? [VideoPresets.h1080, VideoPresets.h720]
-          : [VideoPresets.h540, VideoPresets.h216],
+        ? [VideoPresets.h1440, VideoPresets.h1080]
+        : [VideoPresets.h1080],
         red: !e2eeEnabled,
         videoCodec,
       },

@@ -210,7 +210,7 @@ export function EnhancedChat({
                             {is_img(msg.file.type) ? (
                               <Image
                                 src={msg.file.url}
-                                height={42}
+                                width={"70%"}
                                 fallback={pictureCallback}
                               ></Image>
                             ) : (
