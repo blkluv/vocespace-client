@@ -43,7 +43,7 @@ export const userState = atom({
     volume: 100,
     blur: 0.0,
     screenBlur: 0.0,
-    virtualRole: {
+    virtual: {
       enabled: false,
       role: ModelRole.None,
       bg: ModelBg.ClassRoom,
