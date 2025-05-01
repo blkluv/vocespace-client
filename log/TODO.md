@@ -84,9 +84,8 @@
 - [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
 - [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
-- [ ] tradition环境进行速度缓慢
+- [x] tradition环境进行速度缓慢
 - [ ] video blur 预览
-- [ ] socket
 - [x] 编辑用户名字图标，位置调整
 - [ ] Docker部署
 - [x] 按钮外边距调整

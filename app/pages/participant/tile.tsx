@@ -324,9 +324,9 @@ export const ParticipantItem: (
         case UserStatus.Leisure:
           return 'leisure_dot';
         default:
-          return 'dot';
+          return 'online_dot';
       }
-    }, [settings]);
+    }, [settings, trackReference.participant.identity]);
 
     const setStatusLabel = (name?: string): String => {
       switch (uState.status) {
@@ -377,7 +377,7 @@ export const ParticipantItem: (
       return uState.roomStatus.find(
         (item) => item.id === settings[trackReference.participant.identity]?.status,
       );
-    }, [uState.roomStatus, settings]);
+    }, [uState.roomStatus, settings, trackReference]);
     const user_menu: MenuProps['items'] = useMemo(() => {
       return [
         {

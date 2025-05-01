@@ -2,7 +2,7 @@ import { Button, Input, List, Radio, Slider, Switch, Tabs, TabsProps } from 'ant
 import styles from '@/styles/controls.module.scss';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
-import { loadVideo } from '@/lib/std/device';
+import { loadVideo, useVideoBlur } from '@/lib/std/device';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
@@ -27,7 +27,6 @@ export interface SettingsProps {
     key: TabKey;
     setKey: (e: TabKey) => void;
   };
-  // saveChanges: (tab_key: TabKey) => void;
   messageApi: MessageInstance;
   setUserStatus?: (status: UserStatus | string) => Promise<void>;
   room: string;
@@ -151,7 +150,6 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 step={1.0}
                 onChange={(e) => {
                   setVolume(e);
-                  // saveChanges('audio');
                 }}
               />
             </div>
@@ -181,7 +179,6 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 }}
                 onChangeComplete={(e) => {
                   setVideoBlur(e);
-                  // saveChanges('video');
                 }}
               />
             </div>
@@ -199,7 +196,6 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 }}
                 onChangeComplete={(e) => {
                   setScreenBlur(e);
-                  // saveChanges('screen');
                 }}
               />
             </div>
@@ -208,6 +204,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               <VirtualSettings
                 ref={virtualSettingsRef}
                 close={close}
+                blur={videoBlur}
                 messageApi={messageApi}
                 modelRole={modelRole}
                 setModelRole={setModelRole}
@@ -336,6 +333,7 @@ export interface VirtualSettingsProps {
   compare: boolean;
   setCompare: (e: boolean) => void;
   close: boolean;
+  blur: number;
 }
 
 export interface VirtualSettingsExports {
@@ -350,6 +348,7 @@ export const VirtualSettings = forwardRef<
   (
     {
       close,
+      blur,
       messageApi,
       enabled,
       setEnabled,
@@ -366,15 +365,30 @@ export const VirtualSettings = forwardRef<
     const videoRef = useRef<HTMLVideoElement>(null);
     const [model_selected_index, set_model_selected_index] = useState(0);
     const [bg_selected_index, set_bg_selected_index] = useState(0);
-    
+    const [showBlur, setShowBlur] = useState(true);
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
+    const { blurValue, setVideoBlur } = useVideoBlur({
+      videoRef,
+      initialBlur: blur,
+    });
 
+    useEffect(() => {
+      setVideoBlur(blur);
+    }, [blur]);
+
+    useEffect(() => {
+      if (modelRole != ModelRole.None) {
+        setEnabled(true);
+      } else {
+        setEnabled(false);
+      }
+    }, [modelRole]);
     useEffect(() => {
       if (close && videoRef.current && !videoRef.current.srcObject) {
         console.warn('start video');
         loadVideo(videoRef);
       }
-      
-    }, [videoRef,close]);
+    }, [videoRef, close]);
 
     const modelDatas = [
       {
@@ -429,16 +443,6 @@ export const VirtualSettings = forwardRef<
         src: 'v_bg5.jpg',
       },
     ];
-
-    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
-
-    useEffect(() => {
-      if (modelRole != ModelRole.None) {
-        setEnabled(true);
-      } else {
-        setEnabled(false);
-      }
-    }, [modelRole]);
 
     const items: TabsProps['items'] = [
       {
@@ -568,10 +572,11 @@ export const VirtualSettings = forwardRef<
                   const val = !compare;
                   setCompare(val);
                 } else {
-                  messageApi.warning({
-                    content: t('settings.virtual.none_warning'),
-                    duration: 1,
-                  });
+                  // messageApi.warning({
+                  //   content: t('settings.virtual.none_warning'),
+                  //   duration: 1,
+                  // });
+                  setShowBlur(!showBlur);
                 }
               }}
             >
@@ -582,6 +587,8 @@ export const VirtualSettings = forwardRef<
             className={compare ? '' : styles.virtual_video_box_video}
             style={{
               visibility: compare ? 'hidden' : 'visible',
+              filter: showBlur ? `blur(${blurValue}px)` : 'none',
+              transition: 'filter 0.2s ease-in-out',
             }}
             ref={videoRef}
             playsInline
