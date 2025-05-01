@@ -123,6 +123,10 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on('new_user_status', (msg) => {
+      io.emit('new_user_status_response', msg);
+    });
+
     socket.on('disconnect', (msg) => {
       console.log('Socket disconnected', socket.id);
     });

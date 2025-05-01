@@ -21,7 +21,25 @@ interface RoomSettings {
         };
       };
     };
+    status?: Status[];
   };
+}
+
+interface Status {
+  id: string;
+  creator: {
+    name: string;
+    id: string;
+  };
+  name: string;
+  desc: string;
+  icon: {
+    key: string;
+    color: string;
+  };
+  volume: number;
+  blur: number;
+  screenBlur: number;
 }
 
 const roomSettings: RoomSettings = {};
@@ -31,22 +49,25 @@ export async function GET(request: NextRequest) {
   const all = request.nextUrl.searchParams.get('all') === 'true';
   const roomId = request.nextUrl.searchParams.get('roomId');
   const is_pre = request.nextUrl.searchParams.get('pre') === 'true';
-  
+
   if (all) {
     const detail = request.nextUrl.searchParams.get('detail') === 'true';
     if (detail) {
       return NextResponse.json(roomSettings);
-    }else{
+    } else {
       // 将roomSettings转为Map形式 Map<roomId, participants>
-      const roomSettingsMap = Object.entries(roomSettings).reduce((acc, [roomId, { participants }]) => {
-        acc[roomId] = Object.keys(participants);
-        return acc;
-      }, {} as Record<string, string[]>);
+      const roomSettingsMap = Object.entries(roomSettings).reduce(
+        (acc, [roomId, { participants }]) => {
+          acc[roomId] = Object.keys(participants);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
 
       return NextResponse.json(roomSettingsMap);
     }
   }
-  if (roomId == "" || !roomId) {
+  if (roomId == '' || !roomId) {
     return NextResponse.json({ error: 'Missing roomId' }, { status: 400 });
   }
   const settings = roomSettings[roomId]?.participants || {};
@@ -120,6 +141,35 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error updating room settings:', error);
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
+  }
+}
+
+// 添加房间状态
+export async function PUT(request: NextRequest) {
+  const body = await request.json();
+  const { roomId, status }: { roomId: string; status: Status } = body;
+  if (!roomId || !status) {
+    return NextResponse.json({ error: 'Room ID and status are required' }, { status: 400 });
+  }
+  if (!roomSettings[roomId]) {
+    return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+  }
+
+  if (!roomSettings[roomId].status) {
+    roomSettings[roomId].status = [];
+  }
+
+  // 检查状态是否已存在，若存在则返回错误信息，否则添加
+  let existStatus = roomSettings[roomId].status.find((s) => s.name === status.name);
+  if (existStatus) {
+    return NextResponse.json({
+      error: 'Status already exists',
+      status: existStatus,
+    });
+  } else {
+    roomSettings[roomId].status.push(status);
+    // 返回所有状态
+    return NextResponse.json({ success: true, status: roomSettings[roomId].status, roomId });
   }
 }
 

@@ -4,7 +4,8 @@
   display: inline-flex;
   align-items: center;
   margin: auto;
-  justify-content: flex-start;
+  justify-content: space-between;
+  padding: 0 0.5rem;
   &_left {
     width: calc(100% - 100px);
     height: 100%;
@@ -26,6 +27,13 @@
 .setting_box{
   margin: 16px 0;
   width: 100%;
+  &_line{
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
 }
 
 .setting_container{
@@ -172,15 +180,12 @@
   width: 200px;
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px;
+  justify-content: flex-start;
+  padding: 8px 0;
+  gap: 8px;
   &_name{
       font-weight: 700;
       font-size: 14px;
-  }
-  &_identity{
-      font-size: 14px;
-      font-weight: 500;
   }
 }
 
@@ -221,4 +226,24 @@
   0% { transform: translate(-50%, -50%) scale(1); }
   50% { transform: translate(-50%, -50%) scale(1.2); }
   100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.build_status{
+  margin: 8px 0 0 0;
+}
+
+.status_icon {
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  width: 42px;
+  transition: all 0.3s ease;
+  &:hover {
+    filter: brightness(1.1);
+  }
 }

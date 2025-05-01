@@ -50,6 +50,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
    */
   saveUserChoices?: boolean;
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
+  setUserStatus: (status: UserStatus | string) => Promise<void>;
 }
 
 export interface ControlBarExport {
@@ -80,6 +81,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       saveUserChoices = true,
       onDeviceError,
       updateSettings,
+      setUserStatus,
       ...props
     }: ControlBarProps,
     ref,
@@ -161,102 +163,51 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     // settings ------------------------------------------------------------------------------------------
     const room = useMaybeRoomContext();
     const [key, setKey] = React.useState<TabKey>('general');
-    const [virtualEnabled, setVirtualEnabled] = React.useState(false);
-    const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.None);
-    const [modelBg, setModelBg] = React.useState<ModelBg>(ModelBg.ClassRoom);
-    const [compare, setCompare] = React.useState(false);
     const settingsRef = React.useRef<SettingsExports>(null);
     const [messageApi, contextHolder] = message.useMessage();
-    const [device, setDevice] = useRecoilState(userState);
-    const [volume, setVolume] = React.useState(device.volume);
-    const [videoBlur, setVideoBlur] = React.useState(device.blur);
-    const [screenBlur, setScreenBlur] = React.useState(device.screenBlur);
+    const [uState, setUState] = useRecoilState(userState);
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
-    const closeSetting = () => {
-      setCompare(false);
-      if (modelRole !== ModelRole.None) {
-        setVirtualEnabled(true);
-      } else {
-        setVirtualEnabled(false);
-      }
-      if (settingsRef.current) {
+    const closeSetting = async () => {
+      if (settingsRef.current && room) {
         settingsRef.current.removeVideo();
+        // 更新用户名 ------------------------------------------------------
+        const newName = settingsRef.current.username;
+        if (
+          newName !== '' &&
+          newName !== (room.localParticipant?.name || room.localParticipant.identity)
+        ) {
+          saveUsername(newName);
+          await room.localParticipant?.setMetadata(JSON.stringify({ name: newName }));
+          await room.localParticipant.setName(newName);
+          messageApi.success(t('msg.success.user.username.change'));
+        } else if (newName == (room.localParticipant?.name || room.localParticipant.identity)) {
+        } else {
+          messageApi.error(t('msg.error.user.username.change'));
+        }
+        // 更新其他设置 ------------------------------------------------
+        const { volume, screenBlur, blur, virtual } = settingsRef.current.state;
+
+        setUState((prev) => ({
+          ...prev,
+          volume,
+          screenBlur,
+          blur,
+          virtual,
+        }));
+        await updateSettings(settingsRef.current.state);
+        // 通知socket，进行状态的更新 -----------------------------------
+        socket.emit('update_user_status');
       }
       setVirtualMask(false);
     };
-    // 监听虚拟角色相关的变化 -------------------------------------------------
-    React.useEffect(() => {
-      setDevice({
-        ...device,
-        virtualRole: {
-          enabled: virtualEnabled,
-          role: modelRole,
-          bg: modelBg,
-        },
-      });
-      // 更新设置
-      updateSettings({
-        virtual: {
-          enabled: virtualEnabled,
-          role: modelRole,
-          bg: modelBg,
-        },
-      }).then(() => {
-        socket.emit('update_user_status');
-      });
-    }, [virtualEnabled, modelRole, modelBg]);
-    const saveChanges = async (key: TabKey) => {
-      let update;
-      switch (key) {
-        case 'general': {
-          const new_name = settingsRef.current?.username;
-          if (new_name) {
-            saveUsername(new_name);
-            if (room) {
-              try {
-                await room.localParticipant?.setMetadata(JSON.stringify({ name: new_name }));
-                await room.localParticipant.setName(new_name);
-                update = {
-                  name: new_name,
-                };
-                messageApi.success(t('msg.success.user.username.change'));
-              } catch (error) {
-                messageApi.error(t('msg.error.user.username.change'));
-              }
-            }
-          }
-          break;
-        }
-        case 'audio': {
-          setDevice({ ...device, volume });
-          update = {
-            volume,
-          };
-          break;
-        }
-        case 'video': {
-          setDevice({ ...device, blur: videoBlur });
-          update = {
-            blur: videoBlur,
-          };
-          break;
-        }
-        case 'screen': {
-          setDevice({ ...device, screenBlur });
-          update = {
-            screenBlur,
-          };
-          break;
-        }
-      }
-      await updateSettings({ ...update });
-      // 通知socket，进行状态的更新
-      socket.emit('update_user_status');
-    };
 
-    const openSettings = (tab: TabKey) => {
+    // 打开设置面板 -----------------------------------------------------------
+    const openSettings = async (tab: TabKey) => {
       setKey(tab);
       setSettingVis(true);
+      if (settingsRef.current && tab === 'video') {
+        await settingsRef.current.startVideo();
+      }
     };
 
     React.useImperativeHandle(
@@ -266,87 +217,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           openSettings,
         } as ControlBarExport),
     );
-
-    const setUserStatus = async (status: UserStatus) => {
-      let newStatus = {
-        status: status,
-      };
-      switch (status) {
-        case UserStatus.Online: {
-          if (room) {
-            room.localParticipant.setMicrophoneEnabled(true);
-            room.localParticipant.setCameraEnabled(true);
-            room.localParticipant.setScreenShareEnabled(false);
-            if (volume == 0) {
-              const newVolume = 80;
-              setVolume(newVolume);
-              // 确保设备状态同步更新
-              setDevice((prev) => ({
-                ...prev,
-                volume: newVolume,
-              }));
-              Object.assign(newStatus, { volume: newVolume });
-            }
-          }
-          break;
-        }
-        case UserStatus.Leisure: {
-          setVideoBlur(0.15);
-          setScreenBlur(0.15);
-          setDevice((prev) => ({
-            ...prev,
-            blur: 0.15,
-            screenBlur: 0.15,
-          }));
-          Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15 });
-          break;
-        }
-        case UserStatus.Busy: {
-          setVideoBlur(0.15);
-          setScreenBlur(0.15);
-          setVolume(0);
-          setVirtualEnabled(false);
-          setModelRole(ModelRole.None);
-          setModelBg(ModelBg.ClassRoom);
-          setDevice((prev) => ({
-            ...prev,
-            blur: 0.15,
-            screenBlur: 0.15,
-            volume: 0,
-            virtualRole: {
-              ...prev.virtualRole,
-              enabled: false,
-              bg: ModelBg.ClassRoom,
-              role: ModelRole.None,
-            },
-          }));
-
-          Object.assign(newStatus, { blur: 0.15, screenBlur: 0.15, volume: 0 });
-          break;
-        }
-        case UserStatus.Offline: {
-          if (room) {
-            room.localParticipant.setMicrophoneEnabled(false);
-            room.localParticipant.setCameraEnabled(false);
-            room.localParticipant.setScreenShareEnabled(false);
-            setDevice((prev) => ({
-              ...prev,
-              virtualRole: {
-                ...prev.virtualRole,
-                enabled: false,
-                bg: ModelBg.ClassRoom,
-                role: ModelRole.None,
-              },
-            }));
-          }
-          break;
-        }
-      }
-
-      await updateSettings(newStatus);
-      // 通知socket，进行状态的更新
-      socket.emit('update_user_status');
-    };
 
     // [chat] -----------------------------------------------------------------------------------------------------
     const [chatOpen, setChatOpen] = React.useState(false);
@@ -431,7 +301,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           <SettingToggle
             enabled={settingVis}
-            onClicked={() => {
+            onClicked={async () => {
               // setVirtualEnabled(false);
               setSettingVis(true);
             }}
@@ -473,40 +343,19 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           })}
         >
           <div className={styles.setting_container}>
-            <Settings
-              virtual={{
-                enabled: virtualEnabled,
-                setEnabled: setVirtualEnabled,
-                modelRole: modelRole,
-                setModelRole: setModelRole,
-                modelBg: modelBg,
-                setModelBg: setModelBg,
-                compare,
-                setCompare,
-              }}
-              ref={settingsRef}
-              messageApi={messageApi}
-              microphone={{
-                audio: {
-                  volume: volume,
-                  setVolume,
-                },
-              }}
-              camera={{
-                video: {
-                  blur: videoBlur,
-                  setVideoBlur,
-                },
-                screen: {
-                  blur: screenBlur,
-                  setScreenBlur,
-                },
-              }}
-              username={userChoices.username}
-              tab={{ key, setKey }}
-              saveChanges={saveChanges}
-              setUserStatus={setUserStatus}
-            ></Settings>
+            {room && (
+              <Settings
+                ref={settingsRef}
+                close={settingVis}
+                messageApi={messageApi}
+                room={room.name}
+                username={userChoices.username}
+                tab={{ key, setKey }}
+                // saveChanges={saveChanges}
+                setUserStatus={setUserStatus}
+                localParticipant={room.localParticipant}
+              ></Settings>
+            )}
           </div>
         </Drawer>
       </div>
