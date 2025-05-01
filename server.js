@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 
 // const dev = process.env.NODE_ENV !== 'production';
-const dev = true;
+const dev = false;
 const hostname = 'localhost';
 const port = 3000;
 const basePath = ''; // 添加 basePath 配置
