@@ -85,7 +85,7 @@
 - [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 - [x] tradition环境进行速度缓慢
-- [ ] video blur 预览
+- [x] video blur 预览
 - [x] 编辑用户名字图标，位置调整
 - [ ] Docker部署
 - [x] 按钮外边距调整

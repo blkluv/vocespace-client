@@ -602,6 +602,8 @@ export const VirtualSettings = forwardRef<
                 messageApi={messageApi}
                 isLocal={true}
                 isReplace={false}
+                onReady={() => {}}
+                onDestroy={() => {}}
               ></VirtualRoleCanvas>
             </div>
           )}

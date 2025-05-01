@@ -68,6 +68,12 @@ export const ParticipantItem: (
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
     const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
+    const [virtualReady, setVirtualReady] = React.useState(false);
+
+    useEffect(()=>{
+      setVirtualReady(false);
+    }, [uState.virtual]);
+
 
     // 存储所有观众的鼠标位置
     const [remoteCursors, setRemoteCursors] = React.useState<{
@@ -150,6 +156,12 @@ export const ParticipantItem: (
                       trackRef={trackReference}
                       isLocal={trackReference.participant.identity === localParticipant.identity}
                       isReplace={true}
+                      onReady={() => {
+                        setVirtualReady(true);
+                      }}
+                      onDestroy={() => {
+                        setVirtualReady(false);
+                      }}
                     ></VirtualRoleCanvas>
                   </div>
                 )}
@@ -157,7 +169,8 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter:
-                    settings[trackReference.participant.identity]?.virtual?.enabled ?? false
+                    (settings[trackReference.participant.identity]?.virtual?.enabled ?? false) &&
+                    virtualReady
                       ? `none`
                       : `blur(${blurValue}px)`,
                   transition: 'filter 0.2s ease-in-out',
@@ -310,6 +323,7 @@ export const ParticipantItem: (
       remoteCursors,
       settings,
       virtualMask,
+      virtualReady,
     ]);
 
     // [status] ------------------------------------------------------------
