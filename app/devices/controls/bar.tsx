@@ -163,14 +163,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     // settings ------------------------------------------------------------------------------------------
     const room = useMaybeRoomContext();
     const [key, setKey] = React.useState<TabKey>('general');
-    // const [virtualEnabled, setVirtualEnabled] = React.useState(false);
-    // const [modelRole, setModelRole] = React.useState<ModelRole>(ModelRole.None);
-    // const [modelBg, setModelBg] = React.useState<ModelBg>(ModelBg.ClassRoom);
-
     const settingsRef = React.useRef<SettingsExports>(null);
     const [messageApi, contextHolder] = message.useMessage();
-    // const [uState, setUState] = useRecoilState(userState);
-
+    const [uState, setUState] = useRecoilState(userState);
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const closeSetting = async () => {
       if (settingsRef.current && room) {
@@ -181,6 +176,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           newName !== '' &&
           newName !== (room.localParticipant?.name || room.localParticipant.identity)
         ) {
+          saveUsername(newName);
           await room.localParticipant?.setMetadata(JSON.stringify({ name: newName }));
           await room.localParticipant.setName(newName);
           messageApi.success(t('msg.success.user.username.change'));
@@ -189,38 +185,29 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           messageApi.error(t('msg.error.user.username.change'));
         }
         // 更新其他设置 ------------------------------------------------
+        const { volume, screenBlur, blur, virtual } = settingsRef.current.state;
+
+        setUState((prev) => ({
+          ...prev,
+          volume,
+          screenBlur,
+          blur,
+          virtual,
+        }));
         await updateSettings(settingsRef.current.state);
         // 通知socket，进行状态的更新 -----------------------------------
         socket.emit('update_user_status');
       }
       setVirtualMask(false);
     };
-    // 监听虚拟角色相关的变化 -------------------------------------------------
-    // React.useEffect(() => {
-    //   setUState({
-    //     ...uState,
-    //     virtual: {
-    //       enabled: virtualEnabled,
-    //       role: modelRole,
-    //       bg: modelBg,
-    //     },
-    //   });
-    //   // 更新设置
-    //   updateSettings({
-    //     virtual: {
-    //       enabled: virtualEnabled,
-    //       role: modelRole,
-    //       bg: modelBg,
-    //     },
-    //   }).then(() => {
-    //     socket.emit('update_user_status');
-    //   });
-    // }, [virtualEnabled, modelRole, modelBg]);
 
     // 打开设置面板 -----------------------------------------------------------
-    const openSettings = (tab: TabKey) => {
+    const openSettings = async (tab: TabKey) => {
       setKey(tab);
       setSettingVis(true);
+      if (settingsRef.current && tab === 'video') {
+        await settingsRef.current.startVideo();
+      }
     };
 
     React.useImperativeHandle(
@@ -314,7 +301,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           <SettingToggle
             enabled={settingVis}
-            onClicked={() => {
+            onClicked={async () => {
               // setVirtualEnabled(false);
               setSettingVis(true);
             }}
@@ -359,6 +346,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             {room && (
               <Settings
                 ref={settingsRef}
+                close={settingVis}
                 messageApi={messageApi}
                 room={room.name}
                 username={userChoices.username}

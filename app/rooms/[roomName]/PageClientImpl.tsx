@@ -45,7 +45,7 @@ export const userState = atom({
     screenBlur: 0.15,
     virtual: {
       enabled: false,
-      role: ModelRole.Haru,
+      role: ModelRole.None,
       bg: ModelBg.ClassRoom,
     },
     status: UserStatus.Online as string,

@@ -1,6 +1,6 @@
 import { Button, Input, List, Radio, Slider, Switch, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
 import { loadVideo } from '@/lib/std/device';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
@@ -22,7 +22,7 @@ const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export interface SettingsProps {
   username: string;
-
+  close: boolean;
   tab: {
     key: TabKey;
     setKey: (e: TabKey) => void;
@@ -37,6 +37,7 @@ export interface SettingsProps {
 export interface SettingsExports {
   username: string;
   removeVideo: () => void;
+  startVideo: () => Promise<void>;
   state: {
     volume: number;
     blur: number;
@@ -54,6 +55,7 @@ export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'about_us';
 export const Settings = forwardRef<SettingsExports, SettingsProps>(
   (
     {
+      close,
       username: uname,
       tab: { key, setKey },
       // saveChanges,
@@ -205,6 +207,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               <div style={{ marginBottom: '6px' }}>{t('settings.virtual.title')}:</div>
               <VirtualSettings
                 ref={virtualSettingsRef}
+                close={close}
                 messageApi={messageApi}
                 modelRole={modelRole}
                 setModelRole={setModelRole}
@@ -274,6 +277,11 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
           setCompare(false);
         }
       },
+      startVideo: async () => {
+        if (virtualSettingsRef.current) {
+          await virtualSettingsRef.current.startVideo();
+        }
+      },
       state: {
         volume,
         blur: videoBlur,
@@ -327,10 +335,12 @@ export interface VirtualSettingsProps {
   setModelBg: (e: ModelBg) => void;
   compare: boolean;
   setCompare: (e: boolean) => void;
+  close: boolean;
 }
 
 export interface VirtualSettingsExports {
   removeVideo: () => void;
+  startVideo: () => Promise<void>;
 }
 
 export const VirtualSettings = forwardRef<
@@ -339,6 +349,7 @@ export const VirtualSettings = forwardRef<
 >(
   (
     {
+      close,
       messageApi,
       enabled,
       setEnabled,
@@ -355,6 +366,15 @@ export const VirtualSettings = forwardRef<
     const videoRef = useRef<HTMLVideoElement>(null);
     const [model_selected_index, set_model_selected_index] = useState(0);
     const [bg_selected_index, set_bg_selected_index] = useState(0);
+    
+
+    useEffect(() => {
+      if (close && videoRef.current && !videoRef.current.srcObject) {
+        console.warn('start video');
+        loadVideo(videoRef);
+      }
+      
+    }, [videoRef,close]);
 
     const modelDatas = [
       {
@@ -411,6 +431,14 @@ export const VirtualSettings = forwardRef<
     ];
 
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
+
+    useEffect(() => {
+      if (modelRole != ModelRole.None) {
+        setEnabled(true);
+      } else {
+        setEnabled(false);
+      }
+    }, [modelRole]);
 
     const items: TabsProps['items'] = [
       {
@@ -520,15 +548,11 @@ export const VirtualSettings = forwardRef<
       }
     };
 
-    useEffect(() => {
-      loadVideo(videoRef);
-      return () => {
-        removeVideo();
-      };
-    }, [loadVideo, compare]);
-
     useImperativeHandle(ref, () => ({
       removeVideo,
+      startVideo: async () => {
+        await loadVideo(videoRef);
+      },
     }));
 
     return (
@@ -561,7 +585,6 @@ export const VirtualSettings = forwardRef<
             }}
             ref={videoRef}
             playsInline
-            muted
           />
           {compare && modelRole != ModelRole.None && (
             <div className={styles.virtual_video_box_canvas}>
