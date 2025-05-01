@@ -56,6 +56,19 @@ export default {
         busy_desc: '忙碌中，用户的视频将进行模糊处理, 音频将静音',
         offline: '离开',
         offline_desc: '离开, 用户的视频和音频都将关闭',
+        define: {
+          title: "自定义状态",
+          name: "状态名称",
+          desc: "状态描述",
+          icon: "状态图标",
+          placeholder: {
+            name: "请输入状态名称",
+            desc: "请输入状态描述",
+          },
+          save: "保存状态",
+          success: "创建新状态成功",
+          fail: "创建新状态失败",
+        }
       },
     },
     audio: {
@@ -147,7 +160,6 @@ export default {
       file: {
         upload: '文件上传失败',
         download: '文件下载失败',
-        
       }
     },
     request: {

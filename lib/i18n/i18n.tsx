@@ -6,11 +6,11 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 
 // 定义翻译类型
 export type Translations = typeof en;
-
+export type Trans = (key: string, options?: { [key: string]: string | number }) => string;
 // 创建 i18n 上下文
 interface I18nContextType {
   locale: string;
-  t: (key: string, options?: { [key: string]: string | number }) => string;
+  t: Trans;
   changeLocale: (newLocale: string) => void;
 }
 

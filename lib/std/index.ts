@@ -1,3 +1,5 @@
+import { EgressClient } from 'livekit-server-sdk';
+
 /**
  * Option<T>
  *
@@ -23,6 +25,23 @@ export interface SizeNum {
 export interface UserItemProp {
   name: string;
   status: UserStatus;
+}
+
+export interface UserDefineStatus {
+  id: string;
+  creator: {
+    name: string;
+    id: string;
+  };
+  name: string;
+  desc: string;
+  icon: {
+    key: string;
+    color: string;
+  };
+  volume: number;
+  blur: number;
+  screenBlur: number;
 }
 
 // export type UserStatus = 'success' | 'processing' | 'default' | 'error' | 'warning';
@@ -53,17 +72,6 @@ export function connect_endpoint(url: string): string {
   }
   return `${prefix}${url}`;
 }
-
-/// 生成随机4个字符
-export function ulid(): string {
-  const char = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  let res = '';
-  for (let i = 0; i < 4; i++) {
-    res += char[Math.floor(Math.random() * char.length)];
-  }
-  return res;
-}
-
 ///生成唯一颜色
 export const randomColor = (participantId: string): string => {
   // 使用参与者ID创建一个简单的哈希值

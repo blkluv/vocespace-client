@@ -27,4 +27,6 @@ export interface VirtualRoleProps {
   messageApi: MessageInstance,
   isLocal: boolean,
   isReplace: boolean,
+  onReady:() => void;
+  onDestroy:() => void;
 }

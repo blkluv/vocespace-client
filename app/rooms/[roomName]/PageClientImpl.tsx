@@ -25,7 +25,7 @@ import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, RecoilRoot, useRecoilState } from 'recoil';
-import { connect_endpoint, UserStatus } from '@/lib/std';
+import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 
@@ -43,15 +43,16 @@ export const userState = atom({
     volume: 80,
     blur: 0.15,
     screenBlur: 0.15,
-    virtualRole: {
+    virtual: {
       enabled: false,
-      role: ModelRole.Haru,
+      role: ModelRole.None,
       bg: ModelBg.ClassRoom,
     },
-    status: UserStatus.Online,
+    status: UserStatus.Online as string,
     rpc: {
       wave: false,
     },
+    roomStatus: [] as UserDefineStatus[],
   },
 });
 
@@ -166,13 +167,13 @@ function VideoConferenceComponent(props: {
     return {
       videoCaptureDefaults: {
         deviceId: props.userChoices.videoDeviceId ?? undefined,
-        resolution: props.options.hq ? VideoPresets.h2160 : VideoPresets.h720,
+        resolution: props.options.hq ? VideoPresets.h2160 : VideoPresets.h1080,
       },
       publishDefaults: {
         dtx: false,
         videoSimulcastLayers: props.options.hq
-          ? [VideoPresets.h1080, VideoPresets.h720]
-          : [VideoPresets.h540, VideoPresets.h216],
+        ? [VideoPresets.h1440, VideoPresets.h1080]
+        : [VideoPresets.h1080],
         red: !e2eeEnabled,
         videoCodec,
       },

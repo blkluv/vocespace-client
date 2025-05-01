@@ -1,8 +1,8 @@
-import { Button, Input, List, Slider, Switch, Tabs, TabsProps } from 'antd';
+import { Button, Input, List, Radio, Slider, Switch, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
-import { loadVideo } from '@/lib/std/device';
+import { loadVideo, useVideoBlur } from '@/lib/std/device';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
@@ -10,42 +10,43 @@ import { AudioSelect } from './audio_select';
 import { VideoSelect } from './video_select';
 import { LangSelect } from './lang_select';
 import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
-import { src, UserStatus } from '@/lib/std';
+import { connect_endpoint, src, UserDefineStatus, UserStatus } from '@/lib/std';
 import { StatusSelect } from './status_select';
 import { useRecoilState } from 'recoil';
-import { virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import TextArea from 'antd/es/input/TextArea';
+import { LocalParticipant } from 'livekit-client';
+import { ulid } from 'ulid';
+
+const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export interface SettingsProps {
-  microphone: {
-    audio: {
-      volume: number;
-      setVolume: (e: number) => void;
-    };
-  };
-  camera: {
-    video: {
-      blur: number;
-      setVideoBlur: (e: number) => void;
-    };
-    screen: {
-      blur: number;
-      setScreenBlur: (e: number) => void;
-    };
-  };
   username: string;
-  virtual: VirtualSettingsProps;
+  close: boolean;
   tab: {
     key: TabKey;
     setKey: (e: TabKey) => void;
   };
-  saveChanges: (tab_key: TabKey) => void;
   messageApi: MessageInstance;
-  setUserStatus?: (status: UserStatus) => Promise<void>;
+  setUserStatus?: (status: UserStatus | string) => Promise<void>;
+  room: string;
+  localParticipant: LocalParticipant;
 }
 
 export interface SettingsExports {
   username: string;
   removeVideo: () => void;
+  startVideo: () => Promise<void>;
+  state: {
+    volume: number;
+    blur: number;
+    screenBlur: number;
+    virtual: {
+      enabled: boolean;
+      role: ModelRole;
+      bg: ModelBg;
+    };
+  };
 }
 
 export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'about_us';
@@ -53,34 +54,39 @@ export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'about_us';
 export const Settings = forwardRef<SettingsExports, SettingsProps>(
   (
     {
-      microphone: {
-        audio: { volume, setVolume },
-      },
-      camera: {
-        video: { blur: video_blur, setVideoBlur },
-        screen: { blur: screen_blur, setScreenBlur },
-      },
+      close,
       username: uname,
       tab: { key, setKey },
-      virtual: {
-        enabled,
-        setEnabled,
-        modelRole,
-        setModelRole,
-        modelBg,
-        setModelBg,
-        compare,
-        setCompare,
-      },
-      saveChanges,
+      // saveChanges,
       messageApi,
       setUserStatus,
+      room,
+      localParticipant,
     }: SettingsProps,
     ref,
   ) => {
     const { t } = useI18n();
     const [username, setUsername] = useState(uname);
+    const [appendStatus, setAppendStatus] = useState(false);
+    const [uState, setUState] = useRecoilState(userState);
+    const [volume, setVolume] = useState(uState.volume);
+    const [videoBlur, setVideoBlur] = useState(uState.blur);
+    const [screenBlur, setScreenBlur] = useState(uState.screenBlur);
+    const [virtualEnabled, setVirtualEnabled] = useState(false);
+    const [modelRole, setModelRole] = useState<ModelRole>(ModelRole.None);
+    const [modelBg, setModelBg] = useState<ModelBg>(ModelBg.ClassRoom);
+    const [compare, setCompare] = useState(false);
     const virtualSettingsRef = useRef<VirtualSettingsExports>(null);
+
+    useEffect(() => {
+      setVolume(uState.volume);
+      setVideoBlur(uState.blur);
+      setScreenBlur(uState.screenBlur);
+      setVirtualEnabled(uState.virtual.enabled);
+      setModelRole(uState.virtual.role);
+      setModelBg(uState.virtual.bg);
+    }, [uState]);
+
     const items: TabsProps['items'] = [
       {
         key: 'general',
@@ -95,16 +101,33 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               onChange={(e: any) => {
                 setUsername(e.target.value);
               }}
-              onBlur={() => {
-                if (username !== uname) {
-                  saveChanges('general');
-                }
-              }}
             ></Input>
             <div className={styles.common_space}>{t('settings.general.lang')}:</div>
             <LangSelect style={{ width: '100%' }}></LangSelect>
             <div className={styles.common_space}>{t('settings.general.status.title')}:</div>
-            <StatusSelect style={{ width: '100%' }} setUserStatus={setUserStatus}></StatusSelect>
+            <div className={styles.setting_box_line}>
+              <StatusSelect
+                style={{ width: 'calc(100% - 52px)' }}
+                setUserStatus={setUserStatus}
+              ></StatusSelect>
+              <Button
+                type="primary"
+                shape="circle"
+                style={{ cursor: 'pointer' }}
+                onClick={() => {
+                  setAppendStatus(!appendStatus);
+                }}
+              >
+                <SvgResource type="add" svgSize={16}></SvgResource>
+              </Button>
+            </div>
+            {appendStatus && (
+              <BuildUserStatus
+                messageApi={messageApi}
+                room={room}
+                localParticipant={localParticipant}
+              ></BuildUserStatus>
+            )}
           </div>
         ),
       },
@@ -122,9 +145,11 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               <Slider
                 value={volume}
                 className={styles.common_space}
+                min={0.0}
+                max={100.0}
+                step={1.0}
                 onChange={(e) => {
                   setVolume(e);
-                  saveChanges('audio');
                 }}
               />
             </div>
@@ -145,7 +170,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               <Slider
                 defaultValue={0.15}
                 className={`${styles.common_space} ${styles.slider}`}
-                value={video_blur}
+                value={videoBlur}
                 min={0.0}
                 max={1.0}
                 step={0.05}
@@ -154,7 +179,6 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 }}
                 onChangeComplete={(e) => {
                   setVideoBlur(e);
-                  saveChanges('video');
                 }}
               />
             </div>
@@ -163,7 +187,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               <Slider
                 defaultValue={0.15}
                 className={`${styles.common_space} ${styles.slider}`}
-                value={screen_blur}
+                value={screenBlur}
                 min={0.0}
                 max={1.0}
                 step={0.05}
@@ -172,21 +196,22 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 }}
                 onChangeComplete={(e) => {
                   setScreenBlur(e);
-                  saveChanges('screen');
                 }}
               />
             </div>
             <div className={styles.setting_box}>
-              <div style={{marginBottom: "6px"}}>{t('settings.virtual.title')}:</div>
+              <div style={{ marginBottom: '6px' }}>{t('settings.virtual.title')}:</div>
               <VirtualSettings
                 ref={virtualSettingsRef}
+                close={close}
+                blur={videoBlur}
                 messageApi={messageApi}
                 modelRole={modelRole}
                 setModelRole={setModelRole}
                 modelBg={modelBg}
                 setModelBg={setModelBg}
-                enabled={enabled}
-                setEnabled={setEnabled}
+                enabled={virtualEnabled}
+                setEnabled={setVirtualEnabled}
                 compare={compare}
                 setCompare={setCompare}
               ></VirtualSettings>
@@ -246,7 +271,23 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       removeVideo: () => {
         if (virtualSettingsRef.current) {
           virtualSettingsRef.current.removeVideo();
+          setCompare(false);
         }
+      },
+      startVideo: async () => {
+        if (virtualSettingsRef.current) {
+          await virtualSettingsRef.current.startVideo();
+        }
+      },
+      state: {
+        volume,
+        blur: videoBlur,
+        screenBlur,
+        virtual: {
+          enabled: virtualEnabled,
+          role: modelRole,
+          bg: modelBg,
+        },
       },
     }));
 
@@ -291,10 +332,13 @@ export interface VirtualSettingsProps {
   setModelBg: (e: ModelBg) => void;
   compare: boolean;
   setCompare: (e: boolean) => void;
+  close: boolean;
+  blur: number;
 }
 
 export interface VirtualSettingsExports {
   removeVideo: () => void;
+  startVideo: () => Promise<void>;
 }
 
 export const VirtualSettings = forwardRef<
@@ -303,6 +347,8 @@ export const VirtualSettings = forwardRef<
 >(
   (
     {
+      close,
+      blur,
       messageApi,
       enabled,
       setEnabled,
@@ -319,6 +365,30 @@ export const VirtualSettings = forwardRef<
     const videoRef = useRef<HTMLVideoElement>(null);
     const [model_selected_index, set_model_selected_index] = useState(0);
     const [bg_selected_index, set_bg_selected_index] = useState(0);
+    const [showBlur, setShowBlur] = useState(true);
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
+    const { blurValue, setVideoBlur } = useVideoBlur({
+      videoRef,
+      initialBlur: blur,
+    });
+
+    useEffect(() => {
+      setVideoBlur(blur);
+    }, [blur]);
+
+    useEffect(() => {
+      if (modelRole != ModelRole.None) {
+        setEnabled(true);
+      } else {
+        setEnabled(false);
+      }
+    }, [modelRole]);
+    useEffect(() => {
+      if (close && videoRef.current && !videoRef.current.srcObject) {
+        console.warn('start video');
+        loadVideo(videoRef);
+      }
+    }, [videoRef, close]);
 
     const modelDatas = [
       {
@@ -374,8 +444,6 @@ export const VirtualSettings = forwardRef<
       },
     ];
 
-    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
-
     const items: TabsProps['items'] = [
       {
         key: 'model',
@@ -396,9 +464,9 @@ export const VirtualSettings = forwardRef<
                     onClick={() => {
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
+                      setVirtualMask(true);
                       if (compare && item.name != ModelRole.None) {
                         // 这里需要将外部视频进行遮罩
-                        setVirtualMask(true);
                         setCompare(false);
                         setTimeout(() => {
                           setCompare(true);
@@ -452,6 +520,7 @@ export const VirtualSettings = forwardRef<
                     className={styles.virtual_model_box}
                     onClick={() => {
                       set_bg_selected_index(index);
+                      setVirtualMask(true);
                       setModelBg(item.src as ModelBg);
                       if (compare) {
                         setCompare(false);
@@ -483,15 +552,11 @@ export const VirtualSettings = forwardRef<
       }
     };
 
-    useEffect(() => {
-      loadVideo(videoRef);
-      return () => {
-        removeVideo();
-      };
-    }, [loadVideo, compare]);
-
     useImperativeHandle(ref, () => ({
       removeVideo,
+      startVideo: async () => {
+        await loadVideo(videoRef);
+      },
     }));
 
     return (
@@ -507,10 +572,11 @@ export const VirtualSettings = forwardRef<
                   const val = !compare;
                   setCompare(val);
                 } else {
-                  messageApi.warning({
-                    content: t('settings.virtual.none_warning'),
-                    duration: 1,
-                  });
+                  // messageApi.warning({
+                  //   content: t('settings.virtual.none_warning'),
+                  //   duration: 1,
+                  // });
+                  setShowBlur(!showBlur);
                 }
               }}
             >
@@ -521,10 +587,11 @@ export const VirtualSettings = forwardRef<
             className={compare ? '' : styles.virtual_video_box_video}
             style={{
               visibility: compare ? 'hidden' : 'visible',
+              filter: showBlur ? `blur(${blurValue}px)` : 'none',
+              transition: 'filter 0.2s ease-in-out',
             }}
             ref={videoRef}
             playsInline
-            muted
           />
           {compare && modelRole != ModelRole.None && (
             <div className={styles.virtual_video_box_canvas}>
@@ -535,6 +602,8 @@ export const VirtualSettings = forwardRef<
                 messageApi={messageApi}
                 isLocal={true}
                 isReplace={false}
+                onReady={() => {}}
+                onDestroy={() => {}}
               ></VirtualRoleCanvas>
             </div>
           )}
@@ -554,6 +623,213 @@ function SelectedMask() {
   return (
     <div className={styles.selected_mask}>
       <SvgResource type="check" svgSize={24} color="#22CCEE"></SvgResource>
+    </div>
+  );
+}
+
+function BuildUserStatus({
+  messageApi,
+  room,
+  localParticipant,
+}: {
+  messageApi: MessageInstance;
+  room: string;
+  localParticipant: LocalParticipant;
+}) {
+  const { t } = useI18n();
+  const [name, setName] = useState('');
+  const [desc, setDesc] = useState('');
+  const status_icons: {
+    key: string;
+    color: string;
+  }[] = [
+    {
+      key: 'a',
+      color: '#3357FF',
+    },
+    {
+      key: 'b',
+      color: '#0052d9',
+    },
+    {
+      key: 'c',
+      color: '#8e56dd',
+    },
+    {
+      key: 'd',
+      color: '#ffaedc',
+    },
+    {
+      key: 'e',
+      color: '#f5ba18',
+    },
+    {
+      key: 'f',
+      color: '#85d3ff',
+    },
+    {
+      key: 'g',
+      color: '#d54941',
+    },
+    {
+      key: 'h',
+      color: '#92dbb2',
+    },
+  ];
+  const [selectedIcon, setSelectedIcon] = useState(status_icons[0].key);
+  const [videoBlur, setVideoBlur] = useState(0.15);
+  const [screenBlur, setScreenBlur] = useState(0.15);
+  const [volume, setVolume] = useState(80);
+
+  const saveStatus = async () => {
+    try {
+      const url = new URL(SAVE_STATUS_ENDPOINT, window.location.origin);
+
+      const status: UserDefineStatus = {
+        id: ulid(),
+        creator: {
+          name: localParticipant.name || localParticipant.identity,
+          id: localParticipant.identity,
+        },
+        name,
+        desc,
+        icon: {
+          key: selectedIcon,
+          color: status_icons.find((item) => item.key == selectedIcon)?.color || '#3357FF',
+        },
+        volume,
+        blur: videoBlur,
+        screenBlur,
+      };
+
+      const response = await fetch(url.toString(), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roomId: room,
+          status,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      messageApi.success({
+        content: t('settings.general.status.define.success'),
+      });
+      // 服务器已经保存了状态，使用socket通知所有房间里的人
+      socket.emit('new_user_status', { status: data.status, room: data.roomId });
+      // 清空所有输入框
+      setName('');
+      setDesc('');
+      setSelectedIcon(status_icons[0].key);
+      setVolume(80);
+      setVideoBlur(0.15);
+      setScreenBlur(0.15);
+    } catch (e) {
+      messageApi.error({
+        content: `${t('settings.general.status.define.fail')}: ${e}`,
+      });
+    }
+  };
+
+  return (
+    <div className={styles.build_status}>
+      <hr />
+      <h4 style={{ fontSize: '16px', color: '#fff' }}>
+        {t('settings.general.status.define.title')}
+      </h4>
+      <div>
+        <div className={styles.common_space}>{t('settings.general.status.define.name')}:</div>
+        <Input
+          value={name}
+          placeholder={t('settings.general.status.define.placeholder.name')}
+          onChange={(e) => {
+            setName(e.target.value);
+          }}
+        ></Input>
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.general.status.define.desc')}:</div>
+        <TextArea
+          rows={3}
+          placeholder={t('settings.general.status.define.placeholder.desc')}
+          value={desc}
+          allowClear
+          onChange={(e) => {
+            setDesc(e.target.value);
+          }}
+          count={{
+            show: true,
+            max: 60,
+          }}
+        ></TextArea>
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.general.status.define.icon')}:</div>
+        <Radio.Group
+          value={selectedIcon}
+          size="large"
+          onChange={(e) => {
+            setSelectedIcon(e.target.value);
+          }}
+        >
+          {status_icons.map((item, index) => (
+            <Radio.Button value={item.key} key={index}>
+              <SvgResource type="dot" svgSize={16} color={item.color}></SvgResource>
+            </Radio.Button>
+          ))}
+        </Radio.Group>
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.audio.volume')}:</div>
+        <Slider
+          value={volume}
+          min={0.0}
+          max={100.0}
+          step={1}
+          onChange={(e) => {
+            setVolume(e);
+          }}
+        />
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.video.video_blur')}:</div>
+        <Slider
+          className={`${styles.slider}`}
+          value={videoBlur}
+          min={0.0}
+          max={1.0}
+          step={0.05}
+          onChange={(e) => {
+            setVideoBlur(e);
+          }}
+        />
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.video.screen_blur')}:</div>
+        <Slider
+          className={`${styles.slider}`}
+          value={screenBlur}
+          min={0.0}
+          max={1.0}
+          step={0.05}
+          onChange={(e) => {
+            setScreenBlur(e);
+          }}
+        />
+      </div>
+
+      <Button style={{ width: '100%', margin: '8px 0' }} type="primary" onClick={saveStatus}>
+        {t('settings.general.status.define.save')}
+      </Button>
     </div>
   );
 }
