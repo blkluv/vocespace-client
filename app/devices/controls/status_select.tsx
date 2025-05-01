@@ -1,17 +1,20 @@
 import { Select, SelectProps } from 'antd';
-import { useState } from 'react';
-import { useI18n } from '@/lib/i18n/i18n';
+import { useEffect, useMemo, useState } from 'react';
+import { Trans, useI18n } from '@/lib/i18n/i18n';
 import { UserStatus } from '@/lib/std';
 import { useRecoilState } from 'recoil';
 import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
+import { BaseOptionType } from 'antd/es/select';
 
-interface Item {
+export interface StatusItem extends BaseOptionType {
   title: string;
   icon: SvgType;
   value: string;
   desc: string;
+  isDefine: boolean;
+  color?: string;
 }
 
 export function StatusSelect({
@@ -21,53 +24,55 @@ export function StatusSelect({
 }: {
   style?: React.CSSProperties;
   className?: string;
-  setUserStatus?: (status: UserStatus) => Promise<void>;
+  setUserStatus?: (status: UserStatus | string) => Promise<void>;
 }) {
   const { t } = useI18n();
   const [state, setState] = useRecoilState(userState);
-  const [active, setActive] = useState(state.status);
-  const items: Item[] = [
-    {
-      title: t('settings.general.status.online'),
-      desc: t('settings.general.status.online_desc'),
-      icon: 'online_dot',
-      value: UserStatus.Online,
-    },
-    {
-      title: t('settings.general.status.leisure'),
-      desc: t('settings.general.status.leisure_desc'),
-      icon: 'leisure_dot',
-      value: UserStatus.Leisure
-    },
-    {
-      title: t('settings.general.status.busy'),
-      desc: t('settings.general.status.busy_desc'),
-      icon: 'busy_dot',
-      value: UserStatus.Busy,
-    },
-    {
-      title: t('settings.general.status.offline'),
-      desc: t('settings.general.status.offline_desc'),
-      icon: 'offline_dot',
-      value: UserStatus.Offline,
-    },
-  ];
+  const [active, setActive] = useState<string>(state.status);
+
+  useEffect(()=> {
+    if (state.status !== active) {
+      setActive(state.status);
+    }
+  }, [state.status]);
+
+  const items = useMemo(() => {
+    const list = statusDefaultList(t);
+    if (state.roomStatus.length > 0) {
+      state.roomStatus.forEach((status) => {
+        list.push({
+          title: status.name,
+          desc: status.desc,
+          icon: 'dot',
+          value: status.id,
+          isDefine: true,
+          color: status.icon.color,
+        });
+      });
+    }
+
+    return list;
+  }, [state.roomStatus]);
 
   const selectActive = (active: string) => {
-    setActive(active as UserStatus);
-    setState({
-      ...state,
-      status: active as UserStatus,
-    });
+    setActive(active);
+    // setState({
+    //   ...state,
+    //   status: active,
+    // });
     if (setUserStatus) {
-      setUserStatus(active as UserStatus);
+      setUserStatus(active);
     }
   };
 
-  const renderedItem: SelectProps['optionRender'] = (option) => {
+  const renderedItem: SelectProps<any, StatusItem>['optionRender'] = (option) => {
     return (
       <div className={styles.status_item}>
-        <SvgResource type={option.data.icon} svgSize={14}></SvgResource>
+        {option.data.isDefine ? (
+          <SvgResource type={option.data.icon} svgSize={14} color={option.data.color}></SvgResource>
+        ) : (
+          <SvgResource type={option.data.icon} svgSize={14}></SvgResource>
+        )}
         <span>{option.data.title}</span>
         <div>{option.data.desc}</div>
       </div>
@@ -79,7 +84,11 @@ export function StatusSelect({
 
     return (
       <div className={styles.status_item}>
-        <SvgResource type={item?.icon as SvgType} svgSize={14}></SvgResource>
+        {item?.isDefine ? (
+          <SvgResource type="dot" svgSize={14} color={item?.color}></SvgResource>
+        ) : (
+          <SvgResource type={item?.icon as SvgType} svgSize={14}></SvgResource>
+        )}
         <span>{item?.title}</span>
       </div>
     );
@@ -98,4 +107,38 @@ export function StatusSelect({
       optionRender={renderedItem}
     ></Select>
   );
+}
+
+
+export const statusDefaultList = (t: Trans):StatusItem[] =>  {
+  return [
+    {
+      title: t('settings.general.status.online'),
+      desc: t('settings.general.status.online_desc'),
+      icon: 'online_dot',
+      value: UserStatus.Online,
+      isDefine: false,
+    },
+    {
+      title: t('settings.general.status.leisure'),
+      desc: t('settings.general.status.leisure_desc'),
+      icon: 'leisure_dot',
+      value: UserStatus.Leisure,
+      isDefine: false,
+    },
+    {
+      title: t('settings.general.status.busy'),
+      desc: t('settings.general.status.busy_desc'),
+      icon: 'busy_dot',
+      value: UserStatus.Busy,
+      isDefine: false,
+    },
+    {
+      title: t('settings.general.status.offline'),
+      desc: t('settings.general.status.offline_desc'),
+      icon: 'offline_dot',
+      value: UserStatus.Offline,
+      isDefine: false,
+    },
+  ];
 }

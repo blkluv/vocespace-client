@@ -57,6 +57,19 @@ export default {
         offline: 'Away',
         offline_desc: "Away, user's video and audio will be turned off",
       },
+      define: {
+        title: "Custom Status",
+        name: "Status Name",
+        desc: "Status Description",
+        icon: "Status Icon",
+        placeholder: {
+          name: "Please enter status name",
+          desc: "Please enter status description",
+        },
+        save: "Save Status",
+        success: "Status saved successfully",
+        fail: "Failed to save status",
+      }
     },
     audio: {
       title: 'Audio',
@@ -148,6 +161,10 @@ export default {
           request: 'Failed to request username',
         },
       },
+      file: {
+        upload: 'File upload failed',
+        download: 'File download failed',
+      }
     },
     request: {
       device: {

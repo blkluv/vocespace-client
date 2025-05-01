@@ -1,6 +1,6 @@
 // lib/hooks/useRoomSettings.ts
 import { useState, useEffect, useCallback } from 'react';
-import { connect_endpoint, UserStatus } from '../std';
+import { connect_endpoint, UserDefineStatus, UserStatus } from '../std';
 import { ModelBg, ModelRole } from '../std/virtual';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
 
@@ -9,7 +9,7 @@ export interface ParticipantSettings {
   volume: number;
   blur: number;
   screenBlur: number;
-  status: UserStatus;
+  status: UserStatus | string;
   socketId: string;
   virtual: {
     role: ModelRole;

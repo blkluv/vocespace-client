@@ -9,14 +9,15 @@ import {
 import styles from '@/styles/pre_join.module.scss';
 import React, { useEffect } from 'react';
 import { facingModeFromLocalTrack, LocalAudioTrack, LocalVideoTrack, Track } from 'livekit-client';
-import { Flex, Input, InputRef, message, Skeleton, Slider, Space } from 'antd';
+import { Input, InputRef, message, Skeleton, Slider, Space } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
-import { roomIdTmpState, userState } from '@/app/rooms/[roomName]/PageClientImpl';
-import { connect_endpoint, src, ulid } from '@/lib/std';
+import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { connect_endpoint, src } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
 import { LangSelect } from '@/app/devices/controls/lang_select';
+import { ulid } from 'ulid';
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint('/api/room-settings');
 /**
@@ -84,12 +85,11 @@ export function PreJoin({
     saveUsername(username);
   }, [username, saveUsername]);
 
-  useEffect(()=>{
-    setTimeout(()=>{
+  useEffect(() => {
+    setTimeout(() => {
       setLoading(false);
-    }, 1500)
+    }, 1500);
   }, []);
-
 
   // Preview tracks -----------------------------------------------------------------------------------
   const tracks = usePreviewTracks(

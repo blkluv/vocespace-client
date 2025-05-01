@@ -33,10 +33,11 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, src, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
 import { RoomSettings } from '@/lib/hooks/room_settings';
+import { statusDefaultList } from '@/app/devices/controls/status_select';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: RoomSettings;
-  setUserStatus: (status: UserStatus) => Promise<void>;
+  setUserStatus: (status: UserStatus | string) => Promise<void>;
   toSettings?: () => void;
   messageApi: MessageInstance;
   isFocus?: boolean;
@@ -67,6 +68,12 @@ export const ParticipantItem: (
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
     const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
+    const [virtualReady, setVirtualReady] = React.useState(false);
+
+    useEffect(()=>{
+      setVirtualReady(false);
+    }, [uState.virtual]);
+
 
     // 存储所有观众的鼠标位置
     const [remoteCursors, setRemoteCursors] = React.useState<{
@@ -117,18 +124,16 @@ export const ParticipantItem: (
     );
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const deviceTrack = React.useMemo(() => {
-      
+      if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
+        return (
+          <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
+            <ParticipantPlaceholder />
+          </div>
+        );
+      }
 
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
-          if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
-            return (
-              <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
-                <ParticipantPlaceholder />
-              </div>
-            );
-          }
-
           return (
             <div
               style={{
@@ -136,44 +141,55 @@ export const ParticipantItem: (
                 width: '100%',
               }}
             >
+              {localParticipant.identity === trackReference.participant.identity &&
+                uState.virtual.enabled && (
+                  <div
+                    className={styles.virtual_video_box_canvas}
+                    style={{ visibility: 'hidden', zIndex: '111' }}
+                  >
+                    <VirtualRoleCanvas
+                      video_ele={videoRef}
+                      model_bg={uState.virtual.bg}
+                      model_role={uState.virtual.role}
+                      enabled={uState.virtual.enabled}
+                      messageApi={messageApi}
+                      trackRef={trackReference}
+                      isLocal={trackReference.participant.identity === localParticipant.identity}
+                      isReplace={true}
+                      onReady={() => {
+                        setVirtualReady(true);
+                      }}
+                      onDestroy={() => {
+                        setVirtualReady(false);
+                      }}
+                    ></VirtualRoleCanvas>
+                  </div>
+                )}
               <VideoTrack
                 ref={videoRef}
                 style={{
                   filter:
-                    settings[trackReference.participant.identity]?.virtual.enabled ?? false
-                      ? 'none'
+                    (settings[trackReference.participant.identity]?.virtual?.enabled ?? false) &&
+                    virtualReady
+                      ? `none`
                       : `blur(${blurValue}px)`,
-                  visibility: 'visible',
-                  transition: 'filter 0.2s ease-in-out'
+                  transition: 'filter 0.2s ease-in-out',
+                  zIndex: '11',
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
                 manageSubscription={autoManageSubscription}
               />
-              {localParticipant.identity === trackReference.participant.identity &&
-                uState.virtualRole.enabled && (
-                  <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
-                    <VirtualRoleCanvas
-                      video_ele={videoRef}
-                      model_bg={uState.virtualRole.bg}
-                      model_role={uState.virtualRole.role}
-                      enabled={uState.virtualRole.enabled}
-                      messageApi={messageApi}
-                      trackRef={trackReference}
-                      isLocal={trackReference.participant.identity === localParticipant.identity}
-                      isReplace={true}
-                    ></VirtualRoleCanvas>
-                  </div>
-                )}
+
               {/** 暂停使用WebGL虚化 */}
               {/* {localParticipant.identity === trackReference.participant.identity &&
-              uState.virtualRole.enabled ? (
+              uState.virtual.enabled ? (
                 <div className={styles.virtual_video_box_canvas} style={{ visibility: 'hidden' }}>
                   <VirtualRoleCanvas
                     video_ele={videoRef}
-                    model_bg={uState.virtualRole.bg}
-                    model_role={uState.virtualRole.role}
-                    enabled={uState.virtualRole.enabled}
+                    model_bg={uState.virtual.bg}
+                    model_role={uState.virtual.role}
+                    enabled={uState.virtual.enabled}
                     messageApi={messageApi}
                     trackRef={trackReference}
                     isLocal={trackReference.participant.identity === localParticipant.identity}
@@ -192,7 +208,7 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter: `blur(${blurValue}px)`,
-                  transition: 'filter 0.2s ease-in-out'
+                  transition: 'filter 0.2s ease-in-out',
                 }}
                 trackRef={trackReference}
                 onSubscriptionStatusChanged={handleSubscribe}
@@ -303,10 +319,11 @@ export const ParticipantItem: (
       loading,
       blurValue,
       videoRef,
-      uState.virtualRole,
+      uState.virtual,
       remoteCursors,
       settings,
       virtualMask,
+      virtualReady,
     ]);
 
     // [status] ------------------------------------------------------------
@@ -320,91 +337,71 @@ export const ParticipantItem: (
           return 'busy_dot';
         case UserStatus.Leisure:
           return 'leisure_dot';
-      }
-    }, [settings]);
-    const statusFromSvgType = (svgType: SvgType): UserStatus => {
-      switch (svgType) {
-        case 'online_dot':
-          return UserStatus.Online;
-        case 'offline_dot':
-          return UserStatus.Offline;
-        case 'busy_dot':
-          return UserStatus.Busy;
-        case 'leisure_dot':
-          return UserStatus.Leisure;
         default:
-          return UserStatus.Online;
+          return 'online_dot';
       }
-    };
-    const setStatusLabel = (): String => {
-      switch (userStatusDisply) {
-        case 'online_dot':
+    }, [settings, trackReference.participant.identity]);
+
+    const setStatusLabel = (name?: string): String => {
+      switch (uState.status) {
+        case UserStatus.Online:
           return t('settings.general.status.online');
-        case 'offline_dot':
+        case UserStatus.Offline:
           return t('settings.general.status.offline');
-        case 'busy_dot':
+        case UserStatus.Busy:
           return t('settings.general.status.busy');
-        case 'leisure_dot':
+        case UserStatus.Leisure:
           return t('settings.general.status.leisure');
         default:
-          return t('settings.general.status.online');
+          return name || '';
       }
     };
 
-    const status_menu: MenuProps['items'] = [
-      {
-        key: 'online_dot',
-        label: (
-          <div className={styles.status_item}>
-            <SvgResource type="online_dot" svgSize={14}></SvgResource>
-            <span>{t('settings.general.status.online')}</span>
-            <div>{t('settings.general.status.online_desc')}</div>
-          </div>
-        ),
-      },
-      {
-        key: 'leisure_dot',
-        label: (
-          <div className={styles.status_item}>
-            <SvgResource type="leisure_dot" svgSize={14}></SvgResource>
-            <span>{t('settings.general.status.leisure')}</span>
-            <div>{t('settings.general.status.leisure_desc')}</div>
-          </div>
-        ),
-      },
-      {
-        key: 'busy_dot',
-        label: (
-          <div className={styles.status_item}>
-            <SvgResource type="busy_dot" svgSize={14}></SvgResource>
-            <span>{t('settings.general.status.busy')}</span>
-            <div>{t('settings.general.status.busy_desc')}</div>
-          </div>
-        ),
-      },
-      {
-        key: 'offline_dot',
-        label: (
-          <div className={styles.status_item}>
-            <SvgResource type="offline_dot" svgSize={14}></SvgResource>
-            <span>{t('settings.general.status.offline')}</span>
-            <div>{t('settings.general.status.offline_desc')}</div>
-          </div>
-        ),
-      },
-    ];
+    const status_menu: MenuProps['items'] = useMemo(() => {
+      const list = statusDefaultList(t);
+      if (uState.roomStatus.length > 0) {
+        uState.roomStatus.forEach((item) => {
+          list.push({
+            title: item.name,
+            desc: item.desc,
+            icon: 'dot',
+            value: item.id,
+            isDefine: true,
+            color: item.icon.color,
+          });
+        });
+      }
 
+      return list.map((item) => ({
+        key: item.value,
+        label: (
+          <div className={styles.status_item}>
+            {item.isDefine ? (
+              <SvgResource type={item.icon} svgSize={14} color={item.color}></SvgResource>
+            ) : (
+              <SvgResource type={item.icon} svgSize={14}></SvgResource>
+            )}
+            <span>{item.title}</span>
+            <div>{item.desc}</div>
+          </div>
+        ),
+      }));
+    }, [uState.roomStatus]);
+    const defineStatus = useMemo(() => {
+      return uState.roomStatus.find(
+        (item) => item.id === settings[trackReference.participant.identity]?.status,
+      );
+    }, [uState.roomStatus, settings, trackReference]);
     const user_menu: MenuProps['items'] = useMemo(() => {
       return [
         {
           key: 'user_info',
           label: (
             <div className={styles.user_info_wrap} onClick={toSettings}>
+              <SvgResource type="modify" svgSize={16} color="#fff"></SvgResource>
               <div className={styles.user_info_wrap_name}>
                 {settings[trackReference.participant.identity]?.name || localParticipant.name}
               </div>
-              <SvgResource type="modify" svgSize={14} color="#fff"></SvgResource>
-              {/* <div className={styles.user_info_wrap_identity}>{trackReference.participant.identity}</div> */}
             </div>
           ),
         },
@@ -416,19 +413,22 @@ export const ParticipantItem: (
               menu={{
                 items: status_menu,
                 onClick: async (e) => {
-                  let status = statusFromSvgType(e.key as SvgType);
-                  // setUState({
-                  //   ...uState,
-                  //   status,
-                  // });
-                  await setUserStatus(status);
+                  await setUserStatus(e.key);
                 },
               }}
             >
               <div className={styles.status_item_inline} style={{ width: '100%' }}>
                 <div className={styles.status_item_inline}>
-                  <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
-                  <div>{setStatusLabel()}</div>
+                  {defineStatus ? (
+                    <SvgResource
+                      type="dot"
+                      svgSize={16}
+                      color={defineStatus.icon.color}
+                    ></SvgResource>
+                  ) : (
+                    <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
+                  )}
+                  <div>{setStatusLabel(defineStatus?.name)}</div>
                 </div>
                 <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
               </div>
@@ -436,7 +436,7 @@ export const ParticipantItem: (
           ),
         },
       ];
-    }, [settings, userStatusDisply]);
+    }, [settings, userStatusDisply, status_menu, defineStatus]);
 
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {
@@ -634,8 +634,18 @@ export const ParticipantItem: (
                     show={'muted'}
                   ></TrackMutedIndicator>
                   <ParticipantName />
-                  <div style={{ marginLeft: '0.25rem' }}>
-                    <SvgResource type={userStatusDisply} svgSize={14}></SvgResource>
+                  <div
+                    style={{ marginLeft: '0.25rem', display: 'inline-flex', alignItems: 'center' }}
+                  >
+                    {defineStatus ? (
+                      <SvgResource
+                        type="dot"
+                        svgSize={16}
+                        color={defineStatus.icon.color}
+                      ></SvgResource>
+                    ) : (
+                      <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
+                    )}
                   </div>
                 </>
               ) : (

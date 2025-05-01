@@ -49,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Radio: {
             buttonBg: '#1E1E1E',
             colorBorder: '#1E1E1E',
+            buttonCheckedBg: '#1E1E1E',
           },
           Input: {
             colorBgBase: '#1E1E1E',
@@ -79,7 +80,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           },
           Popover: {
             colorBgElevated: '#1E1E1E',
-          }
+          },
+          
         },
       }}
     >

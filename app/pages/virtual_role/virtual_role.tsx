@@ -21,6 +21,8 @@ export const Live2DComponent = ({
   trackRef,
   messageApi,
   isReplace,
+  onReady,
+  onDestroy
 }: VirtualRoleProps) => {
   // [ref] --------------------------------------------------------------------------------------------------------------------
   const containerRef = useRef<HTMLDivElement>(null);
@@ -123,6 +125,8 @@ export const Live2DComponent = ({
       const stream = fakeVideoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
     }
+
+    onDestroy();
   };
 
   const loadLive2dCore = () => {
@@ -483,6 +487,7 @@ export const Live2DComponent = ({
       // startFaceTracking(); 暂时停用
       startVirtualCamera();
     }
+    onReady();
   }, [screenSize, enabled, cState.trackingActive, isReplace]);
 
   //创建虚拟视频流
@@ -491,7 +496,7 @@ export const Live2DComponent = ({
 
     try {
       // 将canvas转换为媒体流
-      const stream = canvasElement.captureStream(24); // 24 FPS
+      const stream = canvasElement.captureStream(30); // 30 FPS
       return stream;
     } catch (err) {
       console.error('创建虚拟摄像头流失败:', err);
