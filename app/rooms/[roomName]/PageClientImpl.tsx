@@ -63,7 +63,7 @@ export const roomIdTmpState = atom({
 
 export const virtualMaskState = atom({
   key: 'virtualMaskState',
-  default: false
+  default: false,
 });
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint(
@@ -172,8 +172,8 @@ function VideoConferenceComponent(props: {
       publishDefaults: {
         dtx: false,
         videoSimulcastLayers: props.options.hq
-        ? [VideoPresets.h1440, VideoPresets.h1080]
-        : [VideoPresets.h1080],
+          ? [VideoPresets.h1440, VideoPresets.h1080]
+          : [VideoPresets.h1080],
         red: !e2eeEnabled,
         videoCodec,
       },
@@ -213,10 +213,26 @@ function VideoConferenceComponent(props: {
   }, [e2eeEnabled, room, e2eePassphrase]);
 
   const connectOptions = React.useMemo((): RoomConnectOptions => {
-    return {
+    let conf = {
       maxRetries: 5,
       autoSubscribe: true,
-    };
+    } as RoomConnectOptions;
+
+    if (process.env.TURN_CREDENTIAL) {
+      conf.rtcConfig = {
+        iceServers: [
+          {
+            urls: 'turn:space.voce.chat:3478',
+            username: 'privoce',
+            credential: process.env.TURN_CREDENTIAL,
+          },
+        ],
+        iceCandidatePoolSize: 20,
+        iceTransportPolicy: 'all',
+      };
+    }
+
+    return conf;
   }, []);
 
   const router = useRouter();
@@ -343,7 +359,7 @@ function VideoConferenceComponent(props: {
         onMediaDeviceFailure={handleMediaDeviceFailure}
       >
         <VideoContainer
-        ref={videoContainerRef}
+          ref={videoContainerRef}
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
           messageApi={messageApi}
