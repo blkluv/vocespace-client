@@ -92,6 +92,7 @@ echo "LIVEKIT_API_KEY=devkey" >> .env
 echo "LIVEKIT_API_SECRET=secret" >> .env
 echo "LIVEKIT_URL=wss://space.voce.chat" >> .env
 echo "NEXT_PUBLIC_BASE_PATH=/dev" >> .env
+echo "TURN_CREDENTIAL=+Xj4jYs7tuoyt(xX" >> .env
 #=========================================================================#
 # install dependencies and build -----------------------------------------#
 #=========================================================================#
