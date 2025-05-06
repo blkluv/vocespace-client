@@ -6,7 +6,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { DemoMeetingTab } from './pages/pre_join/demo';
 import { src } from '@/lib/std';
 import { LangSelect } from './devices/controls/lang_select';
-import { Skeleton, Space } from 'antd';
+import { Skeleton } from 'antd';
 
 export default function Page() {
   const { t } = useI18n();
@@ -22,14 +22,14 @@ export default function Page() {
     <>
       <main className={styles.main} data-lk-theme="default">
         <span className={styles.lang_select}>
-         {
-          loading ? (
+          {loading ? (
             <Skeleton.Node
               active
               style={{ height: `40px`, backgroundColor: '#333', width: '126px' }}
             ></Skeleton.Node>
-          ): ( <LangSelect></LangSelect>)
-         }
+          ) : (
+            <LangSelect></LangSelect>
+          )}
         </span>
         {loading ? (
           <div className={styles.flex_column}>
@@ -54,7 +54,7 @@ export default function Page() {
             <h2>{t('msg.info.title')}</h2>
           </div>
         )}
-
+        {/* main tab for room enter ------------------------------------------------------------ */}
         {loading ? (
           <div className={styles.flex_column}>
             <Skeleton.Node
@@ -64,30 +64,28 @@ export default function Page() {
           </div>
         ) : (
           <Suspense fallback="Loading">
-            <DemoMeetingTab label={t('common.demo')} />
+            <DemoMeetingTab />
           </Suspense>
         )}
       </main>
-
-      {
-        loading ? (
-          <Skeleton.Node
-              active
-              style={{ height: `67px`, backgroundColor: '#333', width: '100%' }}
-            ></Skeleton.Node>
-        ): (
-          <footer data-lk-theme="default">
-        {t('msg.info.contact')}
-        <a
-          href="mailto:han@privoce.com"
-          style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
-        >
-          han@privoce.com
-        </a>
-        {t('msg.info.learn_more')}
-      </footer>
-        )
-      }
+      {/* footer for connect ------------------------------------------------------------------- */}
+      {loading ? (
+        <Skeleton.Node
+          active
+          style={{ height: `67px`, backgroundColor: '#333', width: '100%' }}
+        ></Skeleton.Node>
+      ) : (
+        <footer data-lk-theme="default">
+          {t('msg.info.contact')}
+          <a
+            href="mailto:han@privoce.com"
+            style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
+          >
+            han@privoce.com
+          </a>
+          {t('msg.info.learn_more')}
+        </footer>
+      )}
     </>
   );
 }

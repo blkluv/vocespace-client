@@ -91,7 +91,7 @@
 
 - [x] chat输入部分ui调整（b站）
 - [ ] 新用户新状态同步
-- [ ] 进入link regex
+- [x] 进入link regex
 - [ ] Docker部署
 - [ ] 虚拟形象移除对比，保留None时blur的对比
 - [x] 首页骨架屏
