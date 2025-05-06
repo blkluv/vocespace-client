@@ -212,7 +212,14 @@ export function PreJoin({
     <div className={styles.view}>
       {contextHolder}
       <span className={styles.view__lang_select}>
-        <LangSelect></LangSelect>
+        {loading ? (
+          <Skeleton.Node
+            active
+            style={{ height: `40px`, backgroundColor: '#333', width: '126px' }}
+          ></Skeleton.Node>
+        ) : (
+          <LangSelect></LangSelect>
+        )}
       </span>
       <div className={styles.view__video}>
         {videoTrack && videoEnabled && (

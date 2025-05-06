@@ -45,3 +45,12 @@
   top: 1rem;
   right: 1rem;
 }
+
+.flex_column {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-direction: column;
+ 
+}
