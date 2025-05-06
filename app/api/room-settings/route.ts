@@ -12,7 +12,7 @@ interface RoomSettings {
         volume: number;
         blur: number;
         screenBlur: number;
-        status: UserStatus;
+        status: UserStatus | string;
         socketId: string;
         virtual: {
           role: ModelRole;
@@ -70,9 +70,9 @@ export async function GET(request: NextRequest) {
   if (roomId == '' || !roomId) {
     return NextResponse.json({ error: 'Missing roomId' }, { status: 400 });
   }
-  const settings = roomSettings[roomId]?.participants || {};
+  const settings = roomSettings[roomId] || { participants: {} };
   if (is_pre) {
-    let participants = Object.values(settings);
+    let participants = Object.values(settings.participants);
     if (participants.length === 0) {
       return NextResponse.json({
         name: `User 01`,

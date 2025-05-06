@@ -49,9 +49,9 @@ export const userState = atom({
       bg: ModelBg.ClassRoom,
     },
     status: UserStatus.Online as string,
-    rpc: {
-      wave: false,
-    },
+    // rpc: {
+    //   wave: false,
+    // },
     roomStatus: [] as UserDefineStatus[],
   },
 });

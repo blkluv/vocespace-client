@@ -97,15 +97,15 @@ export const ParticipantItem: (
     });
     const [loading, setLoading] = React.useState(true);
     useEffect(() => {
-      if (settings && Object.keys(settings).length > 0) {
+      if (settings.participants && Object.keys(settings.participants).length > 0) {
         if (trackReference.source === Track.Source.Camera) {
-          setVideoBlur(settings[trackReference.participant.identity]?.blur ?? 0.15);
+          setVideoBlur(settings.participants[trackReference.participant.identity]?.blur ?? 0.15);
         } else {
-          setVideoBlur(settings[trackReference.participant.identity]?.screenBlur ?? 0.15);
+          setVideoBlur(settings.participants[trackReference.participant.identity]?.screenBlur ?? 0.15);
         }
         setLoading(false);
       }
-    }, [settings, trackReference]);
+    }, [settings.participants, trackReference]);
 
     const handleSubscribe = React.useCallback(
       (subscribed: boolean) => {
@@ -187,7 +187,7 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter:
-                    (settings[trackReference.participant.identity]?.virtual?.enabled ?? false) &&
+                    (settings.participants[trackReference.participant.identity]?.virtual?.enabled ?? false) &&
                     virtualReady
                       ? `none`
                       : `blur(${blurValue}px)`,
@@ -347,7 +347,7 @@ export const ParticipantItem: (
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {
-      switch (settings[trackReference.participant.identity]?.status) {
+      switch (settings.participants[trackReference.participant.identity]?.status) {
         case UserStatus.Online:
           return 'online_dot';
         case UserStatus.Offline:
@@ -359,7 +359,7 @@ export const ParticipantItem: (
         default:
           return 'online_dot';
       }
-    }, [settings, trackReference.participant.identity]);
+    }, [settings.participants, trackReference.participant.identity]);
 
     const setStatusLabel = (name?: string): String => {
       switch (uState.status) {
@@ -408,9 +408,9 @@ export const ParticipantItem: (
     }, [uState.roomStatus]);
     const defineStatus = useMemo(() => {
       return uState.roomStatus.find(
-        (item) => item.id === settings[trackReference.participant.identity]?.status,
+        (item) => item.id === settings.participants[trackReference.participant.identity]?.status,
       );
-    }, [uState.roomStatus, settings, trackReference]);
+    }, [uState.roomStatus, settings.participants, trackReference]);
     const user_menu: MenuProps['items'] = useMemo(() => {
       return [
         {
@@ -419,7 +419,7 @@ export const ParticipantItem: (
             <div className={styles.user_info_wrap} onClick={toSettings}>
               <SvgResource type="modify" svgSize={16} color="#fff"></SvgResource>
               <div className={styles.user_info_wrap_name}>
-                {settings[trackReference.participant.identity]?.name || localParticipant.name}
+                {settings.participants[trackReference.participant.identity]?.name || localParticipant.name}
               </div>
             </div>
           ),
@@ -455,7 +455,7 @@ export const ParticipantItem: (
           ),
         },
       ];
-    }, [settings, userStatusDisply, status_menu, defineStatus]);
+    }, [settings.participants, userStatusDisply, status_menu, defineStatus]);
 
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {
@@ -464,7 +464,7 @@ export const ParticipantItem: (
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
-        socketId: settings[trackReference.participant.identity]?.socketId,
+        socketId: settings.participants[trackReference.participant.identity]?.socketId,
       });
       // 创建一个虚拟的audio元素并播放音频，然后移除
       const audioSrc = src('/audios/vocespacewave.m4a');
@@ -542,7 +542,7 @@ export const ParticipantItem: (
               senderName: localParticipant.name || localParticipant.identity,
               senderId: localParticipant.identity,
               receiverId: trackReference.participant.identity,
-              receSocketId: settings[trackReference.participant.identity]?.socketId,
+              receSocketId: settings.participants[trackReference.participant.identity]?.socketId,
               realVideoRect: actualVideoRect,
             };
 
@@ -572,7 +572,7 @@ export const ParticipantItem: (
               senderName: localParticipant.name || localParticipant.identity,
               senderId: localParticipant.identity,
               receiverId: trackReference.participant.identity,
-              receSocketId: settings[trackReference.participant.identity]?.socketId,
+              receSocketId: settings.participants[trackReference.participant.identity]?.socketId,
             });
           }
         };

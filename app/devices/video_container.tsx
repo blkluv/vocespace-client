@@ -141,7 +141,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           // 需要判断虚拟形象是否开启，若开启则需要关闭
           if (
             uState.virtual.enabled ||
-            settings[room.localParticipant.identity]?.virtual.enabled
+            settings.participants[room.localParticipant.identity]?.virtual.enabled
           ) {
             setUState((prev) => ({
               ...prev,
@@ -188,13 +188,23 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
       room.remoteParticipants.forEach((rp) => {
-        let volume = settings[rp.identity]?.volume / 100.0;
+        let volume = settings.participants[rp.identity]?.volume / 100.0;
         if (isNaN(volume)) {
           volume = 1.0;
         }
         rp.setVolume(volume);
       });
     }, [room, settings]);
+
+    useEffect(() => {
+      // 当settings.status发生变化时，更新用户状态 --------------------------------------------------
+      if (settings.status) {
+        setUState((prev) => ({
+          ...prev,
+          roomStatus: settings.status!,
+        }));
+      }
+    }, [settings.status]);
 
     const [widgetState, setWidgetState] = React.useState<WidgetState>({
       showChat: false,
