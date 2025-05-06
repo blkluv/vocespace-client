@@ -101,7 +101,9 @@ export const ParticipantItem: (
         if (trackReference.source === Track.Source.Camera) {
           setVideoBlur(settings.participants[trackReference.participant.identity]?.blur ?? 0.15);
         } else {
-          setVideoBlur(settings.participants[trackReference.participant.identity]?.screenBlur ?? 0.15);
+          setVideoBlur(
+            settings.participants[trackReference.participant.identity]?.screenBlur ?? 0.15,
+          );
         }
         setLoading(false);
       }
@@ -187,7 +189,8 @@ export const ParticipantItem: (
                 ref={videoRef}
                 style={{
                   filter:
-                    (settings.participants[trackReference.participant.identity]?.virtual?.enabled ?? false) &&
+                    (settings.participants[trackReference.participant.identity]?.virtual?.enabled ??
+                      false) &&
                     virtualReady
                       ? `none`
                       : `blur(${blurValue}px)`,
@@ -419,7 +422,8 @@ export const ParticipantItem: (
             <div className={styles.user_info_wrap} onClick={toSettings}>
               <SvgResource type="modify" svgSize={16} color="#fff"></SvgResource>
               <div className={styles.user_info_wrap_name}>
-                {settings.participants[trackReference.participant.identity]?.name || localParticipant.name}
+                {settings.participants[trackReference.participant.identity]?.name ||
+                  localParticipant.name}
               </div>
             </div>
           ),
@@ -427,11 +431,14 @@ export const ParticipantItem: (
         {
           key: 'user_status',
           label: (
-            <Dropdown
+            <div onClick={(e) => e.stopPropagation()}>
+              <Dropdown
+              trigger={['hover', 'click']}
               placement="topLeft"
               menu={{
                 items: status_menu,
                 onClick: async (e) => {
+                  e.domEvent.stopPropagation();
                   await setUserStatus(e.key);
                 },
               }}
@@ -452,6 +459,7 @@ export const ParticipantItem: (
                 <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
               </div>
             </Dropdown>
+            </div>
           ),
         },
       ];
