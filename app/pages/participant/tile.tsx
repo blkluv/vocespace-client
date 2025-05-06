@@ -70,10 +70,9 @@ export const ParticipantItem: (
     const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
     const [virtualReady, setVirtualReady] = React.useState(false);
 
-    useEffect(()=>{
+    useEffect(() => {
       setVirtualReady(false);
     }, [uState.virtual]);
-
 
     // 存储所有观众的鼠标位置
     const [remoteCursors, setRemoteCursors] = React.useState<{
@@ -123,14 +122,27 @@ export const ParticipantItem: (
       [trackReference, layoutContext],
     );
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
-    const deviceTrack = React.useMemo(() => {
-      if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
-        return (
-          <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
-            <ParticipantPlaceholder />
-          </div>
-        );
+
+    const [deleyMask, setDelayMask] = React.useState(virtualMask);
+
+    useEffect(() => {
+      if (virtualMask) {
+        setDelayMask(virtualMask);
+      } else {
+        setTimeout(() => {
+          setDelayMask(virtualMask);
+        }, 1000);
       }
+    }, [virtualMask]);
+
+    const deviceTrack = React.useMemo(() => {
+      // if ( && localParticipant.identity === trackReference.participant.identity) {
+      //   return (
+      //     <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
+      //       <ParticipantPlaceholder />
+      //     </div>
+      //   );
+      // }
 
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
@@ -141,8 +153,14 @@ export const ParticipantItem: (
                 width: '100%',
               }}
             >
+              {deleyMask && (
+                <div className="lk-participant-placeholder" style={{ opacity: 1, zIndex: 1000 }}>
+                  <ParticipantPlaceholder />
+                </div>
+              )}
               {localParticipant.identity === trackReference.participant.identity &&
-                uState.virtual.enabled && (
+                uState.virtual.enabled &&
+                !virtualMask && (
                   <div
                     className={styles.virtual_video_box_canvas}
                     style={{ visibility: 'hidden', zIndex: '111' }}
@@ -323,6 +341,7 @@ export const ParticipantItem: (
       remoteCursors,
       settings,
       virtualMask,
+      deleyMask,
       virtualReady,
     ]);
 

@@ -113,8 +113,6 @@ export function DemoMeetingTab() {
   );
 }
 
-const AllowUrls = ['vocespace.com', 'space.voce.chat'];
-
 // 判断是否是允许的url，如果是则跳转，如果是房间名则拼接
 const isAllowUrlAnd = (
   url: string,
