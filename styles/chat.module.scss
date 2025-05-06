@@ -2,7 +2,9 @@
   height: calc(100% - 60px);
   overflow-y: scroll;
   scrollbar-width: thin;
-  padding: 1rem;
+  padding: 0 24px;
+  width: 100%;
+  box-sizing: border-box;
   &_list {
     margin: 0;
     padding: 0;
@@ -82,6 +84,14 @@
 }
 
 .tool {
-  padding-top: 12px;
+  background-color: #1E1E1E;
+  padding: 12px;
   height: fit-content;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between; 
+  &_input {
+    width: calc(100% - 112px);
+  } 
 }

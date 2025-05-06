@@ -133,12 +133,12 @@ export function EnhancedChat({
     scrollToBottom();
   }, [messages]);
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMsg();
-    }
-  };
+  // const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === 'Enter' && !e.shiftKey) {
+  //     e.preventDefault();
+  //     sendMsg();
+  //   }
+  // };
   const { localParticipant } = useLocalParticipant();
   const isLocal = (identity?: string): boolean => {
     if (identity) {
@@ -180,6 +180,15 @@ export function EnhancedChat({
         on_clicked: () => setOpen(false),
       })}
       style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
+      styles={{
+        body: {
+          padding: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+        }
+      }}
     >
       <div className={styles.msg}>
         <ul ref={ulRef} className={styles.msg_list}>
@@ -294,25 +303,26 @@ export function EnhancedChat({
       </div>
 
       <div className={styles.tool}>
-        <Input
-          value={value}
-          placeholder={t('common.chat_placeholder')}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyPress}
-          style={{ paddingRight: 0, backgroundColor: '#333' }}
-          prefix={
-            <Upload beforeUpload={handleBeforeUpload} showUploadList={false}>
-              <Button shape="circle" style={{ background: 'transparent', border: 'none' }}>
-                <SvgResource type="add" svgSize={18} color="#fff" />
-              </Button>
-            </Upload>
-          }
-          suffix={
-            <Button style={{ border: 'none', marginRight: "0.5rem" }} type="primary" onClick={sendMsg}>
-              {t('common.send')}
-            </Button>
-          }
-        />
+        <Upload beforeUpload={handleBeforeUpload} showUploadList={false}>
+          <Button shape="circle" style={{ background: 'transparent', border: 'none' }}>
+            <SvgResource type="add" svgSize={18} color="#fff" />
+          </Button>
+        </Upload>
+        <div className={styles.tool_input}>
+          <Input
+            value={value}
+            placeholder={t('common.chat_placeholder')}
+            onChange={(e) => setValue(e.target.value)}
+            // onKeyDown={handleKeyPress}
+            onPressEnter={(e) => {
+              e.preventDefault();
+            }}
+            style={{ paddingRight: 0, backgroundColor: '#333' }}
+          />
+        </div>
+        <Button style={{ border: 'none' }} type="primary" onClick={sendMsg}>
+          {t('common.send')}
+        </Button>
       </div>
     </Drawer>
   );

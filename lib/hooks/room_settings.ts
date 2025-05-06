@@ -19,13 +19,16 @@ export interface ParticipantSettings {
 }
 
 export interface RoomSettings {
-  [participantId: string]: ParticipantSettings;
+  participants: {
+    [participantId: string]: ParticipantSettings;
+  },
+  status?: UserDefineStatus[];
 }
 
 const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export function useRoomSettings(roomId: string, participantId: string) {
-  const [settings, setSettings] = useState<RoomSettings>({});
+  const [settings, setSettings] = useState<RoomSettings>({participants:{}});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
