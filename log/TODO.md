@@ -91,8 +91,6 @@
 
 - [x] chat输入部分ui调整（b站）
 - [x] 新用户新状态同步
-- [ ] 进入link regex  (特殊字符)
-- [ ] Docker部署
 - [x] 持续遮罩当切换虚拟形象时
 - [x] 虚拟形象移除对比，保留None时blur的对比
 - [x] 首页骨架屏
@@ -107,6 +105,7 @@
 - [x] 虚拟形象替换时，使用遮罩
 - [x] focus布局时点击状态修改事件丢失
 - [x] Turn 测试 https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/ （测试成功）
+- [x] 进入link regex  (特殊字符)
 
 Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	relayProtocol (if present)
 0.001	host	0	udp	192.168.31.211	52248	126 | 32512 | 255		
@@ -116,3 +115,6 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 0.658	srflx	1	udp	101.83.176.123	57546	100 | 32543 | 254		
 0.658	relay	2	udp	158.247.198.2	53072	5 | 32543 | 254		
 0.886	Done
+
+
+- [ ] Docker部署
