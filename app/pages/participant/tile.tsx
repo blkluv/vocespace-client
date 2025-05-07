@@ -67,8 +67,58 @@ export const ParticipantItem: (
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
+    const isLocal = React.useMemo(() => {
+      return localParticipant.identity === trackReference.participant.identity;
+    }, [localParticipant, trackReference]);
     const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
     const [virtualReady, setVirtualReady] = React.useState(false);
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
+    const [remoteMask, setRemoteMask] = React.useState(false);
+    const [deleyMask, setDelayMask] = React.useState(virtualMask);
+
+    useEffect(() => {
+      socket.on(
+        'reload_virtual_response',
+        (msg: { identity: string; reloading: boolean; roomId: string }) => {
+          console.log('reload_virtual_response', msg);
+          if (room == msg.roomId) {
+            if (msg.identity != localParticipant.identity) {
+              setRemoteMask(msg.reloading);
+            }
+          }
+        },
+      );
+
+      return () => {
+        socket.off('reload_virtual_response');
+      };
+    }, [room, localParticipant.identity]);
+
+    useEffect(() => {
+      if (isLocal) {
+        if (virtualMask) {
+          setDelayMask(virtualMask);
+        } else {
+          if (virtualReady) {
+            setTimeout(() => {
+              setDelayMask(virtualMask);
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              setDelayMask(virtualMask);
+            }, 1500);
+          }
+        }
+      }else{
+        if (remoteMask) {
+          setDelayMask(true);
+        }else{
+          setTimeout(()=> {
+            setDelayMask(false);
+          }, 5000);
+        }
+      }
+    }, [virtualMask, virtualReady, isLocal, remoteMask]);
 
     useEffect(() => {
       setVirtualReady(false);
@@ -123,29 +173,9 @@ export const ParticipantItem: (
       },
       [trackReference, layoutContext],
     );
-    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
 
-    const [deleyMask, setDelayMask] = React.useState(virtualMask);
-
-    useEffect(() => {
-      if (virtualMask) {
-        setDelayMask(virtualMask);
-      } else {
-        setTimeout(() => {
-          setDelayMask(virtualMask);
-        }, 1000);
-      }
-    }, [virtualMask]);
 
     const deviceTrack = React.useMemo(() => {
-      // if ( && localParticipant.identity === trackReference.participant.identity) {
-      //   return (
-      //     <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
-      //       <ParticipantPlaceholder />
-      //     </div>
-      //   );
-      // }
-
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
@@ -160,38 +190,35 @@ export const ParticipantItem: (
                   <ParticipantPlaceholder />
                 </div>
               )}
-              {localParticipant.identity === trackReference.participant.identity &&
-                uState.virtual.enabled &&
-                !virtualMask && (
-                  <div
-                    className={styles.virtual_video_box_canvas}
-                    style={{ visibility: 'hidden', zIndex: '111' }}
-                  >
-                    <VirtualRoleCanvas
-                      video_ele={videoRef}
-                      model_bg={uState.virtual.bg}
-                      model_role={uState.virtual.role}
-                      enabled={uState.virtual.enabled}
-                      messageApi={messageApi}
-                      trackRef={trackReference}
-                      isLocal={trackReference.participant.identity === localParticipant.identity}
-                      isReplace={true}
-                      onReady={() => {
-                        setVirtualReady(true);
-                      }}
-                      onDestroy={() => {
-                        setVirtualReady(false);
-                      }}
-                    ></VirtualRoleCanvas>
-                  </div>
-                )}
+              {isLocal && uState.virtual.enabled && !virtualMask && (
+                <div
+                  className={styles.virtual_video_box_canvas}
+                  style={{ visibility: 'hidden', zIndex: '111' }}
+                >
+                  <VirtualRoleCanvas
+                    video_ele={videoRef}
+                    model_bg={uState.virtual.bg}
+                    model_role={uState.virtual.role}
+                    enabled={uState.virtual.enabled}
+                    messageApi={messageApi}
+                    trackRef={trackReference}
+                    isLocal={isLocal}
+                    isReplace={true}
+                    onReady={() => {
+                      setVirtualReady(true);
+                    }}
+                    onDestroy={() => {
+                      setVirtualReady(false);
+                    }}
+                  ></VirtualRoleCanvas>
+                </div>
+              )}
               <VideoTrack
                 ref={videoRef}
                 style={{
                   filter:
-                    (settings.participants[trackReference.participant.identity]?.virtual?.enabled ??
-                      false) &&
-                    virtualReady
+                    settings.participants[trackReference.participant.identity]?.virtual?.enabled ??
+                    false
                       ? `none`
                       : `blur(${blurValue}px)`,
                   transition: 'filter 0.2s ease-in-out',
@@ -344,6 +371,8 @@ export const ParticipantItem: (
       remoteCursors,
       settings,
       virtualMask,
+      remoteMask,
+      isLocal,
       deleyMask,
       virtualReady,
     ]);
@@ -433,32 +462,32 @@ export const ParticipantItem: (
           label: (
             <div onClick={(e) => e.stopPropagation()}>
               <Dropdown
-              trigger={['hover', 'click']}
-              placement="topLeft"
-              menu={{
-                items: status_menu,
-                onClick: async (e) => {
-                  e.domEvent.stopPropagation();
-                  await setUserStatus(e.key);
-                },
-              }}
-            >
-              <div className={styles.status_item_inline} style={{ width: '100%' }}>
-                <div className={styles.status_item_inline}>
-                  {defineStatus ? (
-                    <SvgResource
-                      type="dot"
-                      svgSize={16}
-                      color={defineStatus.icon.color}
-                    ></SvgResource>
-                  ) : (
-                    <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
-                  )}
-                  <div>{setStatusLabel(defineStatus?.name)}</div>
+                trigger={['hover', 'click']}
+                placement="topLeft"
+                menu={{
+                  items: status_menu,
+                  onClick: async (e) => {
+                    e.domEvent.stopPropagation();
+                    await setUserStatus(e.key);
+                  },
+                }}
+              >
+                <div className={styles.status_item_inline} style={{ width: '100%' }}>
+                  <div className={styles.status_item_inline}>
+                    {defineStatus ? (
+                      <SvgResource
+                        type="dot"
+                        svgSize={16}
+                        color={defineStatus.icon.color}
+                      ></SvgResource>
+                    ) : (
+                      <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
+                    )}
+                    <div>{setStatusLabel(defineStatus?.name)}</div>
+                  </div>
+                  <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
                 </div>
-                <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
-              </div>
-            </Dropdown>
+              </Dropdown>
             </div>
           ),
         },
