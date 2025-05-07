@@ -7,6 +7,7 @@ import { DemoMeetingTab } from './pages/pre_join/demo';
 import { src } from '@/lib/std';
 import { LangSelect } from './devices/controls/lang_select';
 import { Skeleton } from 'antd';
+import { SvgResource } from './resources/svg';
 
 export default function Page() {
   const { t } = useI18n();
@@ -15,7 +16,7 @@ export default function Page() {
   useEffect(() => {
     setTimeout(() => {
       setLoading(false);
-    }, 1200);
+    }, 400);
   }, []);
 
   return (
@@ -44,13 +45,9 @@ export default function Page() {
           </div>
         ) : (
           <div className="header">
-            <img
-              src={src('/images/vocespace.svg')}
-              alt="VoceSpace"
-              width="360"
-              height="45"
-              style={{ marginBottom: '12px' }}
-            />
+            <div style={{ marginBottom: '12px' }}>
+              <SvgResource type="logo2" svgSize={45}></SvgResource>
+            </div>
             <h2>{t('msg.info.title')}</h2>
           </div>
         )}

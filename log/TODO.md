@@ -91,8 +91,6 @@
 
 - [x] chat输入部分ui调整（b站）
 - [x] 新用户新状态同步
-- [x] 进入link regex
-- [ ] Docker部署
 - [x] 持续遮罩当切换虚拟形象时
 - [x] 虚拟形象移除对比，保留None时blur的对比
 - [x] 首页骨架屏
@@ -100,3 +98,23 @@
 - [x] 重连机制 -> webrtc turn
 - [x] 禁止输入框enter事件
 - [x] 状态点击事件
+
+- [x] 首页骨架屏调整为400ms, logo png -> insert svg
+- [x] 回车直接发送消息 (Chrome)
+- [x] 开启后重新加载虚拟形象(setting)
+- [x] 虚拟形象替换时，使用遮罩
+- [x] focus布局时点击状态修改事件丢失
+- [x] Turn 测试 https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/ （测试成功）
+- [x] 进入link regex  (特殊字符)
+
+Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	relayProtocol (if present)
+0.001	host	0	udp	192.168.31.211	52248	126 | 32512 | 255		
+0.001	host	3	tcp	192.168.31.211	9	125 | 32704 | 255		
+0.002	host	0	udp	192.168.31.211	57546	126 | 32512 | 254		
+0.002	host	3	tcp	192.168.31.211	9	125 | 32704 | 254		
+0.658	srflx	1	udp	101.83.176.123	57546	100 | 32543 | 254		
+0.658	relay	2	udp	158.247.198.2	53072	5 | 32543 | 254		
+0.886	Done
+
+
+- [ ] Docker部署

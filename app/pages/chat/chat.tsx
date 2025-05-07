@@ -34,7 +34,8 @@ export function EnhancedChat({
   const ulRef = React.useRef<HTMLUListElement>(null);
   const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
   const [value, setValue] = React.useState('');
-  // const [uploadFile, setUploadFile] = React.useState<FileType | null>(null);
+  // 添加输入法组合状态跟踪
+  const [isComposing, setIsComposing] = React.useState(false);
   // [socket] ----------------------------------------------------------------------------------
   React.useEffect(() => {
     socket.on('chat_msg_response', (msg: ChatMsgItem) => {
@@ -133,12 +134,15 @@ export function EnhancedChat({
     scrollToBottom();
   }, [messages]);
 
-  // const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  //   if (e.key === 'Enter' && !e.shiftKey) {
-  //     e.preventDefault();
-  //     sendMsg();
-  //   }
-  // };
+  // 处理回车键事件
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 只有在不处于输入法组合状态且按下回车键时才发送消息
+    if (e.key === 'Enter' && !isComposing) {
+      e.preventDefault();
+      sendMsg();
+    }
+  };
+
   const { localParticipant } = useLocalParticipant();
   const isLocal = (identity?: string): boolean => {
     if (identity) {
@@ -313,10 +317,9 @@ export function EnhancedChat({
             value={value}
             placeholder={t('common.chat_placeholder')}
             onChange={(e) => setValue(e.target.value)}
-            // onKeyDown={handleKeyPress}
-            onPressEnter={(e) => {
-              e.preventDefault();
-            }}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
+            onKeyDown={handleKeyDown}
             style={{ paddingRight: 0, backgroundColor: '#333' }}
           />
         </div>

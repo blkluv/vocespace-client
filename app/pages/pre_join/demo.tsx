@@ -123,12 +123,11 @@ const isAllowUrlAnd = (
   // 判断是否是允许的url，拼接AllowUrls，并且可能是没有AllowUrls的，当用户输入的只是一个房间名时
   // 格式为: ^(https?:\/\/)?(vocespace.com|space.voce.chat)?\/rooms\/([a-zA-Z0-9_-]+)$
   let regax = new RegExp(
-    `^(https?:\/\/)?(vocespace.com|space.voce.chat)?(\/chat|dev\/)?(\/rooms\/)?([a-zA-Z0-9_-]+)$`,
+    `^(https?:\/\/)?(vocespace.com|space.voce.chat)?(\/chat|dev\/)?(\/rooms\/)?([^/]+)$`,
   );
   let match = url.match(regax);
-  console.warn('match', match);
   if (match) {
-    if (!match[1] && !match[2] && !match[3] && !match[4]) {
+    if (!match[1] && !match[2] && !match[3]) {
       // 如果是房间名则拼接
       router.push(`/rooms/${match[5]}`);
     } else {

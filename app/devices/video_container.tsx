@@ -405,6 +405,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                       <ParticipantItem
                         room={room?.name}
                         settings={settings}
+                        toSettings={toSettingGeneral}
                         messageApi={messageApi}
                         setUserStatus={setUserStatus}
                       ></ParticipantItem>
@@ -414,6 +415,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                         room={room?.name}
                         setUserStatus={setUserStatus}
                         settings={settings}
+                        toSettings={toSettingGeneral}
                         trackRef={focusTrack}
                         messageApi={messageApi}
                         isFocus={isFocus}

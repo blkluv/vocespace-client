@@ -27,11 +27,16 @@ sudo vim /etc/turnserver.conf
 
 ### 基础配置
 ```
+server-name=space.voce.chat
+listening-ip=0.0.0.0
 listening-port=3478
 fingerprint
 lt-cred-mech
-user=your-username:your-password
-realm=your-domain.com
+user=privoce:+Xj4jYs7tuoyt(xX
+realm=space.voce.chat
+external-ip=158.247.198.2
+min-port=49152
+max-port=65535
 ```
 
 ### 启动服务
@@ -39,4 +44,5 @@ realm=your-domain.com
 ```
 sudo systemctl enable coturn
 sudo systemctl start coturn
+systemctl restart coturn
 ```
