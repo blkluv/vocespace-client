@@ -105,7 +105,7 @@
 - [x] 回车直接发送消息 (Chrome)
 - [ ] 开启后重新加载虚拟形象(setting)
 - [ ] 虚拟形象替换时，使用最大模糊度
-- [ ] focus布局时点击状态修改事件丢失
+- [x] focus布局时点击状态修改事件丢失
 - [x] Turn 测试 https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/ （测试成功）
 
 Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	relayProtocol (if present)
