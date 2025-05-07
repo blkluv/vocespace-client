@@ -91,7 +91,7 @@
 
 - [x] chat输入部分ui调整（b站）
 - [x] 新用户新状态同步
-- [x] 进入link regex
+- [ ] 进入link regex  (特殊字符)
 - [ ] Docker部署
 - [x] 持续遮罩当切换虚拟形象时
 - [x] 虚拟形象移除对比，保留None时blur的对比
@@ -100,3 +100,10 @@
 - [x] 重连机制 -> webrtc turn
 - [x] 禁止输入框enter事件
 - [x] 状态点击事件
+
+- [x] 首页骨架屏调整为400ms, logo png -> insert svg
+- [ ] 回车直接发送消息 (Chrome)
+- [ ] 开启后重新加载虚拟形象(setting)
+- [ ] 虚拟形象替换时，使用最大模糊度
+- [ ] focus布局时点击状态修改事件丢失
+- [ ] Turn 测试
