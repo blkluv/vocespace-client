@@ -113,6 +113,10 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on("reload_virtual", (msg) => {
+      socket.broadcast.emit("reload_virtual_response", msg);
+    });
+
     socket.on('clear_room_resources', async (msg) => {
       const { roomName } = msg;
       // 删除uploads下的对应roomName的文件夹

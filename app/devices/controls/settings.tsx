@@ -15,8 +15,9 @@ import { StatusSelect } from './status_select';
 import { useRecoilState } from 'recoil';
 import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import TextArea from 'antd/es/input/TextArea';
-import { LocalParticipant } from 'livekit-client';
+import { isLocalParticipant, LocalParticipant } from 'livekit-client';
 import { ulid } from 'ulid';
+import { useLocalParticipant } from '@livekit/components-react';
 
 const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
@@ -214,6 +215,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 setEnabled={setVirtualEnabled}
                 compare={compare}
                 setCompare={setCompare}
+                room={room}
+                localParticipant={localParticipant}
               ></VirtualSettings>
             </div>
           </div>
@@ -334,6 +337,8 @@ export interface VirtualSettingsProps {
   setCompare: (e: boolean) => void;
   close: boolean;
   blur: number;
+  room: string;
+  localParticipant: LocalParticipant;
 }
 
 export interface VirtualSettingsExports {
@@ -358,6 +363,8 @@ export const VirtualSettings = forwardRef<
       setModelBg,
       compare,
       setCompare,
+      room,
+      localParticipant
     }: VirtualSettingsProps & { messageApi: MessageInstance },
     ref,
   ) => {
@@ -372,6 +379,14 @@ export const VirtualSettings = forwardRef<
       initialBlur: blur,
     });
 
+    const reloadVirtual = () => {
+      socket.emit('reload_virtual', {
+        identity: localParticipant.identity,
+        roomId: room,
+        reloading: true,
+      });
+    };
+
     useEffect(() => {
       setVideoBlur(blur);
     }, [blur]);
@@ -385,8 +400,12 @@ export const VirtualSettings = forwardRef<
     }, [modelRole]);
     useEffect(() => {
       if (close && videoRef.current && !videoRef.current.srcObject) {
-        console.warn('start video');
         loadVideo(videoRef);
+        if (modelRole!= ModelRole.None) {
+          setVirtualMask(true);
+          reloadVirtual();
+          setCompare(true);
+        }
       }
     }, [videoRef, close]);
 
@@ -444,6 +463,8 @@ export const VirtualSettings = forwardRef<
       },
     ];
 
+    
+
     const items: TabsProps['items'] = [
       {
         key: 'model',
@@ -462,6 +483,7 @@ export const VirtualSettings = forwardRef<
                   <div
                     className={styles.virtual_model_box}
                     onClick={() => {
+                      reloadVirtual();
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
                       setVirtualMask(true);
@@ -519,6 +541,7 @@ export const VirtualSettings = forwardRef<
                   <div
                     className={styles.virtual_model_box}
                     onClick={() => {
+                      reloadVirtual();
                       set_bg_selected_index(index);
                       setVirtualMask(true);
                       setModelBg(item.src as ModelBg);
