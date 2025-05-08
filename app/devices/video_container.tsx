@@ -134,7 +134,23 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
       // 监听远程参与者连接事件 --------------------------------------------------------------------------
       room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+      // room.localParticipant.on(ParticipantEvent.TrackPublished, (data) => {
+      //   console.warn("TrackPublished" , data);
+      // })
+      // room.localParticipant.on(ParticipantEvent.TrackStreamStateChanged, (data) => {
+      //   console.warn("TrackStreamStateChanged" , data);
+      // })
+      // room.localParticipant.on(ParticipantEvent.LocalTrackPublished, (data) => {
+      //   console.warn('LocalTrackPublished', data);
+      // });
+      // room.localParticipant.on(ParticipantEvent.TrackSubscriptionStatusChanged, (data) => {
+      //   console.warn('TrackSubscriptionStatusChanged', data);
+      // });
+      // room.on(RoomEvent.TrackPublished, (data) => {
+      //   console.warn("room track published", data);
+      // });
 
+      // room.on(RoomEvent.TrackSub)
       // 监听本地用户开关摄像头事件 ----------------------------------------------------------------------
       const onTrackHandler = (track: TrackPublication) => {
         if (track.source === Track.Source.Camera) {

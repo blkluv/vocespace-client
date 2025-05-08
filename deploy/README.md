@@ -31,3 +31,4 @@ sh auto_deploy_prod.sh
 chmod +x nginx_deploy.sh
 sh nginx_deploy.sh
 ```
+docker system prune -f
