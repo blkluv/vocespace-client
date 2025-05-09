@@ -293,6 +293,7 @@ export const Live2DComponent = ({
       // }, 300);
 
       originTrackRef.current = originalTrack;
+      onReady();
       // console.log('虚拟摄像头流创建成功');
     } catch (error) {
       console.error('虚拟摄像头流构建失败:', error);
@@ -487,7 +488,6 @@ export const Live2DComponent = ({
       // startFaceTracking(); 暂时停用
       startVirtualCamera();
     }
-    onReady();
   }, [screenSize, enabled, cState.trackingActive, isReplace]);
 
   //创建虚拟视频流
