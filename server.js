@@ -6,10 +6,11 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import express from 'express';
 
-const dev = true;
+// const dev = process.env.NODE_ENV !== 'production';
+const dev = false;
 const hostname = 'localhost';
-const port = 3000;
-const basePath = '/chat'; // 添加 basePath 配置
+const port = 3001;
+const basePath = '/dev'; // 添加 basePath 配置
 // when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();

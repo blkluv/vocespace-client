@@ -119,7 +119,7 @@ export function PreJoin({
   }, [videoTrack]);
 
   React.useEffect(() => {
-    if (videoEl.current && videoTrack) {
+    if (videoEl.current && videoTrack && !loading) {
       videoTrack.unmute();
       videoTrack.attach(videoEl.current);
       // 自动聚焦input
@@ -131,7 +131,7 @@ export function PreJoin({
     return () => {
       videoTrack?.detach();
     };
-  }, [videoTrack, inputRef]);
+  }, [videoTrack, inputRef,loading]);
   // audio track --------------------------------------------------------------------------------------
   const audioTrack = React.useMemo(
     () => tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack,

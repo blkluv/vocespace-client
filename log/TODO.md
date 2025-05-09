@@ -118,3 +118,5 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 
 
 - [ ] Docker部署
+- [ ] 视频流从setting和tile之间切换
+- [ ] 视频加载两次（prejoin）video track

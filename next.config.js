@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: "/chat",
+  basePath: "/dev",
   reactStrictMode: false,
   productionBrowserSourceMaps: true,
   webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
