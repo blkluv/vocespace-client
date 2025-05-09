@@ -10,6 +10,15 @@ import { CheckboxGroupProps } from 'antd/es/checkbox';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { MessageInstance } from 'antd/es/message/interface';
 
+const SERVER_NAME = process.env.SERVER_NAME ?? '';
+const SERVER_NAMES =
+  SERVER_NAME === ''
+    ? 'vocespace.com|space.voce.chat'
+    : `vocespace.com|space.voce.chat|${SERVER_NAME}`;
+const ENV_PRIFIX =
+  (process.env.NEXT_PUBLIC_BASE_PATH ?? '') === ''
+    ? `\/chat|\/dev\/`
+    : `\/chat|\/dev\/|${process.env.NEXT_PUBLIC_BASE_PATH}\/`;
 /**
  * # DemoMeetingTab
  * Demo meeting tab for room, which use before PreJoin
@@ -122,9 +131,7 @@ const isAllowUrlAnd = (
 ) => {
   // 判断是否是允许的url，拼接AllowUrls，并且可能是没有AllowUrls的，当用户输入的只是一个房间名时
   // 格式为: ^(https?:\/\/)?(vocespace.com|space.voce.chat)?\/rooms\/([a-zA-Z0-9_-]+)$
-  let regax = new RegExp(
-    `^(https?:\/\/)?(vocespace.com|space.voce.chat)?(\/chat|\/dev\/)?(\/rooms\/)?([^/]+)$`,
-  );
+  let regax = new RegExp(`^(https?:\/\/)?(${SERVER_NAMES})?(${ENV_PRIFIX})?(\/rooms\/)?([^/]+)$`);
   let match = url.match(regax);
   if (match) {
     if (!match[1] && !match[2] && !match[3]) {

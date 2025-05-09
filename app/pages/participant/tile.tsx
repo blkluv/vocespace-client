@@ -102,11 +102,11 @@ export const ParticipantItem: (
           if (virtualReady) {
             setTimeout(() => {
               setDelayMask(virtualMask);
-            }, 1000);
+            }, 1500);
           } else {
             setTimeout(() => {
               setDelayMask(virtualMask);
-            }, 1000);
+            }, 1500);
           }
         }
       }else{
@@ -116,7 +116,7 @@ export const ParticipantItem: (
         }else{
           setTimeout(()=> {
             setDelayMask(false);
-          }, 1500);
+          }, 3500);
         }
       }
     }, [virtualMask, virtualReady, isLocal, remoteMask]);

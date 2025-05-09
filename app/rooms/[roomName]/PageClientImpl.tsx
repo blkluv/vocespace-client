@@ -5,7 +5,6 @@ import { decodePassphrase } from '@/lib/client-utils';
 import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from '@/lib/RecordingIndicator';
-import { SettingsMenu } from '@/lib/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
 import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
@@ -18,8 +17,6 @@ import {
   DeviceUnsupportedError,
   RoomConnectOptions,
   MediaDeviceFailure,
-  RpcInvocationData,
-  ConnectionState,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
@@ -29,11 +26,9 @@ import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_PATH
-  ? {
-      path: process.env.NEXT_PUBLIC_BASE_PATH,
-    }
-  : {};
+const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
+const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
+const TURN_URL = process.env.TURN_URL ?? '';
 
 export const socket = io();
 
@@ -218,13 +213,13 @@ function VideoConferenceComponent(props: {
       autoSubscribe: true,
     } as RoomConnectOptions;
 
-    if (process.env.TURN_CREDENTIAL) {
+    if (TURN_CREDENTIAL !== "" && TURN_USERNAME !== "" && TURN_URL !== "") {
       conf.rtcConfig = {
         iceServers: [
           {
-            urls: 'turn:space.voce.chat:3478',
-            username: 'privoce',
-            credential: process.env.TURN_CREDENTIAL,
+            urls: TURN_URL,
+            username: TURN_USERNAME,
+            credential: TURN_CREDENTIAL,
           },
         ],
         iceCandidatePoolSize: 20,
