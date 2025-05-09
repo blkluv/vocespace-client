@@ -36,15 +36,15 @@ COPY . .
 ARG LIVEKIT_API_KEY=devkey
 ARG LIVEKIT_API_SECRET=secret
 ARG LIVEKIT_URL=wss://space.voce.chat
-ARG NEXT_PUBLIC_BASE_PATH="/chat"
+ARG NEXT_PUBLIC_BASE_PATH="__NEXT_PUBLIC_BASE_PATH_PLACEHOLDER__"
 ARG TURN_CREDENTIAL=""
 
 # 将构建参数写入.env
-RUN echo "LIVEKIT_API_KEY=${LIVEKIT_API_KEY}" > .env \
-    && echo "LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}" >> .env \
-    && echo "LIVEKIT_URL=${LIVEKIT_URL}" >> .env \
-    && echo "NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}" >> .env \
-    && echo "TURN_CREDENTIAL=${TURN_CREDENTIAL}" >> .env
+RUN echo "LIVEKIT_API_KEY=${LIVEKIT_API_KEY}" > .env.local \
+    && echo "LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}" >> .env.local \
+    && echo "LIVEKIT_URL=${LIVEKIT_URL}" >> .env.local \
+    && echo "NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}" >> .env.local \
+    && echo "TURN_CREDENTIAL=${TURN_CREDENTIAL}" >> .env.local
 
 # 构建项目
 ENV NODE_OPTIONS="--max-old-space-size=8192"
@@ -76,10 +76,13 @@ RUN mkdir -p /app/uploads && chown -R nextjs:nodejs /app/uploads
 # # 重要：复制 app 目录 - Next.js需要这个来检测App Router
 # COPY --from=builder --chown=nextjs:nodejs /app/app ./app
 
+# 创建并配置入口点脚本
+COPY docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # 复制整个应用
 COPY --from=builder --chown=nextjs:nodejs /app .
 
-# 添加可执行权限
 USER root
 # RUN chmod +x ./entrypoint.sh
 USER nextjs
@@ -87,8 +90,8 @@ USER nextjs
 # 暴露3000端口
 EXPOSE 3001
 
-# # 启动服务 (使用entrypoint.sh处理运行时环境变量)
-# ENTRYPOINT ["/bin/sh", "./entrypoint.sh"]
+# # 启动服务 (直接使用pnpm start)
+# ENTRYPOINT ["pnpm", "start"]
 
-# 启动服务 (直接使用pnpm start)
-ENTRYPOINT ["pnpm", "start"]
+# 使用入口脚本启动服务
+ENTRYPOINT ["/app/entrypoint.sh"]

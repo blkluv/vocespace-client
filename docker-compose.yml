@@ -5,18 +5,23 @@ services:
   livemeet-prod:
     build:
       context: .
-      args:
-        - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
-        - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
-        - LIVEKIT_URL=${LIVEKIT_URL:-wss://space.voce.chat}
-        - NEXT_PUBLIC_BASE_PATH=/chat
-        - TURN_CREDENTIAL=${TURN_CREDENTIAL:-}
+      # args:
+      #   - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      #   - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
+      #   - LIVEKIT_URL=${LIVEKIT_URL:-wss://space.voce.chat}
+      #   - NEXT_PUBLIC_BASE_PATH=/chat
+      #   - TURN_CREDENTIAL=${TURN_CREDENTIAL:-}
     restart: unless-stopped
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
+      - LIVEKIT_URL=${LIVEKIT_URL:-wss://space.voce.chat}
+      - NEXT_PUBLIC_BASE_PATH=/chat
+      - TURN_CREDENTIAL=${TURN_CREDENTIAL:-}
     networks:
       - livemeet
 
