@@ -15,9 +15,8 @@ import { StatusSelect } from './status_select';
 import { useRecoilState } from 'recoil';
 import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import TextArea from 'antd/es/input/TextArea';
-import { isLocalParticipant, LocalParticipant } from 'livekit-client';
+import { LocalParticipant } from 'livekit-client';
 import { ulid } from 'ulid';
-import { useLocalParticipant } from '@livekit/components-react';
 
 const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
@@ -364,7 +363,7 @@ export const VirtualSettings = forwardRef<
       compare,
       setCompare,
       room,
-      localParticipant
+      localParticipant,
     }: VirtualSettingsProps & { messageApi: MessageInstance },
     ref,
   ) => {
@@ -401,7 +400,7 @@ export const VirtualSettings = forwardRef<
     useEffect(() => {
       if (close && videoRef.current && !videoRef.current.srcObject) {
         loadVideo(videoRef);
-        if (modelRole!= ModelRole.None) {
+        if (modelRole != ModelRole.None) {
           setVirtualMask(true);
           reloadVirtual();
           setCompare(true);
@@ -462,8 +461,6 @@ export const VirtualSettings = forwardRef<
         src: 'v_bg5.jpg',
       },
     ];
-
-    
 
     const items: TabsProps['items'] = [
       {
@@ -701,9 +698,9 @@ function BuildUserStatus({
     },
   ];
   const [selectedIcon, setSelectedIcon] = useState(status_icons[0].key);
-  const [videoBlur, setVideoBlur] = useState(0.15);
-  const [screenBlur, setScreenBlur] = useState(0.15);
-  const [volume, setVolume] = useState(80);
+  const [videoBlur, setVideoBlur] = useState(0.0);
+  const [screenBlur, setScreenBlur] = useState(0.0);
+  const [volume, setVolume] = useState(100);
 
   const saveStatus = async () => {
     try {
@@ -754,9 +751,9 @@ function BuildUserStatus({
       setName('');
       setDesc('');
       setSelectedIcon(status_icons[0].key);
-      setVolume(80);
-      setVideoBlur(0.15);
-      setScreenBlur(0.15);
+      setVolume(100);
+      setVideoBlur(0.0);
+      setScreenBlur(0.0);
     } catch (e) {
       messageApi.error({
         content: `${t('settings.general.status.define.fail')}: ${e}`,
