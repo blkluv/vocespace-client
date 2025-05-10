@@ -13,15 +13,18 @@ services:
       #   - TURN_CREDENTIAL=${TURN_CREDENTIAL:-}
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=3000
       - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
       - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
       - LIVEKIT_URL=${LIVEKIT_URL:-wss://space.voce.chat}
-      - NEXT_PUBLIC_BASE_PATH=/chat
+      - NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH:-}
+      - NEXT_PORT=${NEXT_PORT:-3000}
       - TURN_CREDENTIAL=${TURN_CREDENTIAL:-}
+      - TURN_URL=${TURN_URL:-}
+      - TURN_USERNAME=${TURN_USERNAME:-}
     networks:
       - livemeet
 
