@@ -1,4 +1,6 @@
 ```bash
+# clear cache
+docker system prune -f
 # 导入image
 docker load -i live_meet-livemeet-prod.tar
 # 运行image -> container

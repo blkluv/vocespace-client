@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 生产环境 (vocespace.com/chat)
   livemeet-prod:
     build:
       context: .
@@ -25,23 +24,6 @@ services:
       - TURN_CREDENTIAL=${TURN_CREDENTIAL:-}
       - TURN_URL=${TURN_URL:-}
       - TURN_USERNAME=${TURN_USERNAME:-}
-    networks:
-      - livemeet
-
-  # Nginx反向代理
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./deploy/nginx/sites:/etc/nginx/conf.d:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /var/vocespace/vocespace_com:/var/vocespace/vocespace_com:ro  # 静态文件挂载
-    depends_on:
-      - livemeet-prod
     networks:
       - livemeet
 
