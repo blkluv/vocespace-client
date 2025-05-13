@@ -117,6 +117,8 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 0.886	Done
 
 
-- [ ] Docker部署
+- [x] Docker部署
 - [ ] 视频流从setting和tile之间切换
-- [ ] 视频加载两次（prejoin）video track
+- [x] 视频加载两次（prejoin）video track
+- [ ] Caddy + 错误页面说明 (真实服务器访问)
+- [ ] 自定义错误页面

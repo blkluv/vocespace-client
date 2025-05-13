@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+        .error-container {
+          padding: 2rem;
+          max-width: 600px;
+          margin: 0 auto;
+          text-align: center;
+        }
+        .error-details {
+          margin-top: 1rem;
+          padding: 1rem;
+          background: #f8f8f8;
+          border-radius: 4px;
+          text-align: left;
+          overflow-x: auto;
+        }
+        .reset-button {
+          margin-top: 1rem;
+          padding: 0.5rem 1rem;
+          background: #0070f3;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="error-container">
+      <h1>出错了</h1>
+      <p>抱歉，处理您的请求时发生了错误。</p>
+      <div class="error-details">
+        <p>{error?.message || '未知错误'}</p>
+        <pre>{error?.stack || ''}</pre>
+      </div>
+      <button class="reset-button">重试</button>
+    </div>
+  </body>
+</html>
