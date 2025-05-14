@@ -5,7 +5,7 @@ import type { GetProp, UploadProps } from 'antd';
 import { pictureCallback, SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
-import { setting_drawer_header } from '@/app/devices/controls/bar';
+import { setting_drawer_header } from '@/app/pages/controls/bar';
 import { ulid } from 'ulid';
 import { Room } from 'livekit-client';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';

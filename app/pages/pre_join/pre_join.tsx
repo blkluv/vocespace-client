@@ -16,7 +16,7 @@ import { useRecoilState } from 'recoil';
 import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { connect_endpoint, src } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
-import { LangSelect } from '@/app/devices/controls/lang_select';
+import { LangSelect } from '@/app/pages/controls/lang_select';
 import { ulid } from 'ulid';
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint('/api/room-settings');

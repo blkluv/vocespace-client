@@ -1,4 +1,4 @@
-import { isTrackReferencePlaceholder } from '@/app/devices/video_container';
+import { isTrackReferencePlaceholder } from '@/app/pages/controls/video_container';
 import { useVideoBlur } from '@/lib/std/device';
 import {
   AudioTrack,
@@ -33,7 +33,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, src, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
 import { RoomSettings } from '@/lib/hooks/room_settings';
-import { statusDefaultList } from '@/app/devices/controls/status_select';
+import { statusDefaultList } from '@/app/pages/controls/status_select';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: RoomSettings;

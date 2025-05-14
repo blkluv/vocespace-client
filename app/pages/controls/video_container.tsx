@@ -26,16 +26,15 @@ import {
   TrackPublication,
 } from 'livekit-client';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { ControlBarExport, Controls } from './controls/bar';
+import { ControlBarExport, Controls } from './bar';
 import { useRecoilState } from 'recoil';
-import { socket, userState } from '../rooms/[roomName]/PageClientImpl';
-import { ParticipantItem } from '../pages/participant/tile';
+import { ParticipantItem } from '../participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
-import { EnhancedChat } from '../pages/chat/chat';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
+import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;

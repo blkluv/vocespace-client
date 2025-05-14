@@ -1,6 +1,6 @@
 'use client';
 
-import { VideoContainer, VideoContainerExports } from '@/app/devices/video_container';
+import { VideoContainer, VideoContainerExports } from '@/app/pages/controls/video_container';
 import { decodePassphrase } from '@/lib/client-utils';
 import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
