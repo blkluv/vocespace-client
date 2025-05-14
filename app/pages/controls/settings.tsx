@@ -1,6 +1,6 @@
-import { Button, Input, List, Radio, Slider, Switch, Tabs, TabsProps } from 'antd';
+import { Button, Input, List, Radio, Slider, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
 import { loadVideo, useVideoBlur } from '@/lib/std/device';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
@@ -15,9 +15,9 @@ import { StatusSelect } from './status_select';
 import { useRecoilState } from 'recoil';
 import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import TextArea from 'antd/es/input/TextArea';
-import { isLocalParticipant, LocalParticipant } from 'livekit-client';
+import { LocalParticipant } from 'livekit-client';
 import { ulid } from 'ulid';
-import { useLocalParticipant } from '@livekit/components-react';
+import { LicenseControl } from './license';
 
 const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
@@ -223,6 +223,11 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         ),
       },
       {
+        key: 'license',
+        label: <TabItem type="license" label={t('settings.license.title')}></TabItem>,
+        children: <LicenseControl></LicenseControl>,
+      },
+      {
         key: 'about_us',
         label: <TabItem type="logo" label={t('settings.about_us.title')}></TabItem>,
         children: (
@@ -364,7 +369,7 @@ export const VirtualSettings = forwardRef<
       compare,
       setCompare,
       room,
-      localParticipant
+      localParticipant,
     }: VirtualSettingsProps & { messageApi: MessageInstance },
     ref,
   ) => {
@@ -401,7 +406,7 @@ export const VirtualSettings = forwardRef<
     useEffect(() => {
       if (close && videoRef.current && !videoRef.current.srcObject) {
         loadVideo(videoRef);
-        if (modelRole!= ModelRole.None) {
+        if (modelRole != ModelRole.None) {
           setVirtualMask(true);
           reloadVirtual();
           setCompare(true);
@@ -462,8 +467,6 @@ export const VirtualSettings = forwardRef<
         src: 'v_bg5.jpg',
       },
     ];
-
-    
 
     const items: TabsProps['items'] = [
       {

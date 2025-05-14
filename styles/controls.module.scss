@@ -247,3 +247,28 @@
     filter: brightness(1.1);
   }
 }
+
+
+.license_wrapper{
+  height: fit-content;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  border: 2px solid #22CCEE;
+  border-radius: 8px;
+  background-color: #d3f8ff;
+  overflow: hidden;
+  box-sizing: border-box;
+  &_title {
+    color: #22CCEE;
+    font-size: 14px;
+  }
+  &_content {
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    width: 100%;
+    overflow: hidden;
+  }
+}

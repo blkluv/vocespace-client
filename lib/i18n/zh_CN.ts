@@ -71,6 +71,9 @@ export default {
         }
       },
     },
+    license: {
+      title: "许可证",
+    },
     audio: {
       title: '音频',
       volume: '音量',
