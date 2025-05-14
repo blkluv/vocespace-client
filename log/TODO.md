@@ -120,5 +120,9 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] Docker部署
 - [ ] 视频流从setting和tile之间切换
 - [x] 视频加载两次（prejoin）video track
-- [ ] Caddy + 错误页面说明 (真实服务器访问)
-- [ ] 自定义错误页面
+- [ ] Caddy 
+- [x] 自定义错误页面
+- [ ] 视频教程
+- [ ] 部署测试基础版本
+- [ ] license服务
+- [ ] chat增加link跳转
