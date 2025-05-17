@@ -259,11 +259,18 @@
   background-color: #d3f8ff;
   overflow: hidden;
   box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
   &_title {
     color: #22CCEE;
     font-size: 14px;
+    width: 100%;
   }
   &_content {
+
     color: #000;
     font-size: 16px;
     font-weight: 700;
@@ -271,4 +278,11 @@
     width: 100%;
     overflow: hidden;
   }
+}
+
+.gift_box {
+  background-color: #22CCEE;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
 }

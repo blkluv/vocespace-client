@@ -34,7 +34,7 @@ import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
-import { socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { licenseState, socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -62,6 +62,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [uState, setUState] = useRecoilState(userState);
+    const [uLicenseState, setULicenseState] = useRecoilState(licenseState);
     const controlsRef = React.useRef<ControlBarExport>(null);
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
     const [isFocus, setIsFocus] = useState(false);
@@ -95,6 +96,35 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       if (init) {
         syncSettings();
         setInit(false);
+      }
+
+      // license 检测 -----------------------------------------------------------------------------
+      const checkLicense = async () => {
+        let url = `http://localhost:3060/api/license/${uLicenseState.value}`;
+        const response = await fetch(url, {
+          method: 'GET',
+        });
+        if (response.ok) {
+          const { id, email, domains, created_at, expires_at, ilimit } = await response.json();
+          setULicenseState((prev) => ({
+            ...prev,
+            id,
+            email,
+            domains,
+            created_at,
+            expires_at,
+            ilimit,
+          }));
+        }
+      };
+
+      if (uLicenseState.value) {
+        checkLicense();
+      } else {
+        setULicenseState((prev) => ({
+          ...prev,
+          value: window.localStorage.getItem('license') || '',
+        }));
       }
 
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
@@ -133,21 +163,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
       // 监听远程参与者连接事件 --------------------------------------------------------------------------
       room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
-      // room.localParticipant.on(ParticipantEvent.TrackPublished, (data) => {
-      //   console.warn("TrackPublished" , data);
-      // })
-      // room.localParticipant.on(ParticipantEvent.TrackStreamStateChanged, (data) => {
-      //   console.warn("TrackStreamStateChanged" , data);
-      // })
-      // room.localParticipant.on(ParticipantEvent.LocalTrackPublished, (data) => {
-      //   console.warn('LocalTrackPublished', data);
-      // });
-      // room.localParticipant.on(ParticipantEvent.TrackSubscriptionStatusChanged, (data) => {
-      //   console.warn('TrackSubscriptionStatusChanged', data);
-      // });
-      // room.on(RoomEvent.TrackPublished, (data) => {
-      //   console.warn("room track published", data);
-      // });
 
       // room.on(RoomEvent.TrackSub)
       // 监听本地用户开关摄像头事件 ----------------------------------------------------------------------
@@ -198,7 +213,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init]);
+    }, [room?.state, room?.localParticipant, uState, init, uLicenseState.value]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;

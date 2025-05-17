@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
     
     const previewData = await getLinkPreview(url, {
-      timeout: 10000,
+      timeout: 2000,
       headers: {
         'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)',
       },

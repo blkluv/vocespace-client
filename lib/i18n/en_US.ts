@@ -71,6 +71,26 @@ export default {
         fail: "Failed to save status",
       }
     },
+    license: {
+      title: "License",
+      signed: "Signed",
+      domains: "Domains",
+      limit: "Limit",
+      created_at: "Created At",
+      expires_at: "Expires At",
+      value: "License Value",
+      renew: "Renew License",
+      update: "Update Manually",
+      input: "Please enter license",
+      gift: {
+        title: "A chance to get a free upgrade! 🎁",
+        desc: "Share your experience through blog posts or social media to get a chance to upgrade for free. Add WeChat to get: Privoce"
+      },
+      license_pro: "VoceSpace Pro [$499/month]",
+      license_custom: "VoceSpace Custom",
+      price_select: "Please choose a price package",
+      meeting: "Book Meeting",
+    },
     audio: {
       title: 'Audio',
       volume: 'Volume',

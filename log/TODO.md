@@ -124,5 +124,6 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] 自定义错误页面
 - [ ] 视频教程
 - [ ] 部署测试基础版本
-- [ ] license服务
-- [ ] chat增加link跳转
+- [x] license服务
+- [x] chat增加link跳转 ->hover 之后
+- [ ] 文件拖拽发送

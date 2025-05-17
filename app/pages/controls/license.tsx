@@ -1,53 +1,241 @@
+import { licenseState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { useI18n } from '@/lib/i18n/i18n';
 import styles from '@/styles/controls.module.scss';
-import { Button, Card } from 'antd';
+import { Button, Card, Modal, Radio, RadioChangeEvent } from 'antd';
+import { CheckboxGroupProps } from 'antd/es/checkbox';
+import TextArea from 'antd/es/input/TextArea';
+import { MessageInstance } from 'antd/es/message/interface';
+import { useMemo, useState } from 'react';
+import { useRecoilState } from 'recoil';
+import { Calendly } from './calendly';
 
-export function LicenseControl() {
+type ModelKey = 'update' | 'renew';
+type OptionValue = 'renew' | 'custom';
+
+export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) {
   const { t } = useI18n();
+  const [userLicense, setUserLicense] = useRecoilState(licenseState);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [calendlyOpen, setCalendlyOpen] = useState(false);
+  const [key, setKey] = useState<ModelKey>('renew');
+  const [value, setValue] = useState<OptionValue>('renew');
+  const [licenseValue, setLicenseValue] = useState<string>('');
+  const okText = useMemo(() => {
+    if (key === 'renew') {
+      if (value === 'renew') {
+        return t('settings.license.buy');
+      } else {
+        return t('settings.license.meeting');
+      }
+    } else {
+      return t('settings.license.update');
+    }
+  }, [key, value]);
 
-  const userLicense = {
-    signed: true,
-    demains: ['vocespace.com'],
-    limit: Limit.Guest,
-    createdAt: '2023-10-01T00:00:00Z',
-    expiresAt: '2024-10-01T00:00:00Z',
-    value: '2C2VtyQjq7gX6SхTrJmPvqrmCJXdCb2SbQEP3LtfSf4Jg6MaDLbY3uqgm6dUvzhpm',
+  const modelTitle = useMemo(() => {
+    switch (key) {
+      case 'renew':
+        return t('settings.license.renew');
+      case 'update':
+        return t('settings.license.update');
+      default:
+        return t('settings.license.renew');
+    }
+  }, [key]);
+
+  // jump to https://buy.stripe.com/test_eVq5kD9exgGK4Qs1aE6c00d
+  const toBuyPage = () => {
+    window.open('https://buy.stripe.com/test_eVq5kD9exgGK4Qs1aE6c00d', '_blank');
+  };
+
+  const items = useMemo(() => {
+    let items = [
+      {
+        key: t('settings.license.signed'),
+        value: userLicense?.id ? 'Yes' : 'No',
+      },
+      {
+        key: t('settings.license.domains'),
+        value: userLicense.domains ?? '-',
+      },
+      {
+        key: t('settings.license.limit'),
+        value: userLicense.ilimit ?? '-',
+      },
+      {
+        key: t('settings.license.created_at'),
+        value: userLicense.created_at ?? '-',
+      },
+      {
+        key: t('settings.license.expires_at'),
+        value: userLicense.expires_at ?? '-',
+      },
+      {
+        key: t('settings.license.value'),
+        value: userLicense.value,
+      },
+    ];
+    const valid = userLicense?.id && userLicense?.expires_at && userLicense?.expires_at;
+    const validStyles = valid
+      ? {}
+      : {
+          border: '2px solid #f00',
+          backgroundColor: '#fdd',
+        };
+
+    const validTextStyles = valid
+      ? {}
+      : {
+          color: '#f00',
+        };
+
+    return (
+      <div className={styles.license_wrapper} style={validStyles}>
+        {items.map((item, index) => (
+          <div key={index} style={{ width: '100%' }}>
+            <div className={styles.license_wrapper_title} style={validTextStyles}>
+              {item.key}
+            </div>
+            <div className={styles.license_wrapper_content}>{item.value}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }, [userLicense]);
+
+  const options: CheckboxGroupProps<string>['options'] = [
+    {
+      label: t('settings.license.license_pro'),
+      value: 'renew',
+    },
+    {
+      label: t('settings.license.license_custom'),
+      value: 'custom',
+    },
+  ];
+
+  const onChange = ({ target: { value } }: RadioChangeEvent) => {
+    setValue(value);
+  };
+
+  const onOk = async () => {
+    if (key === 'renew') {
+      if (value === 'renew') {
+        // renew license
+        toBuyPage();
+      } else {
+        setIsModalOpen(false);
+        setCalendlyOpen(true);
+        return;
+      }
+    } else {
+      // if update should store check from server and then store in local storage
+      const url = `http://localhost:3060/api/license/${licenseValue}`;
+      const response = await fetch(url, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.code && data.code != 200) {
+          messageApi.error({
+            content: t('settings.license.invalid'),
+            duration: 2,
+          });
+        } else {
+          // update license
+          setUserLicense(data);
+          // set into local storage
+          window.localStorage.setItem('license', JSON.stringify(data.value));
+          setIsModalOpen(false);
+          setLicenseValue('');
+          messageApi.success({
+            content: t('settings.license.update_success'),
+            duration: 2,
+          });
+        }
+      } else {
+        // can not get license, means license is not valid
+        messageApi.error({
+          content: t('settings.license.invalid'),
+          duration: 2,
+        });
+      }
+    }
   };
 
   return (
     <div>
+      <Modal title={''} closable footer={<></>} open={calendlyOpen} onCancel={() => setCalendlyOpen(false)} width={800} height={720}>
+        <Calendly></Calendly>
+      </Modal>
+      <Modal
+        title={modelTitle}
+        closable
+        open={isModalOpen}
+        onOk={onOk}
+        okText={okText}
+        cancelText={t('common.cancel')}
+        onCancel={() => {
+          setIsModalOpen(false);
+        }}
+      >
+        {key === 'update' && (
+          <TextArea
+            rows={5}
+            placeholder={t('settings.license.input')}
+            value={licenseValue}
+            onChange={(e) => {
+              setLicenseValue(e.target.value);
+            }}
+          />
+        )}
+        {key === 'renew' && (
+          <>
+            <div style={{ marginBottom: '8px' }}>{t('settings.license.price_select')}</div>
+            <Radio.Group
+              size="large"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+              options={options}
+              onChange={onChange}
+              value={value}
+              optionType="button"
+            />
+          </>
+        )}
+      </Modal>
       <div className={styles.setting_box}>
         <h3>{t('settings.license.title')}</h3>
       </div>
-      <div className={styles.license_wrapper}>
-        <div>
-          <div className={styles.license_wrapper_title}>Signed</div>
-          <div className={styles.license_wrapper_content}>{userLicense.signed ? 'Yes' : 'No'}</div>
-        </div>
-        <div>
-          <div className={styles.license_wrapper_title}>Domains</div>
-          <div className={styles.license_wrapper_content}>{userLicense.demains.join(', ')}</div>
-        </div>
-        <div>
-          <div className={styles.license_wrapper_title}>Limit</div>
-          <div className={styles.license_wrapper_content}>{userLicense.limit}</div>
-        </div>
-        <div>
-          <div className={styles.license_wrapper_title}>Created At</div>
-          <div className={styles.license_wrapper_content}>{userLicense.createdAt}</div>
-        </div>
-        <div>
-          <div className={styles.license_wrapper_title}>Expires At</div>
-          <div className={styles.license_wrapper_content}>{userLicense.expiresAt}</div>
-        </div>
-        <div>
-          <div className={styles.license_wrapper_title}>Value</div>
-          <div className={styles.license_wrapper_content}>{userLicense.value}</div>
-        </div>
+      {items}
+      <div className={styles.setting_box} style={{ gap: '8px', display: 'flex' }}>
+        <Button
+          type="primary"
+          onClick={() => {
+            setIsModalOpen(true);
+            setKey('renew');
+          }}
+        >
+          {t('settings.license.renew')}
+        </Button>
+        <Button
+          type="default"
+          onClick={() => {
+            setIsModalOpen(true);
+            setKey('update');
+          }}
+        >
+          {t('settings.license.update')}
+        </Button>
       </div>
-      <div className={styles.setting_box} style={{gap: '8px', display: "flex"}}>
-        <Button type="primary">Renew License</Button>
-        <Button type="default">Update Manually</Button>
+      <div className={styles.gift_box}>
+        <h2>{t('settings.license.gift.title')}</h2>
+        <div>{t('settings.license.gift.desc')}</div>
       </div>
     </div>
   );

@@ -32,6 +32,7 @@
     "rxjs": "^7.8.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "stripe": "^18.1.0",
     "tinykeys": "^3.0.0",
     "ulid": "^3.0.0"
   },

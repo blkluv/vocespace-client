@@ -51,6 +51,19 @@ export const userState = atom({
   },
 });
 
+export const licenseState = atom({
+  key: 'licenseState',
+  default: {
+    id: undefined,
+    email: undefined,
+    domains: undefined,
+    created_at: undefined,
+    expires_at: undefined,
+    value: "",
+    ilimit: undefined,
+  },
+});
+
 export const roomIdTmpState = atom({
   key: 'roomIdTmpState',
   default: '',
