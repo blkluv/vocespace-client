@@ -1,4 +1,4 @@
-import { is_web, src, UserDefineStatus, UserStatus } from '@/lib/std';
+import { connect_endpoint, is_web, src, UserDefineStatus, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   Chat,
@@ -17,6 +17,7 @@ import {
   WidgetState,
 } from '@livekit/components-react';
 import {
+  ConnectionQuality,
   ConnectionState,
   Participant,
   ParticipantEvent,
@@ -35,6 +36,7 @@ import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { licenseState, socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { useRouter } from 'next/navigation';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -44,7 +46,7 @@ export interface VideoContainerProps extends VideoConferenceProps {
 export interface VideoContainerExports {
   removeLocalSettings: () => Promise<void>;
 }
-
+const ROOM_API_URL = connect_endpoint('/api/room');
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
   (
     {
@@ -59,6 +61,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     ref,
   ) => {
     const room = useMaybeRoomContext();
+
     const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [uState, setUState] = useRecoilState(userState);
@@ -67,6 +70,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
     const [isFocus, setIsFocus] = useState(false);
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
+    const router = useRouter();
     const { settings, updateSettings, fetchSettings, clearSettings } = useRoomSettings(
       room?.name || '', // 房间 ID
       room?.localParticipant?.identity || '', // 参与者 ID
@@ -118,13 +122,16 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
       };
 
-      if (uLicenseState.value) {
+      if (uLicenseState.value !== '') {
         checkLicense();
       } else {
-        setULicenseState((prev) => ({
-          ...prev,
-          value: window.localStorage.getItem('license') || '',
-        }));
+        let value = window.localStorage.getItem('license');
+        if (value && value !== '') {
+          setULicenseState((prev) => ({
+            ...prev,
+            value,
+          }));
+        }
       }
 
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
@@ -148,7 +155,27 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 房间事件监听器 --------------------------------------------------------------------------------
       const onParticipantConnected = async (participant: Participant) => {
-        await fetchSettings();
+        console.warn('onParticipantConnected', participant);
+        // 通过许可证判断人数，free为5人，pro为20人，若超过则拒绝加入并给出提示
+        let user_limit = 5;
+        if (uLicenseState.id && uLicenseState.value! == '') {
+          if (uLicenseState.ilimit === 'pro') {
+            user_limit = 20;
+          }
+        }
+
+        if (room.remoteParticipants.size > user_limit) {
+          if (room.localParticipant.identity === participant.identity) {
+            messageApi.error({
+              content: t('common.full_user'),
+              duration: 3,
+            });
+            room.disconnect(true);
+          }
+          return;
+        } else {
+          await fetchSettings();
+        }
       };
       const onParticipantDisConnected = async (participant: Participant) => {
         socket.emit('mouse_remove', {
@@ -163,7 +190,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
       // 监听远程参与者连接事件 --------------------------------------------------------------------------
       room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
-
       // room.on(RoomEvent.TrackSub)
       // 监听本地用户开关摄像头事件 ----------------------------------------------------------------------
       const onTrackHandler = (track: TrackPublication) => {
@@ -213,7 +239,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init, uLicenseState.value]);
+    }, [room?.state, room?.localParticipant, uState, init, uLicenseState]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;

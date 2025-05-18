@@ -39,6 +39,8 @@ export default {
     share_screen: '共享屏幕',
     stop_share: '停止共享',
     wave_msg: '向您发送了一条提醒!',
+    full_user:
+      '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级许可证获取更多用户名额。',
   },
   settings: {
     title: '设置',
@@ -86,13 +88,16 @@ export default {
         title: '一个获取免费升级的机会！ 🎁',
         desc: '通过 blog 文章或社交媒体分享使用体验，获取免费升级的机会加微信获得：Privoce',
       },
-      license_pro: 'VoceSpace 专业版 [$499/月]',
+      license_pro: 'VoceSpace 专业版 [$499/年]',
       license_custom: 'VoceSpace 定制版',
       price_select: '请选择价格套餐',
       meeting: '订阅会议',
       buy: '购买许可证',
       invalid: '许可证无效或已过期，请检查许可证是否正确。',
       update_success: '许可证更新成功',
+      circle_ip:
+        '当前您的IP地址为回环地址/私有地址，不建议您为此地址购买许可证。请使用公网IP地址购买许可证。若需要为私有地址购买许可证并支持服务，请联系Wechat: Privoce。',
+      confirm_ip: '请确认您的IP地址是否正确！',
     },
     audio: {
       title: '音频',

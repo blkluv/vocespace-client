@@ -1,12 +1,14 @@
 // weebhook for stripe (rewrite use nextjs api)
 // test: stripe trigger payment_intent.succeeded
+import { getServerIp } from '@/lib/std';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const endpointSecret = '';
-const stripe = new Stripe(
-  '',
-);
+
+const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
+const SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? '';
+const endpointSecret = 'whsec_597fa68076c077ecc50192b6db568a06d08bebeb710b997a512bcecb71dc914e';
+const stripe = new Stripe(SECRET_KEY);
 
 export async function POST(request: Request) {
   const sig: any = request.headers.get('stripe-signature');
@@ -44,6 +46,7 @@ const paySuccessAndSendToServer = async (payInfo: Stripe.PaymentIntent) => {
   const info = {
     email: payInfo.receipt_email,
     created_at: payInfo.created,
+    domains: IP,
   };
   await fetch(url, {
     method: 'POST',

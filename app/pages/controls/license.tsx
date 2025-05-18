@@ -1,20 +1,22 @@
 import { licenseState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { useI18n } from '@/lib/i18n/i18n';
 import styles from '@/styles/controls.module.scss';
-import { Button, Card, Modal, Radio, RadioChangeEvent } from 'antd';
+import { Button, Card, Input, Modal, Radio, RadioChangeEvent } from 'antd';
 import { CheckboxGroupProps } from 'antd/es/checkbox';
 import TextArea from 'antd/es/input/TextArea';
 import { MessageInstance } from 'antd/es/message/interface';
 import { useMemo, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { Calendly } from './calendly';
+import { getServerIp } from '@/lib/std';
 
-type ModelKey = 'update' | 'renew';
+type ModelKey = 'update' | 'renew' | 'server';
 type OptionValue = 'renew' | 'custom';
-
+const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) {
   const { t } = useI18n();
   const [userLicense, setUserLicense] = useRecoilState(licenseState);
+  const [ipAddress, setIpAddress] = useState(IP);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [calendlyOpen, setCalendlyOpen] = useState(false);
   const [key, setKey] = useState<ModelKey>('renew');
@@ -27,8 +29,10 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
       } else {
         return t('settings.license.meeting');
       }
-    } else {
+    } else if (key === 'update') {
       return t('settings.license.update');
+    } else {
+      return t('settings.license.buy');
     }
   }, [key, value]);
 
@@ -43,9 +47,8 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
     }
   }, [key]);
 
-  // jump to https://buy.stripe.com/test_eVq5kD9exgGK4Qs1aE6c00d
   const toBuyPage = () => {
-    window.open('https://buy.stripe.com/test_eVq5kD9exgGK4Qs1aE6c00d', '_blank');
+    window.open('https://buy.stripe.com/9AQaHG82n2we8Ni14P', '_blank');
   };
 
   const items = useMemo(() => {
@@ -122,13 +125,17 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
     if (key === 'renew') {
       if (value === 'renew') {
         // renew license
-        toBuyPage();
+        if (isCircleIp) {
+          setKey('server');
+        } else {
+          toBuyPage();
+        }
       } else {
         setIsModalOpen(false);
         setCalendlyOpen(true);
         return;
       }
-    } else {
+    } else if (key === 'update') {
       // if update should store check from server and then store in local storage
       const url = `http://localhost:3060/api/license/${licenseValue}`;
       const response = await fetch(url, {
@@ -147,7 +154,7 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
           // update license
           setUserLicense(data);
           // set into local storage
-          window.localStorage.setItem('license', JSON.stringify(data.value));
+          window.localStorage.setItem('license', data.value);
           setIsModalOpen(false);
           setLicenseValue('');
           messageApi.success({
@@ -162,12 +169,26 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
           duration: 2,
         });
       }
+    } else {
+      toBuyPage();
     }
   };
 
+  const isCircleIp = useMemo(() => {
+    return IP === 'localhost' || IP.startsWith('192.168.');
+  }, [IP]);
+
   return (
     <div>
-      <Modal title={''} closable footer={<></>} open={calendlyOpen} onCancel={() => setCalendlyOpen(false)} width={800} height={720}>
+      <Modal
+        title={''}
+        closable
+        footer={<></>}
+        open={calendlyOpen}
+        onCancel={() => setCalendlyOpen(false)}
+        width={1000}
+        height={720}
+      >
         <Calendly></Calendly>
       </Modal>
       <Modal
@@ -181,6 +202,27 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
           setIsModalOpen(false);
         }}
       >
+        {key === 'server' && (
+          <>
+            {isCircleIp ? (
+              <>
+                <div>{t('settings.license.circle_ip')}</div>
+                <Input
+                style={{color: "#888", marginTop: "8px"}}
+                  disabled
+                  type="text"
+                  size="large"
+                  value={ipAddress}
+                  onChange={(e) => {
+                    setIpAddress(e.target.value);
+                  }}
+                ></Input>
+              </>
+            ) : (
+              <div>{t('settings.license.confirm_ip')}</div>
+            )}
+          </>
+        )}
         {key === 'update' && (
           <TextArea
             rows={5}

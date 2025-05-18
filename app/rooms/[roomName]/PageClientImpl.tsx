@@ -59,7 +59,7 @@ export const licenseState = atom({
     domains: undefined,
     created_at: undefined,
     expires_at: undefined,
-    value: "",
+    value: '',
     ilimit: undefined,
   },
 });
@@ -226,7 +226,7 @@ function VideoConferenceComponent(props: {
       autoSubscribe: true,
     } as RoomConnectOptions;
 
-    if (TURN_CREDENTIAL !== "" && TURN_USERNAME !== "" && TURN_URL !== "") {
+    if (TURN_CREDENTIAL !== '' && TURN_USERNAME !== '' && TURN_URL !== '') {
       conf.rtcConfig = {
         iceServers: [
           {
