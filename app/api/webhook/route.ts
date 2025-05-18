@@ -7,7 +7,7 @@ import Stripe from 'stripe';
 
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 const SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? '';
-const endpointSecret = 'whsec_597fa68076c077ecc50192b6db568a06d08bebeb710b997a512bcecb71dc914e';
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET ?? '';
 const stripe = new Stripe(SECRET_KEY);
 
 export async function POST(request: Request) {
