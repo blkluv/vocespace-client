@@ -23,7 +23,7 @@ find /app/.next -type f -name "*.js" -exec sed -i "s|__TURN_URL_PLACEHOLDER__|${
 find /app/.next -type f -name "*.js" -exec sed -i "s|__TURN_USERNAME_PLACEHOLDER__|${TURN_USERNAME:-}|g" {} \;
 find /app/.next -type f -name "*.js" -exec sed -i "s|__PORT_PLACEHOLDER__|${PORT:-3000}|g" {} \;
 find /app/.next -type f -name "*.js" -exec sed -i "s|__NEXT_PUBLIC_BASE_PATH_PLACEHOLDER__|${NEXT_PUBLIC_BASE_PATH:-/chat}|g" {} \;
-find /app/.next -type f -name "*.js" -exec sed -i "s|__WEEBHOOK_PLACEHOLDER__|${WEEBHOOK:-false}|g" {} \;
+find /app/.next -type f -name "*.js" -exec sed -i "s|__WEEBHOOK_PLACEHOLDER__|${WEEBHOOK:-}|g" {} \;
 
 echo "环境变量配置:"
 cat /app/.env.local

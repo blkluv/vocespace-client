@@ -1,4 +1,11 @@
-import { connect_endpoint, is_web, src, UserDefineStatus, UserStatus } from '@/lib/std';
+import {
+  connect_endpoint,
+  getServerIp,
+  is_web,
+  src,
+  UserDefineStatus,
+  UserStatus,
+} from '@/lib/std';
 import {
   CarouselLayout,
   Chat,
@@ -46,6 +53,7 @@ export interface VideoContainerProps extends VideoConferenceProps {
 export interface VideoContainerExports {
   removeLocalSettings: () => Promise<void>;
 }
+const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 const ROOM_API_URL = connect_endpoint('/api/room');
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
   (
@@ -104,12 +112,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // license 检测 -----------------------------------------------------------------------------
       const checkLicense = async () => {
-        let url = `http://localhost:3060/api/license/${uLicenseState.value}`;
+        let url = `http://localhost:3060/api/license/${IP}`;
         const response = await fetch(url, {
           method: 'GET',
         });
         if (response.ok) {
-          const { id, email, domains, created_at, expires_at, ilimit } = await response.json();
+          const { id, email, domains, created_at, expires_at, ilimit, value } =
+            await response.json();
           setULicenseState((prev) => ({
             ...prev,
             id,
@@ -118,12 +127,15 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             created_at,
             expires_at,
             ilimit,
+            value,
           }));
         }
       };
 
       if (uLicenseState.value !== '') {
-        checkLicense();
+        if (!(IP === 'localhost' || IP.startsWith('192.168.'))) {
+          checkLicense();
+        }
       } else {
         let value = window.localStorage.getItem('license');
         if (value && value !== '') {
@@ -239,7 +251,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init, uLicenseState]);
+    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;

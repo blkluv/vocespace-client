@@ -32,7 +32,7 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
     } else if (key === 'update') {
       return t('settings.license.update');
     } else {
-      return t('settings.license.buy');
+      return t('settings.license.meeting');
     }
   }, [key, value]);
 
@@ -144,7 +144,7 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
 
       if (response.ok) {
         const data = await response.json();
-
+        console.warn('license data', data);
         if (data.code && data.code != 200) {
           messageApi.error({
             content: t('settings.license.invalid'),
@@ -170,7 +170,10 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
         });
       }
     } else {
-      toBuyPage();
+      // book meeting
+      setIsModalOpen(false);
+      setCalendlyOpen(true);
+      return;
     }
   };
 
@@ -208,7 +211,7 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
               <>
                 <div>{t('settings.license.circle_ip')}</div>
                 <Input
-                style={{color: "#888", marginTop: "8px"}}
+                  style={{ color: '#888', marginTop: '8px' }}
                   disabled
                   type="text"
                   size="large"

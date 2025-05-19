@@ -4,13 +4,17 @@ import { getServerIp } from '@/lib/std';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 const SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? '';
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET ?? '';
-const stripe = new Stripe(SECRET_KEY);
+const WEEBHOOK = process.env.WEEBHOOK ?? false;
 
 export async function POST(request: Request) {
+  if (!WEEBHOOK) {
+    return NextResponse.json({ error: 'Webhook is not enabled' }, { status: 400 });
+  }
+
+  const stripe = new Stripe(SECRET_KEY);
   const sig: any = request.headers.get('stripe-signature');
   const body = await request.text();
 

@@ -60,7 +60,7 @@ export const licenseState = atom({
     created_at: undefined,
     expires_at: undefined,
     value: '',
-    ilimit: undefined,
+    ilimit: "Free",
   },
 });
 
