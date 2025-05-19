@@ -5,11 +5,12 @@ import type { GetProp, UploadProps } from 'antd';
 import { pictureCallback, SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
-import { setting_drawer_header } from '@/app/devices/controls/bar';
+import { setting_drawer_header } from '@/app/pages/controls/bar';
 import { ulid } from 'ulid';
 import { Room } from 'livekit-client';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
 import { MessageInstance } from 'antd/es/message/interface';
+import { LinkPreview } from './link_preview';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
@@ -20,6 +21,25 @@ export interface EnhancedChatProps {
   room: Room;
   sendFileConfirm: (onOk: () => Promise<void>) => void;
   messageApi: MessageInstance;
+}
+
+interface ChatMsgItem {
+  id?: string;
+  sender: {
+    id: string;
+    name: string;
+  };
+  message: string | null;
+  type: 'text' | 'file';
+  roomName: string;
+  timestamp?: string;
+  file: {
+    name: string;
+    size: number;
+    type: string;
+    url?: string;
+    data?: string | ArrayBuffer | null;
+  } | null;
 }
 
 export function EnhancedChat({
@@ -34,12 +54,15 @@ export function EnhancedChat({
   const ulRef = React.useRef<HTMLUListElement>(null);
   const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
   const [value, setValue] = React.useState('');
-  // const [uploadFile, setUploadFile] = React.useState<FileType | null>(null);
+  // 添加输入法组合状态跟踪
+  const [isComposing, setIsComposing] = React.useState(false);
   // [socket] ----------------------------------------------------------------------------------
   React.useEffect(() => {
     socket.on('chat_msg_response', (msg: ChatMsgItem) => {
       if (msg.roomName == room.name) {
+        console.warn('chat_msg_response', msg);
         setMessages((prev) => [...prev, msg]);
+        scrollToBottom();
       }
     });
 
@@ -47,6 +70,7 @@ export function EnhancedChat({
       if (msg.roomName == room.name) {
         console.warn('chat_file_response', msg);
         setMessages((prev) => [...prev, msg]);
+        scrollToBottom();
       }
     });
 
@@ -54,7 +78,7 @@ export function EnhancedChat({
       socket.off('chat_msg');
       socket.off('chat_msg_response');
     };
-  }, [socket]);
+  }, [socket, room.name]);
   // [send methods] ----------------------------------------------------------------------------
   const sendMsg = async () => {
     const msg = value.trim();
@@ -129,16 +153,15 @@ export function EnhancedChat({
     }
   };
 
-  React.useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  // 处理回车键事件
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 只有在不处于输入法组合状态且按下回车键时才发送消息
+    if (e.key === 'Enter' && !isComposing) {
       e.preventDefault();
       sendMsg();
     }
   };
+
   const { localParticipant } = useLocalParticipant();
   const isLocal = (identity?: string): boolean => {
     if (identity) {
@@ -149,7 +172,7 @@ export function EnhancedChat({
     }
   };
 
-  const is_img = (type: string) => {
+  const isImg = (type: string) => {
     return type.startsWith('image/');
   };
 
@@ -169,6 +192,19 @@ export function EnhancedChat({
     }
   };
 
+  const msgList = React.useMemo(() => {
+    console.warn('msgList', messages);
+    return messages.map((msg) => (
+      <ChatMsgItemCmp
+        key={msg.id || ulid()}
+        isLocal={isLocal(msg.sender.id)}
+        msg={msg}
+        downloadFile={downloadFile}
+        isImg={isImg}
+      ></ChatMsgItemCmp>
+    ));
+  }, [messages]);
+
   return (
     <Drawer
       title={t('common.chat')}
@@ -180,159 +216,110 @@ export function EnhancedChat({
         on_clicked: () => setOpen(false),
       })}
       style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
+      styles={{
+        body: {
+          padding: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+        },
+      }}
     >
       <div className={styles.msg}>
         <ul ref={ulRef} className={styles.msg_list}>
-          {messages.map((msg) =>
-            isLocal(msg.sender.id) ? (
-              <li key={ulid()} className={styles.msg_item}>
-                <div className={styles.msg_item_wrapper}>
-                  <div className={styles.msg_item_content}>
-                    <h4 className={styles.msg_item_content_name}>{msg.sender.name || 'unknown'}</h4>
-                    {msg.type === 'text' ? (
-                      <p className={styles.msg_item_content_msg}>{msg.message}</p>
-                    ) : (
-                      <Popover
-                        placement="right"
-                        style={{ background: '#1E1E1E' }}
-                        content={
-                          <Button
-                            shape="circle"
-                            type="text"
-                            onClick={() => downloadFile(msg?.file?.url)}
-                          >
-                            <SvgResource type="download" svgSize={16} color="#22CCEE"></SvgResource>
-                          </Button>
-                        }
-                      >
-                        {msg.file && (
-                          <p className={styles.msg_item_content_msg}>
-                            {is_img(msg.file.type) ? (
-                              <Image
-                                src={msg.file.url}
-                                width={'70%'}
-                                fallback={pictureCallback}
-                              ></Image>
-                            ) : (
-                              <div className={styles.msg_item_content_msg_file}>
-                                <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
-                                  <SvgResource
-                                    type="file"
-                                    color="#22CCEE"
-                                    svgSize={42}
-                                  ></SvgResource>
-                                </a>
-                                <div className={styles.msg_item_content_msg_file_info}>
-                                  <h4>{msg.file.name}</h4>
-                                  <p>{Math.round(msg.file.size / 1024)}KB</p>
-                                </div>
-                              </div>
-                            )}
-                          </p>
-                        )}
-                      </Popover>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ) : (
-              <li key={ulid()} className={styles.msg_item__remote}>
-                <div className={styles.msg_item_wrapper}>
-                  <div className={styles.msg_item_content} style={{ justifyContent: 'flex-end' }}>
-                    <h4 className={styles.msg_item_content_name} style={{ textAlign: 'end' }}>
-                      {msg.sender.name}
-                    </h4>
-                    {msg.type === 'text' ? (
-                      <p className={styles.msg_item_content_msg}>{msg.message}</p>
-                    ) : (
-                      <Popover
-                        placement="right"
-                        style={{ background: '#1E1E1E' }}
-                        content={
-                          <Button
-                            shape="circle"
-                            type="text"
-                            onClick={() => downloadFile(msg?.file?.url)}
-                          >
-                            <SvgResource type="download" svgSize={16} color="#22CCEE"></SvgResource>
-                          </Button>
-                        }
-                      >
-                        {msg.file && (
-                          <p className={styles.msg_item_content_msg}>
-                            {is_img(msg.file.type) ? (
-                              <Image
-                                src={msg.file.url}
-                                height={42}
-                                fallback={pictureCallback}
-                              ></Image>
-                            ) : (
-                              <div className={styles.msg_item_content_msg_file}>
-                                <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
-                                  <SvgResource
-                                    type="file"
-                                    color="#22CCEE"
-                                    svgSize={42}
-                                  ></SvgResource>
-                                </a>
-                                <div className={styles.msg_item_content_msg_file_info}>
-                                  <h4>{msg.file.name}</h4>
-                                  <p>{Math.round(msg.file.size / 1024)}KB</p>
-                                </div>
-                              </div>
-                            )}
-                          </p>
-                        )}
-                      </Popover>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ),
-          )}
+          {msgList}
         </ul>
       </div>
 
       <div className={styles.tool}>
-        <Input
-          value={value}
-          placeholder={t('common.chat_placeholder')}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyPress}
-          style={{ paddingRight: 0, backgroundColor: '#333' }}
-          prefix={
-            <Upload beforeUpload={handleBeforeUpload} showUploadList={false}>
-              <Button shape="circle" style={{ background: 'transparent', border: 'none' }}>
-                <SvgResource type="add" svgSize={18} color="#fff" />
-              </Button>
-            </Upload>
-          }
-          suffix={
-            <Button style={{ border: 'none', marginRight: "0.5rem" }} type="primary" onClick={sendMsg}>
-              {t('common.send')}
-            </Button>
-          }
-        />
+        <Upload beforeUpload={handleBeforeUpload} showUploadList={false}>
+          <Button shape="circle" style={{ background: 'transparent', border: 'none' }}>
+            <SvgResource type="add" svgSize={18} color="#fff" />
+          </Button>
+        </Upload>
+        <div className={styles.tool_input}>
+          <Input
+            value={value}
+            placeholder={t('common.chat_placeholder')}
+            onChange={(e) => setValue(e.target.value)}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
+            onKeyDown={handleKeyDown}
+            style={{ paddingRight: 0, backgroundColor: '#333' }}
+          />
+        </div>
+        <Button style={{ border: 'none' }} type="primary" onClick={sendMsg}>
+          {t('common.send')}
+        </Button>
       </div>
     </Drawer>
   );
 }
 
-interface ChatMsgItem {
-  id?: string;
-  sender: {
-    id: string;
-    name: string;
-  };
-  message: string | null;
-  type: 'text' | 'file';
-  roomName: string;
-  timestamp?: string;
-  file: {
-    name: string;
-    size: number;
-    type: string;
-    url?: string;
-    data?: string | ArrayBuffer | null;
-  } | null;
+interface ChatMsgItemProps {
+  isLocal: boolean;
+  msg: ChatMsgItem;
+  downloadFile: (url?: string) => Promise<void>;
+  isImg: (type: string) => boolean;
+}
+
+function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps) {
+  const liClass = isLocal ? styles.msg_item : styles.msg_item__remote;
+  const flexEnd = isLocal ? {} : { justifyContent: 'flex-end' };
+  const textAlignPos = isLocal ? 'left' : 'end';
+
+  const LinkPreviewCmp = React.useMemo(() => {
+    return msg.type === 'text' && msg.message ? (
+      <LinkPreview text={msg.message}></LinkPreview>
+    ) : (
+      <></>
+    );
+  }, [msg.message]);
+
+  return (
+    <li className={liClass}>
+      <div className={styles.msg_item_wrapper}>
+        <div className={styles.msg_item_content} style={flexEnd}>
+          <h4 className={styles.msg_item_content_name} style={{ textAlign: textAlignPos }}>
+            {msg.sender.name || 'unknown'}
+          </h4>
+          {msg.type === 'text' ? (
+            <div className={styles.msg_item_content_wrapper} style={flexEnd}>
+              <p className={styles.msg_item_content_msg}>{msg.message}</p>
+              {LinkPreviewCmp}
+            </div>
+          ) : (
+            <Popover
+              placement="right"
+              style={{ background: '#1E1E1E' }}
+              content={
+                <Button shape="circle" type="text" onClick={() => downloadFile(msg?.file?.url)}>
+                  <SvgResource type="download" svgSize={16} color="#22CCEE"></SvgResource>
+                </Button>
+              }
+            >
+              {msg.file && (
+                <p className={styles.msg_item_content_msg}>
+                  {isImg(msg.file.type) ? (
+                    <Image src={msg.file.url} width={'70%'} fallback={pictureCallback}></Image>
+                  ) : (
+                    <div className={styles.msg_item_content_msg_file}>
+                      <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
+                        <SvgResource type="file" color="#22CCEE" svgSize={42}></SvgResource>
+                      </a>
+                      <div className={styles.msg_item_content_msg_file_info}>
+                        <h4>{msg.file.name}</h4>
+                        <p>{Math.round(msg.file.size / 1024)}KB</p>
+                      </div>
+                    </div>
+                  )}
+                </p>
+              )}
+            </Popover>
+          )}
+        </div>
+      </div>
+    </li>
+  );
 }

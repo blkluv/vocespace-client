@@ -1,5 +1,4 @@
-import { EgressClient } from 'livekit-server-sdk';
-
+import os from 'os';
 /**
  * Option<T>
  *
@@ -116,4 +115,20 @@ export const randomColor = (participantId: string): string => {
 
   const index = Math.abs(hash) % colors.length;
   return colors[index];
+};
+
+
+export const getServerIp = () => {
+  const interfaces = os.networkInterfaces();
+  for (const interfaceName in interfaces) {
+    const networkInterface = interfaces[interfaceName];
+    if (networkInterface) {
+      for (const net of networkInterface) {
+        if (net.family === 'IPv4' && !net.internal) {
+          return net.address;
+        }
+      }
+    }
+  }
+  return null;
 };

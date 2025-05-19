@@ -1,6 +1,6 @@
-import { Button, Input, List, Radio, Slider, Switch, Tabs, TabsProps } from 'antd';
+import { Button, Input, List, Radio, Slider, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
 import { loadVideo, useVideoBlur } from '@/lib/std/device';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
@@ -17,6 +17,7 @@ import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/Page
 import TextArea from 'antd/es/input/TextArea';
 import { LocalParticipant } from 'livekit-client';
 import { ulid } from 'ulid';
+import { LicenseControl } from './license';
 
 const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
@@ -214,10 +215,17 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
                 setEnabled={setVirtualEnabled}
                 compare={compare}
                 setCompare={setCompare}
+                room={room}
+                localParticipant={localParticipant}
               ></VirtualSettings>
             </div>
           </div>
         ),
+      },
+      {
+        key: 'license',
+        label: <TabItem type="license" label={t('settings.license.title')}></TabItem>,
+        children: <LicenseControl messageApi={messageApi}></LicenseControl>,
       },
       {
         key: 'about_us',
@@ -334,6 +342,8 @@ export interface VirtualSettingsProps {
   setCompare: (e: boolean) => void;
   close: boolean;
   blur: number;
+  room: string;
+  localParticipant: LocalParticipant;
 }
 
 export interface VirtualSettingsExports {
@@ -358,6 +368,8 @@ export const VirtualSettings = forwardRef<
       setModelBg,
       compare,
       setCompare,
+      room,
+      localParticipant,
     }: VirtualSettingsProps & { messageApi: MessageInstance },
     ref,
   ) => {
@@ -372,6 +384,14 @@ export const VirtualSettings = forwardRef<
       initialBlur: blur,
     });
 
+    const reloadVirtual = () => {
+      socket.emit('reload_virtual', {
+        identity: localParticipant.identity,
+        roomId: room,
+        reloading: true,
+      });
+    };
+
     useEffect(() => {
       setVideoBlur(blur);
     }, [blur]);
@@ -385,8 +405,12 @@ export const VirtualSettings = forwardRef<
     }, [modelRole]);
     useEffect(() => {
       if (close && videoRef.current && !videoRef.current.srcObject) {
-        console.warn('start video');
         loadVideo(videoRef);
+        if (modelRole != ModelRole.None) {
+          setVirtualMask(true);
+          reloadVirtual();
+          setCompare(true);
+        }
       }
     }, [videoRef, close]);
 
@@ -462,6 +486,7 @@ export const VirtualSettings = forwardRef<
                   <div
                     className={styles.virtual_model_box}
                     onClick={() => {
+                      reloadVirtual();
                       set_model_selected_index(index);
                       setModelRole(item.name as ModelRole);
                       setVirtualMask(true);
@@ -519,14 +544,17 @@ export const VirtualSettings = forwardRef<
                   <div
                     className={styles.virtual_model_box}
                     onClick={() => {
+                      reloadVirtual();
                       set_bg_selected_index(index);
                       setVirtualMask(true);
                       setModelBg(item.src as ModelBg);
-                      if (compare) {
+                      if (compare && modelRole != ModelRole.None) {
                         setCompare(false);
                         setTimeout(() => {
                           setCompare(true);
                         }, 200);
+                      } else if (modelRole == ModelRole.None && !compare) {
+                        setCompare(false);
                       } else {
                         setCompare(true);
                       }
@@ -562,27 +590,26 @@ export const VirtualSettings = forwardRef<
     return (
       <div className={styles.virtual_settings}>
         <div className={styles.virtual_video_box}>
-          <div className={styles.virtual_video_box_compare}>
-            <Button
-              color="default"
-              variant="solid"
-              style={{ padding: '8px' }}
-              onClick={() => {
-                if (modelRole != ModelRole.None) {
-                  const val = !compare;
-                  setCompare(val);
-                } else {
-                  // messageApi.warning({
-                  //   content: t('settings.virtual.none_warning'),
-                  //   duration: 1,
-                  // });
-                  setShowBlur(!showBlur);
-                }
-              }}
-            >
-              <SvgResource type="switch" color="#fff" svgSize={14}></SvgResource>
-            </Button>
-          </div>
+          {modelRole == ModelRole.None && (
+            <div className={styles.virtual_video_box_compare}>
+              <Button
+                color="default"
+                variant="solid"
+                style={{ padding: '8px' }}
+                onClick={() => {
+                  if (modelRole != ModelRole.None) {
+                    const val = !compare;
+                    setCompare(val);
+                  } else {
+                    setShowBlur(!showBlur);
+                  }
+                }}
+              >
+                <SvgResource type="switch" color="#fff" svgSize={14}></SvgResource>
+              </Button>
+            </div>
+          )}
+
           <video
             className={compare ? '' : styles.virtual_video_box_video}
             style={{

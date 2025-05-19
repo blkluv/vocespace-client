@@ -16,7 +16,7 @@ import { useRecoilState } from 'recoil';
 import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { connect_endpoint, src } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
-import { LangSelect } from '@/app/devices/controls/lang_select';
+import { LangSelect } from '@/app/pages/controls/lang_select';
 import { ulid } from 'ulid';
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint('/api/room-settings');
@@ -119,7 +119,7 @@ export function PreJoin({
   }, [videoTrack]);
 
   React.useEffect(() => {
-    if (videoEl.current && videoTrack) {
+    if (videoEl.current && videoTrack && !loading) {
       videoTrack.unmute();
       videoTrack.attach(videoEl.current);
       // 自动聚焦input
@@ -131,7 +131,7 @@ export function PreJoin({
     return () => {
       videoTrack?.detach();
     };
-  }, [videoTrack, inputRef]);
+  }, [videoTrack, inputRef,loading]);
   // audio track --------------------------------------------------------------------------------------
   const audioTrack = React.useMemo(
     () => tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack,
@@ -212,7 +212,14 @@ export function PreJoin({
     <div className={styles.view}>
       {contextHolder}
       <span className={styles.view__lang_select}>
-        <LangSelect></LangSelect>
+        {loading ? (
+          <Skeleton.Node
+            active
+            style={{ height: `40px`, backgroundColor: '#333', width: '126px' }}
+          ></Skeleton.Node>
+        ) : (
+          <LangSelect></LangSelect>
+        )}
       </span>
       <div className={styles.view__video}>
         {videoTrack && videoEnabled && (

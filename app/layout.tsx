@@ -81,7 +81,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Popover: {
             colorBgElevated: '#1E1E1E',
           },
-          
+          Modal : {
+            contentBg: '#111111',
+            headerBg: '#111111',
+            footerBg: '#111111',
+          }
         },
       }}
     >

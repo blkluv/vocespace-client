@@ -1,3 +1,7 @@
+/**
+ * @description: This is a simple Node.js server using Express and Socket.IO to handle real-time communication and file uploads.
+ * @author: Will Sheng
+ */
 import { createServer } from 'node:http';
 import next from 'next';
 import { Server } from 'socket.io';
@@ -6,8 +10,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import express from 'express';
 
-// const dev = process.env.NODE_ENV !== 'production';
-const dev = false;
+// [args] ---------------------------------------------------------------------------------------------------------------
+const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = 3030;
 const basePath = '/chat'; // 添加 basePath 配置
@@ -16,12 +20,14 @@ const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// 文件存储路径
+// upload dir path
 const uploadDir = path.join(__dirname, 'uploads');
+// check if upload dir exists, if not create it
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
+// [app server launch] ---------------------------------------------------------------------------------------------------
 app.prepare().then(() => {
   const server = express();
   server.use(`${basePath}/uploads`, express.static(path.join(__dirname, 'uploads')));
@@ -32,8 +38,13 @@ app.prepare().then(() => {
   const httpServer = createServer(server);
 
   const io = new Server(httpServer);
-
+  // [io on] -------------------------------------------------------------------------------------------------------------
+  // - [io connection] ---------------------------------------------------------------------------------------------------
   io.on('connection', (socket) => {
+    // - [socket: wave hand event to other user] -------------------------------------------------------------------------
+    // - on: "wave"
+    // - emit: "wave_response"
+    // - msg: { room: string, senderId: string, senderName: string, receiverId: string }
     socket.on('wave', (msg) => {
       socket.to(msg.socketId).emit('wave_response', {
         room: msg.room,
@@ -42,22 +53,53 @@ app.prepare().then(() => {
         receiverId: msg.receiverId,
       });
     });
-    // 有用户更新自己的状态，发送给所有人
+    // [socket: update user status event] --------------------------------------------------------------------------------
+    // - on: "update_user_status"
+    // - emit: "user_status_updated"
+    // - msg: _
     socket.on('update_user_status', () => {
       socket.broadcast.emit('user_status_updated');
     });
-    // 鼠标位置移动
+    // [socket: mouse move event] ----------------------------------------------------------------------------------------
+    // - on: "mouse_move"
+    // - emit: "mouse_move_response"
+    // - msg: {
+    //     room: string | undefined;
+    //     x: number;
+    //     y: number;
+    //     color: string;
+    //     senderName: string;
+    //     senderId: string;
+    //     receiverId: string;
+    //     receSocketId: string;
+    //     realVideoRect: {
+    //         width: number;
+    //         height: number;
+    //         left: number;
+    //         top: number;
+    //     };
+    // }
     socket.on('mouse_move', (msg) => {
-      // socket.to(msg.receSocketId).emit('mouse_move_response', msg);
       socket.broadcast.emit('mouse_move_response', msg);
     });
+    // [socket: mouse click event] -------------------------------------------------------------------------------------
+    // - on: "mouse_click"
+    // - emit: "mouse_click_response"
+    // - msg: {
+    //   room: string;
+    //   senderName: string;
+    //   senderId: string;
+    //   receiverId: string;
+    //   receSocketId: string;
+    // }
     socket.on('mouse_remove', (msg) => {
       socket.broadcast.emit('mouse_remove_response', msg);
     });
-
+    // [socket: chat message event] -------------------------------------------------------------------------------------
     socket.on('chat_msg', (msg) => {
       socket.broadcast.emit('chat_msg_response', msg);
     });
+    // [socket: chat file event] ----------------------------------------------------------------------------------------
     socket.on('chat_file', async (msg) => {
       try {
         const { file, sender, roomName } = msg;
@@ -113,7 +155,11 @@ app.prepare().then(() => {
         socket.emit('error', { message: '文件处理失败' });
       }
     });
-
+    // [socket: reload when virtual role change] ------------------------------------------------------------------------------
+    socket.on('reload_virtual', (msg) => {
+      socket.broadcast.emit('reload_virtual_response', msg);
+    });
+    // [socket: clear room resources] -----------------------------------------------------------------------------------------
     socket.on('clear_room_resources', async (msg) => {
       const { roomName } = msg;
       // 删除uploads下的对应roomName的文件夹
@@ -122,16 +168,16 @@ app.prepare().then(() => {
         fs.rmdirSync(roomDir, { recursive: true });
       }
     });
-
+    // [socket: create a new user status] ------------------------------------------------------------------------------------
     socket.on('new_user_status', (msg) => {
       io.emit('new_user_status_response', msg);
     });
-
+    // [socket: new user] ----------------------------------------------------------------------------------------------------
     socket.on('disconnect', (msg) => {
       console.log('Socket disconnected', socket.id);
     });
   });
-
+  // [http server] ----------------------------------------------------------------------------------------------------------
   httpServer
     .once('error', (err) => {
       console.error(err);

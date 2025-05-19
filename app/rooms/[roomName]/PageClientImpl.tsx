@@ -1,11 +1,10 @@
 'use client';
 
-import { VideoContainer, VideoContainerExports } from '@/app/devices/video_container';
+import { VideoContainer, VideoContainerExports } from '@/app/pages/controls/video_container';
 import { decodePassphrase } from '@/lib/client-utils';
 import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from '@/lib/RecordingIndicator';
-import { SettingsMenu } from '@/lib/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
 import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
@@ -18,8 +17,6 @@ import {
   DeviceUnsupportedError,
   RoomConnectOptions,
   MediaDeviceFailure,
-  RpcInvocationData,
-  ConnectionState,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
@@ -29,11 +26,9 @@ import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_PATH
-  ? {
-      path: process.env.NEXT_PUBLIC_BASE_PATH,
-    }
-  : {};
+const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
+const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
+const TURN_URL = process.env.TURN_URL ?? '';
 
 export const socket = io();
 
@@ -49,10 +44,23 @@ export const userState = atom({
       bg: ModelBg.ClassRoom,
     },
     status: UserStatus.Online as string,
-    rpc: {
-      wave: false,
-    },
+    // rpc: {
+    //   wave: false,
+    // },
     roomStatus: [] as UserDefineStatus[],
+  },
+});
+
+export const licenseState = atom({
+  key: 'licenseState',
+  default: {
+    id: undefined,
+    email: undefined,
+    domains: undefined,
+    created_at: undefined,
+    expires_at: undefined,
+    value: '',
+    ilimit: "Free",
   },
 });
 
@@ -63,7 +71,7 @@ export const roomIdTmpState = atom({
 
 export const virtualMaskState = atom({
   key: 'virtualMaskState',
-  default: false
+  default: false,
 });
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint(
@@ -172,8 +180,8 @@ function VideoConferenceComponent(props: {
       publishDefaults: {
         dtx: false,
         videoSimulcastLayers: props.options.hq
-        ? [VideoPresets.h1440, VideoPresets.h1080]
-        : [VideoPresets.h1080],
+          ? [VideoPresets.h1440, VideoPresets.h1080]
+          : [VideoPresets.h1080],
         red: !e2eeEnabled,
         videoCodec,
       },
@@ -213,10 +221,26 @@ function VideoConferenceComponent(props: {
   }, [e2eeEnabled, room, e2eePassphrase]);
 
   const connectOptions = React.useMemo((): RoomConnectOptions => {
-    return {
+    let conf = {
       maxRetries: 5,
       autoSubscribe: true,
-    };
+    } as RoomConnectOptions;
+
+    if (TURN_CREDENTIAL !== '' && TURN_USERNAME !== '' && TURN_URL !== '') {
+      conf.rtcConfig = {
+        iceServers: [
+          {
+            urls: TURN_URL,
+            username: TURN_USERNAME,
+            credential: TURN_CREDENTIAL,
+          },
+        ],
+        iceCandidatePoolSize: 20,
+        iceTransportPolicy: 'all',
+      };
+    }
+
+    return conf;
   }, []);
 
   const router = useRouter();
@@ -343,7 +367,7 @@ function VideoConferenceComponent(props: {
         onMediaDeviceFailure={handleMediaDeviceFailure}
       >
         <VideoContainer
-        ref={videoContainerRef}
+          ref={videoContainerRef}
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
           messageApi={messageApi}

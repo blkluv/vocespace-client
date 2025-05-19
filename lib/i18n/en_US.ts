@@ -39,6 +39,7 @@ export default {
     share_screen: 'Share Screen',
     stop_share: 'Stop Share Share',
     wave_msg: 'sent you a reminder!',
+    full_user: "The room user has exceeded the limit and cannot join. You can join other rooms or inform the builder to upgrade your license to obtain more user slots.",
   },
   settings: {
     title: 'Settings',
@@ -70,6 +71,28 @@ export default {
         success: "Status saved successfully",
         fail: "Failed to save status",
       }
+    },
+    license: {
+      title: "License",
+      signed: "Signed",
+      domains: "Domains",
+      limit: "Limit",
+      created_at: "Created At",
+      expires_at: "Expires At",
+      value: "License Value",
+      renew: "Renew License",
+      update: "Update Manually",
+      input: "Please enter license",
+      gift: {
+        title: "A chance to get a free upgrade! 🎁",
+        desc: "Share your experience through blog posts or social media to get a chance to upgrade for free. Add WeChat to get: Privoce"
+      },
+      license_pro: "VoceSpace Pro [$499/year]",
+      license_custom: "VoceSpace Custom",
+      price_select: "Please choose a price package",
+      meeting: "Book Meeting",
+      circle_ip: "Your current IP address is a loopback address/private address, and we do not recommend purchasing a license for this address. Please purchase a license using a public IP address. If you need to purchase licenses and support services for private addresses, please contact WeChat: Privose.",
+      confirm_ip: "Please confirm your IP address is correct!"
     },
     audio: {
       title: 'Audio',

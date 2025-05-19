@@ -197,6 +197,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         await updateSettings(settingsRef.current.state);
         // 通知socket，进行状态的更新 -----------------------------------
         socket.emit('update_user_status');
+        socket.emit('reload_virtual', {
+          identity: room.localParticipant.identity,
+          roomId: room.name,
+          reloading: false,
+        });
       }
       setVirtualMask(false);
     };

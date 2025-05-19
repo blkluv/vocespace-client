@@ -10,16 +10,24 @@ import { CheckboxGroupProps } from 'antd/es/checkbox';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { MessageInstance } from 'antd/es/message/interface';
 
+const SERVER_NAME = process.env.SERVER_NAME ?? '';
+const SERVER_NAMES =
+  SERVER_NAME === ''
+    ? 'vocespace.com|space.voce.chat'
+    : `vocespace.com|space.voce.chat|${SERVER_NAME}`;
+const ENV_PRIFIX =
+  (process.env.NEXT_PUBLIC_BASE_PATH ?? '') === ''
+    ? `\/chat|\/dev\/`
+    : `\/chat|\/dev\/|${process.env.NEXT_PUBLIC_BASE_PATH}\/`;
 /**
  * # DemoMeetingTab
  * Demo meeting tab for room, which use before PreJoin
  * ## Features
  * - Start meeting and nav to PreJoin page
  * - Enable E2EE (input passphrase)
- * @param props
- * @returns
+ * - Connect by room name or URL
  */
-export function DemoMeetingTab(props: { label: string }) {
+export function DemoMeetingTab() {
   const { t } = useI18n();
   const router = useRouter();
   const [messageApi, contextHolder] = message.useMessage();
@@ -41,13 +49,7 @@ export function DemoMeetingTab(props: { label: string }) {
         router.push(`/rooms/${generateRoomId()}`);
       } else {
         // 对roomUrl进行判断，如果是个有效的网址则直接跳转，否则跳转到房间
-        isAllowUrlAnd(
-          roomUrl,
-          router,
-          messageApi,
-          t('msg.error.room.invalid'),
-        )
-        
+        isAllowUrlAnd(roomUrl, router, messageApi, t('msg.error.room.invalid'));
       }
     }
   };
@@ -120,8 +122,6 @@ export function DemoMeetingTab(props: { label: string }) {
   );
 }
 
-const AllowUrls = ['vocespace.com', 'space.voce.chat'];
-
 // 判断是否是允许的url，如果是则跳转，如果是房间名则拼接
 const isAllowUrlAnd = (
   url: string,
@@ -131,21 +131,17 @@ const isAllowUrlAnd = (
 ) => {
   // 判断是否是允许的url，拼接AllowUrls，并且可能是没有AllowUrls的，当用户输入的只是一个房间名时
   // 格式为: ^(https?:\/\/)?(vocespace.com|space.voce.chat)?\/rooms\/([a-zA-Z0-9_-]+)$
-  let regax = new RegExp(
-    `^(https?:\/\/)?(vocespace.com|space.voce.chat)?(\/rooms\/)?([a-zA-Z0-9_-]+)$`,
-  );
+  let regax = new RegExp(`^(https?:\/\/)?(${SERVER_NAMES})?(${ENV_PRIFIX})?(\/rooms\/)?([^/]+)$`);
   let match = url.match(regax);
   if (match) {
-    // 如果是允许的url，且allowUrls是vocespace.com则内部跳转，是space.voce.chat则外部跳转
-    if (match[2] == AllowUrls[0]) {
-      // 内部跳转
-      router.push(`/rooms/${match[3]}`);
-    } else if (match[2] == AllowUrls[1]) {
-      // 外部跳转
-      router.replace(`https://${match[2]}/rooms/${match[3]}`);
-    }else if (!match[1] && !match[2] && !match[3]) {
+    if (!match[1] && !match[2] && !match[3]) {
       // 如果是房间名则拼接
-      router.push(`/rooms/${match[4]}`);
+      router.push(`/rooms/${match[5]}`);
+    } else {
+      // 只要match[2]可以成功匹配到，就直接进行外部跳转
+      if (match[2] && match[4] == '/rooms/' && match[5]) {
+        router.replace(`${match[0]}`);
+      }
     }
   } else {
     // 如果不是允许的url

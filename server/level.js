@@ -32,3 +32,5 @@ export const getServerLevel = () => {
 
   return "low";
 };
+
+getServerLevel();

@@ -1,4 +1,4 @@
-import { isTrackReferencePlaceholder } from '@/app/devices/video_container';
+import { isTrackReferencePlaceholder } from '@/app/pages/controls/video_container';
 import { useVideoBlur } from '@/lib/std/device';
 import {
   AudioTrack,
@@ -33,7 +33,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, src, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
 import { RoomSettings } from '@/lib/hooks/room_settings';
-import { statusDefaultList } from '@/app/devices/controls/status_select';
+import { statusDefaultList } from '@/app/pages/controls/status_select';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: RoomSettings;
@@ -67,13 +67,63 @@ export const ParticipantItem: (
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
+    const isLocal = React.useMemo(() => {
+      return localParticipant.identity === trackReference.participant.identity;
+    }, [localParticipant, trackReference]);
     const [lastMousePos, setLastMousePos] = React.useState({ x: 0, y: 0 });
     const [virtualReady, setVirtualReady] = React.useState(false);
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
+    const [remoteMask, setRemoteMask] = React.useState(false);
+    const [deleyMask, setDelayMask] = React.useState(virtualMask);
 
-    useEffect(()=>{
+    useEffect(() => {
+      socket.on(
+        'reload_virtual_response',
+        (msg: { identity: string; reloading: boolean; roomId: string }) => {
+          console.log('reload_virtual_response', msg);
+          if (room == msg.roomId) {
+            if (msg.identity != localParticipant.identity) {
+              setRemoteMask(msg.reloading);
+            }
+          }
+        },
+      );
+
+      return () => {
+        socket.off('reload_virtual_response');
+      };
+    }, [room, localParticipant.identity]);
+
+    useEffect(() => {
+      if (isLocal) {
+        if (virtualMask) {
+          setDelayMask(virtualMask);
+        } else {
+          if (virtualReady) {
+            setTimeout(() => {
+              setDelayMask(virtualMask);
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              setDelayMask(virtualMask);
+            }, 1500);
+          }
+        }
+      }else{
+        setVirtualReady(false);
+        if (remoteMask) {
+          setDelayMask(true);
+        }else{
+          setTimeout(()=> {
+            setDelayMask(false);
+          }, 3500);
+        }
+      }
+    }, [virtualMask, virtualReady, isLocal, remoteMask]);
+
+    useEffect(() => {
       setVirtualReady(false);
     }, [uState.virtual]);
-
 
     // 存储所有观众的鼠标位置
     const [remoteCursors, setRemoteCursors] = React.useState<{
@@ -98,15 +148,17 @@ export const ParticipantItem: (
     });
     const [loading, setLoading] = React.useState(true);
     useEffect(() => {
-      if (settings && Object.keys(settings).length > 0) {
+      if (settings.participants && Object.keys(settings.participants).length > 0) {
         if (trackReference.source === Track.Source.Camera) {
-          setVideoBlur(settings[trackReference.participant.identity]?.blur ?? 0.15);
+          setVideoBlur(settings.participants[trackReference.participant.identity]?.blur ?? 0.15);
         } else {
-          setVideoBlur(settings[trackReference.participant.identity]?.screenBlur ?? 0.15);
+          setVideoBlur(
+            settings.participants[trackReference.participant.identity]?.screenBlur ?? 0.15,
+          );
         }
         setLoading(false);
       }
-    }, [settings, trackReference]);
+    }, [settings.participants, trackReference]);
 
     const handleSubscribe = React.useCallback(
       (subscribed: boolean) => {
@@ -122,16 +174,9 @@ export const ParticipantItem: (
       },
       [trackReference, layoutContext],
     );
-    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
-    const deviceTrack = React.useMemo(() => {
-      if (virtualMask && localParticipant.identity === trackReference.participant.identity) {
-        return (
-          <div className="lk-participant-placeholder" style={{ opacity: 1 }}>
-            <ParticipantPlaceholder />
-          </div>
-        );
-      }
 
+
+    const deviceTrack = React.useMemo(() => {
       if (isTrackReference(trackReference) && !loading) {
         if (trackReference.source === Track.Source.Camera) {
           return (
@@ -141,36 +186,40 @@ export const ParticipantItem: (
                 width: '100%',
               }}
             >
-              {localParticipant.identity === trackReference.participant.identity &&
-                uState.virtual.enabled && (
-                  <div
-                    className={styles.virtual_video_box_canvas}
-                    style={{ visibility: 'hidden', zIndex: '111' }}
-                  >
-                    <VirtualRoleCanvas
-                      video_ele={videoRef}
-                      model_bg={uState.virtual.bg}
-                      model_role={uState.virtual.role}
-                      enabled={uState.virtual.enabled}
-                      messageApi={messageApi}
-                      trackRef={trackReference}
-                      isLocal={trackReference.participant.identity === localParticipant.identity}
-                      isReplace={true}
-                      onReady={() => {
-                        setVirtualReady(true);
-                      }}
-                      onDestroy={() => {
-                        setVirtualReady(false);
-                      }}
-                    ></VirtualRoleCanvas>
-                  </div>
-                )}
+              {deleyMask && (
+                <div className="lk-participant-placeholder" style={{ opacity: 1, zIndex: 1000 }}>
+                  <ParticipantPlaceholder />
+                </div>
+              )}
+              {isLocal && uState.virtual.enabled && !virtualMask && (
+                <div
+                  className={styles.virtual_video_box_canvas}
+                  style={{ visibility: 'hidden', zIndex: '111' }}
+                >
+                  <VirtualRoleCanvas
+                    video_ele={videoRef}
+                    model_bg={uState.virtual.bg}
+                    model_role={uState.virtual.role}
+                    enabled={uState.virtual.enabled}
+                    messageApi={messageApi}
+                    trackRef={trackReference}
+                    isLocal={isLocal}
+                    isReplace={true}
+                    onReady={() => {
+                      setVirtualReady(true);
+                    }}
+                    onDestroy={() => {
+                      setVirtualReady(false);
+                    }}
+                  ></VirtualRoleCanvas>
+                </div>
+              )}
               <VideoTrack
                 ref={videoRef}
                 style={{
                   filter:
-                    (settings[trackReference.participant.identity]?.virtual?.enabled ?? false) &&
-                    virtualReady
+                    settings.participants[trackReference.participant.identity]?.virtual?.enabled ??
+                    false
                       ? `none`
                       : `blur(${blurValue}px)`,
                   transition: 'filter 0.2s ease-in-out',
@@ -323,12 +372,15 @@ export const ParticipantItem: (
       remoteCursors,
       settings,
       virtualMask,
+      remoteMask,
+      isLocal,
+      deleyMask,
       virtualReady,
     ]);
 
     // [status] ------------------------------------------------------------
     const userStatusDisply = React.useMemo(() => {
-      switch (settings[trackReference.participant.identity]?.status) {
+      switch (settings.participants[trackReference.participant.identity]?.status) {
         case UserStatus.Online:
           return 'online_dot';
         case UserStatus.Offline:
@@ -340,7 +392,7 @@ export const ParticipantItem: (
         default:
           return 'online_dot';
       }
-    }, [settings, trackReference.participant.identity]);
+    }, [settings.participants, trackReference.participant.identity]);
 
     const setStatusLabel = (name?: string): String => {
       switch (uState.status) {
@@ -389,9 +441,9 @@ export const ParticipantItem: (
     }, [uState.roomStatus]);
     const defineStatus = useMemo(() => {
       return uState.roomStatus.find(
-        (item) => item.id === settings[trackReference.participant.identity]?.status,
+        (item) => item.id === settings.participants[trackReference.participant.identity]?.status,
       );
-    }, [uState.roomStatus, settings, trackReference]);
+    }, [uState.roomStatus, settings.participants, trackReference]);
     const user_menu: MenuProps['items'] = useMemo(() => {
       return [
         {
@@ -400,7 +452,8 @@ export const ParticipantItem: (
             <div className={styles.user_info_wrap} onClick={toSettings}>
               <SvgResource type="modify" svgSize={16} color="#fff"></SvgResource>
               <div className={styles.user_info_wrap_name}>
-                {settings[trackReference.participant.identity]?.name || localParticipant.name}
+                {settings.participants[trackReference.participant.identity]?.name ||
+                  localParticipant.name}
               </div>
             </div>
           ),
@@ -408,35 +461,39 @@ export const ParticipantItem: (
         {
           key: 'user_status',
           label: (
-            <Dropdown
-              placement="topLeft"
-              menu={{
-                items: status_menu,
-                onClick: async (e) => {
-                  await setUserStatus(e.key);
-                },
-              }}
-            >
-              <div className={styles.status_item_inline} style={{ width: '100%' }}>
-                <div className={styles.status_item_inline}>
-                  {defineStatus ? (
-                    <SvgResource
-                      type="dot"
-                      svgSize={16}
-                      color={defineStatus.icon.color}
-                    ></SvgResource>
-                  ) : (
-                    <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
-                  )}
-                  <div>{setStatusLabel(defineStatus?.name)}</div>
+            <div onClick={(e) => e.stopPropagation()}>
+              <Dropdown
+                trigger={['hover', 'click']}
+                placement="topLeft"
+                menu={{
+                  items: status_menu,
+                  onClick: async (e) => {
+                    e.domEvent.stopPropagation();
+                    await setUserStatus(e.key);
+                  },
+                }}
+              >
+                <div className={styles.status_item_inline} style={{ width: '100%' }}>
+                  <div className={styles.status_item_inline}>
+                    {defineStatus ? (
+                      <SvgResource
+                        type="dot"
+                        svgSize={16}
+                        color={defineStatus.icon.color}
+                      ></SvgResource>
+                    ) : (
+                      <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
+                    )}
+                    <div>{setStatusLabel(defineStatus?.name)}</div>
+                  </div>
+                  <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
                 </div>
-                <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
-              </div>
-            </Dropdown>
+              </Dropdown>
+            </div>
           ),
         },
       ];
-    }, [settings, userStatusDisply, status_menu, defineStatus]);
+    }, [settings.participants, userStatusDisply, status_menu, defineStatus]);
 
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wavePin = async () => {
@@ -445,7 +502,7 @@ export const ParticipantItem: (
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
-        socketId: settings[trackReference.participant.identity]?.socketId,
+        socketId: settings.participants[trackReference.participant.identity]?.socketId,
       });
       // 创建一个虚拟的audio元素并播放音频，然后移除
       const audioSrc = src('/audios/vocespacewave.m4a');
@@ -523,7 +580,7 @@ export const ParticipantItem: (
               senderName: localParticipant.name || localParticipant.identity,
               senderId: localParticipant.identity,
               receiverId: trackReference.participant.identity,
-              receSocketId: settings[trackReference.participant.identity]?.socketId,
+              receSocketId: settings.participants[trackReference.participant.identity]?.socketId,
               realVideoRect: actualVideoRect,
             };
 
@@ -553,7 +610,7 @@ export const ParticipantItem: (
               senderName: localParticipant.name || localParticipant.identity,
               senderId: localParticipant.identity,
               receiverId: trackReference.participant.identity,
-              receSocketId: settings[trackReference.participant.identity]?.socketId,
+              receSocketId: settings.participants[trackReference.participant.identity]?.socketId,
             });
           }
         };

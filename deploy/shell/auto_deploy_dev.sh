@@ -1,22 +1,22 @@
 #!/bin/bash
 
 #=========================================================================#
-# shell script for deploy prod environment
+# shell script for deploy dev environment
 #=========================================================================#
 
 #=========================================================================#
 # Variables --------------------------------------------------------------#
 #=========================================================================#
 ROOT_PATH="/root/vocespace-client/"
-KIND="tradition"
-PKG_NAME="vocespace_tradition"
+KIND="dev"
+PKG_NAME="vocespace_dev"
 REPO_URL="https://github.com/Privoce/vocespace-client.git"
-BRANCH="tradition"
+BRANCH="dev"
 DEPLOY_NGINX_CONF="vocespace"
 NGINX_CONF="nginx.conf"
 NGINX_AVA_PATH="/etc/nginx/sites-available"
 NGINX_ENABLED_PATH="/etc/nginx/sites-enabled"
-LOG_FILE="deploy_prod.log"
+LOG_FILE="deploy_dev.log"
 LOG_SRC="/root/deploy_log"
 LOG_PATH="$LOG_SRC/$LOG_FILE"
 ERROR_FMT="AUTO DEPLOY ERROR: See $LOG_PATH for more details"
@@ -33,7 +33,7 @@ if [ -f $LOG_PATH ]; then
 fi
 touch $LOG_PATH
 #=========================================================================#
-# Clone or pull and then do pkg (prod)-------------------------------------#
+# Clone or pull and then do pkg (dev)-------------------------------------#
 #=========================================================================#
 # check if the root path is exist
 if [ ! -d $ROOT_PATH ]; then
@@ -42,15 +42,15 @@ fi
 
 cd $ROOT_PATH
 
-# do clone if vocespace_prod not exist or cd and do pull
+# do clone if vocespace_dev not exist or cd and do pull
 if [ ! -d $ROOT_PATH/$PKG_NAME ]; then
     git clone --branch $BRANCH $REPO_URL $PKG_NAME
     if [ $? -ne 0 ]; then
-        echo "clone vocespace_prod from github repo failed!" >> $LOG_PATH
+        echo "clone vocespace_dev from github repo failed!" >> $LOG_PATH
         echo $ERROR_FMT
         exit 1
     fi
-    echo "SYSTEM: clone vocespace_prod from github repo success" >> $LOG_PATH
+    echo "SYSTEM: clone vocespace_dev from github repo success" >> $LOG_PATH
     # set remote url for future pull
     cd $ROOT_PATH/$PKG_NAME
     git remote set-url origin $REPO_URL
@@ -71,7 +71,7 @@ else
         echo $ERROR_FMT
         exit 1
     fi
-    echo "SYSTEM: pull vocespace_prod from github repo success" >> $LOG_PATH
+    echo "SYSTEM: pull vocespace_dev from github repo success" >> $LOG_PATH
 fi
 #=========================================================================#
 # Build environment ------------------------------------------------------#
@@ -82,7 +82,7 @@ fi
 # LIVEKIT_API_KEY=devkey
 # LIVEKIT_API_SECRET=secret
 # LIVEKIT_URL=wss://space.voce.chat
-# NODE_ENV=production
+# NEXT_PUBLIC_BASE_PATH=/dev
 # ```
 # - remove the old .env file and replace with new one
 if [ -f .env ]; then
@@ -91,6 +91,8 @@ fi
 echo "LIVEKIT_API_KEY=devkey" >> .env
 echo "LIVEKIT_API_SECRET=secret" >> .env
 echo "LIVEKIT_URL=wss://space.voce.chat" >> .env
+echo "NEXT_PUBLIC_BASE_PATH=/dev" >> .env
+echo "TURN_CREDENTIAL=+Xj4jYs7tuoyt(xX" >> .env
 #=========================================================================#
 # install dependencies and build -----------------------------------------#
 #=========================================================================#
@@ -118,14 +120,14 @@ echo "SYSTEM: pnpm install and build success" >> $LOG_PATH
 pm2 stop $PKG_NAME
 # delete $PKG_NAME
 pm2 delete $PKG_NAME
-# start pm2 npm 
-PORT=3000 pm2 start npm --name $PKG_NAME -- start
+# start pm2 npm with 3001 port
+PORT=3001 pm2 start npm --name $PKG_NAME -- start
 # save pm2
 pm2 save
 # sleep 2s for pm2 server to start
 sleep 2
-# netstat -tulnp | grep 3000 to check if the server is running, if have echo success
-if [ $(netstat -tulnp | grep 3000 | wc -l) -gt 0 ]; then
+# netstat -tulnp | grep 3001 to check if the server is running, if have echo success
+if [ $(netstat -tulnp | grep 3001 | wc -l) -gt 0 ]; then
     echo "pm2 server rebuild success!" >> $LOG_PATH
 else 
     echo "pm2 server rebuild failed!" >> $LOG_PATH
@@ -133,5 +135,5 @@ else
     exit 1
 fi
 # echo all done
-echo "Deploy Prod: All done! Please check $LOG_PATH for more details to make sure everything is fine."
+echo "Deploy Dev: All done! Please check $LOG_PATH for more details to make sure everything is fine."
 exit 0
