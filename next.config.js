@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: "/chat",
   reactStrictMode: false,
   output: 'standalone',
   productionBrowserSourceMaps: true,

@@ -14,7 +14,7 @@ import express from 'express';
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = 3030;
-const basePath = '/chat'; // 添加 basePath 配置
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''; // 添加 basePath 配置
 // when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
