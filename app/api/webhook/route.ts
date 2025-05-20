@@ -1,4 +1,4 @@
-// weebhook for stripe (rewrite use nextjs api)
+// webhook for stripe (rewrite use nextjs api)
 // test: stripe trigger payment_intent.succeeded
 import { getServerIp } from '@/lib/std';
 import { NextResponse } from 'next/server';
@@ -7,10 +7,10 @@ import Stripe from 'stripe';
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 const SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? '';
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET ?? '';
-const WEEBHOOK = process.env.WEEBHOOK ?? false;
+const WEBHOOK = process.env.WEBHOOK ?? false;
 
 export async function POST(request: Request) {
-  if (!WEEBHOOK) {
+  if (!WEBHOOK) {
     return NextResponse.json({ error: 'Webhook is not enabled' }, { status: 400 });
   }
 
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 }
 
 const paySuccessAndSendToServer = async (payInfo: Stripe.PaymentIntent) => {
-  const url = 'http://localhost:3060/api/license'; // test
+  const url = 'https://space.voce.chat/api/license'; // test
   const info = {
     email: payInfo.receipt_email,
     created_at: payInfo.created,
