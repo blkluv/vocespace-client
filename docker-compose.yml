@@ -2,6 +2,8 @@ version: '3.8'
 
 services:
   vocespace:
+    container_name: vocespace
+    image: privoce/vocespace:latest
     build:
       context: .
       # args:

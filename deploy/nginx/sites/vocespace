@@ -11,7 +11,9 @@ server {
     if ($host = vocespace.com) {
         return 301 https://$host$request_uri;
     }
-
+    if ($host = chat.vocespace.com) {
+        return 301 https://$host$request_uri;
+    }
     return 404;
 }
 
