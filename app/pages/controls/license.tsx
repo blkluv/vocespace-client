@@ -32,7 +32,7 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
     } else if (key === 'update') {
       return t('settings.license.update');
     } else {
-      return t('settings.license.meeting');
+      return t('settings.license.buy');
     }
   }, [key, value]);
 
@@ -48,7 +48,11 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
   }, [key]);
 
   const toBuyPage = () => {
-    window.open('https://buy.stripe.com/9AQaHG82n2we8Ni14P', '_blank');
+    if (isCircleIp) {
+      window.open('https://buy.stripe.com/bJeaEX9ex2PUer2aLe6c00O', '_blank');
+    } else {
+      window.open('https://buy.stripe.com/9AQaHG82n2we8Ni14P', '_blank');
+    }
   };
 
   const items = useMemo(() => {
@@ -171,8 +175,9 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
       }
     } else {
       // book meeting
-      setIsModalOpen(false);
-      setCalendlyOpen(true);
+      // setIsModalOpen(false);
+      // setCalendlyOpen(true);
+      toBuyPage();
       return;
     }
   };
