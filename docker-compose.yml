@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  livemeet-prod:
+  vocespace:
     build:
       context: .
       # args:
@@ -25,8 +25,8 @@ services:
       - TURN_URL=${TURN_URL:-}
       - TURN_USERNAME=${TURN_USERNAME:-}
     networks:
-      - livemeet
+      - vocespace
 
 networks:
-  livemeet:
+  vocespace:
     driver: bridge

@@ -142,6 +142,7 @@ export default {
       title: 'Your cyber co-working space developed by Privoce',
       contact: 'Contact',
       learn_more: 'Learn More',
+      offical_web: "official website",
       try_free: 'Create a one-time new VoceSpace.',
       try_enter_room: 'Enter your VoceSpace name or link to join or create.',
       connect_with_server: 'Connect Voce Space with a custom server using Voce Space Server.',

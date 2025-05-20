@@ -56,10 +56,10 @@ export const licenseState = atom({
   default: {
     id: undefined,
     email: undefined,
-    domains: undefined,
-    created_at: undefined,
-    expires_at: undefined,
-    value: '',
+    domains: "*",
+    created_at: 1747670400,
+    expires_at: 1750348800,
+    value: 'vocespace_pro__KUgwpDrr-g3iXIX41rTrSCsWAcn9UFX8dOYMr0gAARQ',
     ilimit: "Free",
   },
 });

@@ -80,7 +80,13 @@ export default function Page() {
           >
             han@privoce.com
           </a>
-          {t('msg.info.learn_more')}
+          {t('msg.info.learn_more')}:{' '}
+          <a
+            href="https://vocespace.com"
+            style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
+          >
+            {t('msg.info.offical_web')}
+          </a>
         </footer>
       )}
     </>
