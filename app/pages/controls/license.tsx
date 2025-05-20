@@ -141,7 +141,7 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
       }
     } else if (key === 'update') {
       // if update should store check from server and then store in local storage
-      const url = `http://localhost:3060/api/license/${licenseValue}`;
+      const url = `https://space.voce.chat/api/license/${licenseValue}`;
       const response = await fetch(url, {
         method: 'GET',
       });

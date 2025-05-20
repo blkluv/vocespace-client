@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 }
 
 const paySuccessAndSendToServer = async (payInfo: Stripe.PaymentIntent) => {
-  const url = 'http://localhost:3060/api/license'; // test
+  const url = 'https://space.voce.chat/api/license'; // test
   const info = {
     email: payInfo.receipt_email,
     created_at: payInfo.created,

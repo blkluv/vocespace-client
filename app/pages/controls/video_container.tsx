@@ -112,7 +112,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // license 检测 -----------------------------------------------------------------------------
       const checkLicense = async () => {
-        let url = `http://localhost:3060/api/license/${IP}`;
+        let url = `https://space.voce.chat/api/license/${IP}`;
         const response = await fetch(url, {
           method: 'GET',
         });
