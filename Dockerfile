@@ -30,9 +30,9 @@ COPY . .
 
 # 设置环境变量 -----------------------------------------------------------------
 # 设置最基础的环境变量配置
-ARG LIVEKIT_API_KEY="__LIVEKIT_API_KEY_PLACEHOLDER__"
-ARG LIVEKIT_API_SECRET="__LIVEKIT_API_SECRET_PLACEHOLDER__"
-ARG LIVEKIT_URL="__LIVEKIT_URL_PLACEHOLDER__"
+ARG LIVEKIT_API_KEY="devkey"
+ARG LIVEKIT_API_SECRET="secret"
+ARG LIVEKIT_URL="ws://localhost:7880"
 
 # 将构建参数写入.env.local ------------------------------------------------------
 RUN echo "LIVEKIT_API_KEY=${LIVEKIT_API_KEY}" > .env.local \
@@ -54,6 +54,15 @@ FROM node:23-alpine AS runner
 WORKDIR /app
 # 设置为生产环境 ----------------------------------------------------------------
 ENV NODE_ENV production
+# 安装必要工具
+RUN apk add --no-cache bash tar supervisor 
+
+# 复制预下载的 LiveKit 服务器二进制包
+COPY livekit_1.8.4_linux_arm64.tar.gz /tmp/
+# 解压二进制文件到 /usr/local/bin 目录
+RUN tar -xzf /tmp/livekit_1.8.4_linux_arm64.tar.gz -C /usr/local/bin --wildcards --no-anchored "livekit*" && \
+    chmod +x /usr/local/bin/livekit-server && \
+    rm /tmp/livekit_1.8.4_linux_arm64.tar.gz
 
 # 添加非root用户 ---------------------------------------------------------------
 RUN addgroup --system --gid 1001 nodejs
@@ -63,17 +72,12 @@ RUN adduser --system --uid 1001 nextjs
 RUN mkdir -p /app/uploads && chown -R nextjs:nodejs /app/uploads
 
 # 创建并配置入口点脚本 -----------------------------------------------------------
-# COPY deploy/docker/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder --chown=nextjs:nodejs /app/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
+# RUN ln -sf /app/entrypoint.sh /entrypoint.sh
+# RUN chmod +x /entrypoint.sh
 
 # 复制整个应用 ------------------------------------------------------------------
-# COPY --from=builder --chown=nextjs:nodejs /app .
-# COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./
-# COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-# COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-# COPY --from=builder --chown=nextjs:nodejs /app/.env.local ./.env.local
-# COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
@@ -82,10 +86,10 @@ RUN npm install -g pnpm
 
 USER root
 # RUN chmod +x ./entrypoint.sh
-USER nextjs
+# USER nextjs
 
 # 暴露3000端口 -----------------------------------------------------------------
-EXPOSE 3000
+EXPOSE 3000 7880
 
 # 使用入口脚本启动服务 -----------------------------------------------------------
 ENTRYPOINT ["/app/entrypoint.sh"]
