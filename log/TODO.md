@@ -129,4 +129,4 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 文件拖拽发送
 
 - [ ] docker - 无虚化 （tradition）
-- [ ] 时间戳转正常时间
+- [x] 时间戳转正常时间

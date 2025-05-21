@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { Calendly } from './calendly';
 import { getServerIp } from '@/lib/std';
+import Stripe from 'stripe';
 
 type ModelKey = 'update' | 'renew' | 'server';
 type OptionValue = 'renew' | 'custom';
@@ -47,42 +48,67 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
     }
   }, [key]);
 
-  const toBuyPage = () => {
+  const toBuyPage = async () => {
     if (isCircleIp) {
       window.open('https://buy.stripe.com/bJeaEX9ex2PUer2aLe6c00O', '_blank');
     } else {
-      window.open('https://buy.stripe.com/9AQaHG82n2we8Ni14P', '_blank');
+      // 请求 在space.voce.chat/api/webhook?session_ip=IP, 让官方服务器通过stripe的api获取用户的session
+      // 然后用户侧获取到session.url进行跳转
+      const url = `https://space.voce.chat/api/webhook?session_ip=${IP}`;
+      const response = await fetch(url, {
+        method: 'GET',
+      });
+      if (response.ok) {
+        const { url } = await response.json();
+        if (url) {
+          window.open(url, '_blank');
+        }
+      } else {
+        messageApi.warning({
+          content: 'Failed to get session url',
+          duration: 2,
+        });
+        window.open('https://buy.stripe.com/bJeaEX9ex2PUer2aLe6c00O', '_blank');
+      }
     }
+  };
+
+  const fmtDate = (date: Date): string => {
+    let year = date.getFullYear();
+    let month = (date.getMonth() + 1).toString().padStart(2, '0');
+    let day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const items = useMemo(() => {
     let items = [
       {
         key: t('settings.license.signed'),
-        value: userLicense?.id ? 'Yes' : 'No',
+        value: userLicense?.id ? 'Yes' : userLicense.ilimit == 'Free' ? 'Yes' : 'No',
       },
       {
         key: t('settings.license.domains'),
-        value: userLicense.domains ?? '-',
+        value: userLicense.domains,
       },
       {
         key: t('settings.license.limit'),
-        value: userLicense.ilimit ?? '-',
+        value: userLicense.ilimit,
       },
       {
         key: t('settings.license.created_at'),
-        value: userLicense.created_at ?? '-',
+        value: fmtDate(new Date(userLicense.created_at * 1000)),
       },
       {
         key: t('settings.license.expires_at'),
-        value: userLicense.expires_at ?? '-',
+        value: fmtDate(new Date(userLicense.expires_at * 1000)),
       },
       {
         key: t('settings.license.value'),
         value: userLicense.value,
       },
     ];
-    const valid = userLicense?.id && userLicense?.expires_at && userLicense?.expires_at;
+    const now_timestamp = new Date().getTime();
+    const valid = userLicense.value !== '' && userLicense.expires_at < now_timestamp;
     const validStyles = valid
       ? {}
       : {
