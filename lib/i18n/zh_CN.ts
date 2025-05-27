@@ -41,6 +41,10 @@ export default {
     wave_msg: '向您发送了一条提醒!',
     full_user:
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
+    record: {
+      start: '录制',
+      stop: '停止录制',
+    },
   },
   settings: {
     title: '设置',
@@ -147,7 +151,7 @@ export default {
       title: '由 Privoce 开发的您的网络共享工作空间',
       contact: '请联系',
       learn_more: '了解更多',
-      offical_web: "官方网站",
+      offical_web: '官方网站',
       try_free: '创建一次性的新 VoceSpace。',
       try_enter_room: '输入您的 VoceSpace 名称或链接以加入或创建。',
       connect_with_server: '使用 Voce Space Server 将 Voce Space 与自定义服务器连接。',

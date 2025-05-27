@@ -26,6 +26,7 @@ import { ParticipantSettings } from '@/lib/hooks/room_settings';
 import { UserStatus } from '@/lib/std';
 import { EnhancedChat } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
+import { RecordButton } from './record_button';
 
 /** @public */
 export type ControlBarControls = {
@@ -304,6 +305,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               }}
             ></ChatToggle>
           )}
+          <RecordButton></RecordButton>
           <SettingToggle
             enabled={settingVis}
             onClicked={async () => {
@@ -312,6 +314,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             }}
           ></SettingToggle>
         </div>
+
         {visibleControls.leave && (
           <DisconnectButton>
             {showIcon && <LeaveIcon />}
