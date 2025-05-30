@@ -11,7 +11,9 @@ server {
     if ($host = vocespace.com) {
         return 301 https://$host$request_uri;
     }
-
+    if ($host = chat.vocespace.com) {
+        return 301 https://$host$request_uri;
+    }
     return 404;
 }
 
@@ -58,6 +60,29 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
+# 新增: HTTPS 处理 chat.vocespace.com（聊天环境）
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name chat.vocespace.com;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+
+        proxy_pass http://127.0.0.1:3030;
+    }
+
+    ssl_certificate /etc/letsencrypt/live/vocespace.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/vocespace.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
 # HTTPS 处理 vocespace.com（生产环境和开发环境）
 server {
     listen 443 ssl;
@@ -76,29 +101,29 @@ server {
     }
 
     # 生产环境 (3000)
-    location /chat {
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "Upgrade";
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
+    # location /chat {
+    #     proxy_http_version 1.1;
+    #     proxy_set_header Upgrade $http_upgrade;
+    #     proxy_set_header Connection "Upgrade";
+    #     proxy_set_header Host $host;
+    #     proxy_cache_bypass $http_upgrade;
 
-        proxy_pass http://127.0.0.1:3030;
-    }
+    #     proxy_pass http://127.0.0.1:3030;
+    # }
 
-     # Next.js 静态资源 (dev)
-    location ~ ^/chat/_next/(.*)$ {
-        proxy_pass http://127.0.0.1:3030/chat/_next/$1;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
+    #  # Next.js 静态资源 (dev)
+    # location ~ ^/chat/_next/(.*)$ {
+    #     proxy_pass http://127.0.0.1:3030/chat/_next/$1;
+    #     proxy_http_version 1.1;
+    #     proxy_set_header Upgrade $http_upgrade;
+    #     proxy_set_header Connection 'upgrade';
+    #     proxy_set_header Host $host;
+    #     proxy_cache_bypass $http_upgrade;
 
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
-        access_log off;
-    }
+    #     expires 30d;
+    #     add_header Cache-Control "public, no-transform";
+    #     access_log off;
+    # }
 
     # 开发环境 (3001)
     location /dev {

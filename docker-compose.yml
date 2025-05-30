@@ -1,7 +1,9 @@
 version: '3.8'
 
 services:
-  livemeet-prod:
+  vocespace:
+    container_name: vocespace
+    image: privoce/vocespace:latest
     build:
       context: .
       # args:
@@ -25,8 +27,8 @@ services:
       - TURN_URL=${TURN_URL:-}
       - TURN_USERNAME=${TURN_USERNAME:-}
     networks:
-      - livemeet
+      - vocespace
 
 networks:
-  livemeet:
+  vocespace:
     driver: bridge

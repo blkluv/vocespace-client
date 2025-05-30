@@ -120,10 +120,18 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] Docker部署
 - [ ] 视频流从setting和tile之间切换
 - [x] 视频加载两次（prejoin）video track
-- [ ] Caddy 
+- [x] Caddy 
 - [x] 自定义错误页面
-- [ ] 视频教程
-- [ ] 部署测试基础版本
+- [x] 视频教程
+- [x] 部署测试基础版本
+  
 - [x] license服务
 - [x] chat增加link跳转 ->hover 之后
-- [ ] 文件拖拽发送
+- [x] docker - 无虚化 （tradition）
+- [x] 时间戳转正常时间
+
+- [x] 文件拖拽发送
+- [x] 多次接收文件
+- [ ] 录屏保存本地
+- [ ] 模糊混用
+- [ ] 主持人功能(腾讯视频 参考)

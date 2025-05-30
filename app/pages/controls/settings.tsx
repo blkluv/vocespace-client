@@ -260,14 +260,26 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               {t('settings.about_us.desc')}
             </div>
             <div style={{ textAlign: 'right', width: '100%' }}>
-              {t('msg.info.contact')}
-              <a
-                href="mailto:han@privoce.com"
-                style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
-              >
-                han@privoce.com
-              </a>
-              {t('msg.info.learn_more')}
+              <div>
+                {' '}
+                {t('msg.info.contact')}
+                <a
+                  href="mailto:han@privoce.com"
+                  style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
+                >
+                  han@privoce.com
+                </a>
+              </div>
+              <div>
+                {' '}
+                {t('msg.info.learn_more')}:
+                <a
+                  href="https://vocespace.com"
+                  style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
+                >
+                  {t('msg.info.offical_web')}
+                </a>
+              </div>
             </div>
           </div>
         ),
