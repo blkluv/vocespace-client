@@ -11,6 +11,7 @@ import { Room } from 'livekit-client';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
 import { MessageInstance } from 'antd/es/message/interface';
 import { LinkPreview } from './link_preview';
+import Dragger from 'antd/es/upload/Dragger';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
@@ -56,29 +57,43 @@ export function EnhancedChat({
   const [value, setValue] = React.useState('');
   // 添加输入法组合状态跟踪
   const [isComposing, setIsComposing] = React.useState(false);
+
+  const handleFileResponse = React.useCallback(
+    (msg: ChatMsgItem) => {
+      if (msg.roomName == room.name) {
+        setMessages((prevMessages) => {
+          // 使用函数式更新来获取最新的 messages 状态
+          const existingFile = prevMessages.find((m) => m.id === msg.id);
+          if (!existingFile) {
+            console.warn('chat_file_response', msg);
+            setTimeout(scrollToBottom, 0); // 异步滚动到底部
+            return [...prevMessages, msg];
+          }
+          return prevMessages; // 如果已存在，不重复添加
+        });
+      }
+    },
+    [room.name], // 移除 messages 依赖项
+  );
+
   // [socket] ----------------------------------------------------------------------------------
   React.useEffect(() => {
-    socket.on('chat_msg_response', (msg: ChatMsgItem) => {
+    const handleChatMsgResponse = (msg: ChatMsgItem) => {
       if (msg.roomName == room.name) {
         console.warn('chat_msg_response', msg);
         setMessages((prev) => [...prev, msg]);
-        scrollToBottom();
+        setTimeout(scrollToBottom, 0); // 异步滚动到底部
       }
-    });
+    };
 
-    socket.on('chat_file_response', (msg: ChatMsgItem) => {
-      if (msg.roomName == room.name) {
-        console.warn('chat_file_response', msg);
-        setMessages((prev) => [...prev, msg]);
-        scrollToBottom();
-      }
-    });
+    socket.on('chat_msg_response', handleChatMsgResponse);
+    socket.on('chat_file_response', handleFileResponse);
 
     return () => {
-      socket.off('chat_msg');
-      socket.off('chat_msg_response');
+      socket.off('chat_msg', handleChatMsgResponse);
+      socket.off('chat_msg_response', handleFileResponse);
     };
-  }, [socket, room.name]);
+  }, [room.name, handleFileResponse]);
   // [send methods] ----------------------------------------------------------------------------
   const sendMsg = async () => {
     const msg = value.trim();
@@ -227,6 +242,13 @@ export function EnhancedChat({
       }}
     >
       <div className={styles.msg}>
+        <Dragger
+          style={{ position: 'absolute', top: 0, border: 'none' }}
+          multiple={false}
+          name="file"
+          beforeUpload={handleBeforeUpload}
+          showUploadList={false}
+        ></Dragger>
         <ul ref={ulRef} className={styles.msg_list}>
           {msgList}
         </ul>
@@ -286,7 +308,7 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
           </h4>
           {msg.type === 'text' ? (
             <div className={styles.msg_item_content_wrapper} style={flexEnd}>
-              <p className={styles.msg_item_content_msg}>{msg.message}</p>
+              <div className={styles.msg_item_content_msg}>{msg.message}</div>
               {LinkPreviewCmp}
             </div>
           ) : (
@@ -300,9 +322,9 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
               }
             >
               {msg.file && (
-                <p className={styles.msg_item_content_msg}>
+                <div className={styles.msg_item_content_msg}>
                   {isImg(msg.file.type) ? (
-                    <Image src={msg.file.url} width={'70%'} fallback={pictureCallback}></Image>
+                    <Image src={msg.file.url} width={'100%'} fallback={pictureCallback} height={160}></Image>
                   ) : (
                     <div className={styles.msg_item_content_msg_file}>
                       <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
@@ -310,11 +332,11 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
                       </a>
                       <div className={styles.msg_item_content_msg_file_info}>
                         <h4>{msg.file.name}</h4>
-                        <p>{Math.round(msg.file.size / 1024)}KB</p>
+                        <div>{Math.round(msg.file.size / 1024)}KB</div>
                       </div>
                     </div>
                   )}
-                </p>
+                </div>
               )}
             </Popover>
           )}

@@ -130,6 +130,8 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] docker - 无虚化 （tradition）
 - [x] 时间戳转正常时间
 
-- [ ] 文件拖拽发送
+- [x] 文件拖拽发送
+- [x] 多次接收文件
 - [ ] 录屏保存本地
+- [ ] 模糊混用
 - [ ] 主持人功能(腾讯视频 参考)

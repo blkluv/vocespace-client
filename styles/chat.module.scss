@@ -2,9 +2,10 @@
   height: calc(100% - 60px);
   overflow-y: scroll;
   scrollbar-width: thin;
-  padding: 0 24px;
+  margin: 0 0 0 24px;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
   &_list {
     margin: 0;
     padding: 0;
@@ -31,6 +32,7 @@
       width: 100%;
       flex-wrap: wrap;
       gap: 6px;
+      justify-content: flex-start;
       &_name {
         width: 100%;
         padding: 0;
@@ -49,14 +51,12 @@
         font-size: 14px;
         width: fit-content;
         text-align: justify;
-        margin: auto;
+        margin: 0;
         &_file {
           display: flex;
           align-items: center;
           justify-content: space-between;
           flex-wrap: nowrap;
-          
-      
           &_info {
             display: flex;
             align-items: center;
