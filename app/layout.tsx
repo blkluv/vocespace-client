@@ -17,14 +17,14 @@ export const metadata: Metadata = {
       rel: 'icon',
       url: '/favicon.ico',
     },
-    apple: [
-      {
-        rel: 'apple-touch-icon',
-        url: '/images/livekit-apple-touch.png',
-        sizes: '180x180',
-      },
-      { rel: 'mask-icon', url: '/images/livekit-safari-pinned-tab.svg', color: '#070707' },
-    ],
+    // apple: [
+    //   {
+    //     rel: 'apple-touch-icon',
+    //     url: '/images/livekit-apple-touch.png',
+    //     sizes: '180x180',
+    //   },
+    //   { rel: 'mask-icon', url: '/images/livekit-safari-pinned-tab.svg', color: '#070707' },
+    // ],
   },
 };
 
