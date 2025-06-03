@@ -5,14 +5,17 @@ import {
   LeaveIcon,
   MediaDeviceMenu,
   StartMediaButton,
+  TrackMutedIndicator,
+  TrackReferenceOrPlaceholder,
   TrackToggle,
+  useEnsureTrackRef,
   useLocalParticipantPermissions,
   useMaybeLayoutContext,
   useMaybeRoomContext,
   usePersistentUserChoices,
   useTrackVolume,
 } from '@livekit/components-react';
-import { Button, Drawer, message, Modal } from 'antd';
+import { Avatar, Button, Divider, Drawer, List, message, Modal } from 'antd';
 import { Track } from 'livekit-client';
 import * as React from 'react';
 import { SettingToggle } from './setting_toggle';
@@ -22,11 +25,13 @@ import { Settings, SettingsExports, TabKey } from './settings';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
 import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
-import { ParticipantSettings } from '@/lib/hooks/room_settings';
-import { UserStatus } from '@/lib/std';
+import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
+import { randomColor, UserStatus } from '@/lib/std';
 import { EnhancedChat } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
 import { RecordButton } from './record_button';
+import { MoreButton } from './more_button';
+import Search from 'antd/es/input/Search';
 
 /** @public */
 export type ControlBarControls = {
@@ -52,6 +57,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   saveUserChoices?: boolean;
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
   setUserStatus: (status: UserStatus | string) => Promise<void>;
+  roomSettings: RoomSettings;
 }
 
 export interface ControlBarExport {
@@ -83,6 +89,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       onDeviceError,
       updateSettings,
       setUserStatus,
+      roomSettings,
       ...props
     }: ControlBarProps,
     ref,
@@ -91,7 +98,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [isChatOpen, setIsChatOpen] = React.useState(false);
     const [settingVis, setSettingVis] = React.useState(false);
     const layoutContext = useMaybeLayoutContext();
-
+    const inviteTextRef = React.useRef<HTMLDivElement>(null);
     React.useEffect(() => {
       if (layoutContext?.widget.state?.showChat !== undefined) {
         setIsChatOpen(layoutContext?.widget.state?.showChat);
@@ -237,6 +244,17 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       });
     };
 
+    // [more] -----------------------------------------------------------------------------------------------------
+
+    const [openMore, setOpenMore] = React.useState(false);
+    const [moreType, setMoreType] = React.useState<'record' | 'participant'>('record');
+    const [openShareModal, setOpenShareModal] = React.useState(false);
+    const searchParicipant = (value: string) => {};
+
+    const participantList = React.useMemo(() => {
+      return Object.entries(roomSettings.participants);
+    }, [roomSettings.participants]);
+
     return (
       <div {...htmlProps} className={styles.controls}>
         {contextHolder}
@@ -305,7 +323,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               }}
             ></ChatToggle>
           )}
-          <RecordButton></RecordButton>
+
           <SettingToggle
             enabled={settingVis}
             onClicked={async () => {
@@ -313,6 +331,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               setSettingVis(true);
             }}
           ></SettingToggle>
+          <MoreButton setOpenMore={setOpenMore} setMoreType={setMoreType}></MoreButton>
         </div>
 
         {visibleControls.leave && (
@@ -366,6 +385,141 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             )}
           </div>
         </Drawer>
+        <Drawer
+          style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
+          styles={{
+            body: {
+              padding: '0 24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+            },
+          }}
+          title={
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <SvgResource type="user" svgSize={16}></SvgResource>
+              <span>{t('more.participant.manage')}</span>
+            </div>
+          }
+          placement="right"
+          closable={false}
+          width={'540px'}
+          open={openMore}
+          onClose={() => {
+            setOpenMore(false);
+            // closeSetting();
+          }}
+          extra={setting_drawer_header({
+            on_clicked: () => {
+              setOpenMore(false);
+              // closeSetting();
+            },
+          })}
+        >
+          <div className={styles.setting_container}>
+            {moreType === 'participant' && (
+              <div className={styles.setting_container_more}>
+                <hr />
+                <div className={styles.setting_container_more_header}>
+                  <Search
+                    placeholder={t('more.participant.search')}
+                    allowClear
+                    onSearch={searchParicipant}
+                    style={{ width: 'calc(100% - 60px)' }}
+                  />
+                  <Button type="primary" onClick={() => setOpenShareModal(true)}>
+                    <SvgResource type="user_add" svgSize={16}></SvgResource>
+                  </Button>
+                </div>
+                {room && (
+                  <List
+                    itemLayout="horizontal"
+                    dataSource={participantList}
+                    renderItem={(item, index) => (
+                      <List.Item>
+                        <div className={styles.particepant_item}>
+                          <div className={styles.particepant_item_left}>
+                            <Avatar
+                              size={'large'}
+                              style={{
+                                backgroundColor: randomColor(item[1].name),
+                              }}
+                            >
+                              {item[1].name.substring(0, 2)}
+                            </Avatar>
+                            <span>{item[1].name}</span>
+                            {roomSettings.ownerId !== '' && item[0] === roomSettings.ownerId && (
+                              <span className={styles.particepant_item_owner}>
+                                ( {t('more.participant.manager')} )
+                              </span>
+                            )}
+                          </div>
+                          {room.getParticipantByIdentity(item[0]) && (
+                            <div className={styles.particepant_item_right}>
+                              <TrackMutedIndicator
+                                trackRef={{
+                                  participant: room.getParticipantByIdentity(item[0])!,
+                                  source: Track.Source.Microphone,
+                                }}
+                                show={'always'}
+                              ></TrackMutedIndicator>
+                              <TrackMutedIndicator
+                                trackRef={{
+                                  participant: room.getParticipantByIdentity(item[0])!,
+                                  source: Track.Source.Camera,
+                                }}
+                                show={'always'}
+                              ></TrackMutedIndicator>
+                            </div>
+                          )}
+                        </div>
+                      </List.Item>
+                    )}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        </Drawer>
+        <Modal
+          open={openShareModal}
+          onCancel={() => setOpenShareModal(false)}
+          title={t('more.participant.invite.title')}
+          okText={t('more.participant.invite.ok')}
+          cancelText={t('more.participant.invite.cancel')}
+          onOk={async () => {
+            await navigator.clipboard.writeText(inviteTextRef.current?.innerText || `${t('more.participant.invite.link')}: ${window.location.href}`);
+            setOpenShareModal(false);
+          }}
+        >
+          <div className={styles.invite_container} ref={inviteTextRef}>
+            <div className={styles.invite_container_item}>
+              {room?.localParticipant.name} &nbsp;
+              {t('more.participant.invite.texts.0')}
+            </div>
+            <div className={styles.invite_container_item}>
+              <div className={styles.invite_container_item_justify}>
+                {t('more.participant.invite.texts.1')}
+                {t('more.participant.invite.web')}
+                {t('more.participant.invite.add')}
+              </div>
+              <div>
+                {t('more.participant.invite.link')}: {window.location.href}
+              </div>
+            </div>
+            <div className={styles.invite_container_item}>
+              <div className={styles.invite_container_item_justify}>
+                {t('more.participant.invite.texts.2')}
+                <strong>{`${window.location.href}`}</strong>
+                {t('more.participant.invite.add')}
+              </div>
+              <div>
+                {t('more.participant.invite.room')}: {room?.name}
+              </div>
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   },

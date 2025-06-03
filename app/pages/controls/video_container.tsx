@@ -497,6 +497,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 setUserStatus={setUserStatus}
                 controls={{ chat: true, settings: !!SettingsComponent }}
                 updateSettings={updateSettings}
+                roomSettings={settings}
               ></Controls>
             </div>
             {SettingsComponent && (

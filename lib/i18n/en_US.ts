@@ -41,9 +41,15 @@ export default {
     wave_msg: 'sent you a reminder!',
     full_user:
       'The room user has exceeded the limit and cannot join. You can join other rooms or inform the builder to upgrade your license to obtain more user slots.',
+  },
+  more: {
+    title: 'More',
     record: {
       start: 'Record',
       stop: 'Stop Recording',
+    },
+    participant: {
+      title: 'Participants',
     },
   },
   settings: {

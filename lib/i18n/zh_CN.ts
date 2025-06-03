@@ -41,9 +41,28 @@ export default {
     wave_msg: '向您发送了一条提醒!',
     full_user:
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
+  },
+  more: {
+    title: '更多',
     record: {
       start: '录制',
       stop: '停止录制',
+    },
+    participant: {
+      title: '成员',
+      manage: '管理成员',
+      search: '搜索成员',
+      manager: '管理员',
+      invite: {
+        title: '邀请成员',
+        web: '浏览器中',
+        add: '加入 VoceSpace 房间',
+        texts: ['邀请您加入 VoceSpace', '请 点击|复制 以下链接到', '请复制以下房间名称到'],
+        ok: '复制邀请',
+        cancel: '取消',
+        link: "链接",
+        room: '房间名称',
+      },
     },
   },
   settings: {

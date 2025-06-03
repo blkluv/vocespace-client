@@ -85,6 +85,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             contentBg: '#111111',
             headerBg: '#111111',
             footerBg: '#111111',
+            titleColor: '#ffffff',
+          },
+          Avatar: {
+            groupBorderColor: "#22CCEE"
           }
         },
       }}

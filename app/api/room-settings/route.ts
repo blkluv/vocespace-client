@@ -3,25 +3,28 @@ import { UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { NextRequest, NextResponse } from 'next/server';
 
+interface Participant {
+  name: string;
+  volume: number;
+  blur: number;
+  screenBlur: number;
+  status: UserStatus | string;
+  socketId: string;
+  virtual: {
+    role: ModelRole;
+    bg: ModelBg;
+    enabled: boolean;
+  };
+}
+
 // 内存中存储房间设置
 interface RoomSettings {
   [roomId: string]: {
     participants: {
-      [participantId: string]: {
-        name: string;
-        volume: number;
-        blur: number;
-        screenBlur: number;
-        status: UserStatus | string;
-        socketId: string;
-        virtual: {
-          role: ModelRole;
-          bg: ModelBg;
-          enabled: boolean;
-        };
-      };
+      [participantId: string]: Participant;
     };
     status?: Status[];
+    ownerId: string;
   };
 }
 
@@ -126,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     // 初始化房间设置（如果不存在）
     if (!roomSettings[roomId]) {
-      roomSettings[roomId] = { participants: {} };
+      roomSettings[roomId] = { participants: {}, ownerId: participantId };
     }
 
     // 更新参与者设置
