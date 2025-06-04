@@ -41,6 +41,7 @@ export default {
     wave_msg: 'sent you a reminder!',
     full_user:
       'The room user has exceeded the limit and cannot join. You can join other rooms or inform the builder to upgrade your license to obtain more user slots.',
+    open: 'Open',
   },
   more: {
     title: 'More',
@@ -50,6 +51,50 @@ export default {
     },
     participant: {
       title: 'Participants',
+      manage: 'Manage Participants',
+      search: 'Search Participants',
+      manager: 'Manager',
+      invite: {
+        title: 'Invite Participants',
+        web: 'in Browser',
+        add: 'add into VoceSpace Room',
+        texts: [
+          'Invite you to join VoceSpace',
+          'Please click|copy the following link to',
+          'Please copy the following room name to',
+        ],
+        ok: 'Copy Invite',
+        cancel: 'Cancel',
+        link: 'Link',
+        room: 'Room Name',
+      },
+      set: {
+        invite: {
+          title: 'Participant Invite',
+          video: 'Invite to Enable Camera',
+          wave: 'Send a Reminder',
+          audio: 'Invite to Enable Microphone',
+          share: 'Invite to Share Screen',
+        },
+        control: {
+          title: 'Participant Control',
+          trans: 'Transfer Room Host',
+          change_name: 'Change Name',
+          mute: {
+            audio: 'Mute Microphone',
+            video: 'Turn Off Video',
+          },
+          volume: 'Volume Adjustment',
+          blur: {
+            video: 'Video Blur',
+            screen: 'Screen Blur',
+          },
+        },
+        safe: {
+          title: 'Safety',
+          remove: 'Remove Participant',
+        },
+      },
     },
   },
   settings: {
@@ -161,6 +206,8 @@ export default {
       enabled_e2ee: 'End-to-end encryption enabled',
       enter_room: 'Please enter the space name or link',
       virtual_loading: 'Loading virtual role, please wait...',
+      invite_device: 'Inviting you to enable:',
+      remove_participant: 'You have been removed from the room by the room host',
     },
     error: {
       virtual: {

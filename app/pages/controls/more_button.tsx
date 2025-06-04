@@ -8,9 +8,10 @@ export interface MoreButtonProps {
   showText?: boolean;
   setOpenMore: (open: boolean) => void;
   setMoreType: (type: 'record' | 'participant') => void;
+  onClick?: () => void;
 }
 
-export function MoreButton({ showText = true, setOpenMore, setMoreType }: MoreButtonProps) {
+export function MoreButton({ showText = true, setOpenMore, setMoreType, onClick }: MoreButtonProps) {
   const { t } = useI18n();
 
   const showTextOrHide = useMemo(() => {
@@ -45,6 +46,9 @@ export function MoreButton({ showText = true, setOpenMore, setMoreType }: MoreBu
         break;
       case 'participant':
         // Handle participant action
+        if (onClick) {
+          onClick();
+        }
         setMoreType('participant');
         console.log('Participant action clicked');
         break;

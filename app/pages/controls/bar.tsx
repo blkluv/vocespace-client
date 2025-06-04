@@ -43,7 +43,7 @@ import { ChatToggle } from './chat_toggle';
 import { RecordButton } from './record_button';
 import { MoreButton } from './more_button';
 import Search from 'antd/es/input/Search';
-import { WsInviteDevice } from '@/lib/std/device';
+import { WsInviteDevice, WsTo } from '@/lib/std/device';
 
 /** @public */
 export type ControlBarControls = {
@@ -353,7 +353,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             {
               key: 'safe.remove',
               label: (
-                <span style={{ marginLeft: '8px' }}>{t('more.participant.set.safe.remove')}</span>
+                <span style={{ marginLeft: '8px' }}>
+                  {t('more.participant.set.safe.remove.title')}
+                </span>
               ),
               icon: <SvgResource type="leave" svgSize={16} />,
               disabled: !isOwner,
@@ -367,26 +369,24 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       console.warn('handleOptClick', e);
       if (room?.localParticipant && selectedParticipant) {
         let device = Track.Source.Unknown;
+        let wsTo = {
+          room: room.name,
+          senderName: room.localParticipant.name,
+          senderId: room.localParticipant.identity,
+          receiverId: selectedParticipant.identity,
+          socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+        } as WsTo;
+
         const inviteDevice = () => {
           socket.emit('invite_device', {
-            room: room.name,
-            senderName: room.localParticipant.name,
-            senderId: room.localParticipant.identity,
-            receiverId: selectedParticipant.identity,
-            socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+            ...wsTo,
             device,
           } as WsInviteDevice);
         };
 
         switch (e.key) {
           case 'invite.wave': {
-            socket.emit('wave', {
-              room: room.name,
-              senderName: room.localParticipant.name,
-              senderId: room.localParticipant.identity,
-              receiverId: selectedParticipant.identity,
-              socketId: roomSettings.participants[selectedParticipant.identity].socketId,
-            });
+            socket.emit('wave', wsTo);
             const audioSrc = src('/audios/vocespacewave.m4a');
             const audio = new Audio(audioSrc);
             audio.volume = 1.0;
@@ -414,6 +414,19 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             inviteDevice();
             break;
           }
+          case 'safe.remove':
+            {
+              Modal.confirm({
+                title: t('more.participant.set.safe.remove.title'),
+                content: t('more.participant.set.safe.remove.desc'),
+                okText: t('more.participant.set.safe.remove.confirm'),
+                cancelText: t('more.participant.set.safe.remove.cancel'),
+                onOk: () => {
+                  socket.emit('remove_participant', wsTo);
+                },
+              });
+            }
+            break;
           default:
             break;
         }
@@ -511,7 +524,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               setSettingVis(true);
             }}
           ></SettingToggle>
-          <MoreButton setOpenMore={setOpenMore} setMoreType={setMoreType}></MoreButton>
+          <MoreButton setOpenMore={setOpenMore} setMoreType={setMoreType} onClick={()=> {
+            socket.emit('update_user_status');
+          }}></MoreButton>
         </div>
 
         {visibleControls.leave && (

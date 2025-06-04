@@ -45,7 +45,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { licenseState, socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { useRouter } from 'next/navigation';
-import { WsInviteDevice } from '@/lib/std/device';
+import { WsInviteDevice, WsTo } from '@/lib/std/device';
 import { Button } from 'antd';
 
 export interface VideoContainerProps extends VideoConferenceProps {
@@ -286,6 +286,17 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           });
         }
       });
+      // [用户被移除出房间] ----------------------------------------------------------------
+      socket.on('remove_participant_response', (msg: WsTo) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          messageApi.error({
+            content: t('msg.info.remove_participant'),
+            duration: 3,
+          });
+          room.disconnect(true);
+          router.push('/');
+        }
+      });
 
       return () => {
         socket.off('wave_response');
@@ -294,6 +305,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('mouse_remove_response');
         socket.off('new_user_status_response');
         socket.off('invite_device_response');
+        socket.off('remove_participant_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);

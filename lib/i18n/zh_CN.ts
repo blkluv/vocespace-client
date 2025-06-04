@@ -88,7 +88,12 @@ export default {
         },
         safe: {
           title: '安全',
-          remove: '移除成员',
+          remove: {
+            title: '移除成员',
+            desc: '您确定要移除该成员吗？',
+            confirm: '确定移除',
+            cancel: '取消',
+          },
         },
       },
     },
@@ -206,6 +211,7 @@ export default {
       enter_room: '请输入房间名或链接',
       virtual_loading: '虚拟形象加载中...',
       invite_device: '邀请您开启:',
+      remove_participant: '您已被房间主持人移除房间',
     },
     error: {
       virtual: {

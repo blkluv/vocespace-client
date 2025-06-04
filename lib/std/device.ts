@@ -8,12 +8,15 @@ export interface Device {
   label: string;
 }
 
-export interface WsInviteDevice {
+export interface WsTo {
   room: string;
   senderName: string;
   senderId: string;
   receiverId: string;
   socketId: string;
+}
+
+export interface WsInviteDevice extends WsTo {
   device: Track.Source;
 }
 
