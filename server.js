@@ -44,7 +44,7 @@ app.prepare().then(() => {
     // - [socket: wave hand event to other user] -------------------------------------------------------------------------
     // - on: "wave"
     // - emit: "wave_response"
-    // - msg: { room: string, senderId: string, senderName: string, receiverId: string }
+    // - msg: { room: string, senderId: string, senderName: string, receiverId: string, socketId: string }
     socket.on('wave', (msg) => {
       socket.to(msg.socketId).emit('wave_response', {
         room: msg.room,
@@ -52,6 +52,20 @@ app.prepare().then(() => {
         senderName: msg.senderName,
         receiverId: msg.receiverId,
       });
+    });
+    // [socket: invite open device event] --------------------------------------------------------------------------------
+    // - on: "invite_device"
+    // - emit: "invite_device_response"
+    // - msg: { 
+    //    room: string, 
+    //    socketId: string,
+    //    senderId: string, 
+    //    senderName: string, 
+    //    receiverId: string, 
+    //    device: "camera" | "microphone" | "screen_share" see [`Track.Source`]
+    // }
+    socket.on('invite_device', (msg) => {
+      socket.to(msg.socketId).emit('invite_device_response', msg);
     });
     // [socket: update user status event] --------------------------------------------------------------------------------
     // - on: "update_user_status"

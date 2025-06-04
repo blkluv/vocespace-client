@@ -148,10 +148,10 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
       - [ ] 音量调节
       - [ ] 视频虚化
       - [ ] 屏幕虚化
-    - [ ] 邀请
-      - [ ] 视频
-      - [ ] 音频
-      - [ ] 屏幕
+    - [x] 邀请
+      - [x] 视频
+      - [x] 音频
+      - [x] 屏幕
       - [x] 提醒 wave hand
     - [ ] 安全
       - [ ] 移除

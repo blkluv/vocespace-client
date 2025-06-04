@@ -26,6 +26,7 @@ import {
 import {
   ConnectionQuality,
   ConnectionState,
+  LocalTrackPublication,
   Participant,
   ParticipantEvent,
   RoomEvent,
@@ -44,6 +45,8 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { licenseState, socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { useRouter } from 'next/navigation';
+import { WsInviteDevice } from '@/lib/std/device';
+import { Button } from 'antd';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -103,7 +106,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
 
       if (init) {
-        syncSettings().then(()=>{
+        syncSettings().then(() => {
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
           socket.emit('update_user_status');
         });
@@ -240,11 +243,57 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       room.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
       room.on(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
+
+      // [用户邀请事件] -------------------------------------------------------------------------
+      socket.on('invite_device_response', (msg: WsInviteDevice) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          let device_str;
+          let open: () => Promise<LocalTrackPublication | undefined>;
+          switch (msg.device) {
+            case Track.Source.Camera:
+              device_str = '摄像头';
+              open = () => room.localParticipant.setCameraEnabled(true);
+              break;
+            case Track.Source.Microphone:
+              device_str = '麦克风';
+              open = () => room.localParticipant.setMicrophoneEnabled(true);
+              break;
+            case Track.Source.ScreenShare:
+              device_str = '屏幕共享';
+              open = () => room.localParticipant.setScreenShareEnabled(true);
+              break;
+            default:
+              return;
+          }
+
+          const btn = (
+            <Button
+              type="primary"
+              size="small"
+              onClick={async () => {
+                await open();
+                noteApi.destroy();
+              }}
+            >
+              {t('common.open')}
+            </Button>
+          );
+
+          noteApi.info({
+            message: `${msg.senderName} ${t('msg.info.invite_device')} ${device_str}`,
+            duration: 5,
+            btn,
+          });
+        }
+      });
+
       return () => {
         socket.off('wave_response');
         socket.off('user_status_updated');
         socket.off('mouse_move_response');
         socket.off('mouse_remove_response');
+        socket.off('new_user_status_response');
+        socket.off('invite_device_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);

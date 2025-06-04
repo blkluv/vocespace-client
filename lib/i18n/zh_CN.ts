@@ -41,6 +41,7 @@ export default {
     wave_msg: '向您发送了一条提醒!',
     full_user:
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
+    open: '开启',
   },
   more: {
     title: '更多',
@@ -48,7 +49,6 @@ export default {
       start: '录制',
       stop: '停止录制',
     },
-
     participant: {
       title: '成员',
       manage: '管理成员',
@@ -205,6 +205,7 @@ export default {
       enabled_e2ee: '启用端到端加密',
       enter_room: '请输入房间名或链接',
       virtual_loading: '虚拟形象加载中...',
+      invite_device: '邀请您开启:',
     },
     error: {
       virtual: {

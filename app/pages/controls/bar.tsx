@@ -32,6 +32,7 @@ import { ChatToggle } from './chat_toggle';
 import { RecordButton } from './record_button';
 import { MoreButton } from './more_button';
 import Search from 'antd/es/input/Search';
+import { WsInviteDevice } from '@/lib/std/device';
 
 /** @public */
 export type ControlBarControls = {
@@ -356,6 +357,18 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const handleOptClick: MenuProps['onClick'] = (e) => {
       console.warn('handleOptClick', e);
       if (room?.localParticipant && selectedParticipant) {
+        let device = Track.Source.Unknown;
+        const inviteDevice = () => {
+          socket.emit('invite_device', {
+            room: room.name,
+            senderName: room.localParticipant.name,
+            senderId: room.localParticipant.identity,
+            receiverId: selectedParticipant.identity,
+            socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+            device,
+          } as WsInviteDevice);
+        };
+
         switch (e.key) {
           case 'invite.wave': {
             socket.emit('wave', {
@@ -375,6 +388,22 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 audio.remove();
               }, 2000);
             });
+            break;
+          }
+          case 'invite.audio': {
+            device = Track.Source.Microphone;
+            inviteDevice();
+            break;
+          }
+          case 'invite.video': {
+            device = Track.Source.Camera;
+            inviteDevice();
+            break;
+          }
+          case 'invite.share': {
+            device = Track.Source.ScreenShare;
+            inviteDevice();
+            break;
           }
           default:
             break;

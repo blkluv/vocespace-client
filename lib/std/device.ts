@@ -8,6 +8,15 @@ export interface Device {
   label: string;
 }
 
+export interface WsInviteDevice {
+  room: string;
+  senderName: string;
+  senderId: string;
+  receiverId: string;
+  socketId: string;
+  device: Track.Source;
+}
+
 export interface LiveKitDevice {
   deviceId: string;
   kind: MediaDeviceKind;
@@ -85,8 +94,6 @@ export interface UseVideoBlurProps {
   defaultDimensions?: SizeNum;
 }
 
-
-
 export function useVideoBlur({
   videoRef,
   initialBlur = 0,
@@ -97,7 +104,7 @@ export function useVideoBlur({
 
   // 使用防抖处理尺寸更新
   const debouncedDimensions = useDebounce(dimensions, 100);
-  
+
   // 使用节流处理模糊值更新
   const throttledVideoBlur = useThrottle(videoBlur, 16); // 约60fps
 
@@ -108,7 +115,7 @@ export function useVideoBlur({
     // 只在尺寸真正变化时更新
     const newWidth = videoElement.clientWidth || defaultDimensions.width;
     const newHeight = videoElement.clientHeight || defaultDimensions.height;
-    
+
     if (newWidth !== dimensions.width || newHeight !== dimensions.height) {
       setDimensions({
         width: newWidth,
