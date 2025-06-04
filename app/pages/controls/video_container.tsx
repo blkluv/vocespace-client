@@ -287,14 +287,16 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
       });
       // [用户被移除出房间] ----------------------------------------------------------------
-      socket.on('remove_participant_response', (msg: WsTo) => {
+      socket.on('remove_participant_response', async (msg: WsTo) => {
         if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          await onParticipantDisConnected(room.localParticipant);
           messageApi.error({
             content: t('msg.info.remove_participant'),
             duration: 3,
           });
           room.disconnect(true);
           router.push('/');
+          socket.emit('update_user_status');
         }
       });
 
@@ -557,6 +559,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 controls={{ chat: true, settings: !!SettingsComponent }}
                 updateSettings={updateSettings}
                 roomSettings={settings}
+                fetchSettings={fetchSettings}
               ></Controls>
             </div>
             {SettingsComponent && (

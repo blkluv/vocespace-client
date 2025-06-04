@@ -70,6 +70,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
   setUserStatus: (status: UserStatus | string) => Promise<void>;
   roomSettings: RoomSettings;
+  fetchSettings: () => Promise<void>;
 }
 
 export interface ControlBarExport {
@@ -102,6 +103,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       updateSettings,
       setUserStatus,
       roomSettings,
+      fetchSettings,
       ...props
     }: ControlBarProps,
     ref,
@@ -524,9 +526,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               setSettingVis(true);
             }}
           ></SettingToggle>
-          <MoreButton setOpenMore={setOpenMore} setMoreType={setMoreType} onClick={()=> {
-            socket.emit('update_user_status');
-          }}></MoreButton>
+          <MoreButton
+            setOpenMore={setOpenMore}
+            setMoreType={setMoreType}
+            onClick={async () => {
+              await fetchSettings();
+            }}
+          ></MoreButton>
         </div>
 
         {visibleControls.leave && (
