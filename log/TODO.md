@@ -155,7 +155,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
       - [x] 提醒 wave hand
     - [ ] 安全
       - [ ] 移除
-    - [ ] 搜索用户
+    - [x] 搜索用户 + 用户首字母排序
     - [x] 分享房间
 - [x] 优化进入prejoin时间
 - [x] 去除face-api.js模型

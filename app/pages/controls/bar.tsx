@@ -15,7 +15,18 @@ import {
   usePersistentUserChoices,
   useTrackVolume,
 } from '@livekit/components-react';
-import { Avatar, Button, Divider, Drawer, Dropdown, List, MenuProps, message, Modal } from 'antd';
+import {
+  Avatar,
+  Button,
+  Divider,
+  Drawer,
+  Dropdown,
+  List,
+  MenuProps,
+  message,
+  Modal,
+  Select,
+} from 'antd';
 import { Participant, Track } from 'livekit-client';
 import * as React from 'react';
 import { SettingToggle } from './setting_toggle';
@@ -246,11 +257,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
 
     // [more] -----------------------------------------------------------------------------------------------------
-
     const [openMore, setOpenMore] = React.useState(false);
     const [moreType, setMoreType] = React.useState<'record' | 'participant'>('record');
     const [openShareModal, setOpenShareModal] = React.useState(false);
-    const searchParicipant = (value: string) => {};
     const [isMicDisabled, setIsMicDisabled] = React.useState(false);
     const [isCamDisabled, setIsCamDisabled] = React.useState(false);
     const [selectedParticipant, setSelectedParticipant] = React.useState<Participant | null>(null);
@@ -593,12 +602,22 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               <div className={styles.setting_container_more}>
                 <hr />
                 <div className={styles.setting_container_more_header}>
-                  <Search
+                  <Select
+                    showSearch
                     placeholder={t('more.participant.search')}
                     allowClear
-                    onSearch={searchParicipant}
                     style={{ width: 'calc(100% - 60px)' }}
-                  />
+                    optionFilterProp="label"
+                    filterSort={(optionA, optionB) =>
+                      (optionA?.label ?? '')
+                        .toLowerCase()
+                        .localeCompare((optionB?.label ?? '').toLowerCase())
+                    }
+                    options={participantList.map((item) => ({
+                      label: item[1].name,
+                      value: item[0],
+                    }))}
+                  ></Select>
                   <Button type="primary" onClick={() => setOpenShareModal(true)}>
                     <SvgResource type="user_add" svgSize={16}></SvgResource>
                   </Button>
