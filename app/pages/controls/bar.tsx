@@ -26,7 +26,7 @@ import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
 import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
-import { randomColor, UserStatus } from '@/lib/std';
+import { randomColor, src, UserStatus } from '@/lib/std';
 import { EnhancedChat } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
 import { RecordButton } from './record_button';
@@ -252,6 +252,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const searchParicipant = (value: string) => {};
     const [isMicDisabled, setIsMicDisabled] = React.useState(false);
     const [isCamDisabled, setIsCamDisabled] = React.useState(false);
+    const [selectedParticipant, setSelectedParticipant] = React.useState<Participant | null>(null);
     const [isScreenShareDisabled, setIsScreenShareDisabled] = React.useState(false);
     const participantList = React.useMemo(() => {
       return Object.entries(roomSettings.participants);
@@ -352,7 +353,34 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       ];
     }, [isCamDisabled, isMicDisabled, isOwner, isScreenShareDisabled]);
 
-    const handleOptClick: MenuProps['onClick'] = (e) => {};
+    const handleOptClick: MenuProps['onClick'] = (e) => {
+      console.warn('handleOptClick', e);
+      if (room?.localParticipant && selectedParticipant) {
+        switch (e.key) {
+          case 'invite.wave': {
+            socket.emit('wave', {
+              room: room.name,
+              senderName: room.localParticipant.name,
+              senderId: room.localParticipant.identity,
+              receiverId: selectedParticipant.identity,
+              socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+            });
+            const audioSrc = src('/audios/vocespacewave.m4a');
+            const audio = new Audio(audioSrc);
+            audio.volume = 1.0;
+            audio.play().then(() => {
+              setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.remove();
+              }, 2000);
+            });
+          }
+          default:
+            break;
+        }
+      }
+    };
 
     const optOpen = (open: boolean, participant: Participant) => {
       if (!open) {
@@ -361,6 +389,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setIsMicDisabled(participant.isMicrophoneEnabled);
       setIsCamDisabled(participant.isCameraEnabled);
       setIsScreenShareDisabled(participant.isScreenShareEnabled);
+      setSelectedParticipant(participant);
     };
 
     const optMenu = {

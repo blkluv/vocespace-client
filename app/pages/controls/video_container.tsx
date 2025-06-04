@@ -100,9 +100,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             bg: ModelBg.ClassRoom,
           },
         });
-
-        // const newSettings = await fetchSettings();
-        // setSettings(newSettings);
       };
 
       if (init) {
