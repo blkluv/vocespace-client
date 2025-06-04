@@ -45,6 +45,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Dropdown: {
             colorBgElevated: '#1E1E1E',
             controlItemBgHover: "#333",
+            colorTextDisabled: "#8c8c8c",
+            colorTextDescription: "#8c8c8c",
+            colorText: "#fff"
           },
           Radio: {
             buttonBg: '#1E1E1E',
@@ -89,6 +92,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           },
           Avatar: {
             groupBorderColor: "#22CCEE"
+          },
+          List: {
+            itemPadding: '4px 0',
+            metaMarginBottom: '4px',
+            colorSplit: '#8c8c8c',
           }
         },
       }}

@@ -15,8 +15,8 @@ import {
   usePersistentUserChoices,
   useTrackVolume,
 } from '@livekit/components-react';
-import { Avatar, Button, Divider, Drawer, List, message, Modal } from 'antd';
-import { Track } from 'livekit-client';
+import { Avatar, Button, Divider, Drawer, Dropdown, List, MenuProps, message, Modal } from 'antd';
+import { Participant, Track } from 'livekit-client';
 import * as React from 'react';
 import { SettingToggle } from './setting_toggle';
 import { SvgResource } from '@/app/resources/svg';
@@ -250,10 +250,123 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [moreType, setMoreType] = React.useState<'record' | 'participant'>('record');
     const [openShareModal, setOpenShareModal] = React.useState(false);
     const searchParicipant = (value: string) => {};
-
+    const [isMicDisabled, setIsMicDisabled] = React.useState(false);
+    const [isCamDisabled, setIsCamDisabled] = React.useState(false);
+    const [isScreenShareDisabled, setIsScreenShareDisabled] = React.useState(false);
     const participantList = React.useMemo(() => {
       return Object.entries(roomSettings.participants);
-    }, [roomSettings.participants]);
+    }, [roomSettings]);
+    const isOwner = React.useMemo(() => {
+      return roomSettings.ownerId === room?.localParticipant.identity;
+    }, [roomSettings.ownerId, room?.localParticipant.identity]);
+    const optItems: MenuProps['items'] = React.useMemo(() => {
+      return [
+        {
+          label: t('more.participant.set.invite.title'),
+          key: 'invite',
+          type: 'group',
+          children: [
+            {
+              key: 'invite.audio',
+              label: (
+                <span style={{ marginLeft: '8px' }}>{t('more.participant.set.invite.audio')}</span>
+              ),
+              icon: <SvgResource type="audio" svgSize={16} />,
+              disabled: isMicDisabled,
+            },
+            {
+              key: 'invite.video',
+              label: (
+                <span style={{ marginLeft: '8px' }}>{t('more.participant.set.invite.video')}</span>
+              ),
+              icon: <SvgResource type="video" svgSize={16} />,
+              disabled: isCamDisabled,
+            },
+            {
+              key: 'invite.wave',
+              label: (
+                <span style={{ marginLeft: '8px' }}>{t('more.participant.set.invite.wave')}</span>
+              ),
+              icon: <SvgResource type="wave" svgSize={16} />,
+            },
+            {
+              key: 'invite.share',
+              label: (
+                <span style={{ marginLeft: '8px' }}>{t('more.participant.set.invite.share')}</span>
+              ),
+              icon: <SvgResource type="screen" svgSize={16} />,
+              disabled: isScreenShareDisabled,
+            },
+          ],
+        },
+        {
+          label: t('more.participant.set.control.title'),
+          key: 'control',
+          type: 'group',
+          children: [
+            {
+              key: 'control.trans',
+              label: (
+                <span style={{ marginLeft: '8px' }}>{t('more.participant.set.control.trans')}</span>
+              ),
+              icon: <SvgResource type="switch" svgSize={16} />,
+              disabled: !isOwner,
+            },
+            {
+              key: 'control.change_name',
+              label: (
+                <span style={{ marginLeft: '8px' }}>
+                  {t('more.participant.set.control.change_name')}
+                </span>
+              ),
+              icon: <SvgResource type="user" svgSize={16} />,
+              disabled: !isOwner,
+            },
+            {
+              key: 'control.mute_audio',
+              label: (
+                <span style={{ marginLeft: '8px' }}>
+                  {t('more.participant.set.control.mute.audio')}
+                </span>
+              ),
+              icon: <SvgResource type="volume" svgSize={16} />,
+              disabled: !isOwner,
+            },
+          ],
+        },
+        {
+          label: t('more.participant.set.safe.title'),
+          key: 'safe',
+          type: 'group',
+          children: [
+            {
+              key: 'safe.remove',
+              label: (
+                <span style={{ marginLeft: '8px' }}>{t('more.participant.set.safe.remove')}</span>
+              ),
+              icon: <SvgResource type="leave" svgSize={16} />,
+              disabled: !isOwner,
+            },
+          ],
+        },
+      ];
+    }, [isCamDisabled, isMicDisabled, isOwner, isScreenShareDisabled]);
+
+    const handleOptClick: MenuProps['onClick'] = (e) => {};
+
+    const optOpen = (open: boolean, participant: Participant) => {
+      if (!open) {
+        return;
+      }
+      setIsMicDisabled(participant.isMicrophoneEnabled);
+      setIsCamDisabled(participant.isCameraEnabled);
+      setIsScreenShareDisabled(participant.isScreenShareEnabled);
+    };
+
+    const optMenu = {
+      items: optItems,
+      onClick: handleOptClick,
+    };
 
     return (
       <div {...htmlProps} className={styles.controls}>
@@ -471,6 +584,19 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                                 }}
                                 show={'always'}
                               ></TrackMutedIndicator>
+                              {room.localParticipant.identity !== item[0] && (
+                                <Dropdown
+                                  menu={optMenu}
+                                  trigger={['click']}
+                                  onOpenChange={(open) =>
+                                    optOpen(open, room.getParticipantByIdentity(item[0])!)
+                                  }
+                                >
+                                  <Button shape="circle" type="text">
+                                    <SvgResource type="more2" svgSize={16}></SvgResource>
+                                  </Button>
+                                </Dropdown>
+                              )}
                             </div>
                           )}
                         </div>
@@ -489,7 +615,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           okText={t('more.participant.invite.ok')}
           cancelText={t('more.participant.invite.cancel')}
           onOk={async () => {
-            await navigator.clipboard.writeText(inviteTextRef.current?.innerText || `${t('more.participant.invite.link')}: ${window.location.href}`);
+            await navigator.clipboard.writeText(
+              inviteTextRef.current?.innerText ||
+                `${t('more.participant.invite.link')}: ${window.location.href}`,
+            );
             setOpenShareModal(false);
           }}
         >

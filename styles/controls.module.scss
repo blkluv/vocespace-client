@@ -329,13 +329,13 @@
   align-items: center;
   justify-content: space-between;
   color: #fff;
-  background-color: #1E1E1E;
+  background-color: transparent;
   width: 100%;
   height: fit-content;
   padding: 8px;
   transition: all 0.2s ease;
   &:hover {
-    filter: brightness(1.1);
+    background-color: #1e1e1e90;
     cursor: pointer;
   }
   &_left {

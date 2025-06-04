@@ -48,6 +48,7 @@ export default {
       start: '录制',
       stop: '停止录制',
     },
+
     participant: {
       title: '成员',
       manage: '管理成员',
@@ -60,8 +61,35 @@ export default {
         texts: ['邀请您加入 VoceSpace', '请 点击|复制 以下链接到', '请复制以下房间名称到'],
         ok: '复制邀请',
         cancel: '取消',
-        link: "链接",
+        link: '链接',
         room: '房间名称',
+      },
+      set: {
+        invite: {
+          title: '成员邀请',
+          video: '邀请开启视频',
+          wave: '发送一条提醒',
+          audio: '邀请开启音频',
+          share: '邀请共享屏幕',
+        },
+        control: {
+          title: '成员控制',
+          trans: '转让房间主持人',
+          change_name: '修改名称',
+          mute: {
+            audio: '静音音频',
+            video: '关闭视频',
+          },
+          volume: '音量调节',
+          blur: {
+            video: '视频虚化',
+            screen: '屏幕虚化',
+          },
+        },
+        safe: {
+          title: '安全',
+          remove: '移除成员',
+        },
       },
     },
   },

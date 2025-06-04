@@ -106,7 +106,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
 
       if (init) {
-        syncSettings();
+        syncSettings().then(()=>{
+          // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
+          socket.emit('update_user_status');
+        });
         setInit(false);
       }
 
@@ -185,8 +188,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             room.disconnect(true);
           }
           return;
-        } else {
-          await fetchSettings();
         }
       };
       const onParticipantDisConnected = async (participant: Participant) => {
