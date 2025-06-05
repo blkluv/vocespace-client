@@ -373,3 +373,10 @@
     }
   }
 }
+
+.inline_flex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}

@@ -20,6 +20,23 @@ export interface WsInviteDevice extends WsTo {
   device: Track.Source;
 }
 
+export enum ControlType {
+  ChangeName = 'change_name',
+  MuteAudio = 'mute_audio',
+  MuteVideo = 'mute_video',
+  Volume = 'volume',
+  BlurVideo = 'blur_video',
+  BlurScreen = 'blur_screen',
+  Transfer = 'transfer',
+}
+
+export interface WsControlParticipant extends WsTo {
+  type: ControlType;
+  username?: string;
+  volume?: number; // 音量调节
+  blur?: number; // 视频或屏幕模糊度
+}
+
 export interface LiveKitDevice {
   deviceId: string;
   kind: MediaDeviceKind;

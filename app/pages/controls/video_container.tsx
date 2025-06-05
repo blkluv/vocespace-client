@@ -8,7 +8,6 @@ import {
 } from '@/lib/std';
 import {
   CarouselLayout,
-  Chat,
   ConnectionStateToast,
   FocusLayoutContainer,
   GridLayout,
@@ -24,13 +23,11 @@ import {
   WidgetState,
 } from '@livekit/components-react';
 import {
-  ConnectionQuality,
   ConnectionState,
   LocalTrackPublication,
   Participant,
   ParticipantEvent,
   RoomEvent,
-  RpcInvocationData,
   Track,
   TrackPublication,
 } from 'livekit-client';
@@ -45,7 +42,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { licenseState, socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { useRouter } from 'next/navigation';
-import { WsInviteDevice, WsTo } from '@/lib/std/device';
+import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { Button } from 'antd';
 
 export interface VideoContainerProps extends VideoConferenceProps {
@@ -150,17 +147,14 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       }
 
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
-      socket.on(
-        'wave_response',
-        (msg: { senderId: string; senderName: string; receiverId: string; room: string }) => {
-          if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
-            waveAudioRef.current?.play();
-            noteApi.info({
-              message: `${msg.senderName} ${t('common.wave_msg')}`,
-            });
-          }
-        },
-      );
+      socket.on('wave_response', (msg: WsTo) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          waveAudioRef.current?.play();
+          noteApi.info({
+            message: `${msg.senderName} ${t('common.wave_msg')}`,
+          });
+        }
+      });
 
       // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
       socket.on('user_status_updated', async () => {
@@ -297,6 +291,22 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           room.disconnect(true);
           router.push('/');
           socket.emit('update_user_status');
+        }
+      });
+      // [用户控制事件] -------------------------------------------------------------------
+      socket.on('control_participant_response', async (msg: WsControlParticipant) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          switch (msg.type) {
+            case ControlType.ChangeName: {
+              await room.localParticipant?.setMetadata(JSON.stringify({ name: msg.username! }));
+              await room.localParticipant.setName(msg.username!);
+              await updateSettings({
+                name: msg.username!,
+              });
+              messageApi.success(t('msg.success.user.username.change'));
+              break;
+            }
+          }
         }
       });
 

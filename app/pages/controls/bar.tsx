@@ -1,31 +1,27 @@
 import { useI18n } from '@/lib/i18n/i18n';
 import {
-  ChatIcon,
   DisconnectButton,
   LeaveIcon,
   MediaDeviceMenu,
-  StartMediaButton,
   TrackMutedIndicator,
-  TrackReferenceOrPlaceholder,
   TrackToggle,
-  useEnsureTrackRef,
   useLocalParticipantPermissions,
   useMaybeLayoutContext,
   useMaybeRoomContext,
   usePersistentUserChoices,
-  useTrackVolume,
 } from '@livekit/components-react';
 import {
   Avatar,
   Button,
-  Divider,
   Drawer,
   Dropdown,
+  Input,
   List,
   MenuProps,
   message,
   Modal,
   Select,
+  Slider,
 } from 'antd';
 import { Participant, Track } from 'livekit-client';
 import * as React from 'react';
@@ -33,17 +29,14 @@ import { SettingToggle } from './setting_toggle';
 import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
-import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useRecoilState } from 'recoil';
 import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
 import { randomColor, src, UserStatus } from '@/lib/std';
 import { EnhancedChat } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
-import { RecordButton } from './record_button';
 import { MoreButton } from './more_button';
-import Search from 'antd/es/input/Search';
-import { WsInviteDevice, WsTo } from '@/lib/std/device';
+import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 
 /** @public */
 export type ControlBarControls = {
@@ -266,6 +259,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [isCamDisabled, setIsCamDisabled] = React.useState(false);
     const [selectedParticipant, setSelectedParticipant] = React.useState<Participant | null>(null);
     const [isScreenShareDisabled, setIsScreenShareDisabled] = React.useState(false);
+    const [volume, setVolume] = React.useState(0.0);
+    const [blurVideo, setBlurVideo] = React.useState(0.0);
+    const [blurScreen, setBlurScreen] = React.useState(0.0);
+    const [username, setUsername] = React.useState<string>('');
+    const [openNameModal, setOpenNameModal] = React.useState(false);
     const participantList = React.useMemo(() => {
       return Object.entries(roomSettings.participants);
     }, [roomSettings]);
@@ -342,7 +340,108 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                   {t('more.participant.set.control.mute.audio')}
                 </span>
               ),
-              icon: <SvgResource type="volume" svgSize={16} />,
+              icon: <SvgResource type="audio_close" svgSize={16} />,
+              disabled: !isOwner && isMicDisabled,
+            },
+            {
+              key: 'control.mute_video',
+              label: (
+                <span style={{ marginLeft: '8px' }}>
+                  {t('more.participant.set.control.mute.video')}
+                </span>
+              ),
+              icon: <SvgResource type="video_close" svgSize={16} />,
+              disabled: !isOwner && isCamDisabled,
+            },
+            {
+              key: 'control.volume',
+              label: (
+                <div>
+                  <div className={styles.inline_flex}>
+                    <SvgResource type="volume" svgSize={16} />
+                    <span style={{ marginLeft: '8px' }}>
+                      {t('more.participant.set.control.volume')}
+                    </span>
+                  </div>
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                  >
+                    <Slider
+                      min={0.0}
+                      max={100.0}
+                      step={1.0}
+                      value={volume}
+                      onChange={(e) => {
+                        setVolume(e);
+                      }}
+                    ></Slider>
+                  </div>
+                </div>
+              ),
+              disabled: !isOwner,
+            },
+            {
+              key: 'control.blur_video',
+              label: (
+                <div>
+                  <div className={styles.inline_flex}>
+                    <SvgResource type="blur" svgSize={16} />
+                    <span style={{ marginLeft: '8px' }}>
+                      {t('more.participant.set.control.blur.video')}
+                    </span>
+                  </div>
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                  >
+                    <Slider
+                      min={0.0}
+                      max={1.0}
+                      step={0.05}
+                      value={blurVideo}
+                      onChange={(e) => {
+                        setBlurVideo(e);
+                      }}
+                    ></Slider>
+                  </div>
+                </div>
+              ),
+              disabled: !isOwner,
+            },
+            {
+              key: 'control.blur_screen',
+              label: (
+                <div>
+                  <div className={styles.inline_flex}>
+                    <SvgResource type="blur" svgSize={16} />
+                    <span style={{ marginLeft: '8px' }}>
+                      {t('more.participant.set.control.blur.screen')}
+                    </span>
+                  </div>
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                  >
+                    <Slider
+                      min={0.0}
+                      max={1.0}
+                      step={0.05}
+                      value={blurScreen}
+                      onChange={(e) => {
+                        setBlurScreen(e);
+                      }}
+                      onChangeComplete={(e) => {}}
+                    ></Slider>
+                  </div>
+                </div>
+              ),
               disabled: !isOwner,
             },
           ],
@@ -365,7 +464,15 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           ],
         },
       ];
-    }, [isCamDisabled, isMicDisabled, isOwner, isScreenShareDisabled]);
+    }, [
+      isCamDisabled,
+      isMicDisabled,
+      isOwner,
+      isScreenShareDisabled,
+      volume,
+      blurVideo,
+      blurScreen,
+    ]);
 
     const handleOptClick: MenuProps['onClick'] = (e) => {
       console.warn('handleOptClick', e);
@@ -429,6 +536,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               });
             }
             break;
+          case 'control.change_name': {
+            setOpenNameModal(true);
+            break;
+          }
+          case 'control.mute_audio': {
+            break;
+          }
           default:
             break;
         }
@@ -443,6 +557,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setIsCamDisabled(participant.isCameraEnabled);
       setIsScreenShareDisabled(participant.isScreenShareEnabled);
       setSelectedParticipant(participant);
+      setUsername(participant.name || participant.identity);
+      setBlurVideo(roomSettings.participants[participant.identity]?.blur || 0.0);
+      setBlurScreen(roomSettings.participants[participant.identity]?.screenBlur || 0.0);
+      setVolume(roomSettings.participants[participant.identity]?.volume || 0.0);
     };
 
     const optMenu = {
@@ -621,7 +739,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <div className={styles.setting_container}>
             {moreType === 'participant' && (
               <div className={styles.setting_container_more}>
-                <hr />
                 <div className={styles.setting_container_more_header}>
                   <Select
                     showSearch
@@ -746,6 +863,31 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               </div>
             </div>
           </div>
+        </Modal>
+        <Modal
+          open={openNameModal}
+          title={t('more.participant.set.control.change_name')}
+          okText={t('common.confirm')}
+          cancelText={t('common.cancel')}
+          onCancel={() => {
+            setOpenNameModal(false);
+          }}
+          onOk={() => {
+            socket.emit('control_participant', {
+              type: ControlType.ChangeName,
+              username,
+            } as WsControlParticipant);
+            setOpenNameModal(false);
+          }}
+        >
+          <Input
+            placeholder={t('settings.general.username')}
+            value={username}
+            onChange={(e) => {
+              console.warn('setUsername', e.target.value);
+              setUsername(e.target.value);
+            }}
+          ></Input>
         </Modal>
       </div>
     );

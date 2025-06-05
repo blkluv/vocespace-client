@@ -44,10 +44,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         components: {
           Dropdown: {
             colorBgElevated: '#1E1E1E',
-            controlItemBgHover: "#333",
-            colorTextDisabled: "#8c8c8c",
-            colorTextDescription: "#8c8c8c",
-            colorText: "#fff"
+            controlItemBgHover: '#333',
+            colorTextDisabled: '#8c8c8c',
+            colorTextDescription: '#8c8c8c',
+            colorText: '#fff',
           },
           Radio: {
             buttonBg: '#1E1E1E',
@@ -84,20 +84,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Popover: {
             colorBgElevated: '#1E1E1E',
           },
-          Modal : {
+          Modal: {
             contentBg: '#111111',
             headerBg: '#111111',
             footerBg: '#111111',
             titleColor: '#ffffff',
           },
           Avatar: {
-            groupBorderColor: "#22CCEE"
+            groupBorderColor: '#22CCEE',
           },
           List: {
             itemPadding: '4px 0',
             metaMarginBottom: '4px',
             colorSplit: '#8c8c8c',
-          }
+          },
         },
       }}
     >

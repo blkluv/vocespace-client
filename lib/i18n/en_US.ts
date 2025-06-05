@@ -113,6 +113,19 @@ export default {
         busy_desc: "Busy, user's video will be blurred, audio will be muted",
         offline: 'Away',
         offline_desc: "Away, user's video and audio will be turned off",
+        define: {
+          title: 'Custom state',
+          name: 'State name',
+          desc: 'State description',
+          icon: 'State icon',
+          placeholder: {
+            name: 'Please enter the state name',
+            desc: 'Please enter the state description',
+          },
+          save: 'Save state',
+          success: 'Create new state successfully',
+          fail: 'Failed to create new state',
+        },
       },
       define: {
         title: 'Custom Status',
