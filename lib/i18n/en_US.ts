@@ -41,9 +41,60 @@ export default {
     wave_msg: 'sent you a reminder!',
     full_user:
       'The room user has exceeded the limit and cannot join. You can join other rooms or inform the builder to upgrade your license to obtain more user slots.',
+    open: 'Open',
+  },
+  more: {
+    title: 'More',
     record: {
       start: 'Record',
       stop: 'Stop Recording',
+    },
+    participant: {
+      title: 'Participants',
+      manage: 'Manage Participants',
+      search: 'Search Participants',
+      manager: 'Manager',
+      invite: {
+        title: 'Invite Participants',
+        web: 'in Browser',
+        add: 'add into VoceSpace Room',
+        texts: [
+          'Invite you to join VoceSpace',
+          'Please click|copy the following link to',
+          'Please copy the following room name to',
+        ],
+        ok: 'Copy Invite',
+        cancel: 'Cancel',
+        link: 'Link',
+        room: 'Room Name',
+      },
+      set: {
+        invite: {
+          title: 'Participant Invite',
+          video: 'Invite to Enable Camera',
+          wave: 'Send a Reminder',
+          audio: 'Invite to Enable Microphone',
+          share: 'Invite to Share Screen',
+        },
+        control: {
+          title: 'Participant Control',
+          trans: 'Transfer Room Host',
+          change_name: 'Change Name',
+          mute: {
+            audio: 'Mute Microphone',
+            video: 'Turn Off Video',
+          },
+          volume: 'Volume Adjustment',
+          blur: {
+            video: 'Video Blur',
+            screen: 'Screen Blur',
+          },
+        },
+        safe: {
+          title: 'Safety',
+          remove: 'Remove Participant',
+        },
+      },
     },
   },
   settings: {
@@ -62,6 +113,19 @@ export default {
         busy_desc: "Busy, user's video will be blurred, audio will be muted",
         offline: 'Away',
         offline_desc: "Away, user's video and audio will be turned off",
+        define: {
+          title: 'Custom state',
+          name: 'State name',
+          desc: 'State description',
+          icon: 'State icon',
+          placeholder: {
+            name: 'Please enter the state name',
+            desc: 'Please enter the state description',
+          },
+          save: 'Save state',
+          success: 'Create new state successfully',
+          fail: 'Failed to create new state',
+        },
       },
       define: {
         title: 'Custom Status',
@@ -155,6 +219,8 @@ export default {
       enabled_e2ee: 'End-to-end encryption enabled',
       enter_room: 'Please enter the space name or link',
       virtual_loading: 'Loading virtual role, please wait...',
+      invite_device: 'Inviting you to enable:',
+      remove_participant: 'You have been removed from the room by the room host',
     },
     error: {
       virtual: {
@@ -239,12 +305,17 @@ export default {
     success: {
       device: {
         granted: 'Media permissions have been successfully granted.',
+        mute: {
+          audio: 'Audio-Microphone device muted',
+          video: 'Video-Camera device is turned off',
+        }
       },
       user: {
         username: {
           change: 'Username changed successfully',
         },
         lang: 'Language changed successfully',
+        transfer: 'You have been successfully transferred to the room host',
       },
     },
   },

@@ -41,9 +41,61 @@ export default {
     wave_msg: '向您发送了一条提醒!',
     full_user:
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
+    open: '开启',
+  },
+  more: {
+    title: '更多',
     record: {
       start: '录制',
       stop: '停止录制',
+    },
+    participant: {
+      title: '成员',
+      manage: '管理成员',
+      search: '搜索成员',
+      manager: '管理员',
+      invite: {
+        title: '邀请成员',
+        web: '浏览器中',
+        add: '加入 VoceSpace 房间',
+        texts: ['邀请您加入 VoceSpace', '请 点击|复制 以下链接到', '请复制以下房间名称到'],
+        ok: '复制邀请',
+        cancel: '取消',
+        link: '链接',
+        room: '房间名称',
+      },
+      set: {
+        invite: {
+          title: '成员邀请',
+          video: '邀请开启视频',
+          wave: '发送一条提醒',
+          audio: '邀请开启音频',
+          share: '邀请共享屏幕',
+        },
+        control: {
+          title: '成员控制',
+          trans: '转让房间主持人',
+          change_name: '修改名称',
+          mute: {
+            audio: '静音音频',
+            video: '关闭视频',
+          },
+          volume: '音量调节',
+          blur: {
+            video: '视频虚化',
+            screen: '屏幕虚化',
+          },
+        },
+        safe: {
+          title: '安全',
+          remove: {
+            title: '移除成员',
+            desc: '您确定要移除该成员吗？',
+            confirm: '确定移除',
+            cancel: '取消',
+          },
+        },
+      },
     },
   },
   settings: {
@@ -158,6 +210,8 @@ export default {
       enabled_e2ee: '启用端到端加密',
       enter_room: '请输入房间名或链接',
       virtual_loading: '虚拟形象加载中...',
+      invite_device: '邀请您开启:',
+      remove_participant: '您已被房间主持人移除房间',
     },
     error: {
       virtual: {
@@ -236,12 +290,17 @@ export default {
     success: {
       device: {
         granted: '已成功授予媒体权限。',
+        mute: {
+          audio: '音频-麦克风设备已静音',
+          video: '视频-摄像头设备已关闭',
+        },
       },
       user: {
         username: {
           change: '用户名修改成功',
         },
         lang: '语言修改成功',
+        transfer: '您已成功被转让为房间主持人',
       },
     },
   },

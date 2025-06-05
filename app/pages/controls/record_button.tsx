@@ -46,3 +46,4 @@ export function RecordButton({ showText = true }: { showText?: boolean }) {
     </>
   );
 }
+

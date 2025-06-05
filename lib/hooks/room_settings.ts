@@ -21,14 +21,15 @@ export interface ParticipantSettings {
 export interface RoomSettings {
   participants: {
     [participantId: string]: ParticipantSettings;
-  },
+  };
   status?: UserDefineStatus[];
+  ownerId: string;
 }
 
 const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export function useRoomSettings(roomId: string, participantId: string) {
-  const [settings, setSettings] = useState<RoomSettings>({participants:{}});
+  const [settings, setSettings] = useState<RoomSettings>({ participants: {}, ownerId: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -57,6 +58,32 @@ export function useRoomSettings(roomId: string, participantId: string) {
       setLoading(false);
     }
   }, [roomId]);
+
+  const updateOwnerId = useCallback(async (replacedId?: string) => {
+    const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        roomId,
+        participantId: replacedId || participantId,
+        trans: true,
+      }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const { ownerId } = await response.json();
+
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      ownerId: ownerId || prevSettings.ownerId,
+    }));
+
+    return true;
+  }, [participantId, roomId]);
 
   // 更新当前参与者设置
   const updateSettings = useCallback(
@@ -92,28 +119,31 @@ export function useRoomSettings(roomId: string, participantId: string) {
   );
 
   // 清除参与者设置（离开时）
-  const clearSettings = useCallback(async (id?: string) => {
-    if (!roomId || !participantId) return;
-    let removeId = id || participantId;
-    try {
-      const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-      url.searchParams.append('roomId', roomId);
-      url.searchParams.append('participantId', removeId);
-      await fetch(url.toString(), {
-        method: 'DELETE',
-      }).then(async (res) => {
-        if (res.ok) {
-          const data: { success: boolean; clearRoom?: string } = await res.json();
-          if (data.clearRoom && data.clearRoom !== '') {
-            socket.emit('clear_room_resources', { roomName: data.clearRoom });
-            console.warn("clear room resources", data.clearRoom);
+  const clearSettings = useCallback(
+    async (id?: string) => {
+      if (!roomId || !participantId) return;
+      let removeId = id || participantId;
+      try {
+        const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
+        url.searchParams.append('roomId', roomId);
+        url.searchParams.append('participantId', removeId);
+        await fetch(url.toString(), {
+          method: 'DELETE',
+        }).then(async (res) => {
+          if (res.ok) {
+            const data: { success: boolean; clearRoom?: string } = await res.json();
+            if (data.clearRoom && data.clearRoom !== '') {
+              socket.emit('clear_room_resources', { roomName: data.clearRoom });
+              console.warn('clear room resources', data.clearRoom);
+            }
           }
-        }
-      });
-    } catch (err) {
-      console.error('Error clearing settings:', err);
-    }
-  }, [roomId, participantId]);
+        });
+      } catch (err) {
+        console.error('Error clearing settings:', err);
+      }
+    },
+    [roomId, participantId],
+  );
 
   // useEffect(() => {
   //   console.log(settings);
@@ -127,5 +157,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
     updateSettings,
     fetchSettings,
     clearSettings,
+    updateOwnerId
   };
 }

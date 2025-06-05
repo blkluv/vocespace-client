@@ -118,7 +118,6 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 
 
 - [x] Docker部署
-- [ ] 视频流从setting和tile之间切换
 - [x] 视频加载两次（prejoin）video track
 - [x] Caddy 
 - [x] 自定义错误页面
@@ -135,3 +134,31 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 录屏保存本地
 - [ ] 模糊混用
 - [ ] 主持人功能(腾讯视频 参考)
+  - [x] 增加房间用户数据 (ownerId)
+  - [x] 房间首个用户作为主持人
+  - [ ] 主持人管理房间
+    - [x] 同步成员数据
+    - [x] 分离权限
+    - [x] 会议成员
+    - [x] 成员管理
+      - [x] 转让主持人
+      - [x] 修改名称
+      - [x] 静音
+      - [x] 关闭视频
+      - [x] 音量调节
+      - [x] 视频虚化
+      - [x] 屏幕虚化
+    - [x] 邀请
+      - [x] 视频
+      - [x] 音频
+      - [x] 屏幕
+      - [x] 提醒 wave hand
+    - [x] 安全
+      - [x] 移除用户
+    - [x] 搜索用户 + 用户首字母排序
+    - [x] 分享房间
+- [x] 优化进入prejoin时间
+- [x] 去除face-api.js模型
+- [x] 去除未使用资源
+- [ ] 去除用户部分搜索框上的分割线
+- [ ] 清理用户时，意外清理所有房间数据

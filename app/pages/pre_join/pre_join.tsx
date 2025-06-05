@@ -1,3 +1,5 @@
+'use client';
+
 import {
   MediaDeviceMenu,
   ParticipantPlaceholder,
@@ -88,7 +90,7 @@ export function PreJoin({
   useEffect(() => {
     setTimeout(() => {
       setLoading(false);
-    }, 1500);
+    }, 500);
   }, []);
 
   // Preview tracks -----------------------------------------------------------------------------------

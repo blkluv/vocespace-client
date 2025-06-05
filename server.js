@@ -44,14 +44,37 @@ app.prepare().then(() => {
     // - [socket: wave hand event to other user] -------------------------------------------------------------------------
     // - on: "wave"
     // - emit: "wave_response"
-    // - msg: { room: string, senderId: string, senderName: string, receiverId: string }
+    // - msg: { room: string, senderId: string, senderName: string, receiverId: string, socketId: string } see [`std::WsTo`]
     socket.on('wave', (msg) => {
-      socket.to(msg.socketId).emit('wave_response', {
-        room: msg.room,
-        senderId: msg.senderId,
-        senderName: msg.senderName,
-        receiverId: msg.receiverId,
-      });
+      socket.to(msg.socketId).emit('wave_response', msg);
+    });
+    // [socket: remove participant event] -------------------------------------------------------------------------------
+    // - on: "remove_participant"
+    // - emit: "remove_participant_response"
+    // - msg: { room: string, senderId: string, senderName: string, receiverId: string, socketId: string } see [`std::WsTo`]
+    socket.on('remove_participant', (msg) => {
+      socket.to(msg.socketId).emit('remove_participant_response', msg);
+    });
+    // [socket: invite open device event] --------------------------------------------------------------------------------
+    // - on: "invite_device"
+    // - emit: "invite_device_response"
+    // - msg: {
+    //    room: string,
+    //    socketId: string,
+    //    senderId: string,
+    //    senderName: string,
+    //    receiverId: string,
+    //    device: "camera" | "microphone" | "screen_share" see [`Track.Source`]
+    // } see [`std::WsInviteDevice`]
+    socket.on('invite_device', (msg) => {
+      socket.to(msg.socketId).emit('invite_device_response', msg);
+    });
+    // [socket: control participant event] -------------------------------------------------------------------------------
+    // - on: "control_participant"
+    // - emit: "control_participant_response"
+    // - msg: see [`std::WsControlParticipant`]
+    socket.on('control_participant', (msg) => {
+      socket.to(msg.socketId).emit('control_participant_response', msg);
     });
     // [socket: update user status event] --------------------------------------------------------------------------------
     // - on: "update_user_status"
