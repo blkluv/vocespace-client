@@ -91,6 +91,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         await updateSettings({
           name: room.localParticipant.name || room.localParticipant.identity,
           blur: uState.blur,
+          screenBlur: uState.screenBlur,
           volume: uState.volume,
           status: UserStatus.Online,
           socketId: socket.id,
@@ -304,6 +305,17 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 name: msg.username!,
               });
               messageApi.success(t('msg.success.user.username.change'));
+              socket.emit('update_user_status');
+              break;
+            }
+            case ControlType.MuteAudio: {
+              await room.localParticipant.setMicrophoneEnabled(false);
+              messageApi.success(t('msg.success.device.mute.audio'));
+              break;
+            }
+            case ControlType.MuteVideo: {
+              await room.localParticipant.setCameraEnabled(false);
+              messageApi.success(t('msg.success.device.mute.video'));
               break;
             }
           }
@@ -318,6 +330,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('new_user_status_response');
         socket.off('invite_device_response');
         socket.off('remove_participant_response');
+        socket.off('control_participant_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);

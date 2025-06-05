@@ -341,7 +341,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 </span>
               ),
               icon: <SvgResource type="audio_close" svgSize={16} />,
-              disabled: !isOwner && isMicDisabled,
+              disabled: !isOwner ? true : !isMicDisabled,
             },
             {
               key: 'control.mute_video',
@@ -351,7 +351,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 </span>
               ),
               icon: <SvgResource type="video_close" svgSize={16} />,
-              disabled: !isOwner && isCamDisabled,
+              disabled: !isOwner ? true : !isCamDisabled,
             },
             {
               key: 'control.volume',
@@ -541,6 +541,17 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             break;
           }
           case 'control.mute_audio': {
+            socket.emit('control_participant', {
+              ...wsTo,
+              type: ControlType.MuteAudio,
+            } as WsControlParticipant);
+            break;
+          }
+          case 'control.mute_video': {
+            socket.emit('control_participant', {
+              ...wsTo,
+              type: ControlType.MuteVideo,
+            } as WsControlParticipant);
             break;
           }
           default:
@@ -873,10 +884,18 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             setOpenNameModal(false);
           }}
           onOk={() => {
-            socket.emit('control_participant', {
-              type: ControlType.ChangeName,
-              username,
-            } as WsControlParticipant);
+            if (room && selectedParticipant) {
+              console.warn('setUsername', username);
+              socket.emit('control_participant', {
+                room: room.name,
+                senderName: room.localParticipant.name,
+                senderId: room.localParticipant.identity,
+                receiverId: selectedParticipant.identity,
+                socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+                type: ControlType.ChangeName,
+                username,
+              } as WsControlParticipant);
+            }
             setOpenNameModal(false);
           }}
         >

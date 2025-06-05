@@ -290,6 +290,10 @@ export default {
     success: {
       device: {
         granted: '已成功授予媒体权限。',
+        mute: {
+          audio: '音频-麦克风设备已静音',
+          video: '视频-摄像头设备已关闭',
+        }
       },
       user: {
         username: {
