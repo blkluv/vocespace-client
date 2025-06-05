@@ -305,12 +305,17 @@ export default {
     success: {
       device: {
         granted: 'Media permissions have been successfully granted.',
+        mute: {
+          audio: 'Audio-Microphone device muted',
+          video: 'Video-Camera device is turned off',
+        }
       },
       user: {
         username: {
           change: 'Username changed successfully',
         },
         lang: 'Language changed successfully',
+        transfer: 'You have been successfully transferred to the room host',
       },
     },
   },

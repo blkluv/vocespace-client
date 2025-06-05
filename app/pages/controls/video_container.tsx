@@ -79,10 +79,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [isFocus, setIsFocus] = useState(false);
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
     const router = useRouter();
-    const { settings, updateSettings, fetchSettings, clearSettings } = useRoomSettings(
-      room?.name || '', // 房间 ID
-      room?.localParticipant?.identity || '', // 参与者 ID
-    );
+    const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId } =
+      useRoomSettings(
+        room?.name || '', // 房间 ID
+        room?.localParticipant?.identity || '', // 参与者 ID
+      );
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
 
@@ -316,6 +317,47 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             case ControlType.MuteVideo: {
               await room.localParticipant.setCameraEnabled(false);
               messageApi.success(t('msg.success.device.mute.video'));
+              break;
+            }
+            case ControlType.Transfer: {
+              const success = await updateOwnerId(room.localParticipant.identity);
+              if (success) {
+                messageApi.success(t('msg.success.user.transfer'));
+              }
+              socket.emit('update_user_status');
+              break;
+            }
+            case ControlType.Volume: {
+              setUState((prev) => ({
+                ...prev,
+                volume: msg.volume!,
+              }));
+              await updateSettings({
+                volume: msg.volume!,
+              });
+              socket.emit('update_user_status');
+              break;
+            }
+            case ControlType.BlurVideo: {
+              setUState((prev) => ({
+                ...prev,
+                blur: msg.blur!,
+              }));
+              await updateSettings({
+                blur: msg.blur!,
+              });
+              socket.emit('update_user_status');
+              break;
+            }
+            case ControlType.BlurScreen: {
+              setUState((prev) => ({
+                ...prev,
+                screenBlur: msg.blur!,
+              }));
+              await updateSettings({
+                screenBlur: msg.blur!,
+              });
+              socket.emit('update_user_status');
               break;
             }
           }

@@ -59,6 +59,32 @@ export function useRoomSettings(roomId: string, participantId: string) {
     }
   }, [roomId]);
 
+  const updateOwnerId = useCallback(async (replacedId?: string) => {
+    const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        roomId,
+        participantId: replacedId || participantId,
+        trans: true,
+      }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const { ownerId } = await response.json();
+
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      ownerId: ownerId || prevSettings.ownerId,
+    }));
+
+    return true;
+  }, [participantId, roomId]);
+
   // 更新当前参与者设置
   const updateSettings = useCallback(
     async (newSettings: Partial<ParticipantSettings>) => {
@@ -131,5 +157,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
     updateSettings,
     fetchSettings,
     clearSettings,
+    updateOwnerId
   };
 }

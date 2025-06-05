@@ -293,13 +293,14 @@ export default {
         mute: {
           audio: '音频-麦克风设备已静音',
           video: '视频-摄像头设备已关闭',
-        }
+        },
       },
       user: {
         username: {
           change: '用户名修改成功',
         },
         lang: '语言修改成功',
+        transfer: '您已成功被转让为房间主持人',
       },
     },
   },

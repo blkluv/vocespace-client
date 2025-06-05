@@ -377,6 +377,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                       onChange={(e) => {
                         setVolume(e);
                       }}
+                      onChangeComplete={(e) => {
+                        setVolume(e);
+                        handleAdjustment('control.volume');
+                      }}
                     ></Slider>
                   </div>
                 </div>
@@ -406,6 +410,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                       value={blurVideo}
                       onChange={(e) => {
                         setBlurVideo(e);
+                      }}
+                      onChangeComplete={(e) => {
+                        setBlurVideo(e);
+                        handleAdjustment('control.blur_video');
                       }}
                     ></Slider>
                   </div>
@@ -437,7 +445,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                       onChange={(e) => {
                         setBlurScreen(e);
                       }}
-                      onChangeComplete={(e) => {}}
+                      onChangeComplete={(e) => {
+                        setBlurScreen(e);
+                        handleAdjustment('control.blur_screen');
+                      }}
                     ></Slider>
                   </div>
                 </div>
@@ -474,8 +485,40 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       blurScreen,
     ]);
 
+    const handleAdjustment = (
+      key: 'control.volume' | 'control.blur_video' | 'control.blur_screen',
+    ) => {
+      if (room?.localParticipant && selectedParticipant) {
+        let wsTo = {
+          room: room.name,
+          senderName: room.localParticipant.name,
+          senderId: room.localParticipant.identity,
+          receiverId: selectedParticipant.identity,
+          socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+        } as WsTo;
+        if (key === 'control.volume') {
+          socket.emit('control_participant', {
+            ...wsTo,
+            type: ControlType.Volume,
+            volume,
+          } as WsControlParticipant);
+        } else if (key === 'control.blur_video') {
+          socket.emit('control_participant', {
+            ...wsTo,
+            type: ControlType.BlurVideo,
+            blur: blurVideo,
+          } as WsControlParticipant);
+        } else if (key === 'control.blur_screen') {
+          socket.emit('control_participant', {
+            ...wsTo,
+            type: ControlType.BlurScreen,
+            blur: blurScreen,
+          } as WsControlParticipant);
+        }
+      }
+    };
+
     const handleOptClick: MenuProps['onClick'] = (e) => {
-      console.warn('handleOptClick', e);
       if (room?.localParticipant && selectedParticipant) {
         let device = Track.Source.Unknown;
         let wsTo = {
@@ -551,6 +594,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             socket.emit('control_participant', {
               ...wsTo,
               type: ControlType.MuteVideo,
+            } as WsControlParticipant);
+            break;
+          }
+          case 'control.trans': {
+            socket.emit('control_participant', {
+              ...wsTo,
+              type: ControlType.Transfer,
             } as WsControlParticipant);
             break;
           }

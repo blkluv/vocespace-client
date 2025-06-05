@@ -121,7 +121,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { roomId, participantId, settings } = body;
+    const { roomId, participantId, settings, trans } = body;
+    // 转让房间主持人
+    if (trans && roomId && participantId) {
+      // 检查房间是否存在
+      if (!roomSettings[roomId]) {
+        return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+      }
+      // 检查参与者是否存在
+      if (!roomSettings[roomId].participants[participantId]) {
+        return NextResponse.json({ error: 'Participant not found' }, { status: 404 });
+      }
+      // 更新房间主持人
+      roomSettings[roomId].ownerId = participantId;
+      return NextResponse.json({ success: true, ownerId: participantId }, { status: 200 });
+    }
 
     if (!roomId || !participantId || !settings) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
