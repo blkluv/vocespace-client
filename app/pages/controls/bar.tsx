@@ -32,11 +32,13 @@ import { Settings, SettingsExports, TabKey } from './settings';
 import { useRecoilState } from 'recoil';
 import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
-import { randomColor, src, UserStatus } from '@/lib/std';
+import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
 import { EnhancedChat } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
+
+const RECORD_URL = connect_endpoint('/api/record');
 
 /** @public */
 export type ControlBarControls = {
@@ -64,6 +66,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   setUserStatus: (status: UserStatus | string) => Promise<void>;
   roomSettings: RoomSettings;
   fetchSettings: () => Promise<void>;
+  updateRecord: (active: boolean, egressId?: string, filePath?: string) => Promise<boolean>;
 }
 
 export interface ControlBarExport {
@@ -97,6 +100,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setUserStatus,
       roomSettings,
       fetchSettings,
+      updateRecord,
       ...props
     }: ControlBarProps,
     ref,
@@ -631,6 +635,69 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     // [record] -----------------------------------------------------------------------------------------------------
     const [openRecordModal, setOpenRecordModal] = React.useState(false);
 
+    const isRecording = React.useMemo(() => {
+      return roomSettings.record.active;
+    }, [roomSettings.record.active]);
+
+    const sendRecordRequest = (data: {
+      room: string;
+      type: 'start' | 'stop';
+      egressId?: string;
+    }): Promise<Response> => {
+      const url = new URL(RECORD_URL, window.location.origin);
+      return fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+    };
+
+    const onClickRecord = async () => {
+      if (!room && isOwner) return;
+
+      if (!isRecording) {
+        setOpenRecordModal(true);
+      } else {
+        // 停止录制
+        if (roomSettings.record.egressId && roomSettings.record.egressId !== '') {
+          const response = await sendRecordRequest({
+            room: room!.name,
+            type: 'stop',
+            egressId: roomSettings.record.egressId,
+          });
+
+          if (!response.ok) {
+            let { error } = await response.json();
+            messageApi.error(error);
+          } else {
+            messageApi.success(t('msg.success.record_stop'));
+            await updateRecord(false);
+          }
+        }
+      }
+    };
+
+    const startRecord = async () => {
+      if (isRecording) return;
+
+      if (isOwner && room) {
+        const response = await sendRecordRequest({
+          room: room.name,
+          type: 'start',
+        });
+        if (!response.ok) {
+          let { error } = await response.json();
+          messageApi.error(error);
+        } else {
+          let { filePath, egressId } = await response.json();
+          messageApi.success(t('msg.success.record_start'));
+          await updateRecord(true, egressId, filePath);
+        }
+        
+      }
+    };
     return (
       <div {...htmlProps} className={styles.controls}>
         {contextHolder}
@@ -710,10 +777,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <MoreButton
             setOpenMore={setOpenMore}
             setMoreType={setMoreType}
-            setOpenRecord={setOpenRecordModal}
-            onClickManage={async () => {
-              await fetchSettings();
-            }}
+            onClickRecord={onClickRecord}
+            onClickManage={fetchSettings}
+            isRecording={isRecording}
           ></MoreButton>
         </div>
 
@@ -968,20 +1034,15 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         <Modal
           open={openRecordModal}
           title={t('more.record.title')}
-          okText={
-            isOwner ? t('more.record.confirm'): t('more.record.confirm_request')
-          }
+          okText={isOwner ? t('more.record.confirm') : t('more.record.confirm_request')}
           cancelText={t('more.record.cancel')}
           onCancel={() => setOpenRecordModal(false)}
-          onOk={() => {
-            setOpenRecordModal(false)
+          onOk={async () => {
+            await startRecord();
+            setOpenRecordModal(false);
           }}
         >
-          <div>
-            {
-              isOwner ? (t('more.record.desc')): (t('more.record.request'))
-            }
-          </div>
+          <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
         </Modal>
       </div>
     );

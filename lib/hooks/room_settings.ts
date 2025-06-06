@@ -24,12 +24,21 @@ export interface RoomSettings {
   };
   status?: UserDefineStatus[];
   ownerId: string;
+  record: {
+    egressId?: string;
+    filePath?: string;
+    active: boolean;
+  };
 }
 
 const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export function useRoomSettings(roomId: string, participantId: string) {
-  const [settings, setSettings] = useState<RoomSettings>({ participants: {}, ownerId: '' });
+  const [settings, setSettings] = useState<RoomSettings>({
+    participants: {},
+    ownerId: '',
+    record: { active: false },
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -59,31 +68,64 @@ export function useRoomSettings(roomId: string, participantId: string) {
     }
   }, [roomId]);
 
-  const updateOwnerId = useCallback(async (replacedId?: string) => {
-    const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        roomId,
-        participantId: replacedId || participantId,
-        trans: true,
-      }),
-    });
+  const updateRecord = useCallback(
+    async (active: boolean, egressId?: string, filePath?: string) => {
+      const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId,
+          record: {
+            active,
+            egressId,
+            filePath,
+          },
+        }),
+      });
 
-    if (!response.ok) {
-      return false;
-    }
+      if (!response.ok) {
+        return false;
+      }
+      const { record } = await response.json();
 
-    const { ownerId } = await response.json();
+      setSettings((prevSettings) => ({
+        ...prevSettings,
+        record,
+      }));
+      return true;
+    },
+    [participantId, roomId],
+  );
 
-    setSettings((prevSettings) => ({
-      ...prevSettings,
-      ownerId: ownerId || prevSettings.ownerId,
-    }));
+  const updateOwnerId = useCallback(
+    async (replacedId?: string) => {
+      const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId,
+          participantId: replacedId || participantId,
+          trans: true,
+        }),
+      });
 
-    return true;
-  }, [participantId, roomId]);
+      if (!response.ok) {
+        return false;
+      }
+
+      const { ownerId } = await response.json();
+
+      setSettings((prevSettings) => ({
+        ...prevSettings,
+        ownerId: ownerId || prevSettings.ownerId,
+      }));
+
+      return true;
+    },
+    [participantId, roomId],
+  );
 
   // 更新当前参与者设置
   const updateSettings = useCallback(
@@ -157,6 +199,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
     updateSettings,
     fetchSettings,
     clearSettings,
-    updateOwnerId
+    updateOwnerId,
+    updateRecord,
   };
 }

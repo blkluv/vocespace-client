@@ -7,9 +7,10 @@ import { useMemo, useState } from 'react';
 export interface MoreButtonProps {
   showText?: boolean;
   setOpenMore: (open: boolean) => void;
-  setOpenRecord: (open: boolean) => void;
+  isRecording: boolean;
   setMoreType: (type: 'record' | 'participant') => void;
-  onClickManage?: () => void;
+  onClickManage?: () => Promise<void>;
+  onClickRecord?: () => Promise<void>;
 }
 
 export function MoreButton({
@@ -17,7 +18,8 @@ export function MoreButton({
   setOpenMore,
   setMoreType,
   onClickManage,
-  setOpenRecord
+  onClickRecord,
+  isRecording = false,
 }: MoreButtonProps) {
   const { t } = useI18n();
 
@@ -33,9 +35,13 @@ export function MoreButton({
   const items: MenuProps['items'] = [
     // 录屏功能
     {
-      label: <div style={{ marginLeft: '8px' }}>{t('more.record.start')}</div>,
+      label: (
+        <div style={{ marginLeft: '8px' }}>
+          {!isRecording ? t('more.record.start') : t('more.record.stop')}
+        </div>
+      ),
       key: 'record',
-      icon: <SvgResource type="record" svgSize={16} />,
+      icon: <SvgResource type="record" svgSize={16} color={isRecording ? '#FF0000' : '#fff'} />,
     },
     // 参与者管理功能
     {
@@ -45,17 +51,19 @@ export function MoreButton({
     },
   ];
 
-  const handleMenuClick: MenuProps['onClick'] = (e) => {
+  const handleMenuClick: MenuProps['onClick'] = async (e) => {
     switch (e.key) {
       case 'record':
         // Handle record action
         setMoreType('record');
-        setOpenRecord(true);
+        if (onClickRecord) {
+          await onClickRecord();
+        }
         break;
       case 'participant':
         // Handle participant action
         if (onClickManage) {
-          onClickManage();
+          await onClickManage();
         }
         setMoreType('participant');
         setOpenMore(true);

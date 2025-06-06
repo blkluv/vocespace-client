@@ -79,7 +79,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [isFocus, setIsFocus] = useState(false);
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
     const router = useRouter();
-    const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId } =
+    const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId, updateRecord } =
       useRoomSettings(
         room?.name || '', // 房间 ID
         room?.localParticipant?.identity || '', // 参与者 ID
@@ -625,6 +625,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 updateSettings={updateSettings}
                 roomSettings={settings}
                 fetchSettings={fetchSettings}
+                updateRecord={updateRecord}
               ></Controls>
             </div>
             {SettingsComponent && (

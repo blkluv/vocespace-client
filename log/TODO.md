@@ -163,15 +163,17 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
   - [x] S3账号并构建存储桶
   - [ ] 录屏前端功能部分
-    - [ ] 录屏按钮
+    - [x] 录屏按钮
     - [ ] 录屏请求
-      - [ ] 主持人直接录屏
+      - [x] 主持人直接录屏
       - [ ] 参与者请求录屏，主持人同意进行录屏
       - [ ] 录屏通知其他人
-    - [ ] egress server部署
+    - [ ] 停止录屏
+    - [ ] 录屏数据同步
+    - [ ] 录屏数据记录到room-setting中
+    - [x] egress server部署
     - [ ] 后端服务
-      - [ ] 请求egress server
-      - [ ] 获取服务器参数 (预警，当服务器存储空间不足时 < 3G)
+      - [x] 请求egress server
       - [ ] 视频下载链接
       - [ ] 视频可下载周期，超过下载周期自动清理 (7天)
 - [ ] 清理用户时，意外清理所有房间数据 (暂未排查出原因)
