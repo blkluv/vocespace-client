@@ -53,7 +53,7 @@ export default {
       title: '成员',
       manage: '管理成员',
       search: '搜索成员',
-      manager: '管理员',
+      manager: '主持人',
       invite: {
         title: '邀请成员',
         web: '浏览器中',

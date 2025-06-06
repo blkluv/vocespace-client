@@ -52,7 +52,7 @@ export function StatusSelect({
     }
 
     return list;
-  }, [state.roomStatus]);
+  }, [state.roomStatus, t]);
 
   const selectActive = (active: string) => {
     setActive(active);

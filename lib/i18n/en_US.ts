@@ -53,7 +53,7 @@ export default {
       title: 'Participants',
       manage: 'Manage Participants',
       search: 'Search Participants',
-      manager: 'Manager',
+      manager: 'host',
       invite: {
         title: 'Invite Participants',
         web: 'in Browser',
