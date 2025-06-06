@@ -825,6 +825,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                   <List
                     itemLayout="horizontal"
                     dataSource={participantList}
+                    split={false}
                     renderItem={(item, index) => (
                       <List.Item>
                         <div className={styles.particepant_item}>
@@ -835,7 +836,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                                 backgroundColor: randomColor(item[1].name),
                               }}
                             >
-                              {item[1].name.substring(0, 2)}
+                              {item[1].name.substring(0, 3)}
                             </Avatar>
                             <span>{item[1].name}</span>
                             {roomSettings.ownerId !== '' && item[0] === roomSettings.ownerId && (
