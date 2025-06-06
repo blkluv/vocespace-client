@@ -628,6 +628,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       items: optItems,
       onClick: handleOptClick,
     };
+    // [record] -----------------------------------------------------------------------------------------------------
+    const [openRecordModal, setOpenRecordModal] = React.useState(false);
 
     return (
       <div {...htmlProps} className={styles.controls}>
@@ -708,7 +710,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <MoreButton
             setOpenMore={setOpenMore}
             setMoreType={setMoreType}
-            onClick={async () => {
+            setOpenRecord={setOpenRecordModal}
+            onClickManage={async () => {
               await fetchSettings();
             }}
           ></MoreButton>
@@ -885,6 +888,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             )}
           </div>
         </Drawer>
+        {/* ------------- share room modal -------------------------------------------------------- */}
         <Modal
           open={openShareModal}
           onCancel={() => setOpenShareModal(false)}
@@ -926,6 +930,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             </div>
           </div>
         </Modal>
+        {/* -------------- control participant name modal ---------------------------------------- */}
         <Modal
           open={openNameModal}
           title={t('more.participant.set.control.change_name')}
@@ -958,6 +963,25 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               setUsername(e.target.value);
             }}
           ></Input>
+        </Modal>
+        {/* ---------------- record modal ------------------------------------------------------- */}
+        <Modal
+          open={openRecordModal}
+          title={t('more.record.title')}
+          okText={
+            isOwner ? t('more.record.confirm'): t('more.record.confirm_request')
+          }
+          cancelText={t('more.record.cancel')}
+          onCancel={() => setOpenRecordModal(false)}
+          onOk={() => {
+            setOpenRecordModal(false)
+          }}
+        >
+          <div>
+            {
+              isOwner ? (t('more.record.desc')): (t('more.record.request'))
+            }
+          </div>
         </Modal>
       </div>
     );

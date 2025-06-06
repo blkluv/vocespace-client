@@ -48,6 +48,13 @@ export default {
     record: {
       start: '录制',
       stop: '停止录制',
+      title: '录制房间',
+      desc: 'VoceSpace 将会录制房间中的音频和视频。请注意，录制可能会影响性能。录制结束后，您将收到一条通知，包含录制文件的下载链接。',
+      request:
+        "由于您不是房间主持人，您无法直接进行录制，若您需要录制，请点击'请求录制'按钮，房间支持人将收到您的请求，若同意将会开启录制。",
+      confirm: '开始录制',
+      confirm_request: '请求录制',
+      cancel: '取消',
     },
     participant: {
       title: '成员',

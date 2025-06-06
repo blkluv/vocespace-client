@@ -85,9 +85,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             colorBgElevated: '#1E1E1E',
           },
           Modal: {
-            contentBg: '#111111',
-            headerBg: '#111111',
-            footerBg: '#111111',
+            contentBg: '#1E1E1E',
+            headerBg: '#1E1E1E',
+            footerBg: '#1E1E1E',
             titleColor: '#ffffff',
           },
           Avatar: {

@@ -81,9 +81,6 @@
 - [x] 更换压缩率较低的编解码器
 - [x] 调整chat时图片大小 = 文件大小
 - [x] 用户自定义状态，提供其他用户被选，其他用户只有可读，不可写 (socket)
-- [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
-- [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
-- [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 - [x] tradition环境进行速度缓慢
 - [x] video blur 预览
 - [x] 编辑用户名字图标，位置调整
@@ -94,7 +91,6 @@
 - [x] 持续遮罩当切换虚拟形象时
 - [x] 虚拟形象移除对比，保留None时blur的对比
 - [x] 首页骨架屏
-- [ ] 用户自定义虚拟形象: 用户提交虚拟形象图片 -> live2d cubism 自动处理 (代码尝试) -> 生成完整动画效果 + 模型数据 -> 存储 -> 返回
 - [x] 重连机制 -> webrtc turn
 - [x] 禁止输入框enter事件
 - [x] 状态点击事件
@@ -131,12 +127,11 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 
 - [x] 文件拖拽发送
 - [x] 多次接收文件
-- [ ] 录屏保存本地
 - [ ] 模糊混用
-- [ ] 主持人功能(腾讯视频 参考)
+- [x] 主持人功能(腾讯视频 参考)
   - [x] 增加房间用户数据 (ownerId)
   - [x] 房间首个用户作为主持人
-  - [ ] 主持人管理房间
+  - [x] 主持人管理房间
     - [x] 同步成员数据
     - [x] 分离权限
     - [x] 会议成员
@@ -161,8 +156,25 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] 去除face-api.js模型
 - [x] 去除未使用资源
 - [x] 去除用户部分搜索框上的分割线
-- [ ] 清理用户时，意外清理所有房间数据
 - [x] 主持人（host） -> 管理员
 - [x] 去除用户之间的分割线
 - [x] 头像名称 3个字母
 - [x] state i18n
+- [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
+  - [x] S3账号并构建存储桶
+  - [ ] 录屏前端功能部分
+    - [ ] 录屏按钮
+    - [ ] 录屏请求
+      - [ ] 主持人直接录屏
+      - [ ] 参与者请求录屏，主持人同意进行录屏
+      - [ ] 录屏通知其他人
+    - [ ] egress server部署
+    - [ ] 后端服务
+      - [ ] 请求egress server
+      - [ ] 获取服务器参数 (预警，当服务器存储空间不足时 < 3G)
+      - [ ] 视频下载链接
+      - [ ] 视频可下载周期，超过下载周期自动清理 (7天)
+- [ ] 清理用户时，意外清理所有房间数据 (暂未排查出原因)
+- [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
+- [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
+- [ ] 用户自定义虚拟形象: 用户提交虚拟形象图片 -> live2d cubism 自动处理 (代码尝试) -> 生成完整动画效果 + 模型数据 -> 存储 -> 返回
