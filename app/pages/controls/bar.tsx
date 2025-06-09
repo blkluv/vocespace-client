@@ -634,10 +634,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
     // [record] -----------------------------------------------------------------------------------------------------
     const [openRecordModal, setOpenRecordModal] = React.useState(false);
-
+    const [isDownload, setIsDownload] = React.useState(false);
     const isRecording = React.useMemo(() => {
+      console.warn('active:' + roomSettings.record.active);
       return roomSettings.record.active;
-    }, [roomSettings.record.active]);
+    }, [roomSettings.record]);
 
     const sendRecordRequest = (data: {
       room: string;
@@ -672,8 +673,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             let { error } = await response.json();
             messageApi.error(error);
           } else {
-            messageApi.success(t('msg.success.record_stop'));
+            messageApi.success(t('msg.success.record.stop'));
+            setIsDownload(true);
             await updateRecord(false);
+            setOpenRecordModal(true);
           }
         }
       }
@@ -691,13 +694,39 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           let { error } = await response.json();
           messageApi.error(error);
         } else {
-          let { filePath, egressId } = await response.json();
-          messageApi.success(t('msg.success.record_start'));
+          let { egressId, filePath } = await response.json();
           await updateRecord(true, egressId, filePath);
+          messageApi.success(t('msg.success.record.start'));
         }
-        
       }
     };
+
+    const recordModalOnOk = async () => {
+      if (isDownload) {
+        // copy link to clipboard
+        if (roomSettings.record.filePath) {
+          try {
+            await navigator.clipboard.writeText(roomSettings.record.filePath);
+            messageApi.success(t('msg.success.record.copy'));
+            setOpenRecordModal(false);
+          } catch (err) {
+            messageApi.error(t('msg.error.record.copy'));
+          }
+        }
+        setIsDownload(false);
+      } else {
+        await startRecord();
+        setOpenRecordModal(false);
+      }
+    };
+
+    const recordModalOnCancel = () => {
+      if (isDownload) {
+        setIsDownload(false);
+      }
+      setOpenRecordModal(false);
+    };
+
     return (
       <div {...htmlProps} className={styles.controls}>
         {contextHolder}
@@ -774,13 +803,15 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               setSettingVis(true);
             }}
           ></SettingToggle>
-          <MoreButton
-            setOpenMore={setOpenMore}
-            setMoreType={setMoreType}
-            onClickRecord={onClickRecord}
-            onClickManage={fetchSettings}
-            isRecording={isRecording}
-          ></MoreButton>
+          {room && roomSettings.participants && (
+            <MoreButton
+              setOpenMore={setOpenMore}
+              setMoreType={setMoreType}
+              onClickRecord={onClickRecord}
+              onClickManage={fetchSettings}
+              isRecording={isRecording}
+            ></MoreButton>
+          )}
         </div>
 
         {visibleControls.leave && (
@@ -1033,16 +1064,31 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         {/* ---------------- record modal ------------------------------------------------------- */}
         <Modal
           open={openRecordModal}
-          title={t('more.record.title')}
-          okText={isOwner ? t('more.record.confirm') : t('more.record.confirm_request')}
+          title={isDownload ? t('more.record.download') : t('more.record.title')}
+          okText={
+            isDownload
+              ? t('more.record.download')
+              : isOwner
+              ? t('more.record.confirm')
+              : t('more.record.confirm_request')
+          }
           cancelText={t('more.record.cancel')}
-          onCancel={() => setOpenRecordModal(false)}
-          onOk={async () => {
-            await startRecord();
-            setOpenRecordModal(false);
-          }}
+          onCancel={recordModalOnCancel}
+          onOk={recordModalOnOk}
         >
-          <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
+          {isDownload ? (
+            <div>
+              <div>{t('more.record.download_msg')}</div>
+              <div>
+                <span>{t('more.record.download_link')}:</span>
+                <a href={roomSettings.record.filePath} target="_blank">
+                  {roomSettings.record.filePath}
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
+          )}
         </Modal>
       </div>
     );

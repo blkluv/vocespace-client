@@ -55,6 +55,9 @@ export default {
       confirm: '开始录制',
       confirm_request: '请求录制',
       cancel: '取消',
+      download_msg: '录制已完成，您可以在以下链接下载录制文件或访问AWS S3存储桶。',
+      download: '下载录制文件',
+      download_link: '下载链接',
     },
     participant: {
       title: '成员',
@@ -221,6 +224,9 @@ export default {
       remove_participant: '您已被房间主持人移除房间',
     },
     error: {
+      record: {
+        copy: '录制链接复制失败',
+      },
       virtual: {
         video_stream: '虚拟摄像头流构建错误',
         model: '模型或视频不可用',
@@ -295,9 +301,13 @@ export default {
       },
     },
     success: {
+      record: {
+        start: '房间已经成功开启录制',
+        stop: '房间录制已成功停止, 10s后录制状态将移除',
+        copy: '录制链接已复制到剪贴板',
+      },
       device: {
         granted: '已成功授予媒体权限。',
-        record_stop: '已停止录制。',
         mute: {
           audio: '音频-麦克风设备已静音',
           video: '视频-摄像头设备已关闭',

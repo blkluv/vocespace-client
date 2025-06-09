@@ -48,6 +48,17 @@ export default {
     record: {
       start: 'Record',
       stop: 'Stop Recording',
+      title: 'Recording Room',
+      desc: 'VoceSpace will record the audio and video in the room. Please note that recording may affect performance. After the recording is completed, you will receive a notification with a download link for the recording file. ',
+      request:
+        "Since you are not the room host, you cannot record directly. If you need to record, please click the 'Request Recording' button. The room host will receive your request and will start recording if he agrees.",
+      confirm: 'Start recording',
+      confirm_request: 'Request recording',
+      cancel: 'Cancel',
+      download_msg:
+        'The recording is complete. You can download the recording file or access the AWS S3 bucket at the following link. ',
+      download: 'Download recording file',
+      download_link: 'Download link',
     },
     participant: {
       title: 'Participants',
@@ -223,6 +234,9 @@ export default {
       remove_participant: 'You have been removed from the room by the room host',
     },
     error: {
+      record: {
+        copy: 'Failed to copy the recording link',
+      },
       virtual: {
         video_stream: 'Virtual camera stream construction error',
         model: 'Model or video unavailable',
@@ -303,12 +317,17 @@ export default {
       },
     },
     success: {
+      record: {
+        start: 'The room has successfully started recording',
+        stop: 'The room recording has been successfully stopped. The recording status will be removed after 10 seconds.',
+        copy: 'Recording link copied to clipboard',
+      },
       device: {
         granted: 'Media permissions have been successfully granted.',
         mute: {
           audio: 'Audio-Microphone device muted',
           video: 'Video-Camera device is turned off',
-        }
+        },
       },
       user: {
         username: {

@@ -19,7 +19,7 @@ export function MoreButton({
   setMoreType,
   onClickManage,
   onClickRecord,
-  isRecording = false,
+  isRecording,
 }: MoreButtonProps) {
   const { t } = useI18n();
 
@@ -32,24 +32,26 @@ export function MoreButton({
     }
   }, [window.innerWidth]);
 
-  const items: MenuProps['items'] = [
-    // 录屏功能
-    {
-      label: (
-        <div style={{ marginLeft: '8px' }}>
-          {!isRecording ? t('more.record.start') : t('more.record.stop')}
-        </div>
-      ),
-      key: 'record',
-      icon: <SvgResource type="record" svgSize={16} color={isRecording ? '#FF0000' : '#fff'} />,
-    },
-    // 参与者管理功能
-    {
-      label: <div style={{ marginLeft: '8px' }}>{t('more.participant.title')}</div>,
-      key: 'participant',
-      icon: <SvgResource type="user" svgSize={16} />,
-    },
-  ];
+  const items: MenuProps['items'] = useMemo(() => {
+    return [
+      // 录屏功能
+      {
+        label: (
+          <div style={{ marginLeft: '8px' }}>
+            {!isRecording ? t('more.record.start') : t('more.record.stop')}
+          </div>
+        ),
+        key: 'record',
+        icon: <SvgResource type="record" svgSize={16} color={isRecording ? '#FF0000' : '#fff'} />,
+      },
+      // 参与者管理功能
+      {
+        label: <div style={{ marginLeft: '8px' }}>{t('more.participant.title')}</div>,
+        key: 'participant',
+        icon: <SvgResource type="user" svgSize={16} />,
+      },
+    ];
+  }, [isRecording]);
 
   const handleMenuClick: MenuProps['onClick'] = async (e) => {
     switch (e.key) {

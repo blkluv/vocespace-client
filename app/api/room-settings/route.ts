@@ -129,6 +129,7 @@ export async function POST(request: NextRequest) {
     const { roomId, participantId, settings, trans, record } = body;
     // 处理录制
     if (record && roomId) {
+      console.warn(roomSettings, roomId, record, roomSettings[roomId]);
       // 检查房间是否存在
       if (!roomSettings[roomId]) {
         return NextResponse.json({ error: 'Room not found' }, { status: 404 });

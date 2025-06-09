@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         {
-          filePath: fileOutput.filepath,
+          filePath: `s3://${S3_BUCKET}/${fileOutput.filepath}`,
           egressId: egressInfo.egressId,
         },
         { status: 200 },

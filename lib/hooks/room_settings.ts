@@ -88,7 +88,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
         return false;
       }
       const { record } = await response.json();
-
+      console.warn('update record', record);
       setSettings((prevSettings) => ({
         ...prevSettings,
         record,
