@@ -169,7 +169,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
       - [x] 参与者请求录屏，主持人同意进行录屏
       - [x] 录屏通知其他人
     - [x] 停止录屏
-    - [ ] 录屏数据同步
+    - [x] 录屏数据同步
     - [x] 录屏数据记录到room-setting中
     - [x] egress server部署
     - [ ] 后端服务

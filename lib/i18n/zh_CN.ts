@@ -42,6 +42,7 @@ export default {
     full_user:
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
     open: '开启',
+    email_placeholder: '请输入您的邮箱地址',
   },
   more: {
     title: '更多',
@@ -55,9 +56,8 @@ export default {
       confirm: '开始录制',
       confirm_request: '请求录制',
       cancel: '取消',
-      download_msg: '录制已完成，您可以在以下链接下载录制文件或访问AWS S3存储桶。',
+      download_msg: '录制已完成，正在传输至云端进行存储，请提交您的邮箱地址以在完成传输后获取下载链接。',
       download: '下载录制文件',
-      download_link: '下载链接',
     },
     participant: {
       title: '成员',
@@ -228,6 +228,9 @@ export default {
     error: {
       record: {
         copy: '录制链接复制失败',
+        email: {
+          empty: '邮箱地址不能为空',
+        }
       },
       virtual: {
         video_stream: '虚拟摄像头流构建错误',

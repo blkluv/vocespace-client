@@ -17,7 +17,26 @@ interface EgressBody {
   egressId?: string;
 }
 
+const isUndefinedString = (value: string | undefined): boolean => {
+  return value === undefined || value.trim() === '';
+};
+
 export async function POST(req: NextRequest) {
+  if (
+    isUndefinedString(LIVEKIT_API_KEY) ||
+    isUndefinedString(LIVEKIT_API_SECRET) ||
+    isUndefinedString(LIVEKIT_URL) ||
+    isUndefinedString(S3_ACCESS_KEY) ||
+    isUndefinedString(S3_SECRET_KEY) ||
+    isUndefinedString(S3_BUCKET) ||
+    isUndefinedString(S3_REGION)
+  ) {
+    return NextResponse.json(
+      { error: 'Environment variables are not set properly' },
+      { status: 500 },
+    );
+  }
+
   try {
     const { room, type, egressId }: EgressBody = await req.json();
     if (room === null) {
@@ -32,6 +51,7 @@ export async function POST(req: NextRequest) {
     const hostURL = 'https://vocespace.xyz';
 
     const egressClient = new EgressClient(hostURL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+
     if (type === 'start' && !egressId) {
       // check if the room egresses are already running
       const existingEgresses = await egressClient.listEgress({ roomName: room });
@@ -70,7 +90,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         {
-          filePath: `s3://${S3_BUCKET}/${fileOutput.filepath}`,
+          filePath: fileOutput.filepath,
           egressId: egressInfo.egressId,
         },
         { status: 200 },
@@ -91,7 +111,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     if (error instanceof Error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 }

@@ -638,6 +638,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     // [record] -----------------------------------------------------------------------------------------------------
     const [openRecordModal, setOpenRecordModal] = React.useState(false);
     const [isDownload, setIsDownload] = React.useState(false);
+    const [downloadEmail, setDownloadEmail] = React.useState<string>('');
     const isRecording = React.useMemo(() => {
       return roomSettings.record.active;
     }, [roomSettings.record]);
@@ -735,8 +736,29 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         // copy link to clipboard
         if (roomSettings.record.filePath) {
           try {
-            await navigator.clipboard.writeText(roomSettings.record.filePath);
-            messageApi.success(t('msg.success.record.copy'));
+            // submit email for download
+            if (downloadEmail === '') {
+              messageApi.error(t('msg.error.record.email.empty'));
+              return;
+            } else {
+              const url = 'https://space.voce.chat/api/s3/download_request';
+              const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  email: downloadEmail,
+                  key: roomSettings.record.filePath,
+                }),
+              });
+
+              if (!response.ok) {
+                let { error } = await response.json();
+                messageApi.error(error);
+              }
+            }
+
             setOpenRecordModal(false);
           } catch (err) {
             messageApi.error(t('msg.error.record.copy'));
@@ -1094,7 +1116,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           title={isDownload ? t('more.record.download') : t('more.record.title')}
           okText={
             isDownload
-              ? t('more.record.download')
+              ? t('common.confirm')
               : isOwner
               ? t('more.record.confirm')
               : t('more.record.confirm_request')
@@ -1106,12 +1128,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           {isDownload ? (
             <div>
               <div>{t('more.record.download_msg')}</div>
-              <div>
-                <span>{t('more.record.download_link')}:</span>
-                <a href={roomSettings.record.filePath} target="_blank">
-                  {roomSettings.record.filePath}
-                </a>
-              </div>
+              <Input
+                placeholder={t('common.email_placeholder')}
+                value={downloadEmail}
+                type="email"
+              ></Input>
             </div>
           ) : (
             <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
