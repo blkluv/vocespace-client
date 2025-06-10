@@ -182,4 +182,6 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 - [ ] 用户自定义虚拟形象: 用户提交虚拟形象图片 -> live2d cubism 自动处理 (代码尝试) -> 生成完整动画效果 + 模型数据 -> 存储 -> 返回
 - [ ] 录制时无法应用模糊 (录制是直接获取通道的，我们的模糊并没有替换视频而是css模糊)
-- [ ] Dashboard显示用户数据
+- [x] Dashboard显示用户数据
+  - [x] 当前活跃房间数据
+  - [ ] 历史使用记录
