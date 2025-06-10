@@ -232,6 +232,7 @@ export default {
       virtual_loading: 'Loading virtual role, please wait...',
       invite_device: 'Inviting you to enable:',
       remove_participant: 'You have been removed from the room by the room host',
+      req_record: 'Request to start recording',
     },
     error: {
       record: {

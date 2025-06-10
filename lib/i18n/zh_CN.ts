@@ -222,6 +222,8 @@ export default {
       virtual_loading: '虚拟形象加载中...',
       invite_device: '邀请您开启:',
       remove_participant: '您已被房间主持人移除房间',
+      req_record: '请求进行录制',
+      recording: "房间在10s后将开启录制，若您不希望被录制，可点击'离开房间'按钮退出。",
     },
     error: {
       record: {

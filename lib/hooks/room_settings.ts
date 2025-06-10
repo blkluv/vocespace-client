@@ -61,7 +61,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
       setSettings(data.settings || {});
       return data.settings || {};
     } catch (err) {
-      console.error('Error fetching room settings:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
@@ -88,7 +87,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
         return false;
       }
       const { record } = await response.json();
-      console.warn('update record', record);
+
       setSettings((prevSettings) => ({
         ...prevSettings,
         record,
@@ -152,7 +151,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
 
         return Boolean(data);
       } catch (err) {
-        console.error('Error updating settings:', err);
         setError(err instanceof Error ? err : new Error(String(err)));
         return false;
       }
@@ -176,7 +174,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
             const data: { success: boolean; clearRoom?: string } = await res.json();
             if (data.clearRoom && data.clearRoom !== '') {
               socket.emit('clear_room_resources', { roomName: data.clearRoom });
-              console.warn('clear room resources', data.clearRoom);
             }
           }
         });
@@ -186,10 +183,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
     },
     [roomId, participantId],
   );
-
-  // useEffect(() => {
-  //   console.log(settings);
-  // }, [settings]);
 
   return {
     settings,

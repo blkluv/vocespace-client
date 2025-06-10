@@ -162,12 +162,12 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] state i18n
 - [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
   - [x] S3账号并构建存储桶
-  - [ ] 录屏前端功能部分
+  - [x] 录屏前端功能部分
     - [x] 录屏按钮
-    - [ ] 录屏请求
+    - [x] 录屏请求
       - [x] 主持人直接录屏
-      - [ ] 参与者请求录屏，主持人同意进行录屏
-      - [ ] 录屏通知其他人
+      - [x] 参与者请求录屏，主持人同意进行录屏
+      - [x] 录屏通知其他人
     - [x] 停止录屏
     - [ ] 录屏数据同步
     - [x] 录屏数据记录到room-setting中
@@ -182,3 +182,4 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 - [ ] 用户自定义虚拟形象: 用户提交虚拟形象图片 -> live2d cubism 自动处理 (代码尝试) -> 生成完整动画效果 + 模型数据 -> 存储 -> 返回
 - [ ] 录制时无法应用模糊 (录制是直接获取通道的，我们的模糊并没有替换视频而是css模糊)
+- [ ] Dashboard显示用户数据

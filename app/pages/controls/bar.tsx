@@ -374,6 +374,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                     }}
                   >
                     <Slider
+                      disabled={!isOwner}
                       min={0.0}
                       max={100.0}
                       step={1.0}
@@ -408,6 +409,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                     }}
                   >
                     <Slider
+                      disabled={!isOwner}
                       min={0.0}
                       max={1.0}
                       step={0.05}
@@ -442,6 +444,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                     }}
                   >
                     <Slider
+                      disabled={!isOwner}
                       min={0.0}
                       max={1.0}
                       step={0.05}
@@ -492,7 +495,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const handleAdjustment = (
       key: 'control.volume' | 'control.blur_video' | 'control.blur_screen',
     ) => {
-      if (room?.localParticipant && selectedParticipant) {
+      if (room?.localParticipant && selectedParticipant && isOwner) {
         let wsTo = {
           room: room.name,
           senderName: room.localParticipant.name,
@@ -636,7 +639,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [openRecordModal, setOpenRecordModal] = React.useState(false);
     const [isDownload, setIsDownload] = React.useState(false);
     const isRecording = React.useMemo(() => {
-      console.warn('active:' + roomSettings.record.active);
       return roomSettings.record.active;
     }, [roomSettings.record]);
 
@@ -683,9 +685,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
 
     const startRecord = async () => {
-      if (isRecording) return;
+      if (isRecording || !room) return;
 
-      if (isOwner && room) {
+      if (isOwner) {
+        // host request to start recording
         const response = await sendRecordRequest({
           room: room.name,
           type: 'start',
@@ -695,9 +698,35 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           messageApi.error(error);
         } else {
           let { egressId, filePath } = await response.json();
-          await updateRecord(true, egressId, filePath);
           messageApi.success(t('msg.success.record.start'));
+          const res = await updateRecord(true, egressId, filePath);
+          console.warn(res);
+          // 这里有可能是房间数据出现问题，需要让所有参与者重新提供数据并重新updateRecord
+          if (!res) {
+            console.error('Failed to update record settings');
+            socket.emit('refetch_room', {
+              room: room.name,
+              record: {
+                active: true,
+                egressId,
+                filePath,
+              },
+            });
+          }
+          socket.emit('recording', {
+            room: room.name,
+          });
         }
+        console.warn(roomSettings);
+      } else {
+        // participant request to start recording
+        socket.emit('req_record', {
+          room: room.name,
+          senderName: room.localParticipant.name,
+          senderId: room.localParticipant.identity,
+          receiverId: roomSettings.ownerId,
+          socketId: roomSettings.participants[roomSettings.ownerId].socketId,
+        } as WsTo);
       }
     };
 
@@ -1038,7 +1067,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           }}
           onOk={() => {
             if (room && selectedParticipant) {
-              console.warn('setUsername', username);
               socket.emit('control_participant', {
                 room: room.name,
                 senderName: room.localParticipant.name,
@@ -1056,7 +1084,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             placeholder={t('settings.general.username')}
             value={username}
             onChange={(e) => {
-              console.warn('setUsername', e.target.value);
               setUsername(e.target.value);
             }}
           ></Input>

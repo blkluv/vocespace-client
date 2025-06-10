@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
           }),
         },
       });
-      console.warn(fileOutput);
+
       const egressInfo = await egressClient.startRoomCompositeEgress(
         room,
         {

@@ -54,7 +54,6 @@ export interface VideoContainerExports {
   removeLocalSettings: () => Promise<void>;
 }
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
-const ROOM_API_URL = connect_endpoint('/api/room');
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
   (
     {
@@ -85,7 +84,16 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room?.localParticipant?.identity || '', // 参与者 ID
       );
     useEffect(() => {
-      if (!room || room.state !== ConnectionState.Connected) return;
+      if (!room) return;
+      if (
+        room.state === ConnectionState.Connecting ||
+        room.state === ConnectionState.Reconnecting
+      ) {
+        setInit(true);
+        return;
+      } else if (room.state !== ConnectionState.Connected) {
+        return;
+      }
 
       const syncSettings = async () => {
         // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
@@ -105,6 +113,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
 
       if (init) {
+        console.warn('VideoContainer init');
         syncSettings().then(() => {
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
           socket.emit('update_user_status');
@@ -363,6 +372,54 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           }
         }
       });
+      // [参与者请求主持人录屏] ---------------------------------------------------
+      socket.on('req_record_response', (msg: WsTo) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          noteApi.info({
+            message: `${msg.senderName} ${t('msg.info.req_record')}`,
+            duration: 5,
+          });
+        }
+      });
+      // [主持人进行了录屏，询问参会者是否还要呆在房间] -----------------------------------
+      socket.on('recording_response', (msg: { room: string }) => {
+        if (msg.room === room.name) {
+          noteApi.warning({
+            message: t('msg.info.recording'),
+            btn: (
+              <Button
+                color="danger"
+                size="small"
+                onClick={async () => {
+                  await onParticipantDisConnected(room.localParticipant);
+                  room.disconnect(true);
+                  router.push('/');
+                  socket.emit('update_user_status');
+                }}
+              >
+                {t('common.leave')}
+              </Button>
+            ),
+          });
+        }
+      });
+      // [重新fetch room，这里有可能是因为房间初始化设置时出现问题] ------------------------
+      socket.on(
+        'refetch_room_response',
+        async (msg: {
+          room: string;
+          reocrd: {
+            active: boolean;
+            egressId: string;
+            filePath: string;
+          };
+        }) => {
+          if (msg.room === room.name) {
+            await syncSettings();
+            socket.emit('update_user_status');
+          }
+        },
+      );
 
       return () => {
         socket.off('wave_response');
@@ -373,6 +430,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('invite_device_response');
         socket.off('remove_participant_response');
         socket.off('control_participant_response');
+        socket.off('req_record_response');
+        socket.off('recording_response');
+        socket.off('refetch_room_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
