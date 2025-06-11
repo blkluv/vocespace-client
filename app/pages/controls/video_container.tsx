@@ -104,6 +104,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           volume: uState.volume,
           status: UserStatus.Online,
           socketId: socket.id,
+          startAt: new Date().getTime(),
           virtual: {
             enabled: false,
             role: ModelRole.None,

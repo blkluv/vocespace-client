@@ -8,32 +8,14 @@ import styles from '@/styles/dashboard.module.scss';
 
 const { Title } = Typography;
 
-interface Participant {
-  name: string;
-  volume: number;
-  blur: number;
-  screenBlur: number;
-  status: string;
-  socketId: string;
-  virtual: {
-    role: string;
-    bg: string;
-    enabled: boolean;
-  };
-}
-
-interface RoomData {
-  roomId: string;
-  participants: {
-    [participantId: string]: Participant;
-  };
-  ownerId: string;
-  record: {
-    egressId?: string;
-    filePath?: string;
-    active: boolean;
-  };
-}
+const countDuring = (startAt: number): string => {
+  if (!startAt) return '0m';
+  const now = Date.now();
+  const duration = Math.floor((now - startAt) / 1000); // 秒
+  const hours = Math.floor(duration / 3600);
+  const minutes = Math.floor((duration % 3600) / 60);
+  return `${hours}h ${minutes}m`;
+};
 
 interface ParticipantTableData {
   key: string;
@@ -47,6 +29,7 @@ interface ParticipantTableData {
   isOwner: boolean;
   isRecording: boolean;
   virtualEnabled: boolean;
+  during: string;
 }
 
 interface HistoryRoomData {
@@ -99,6 +82,7 @@ export default function Dashboard() {
                   isOwner: roomData.ownerId === participantId,
                   isRecording: roomData.record?.active || false,
                   virtualEnabled: participant.virtual?.enabled || false,
+                  during: countDuring(participant.startAt),
                 });
               },
             );
@@ -162,7 +146,7 @@ export default function Dashboard() {
       title: '房间',
       dataIndex: 'roomId',
       key: 'roomId',
-      width: 200,
+      width: 120,
       render: (roomId: string, record) => (
         <Space>
           <span>{roomId}</span>
@@ -192,37 +176,47 @@ export default function Dashboard() {
       render: (status: string) => <Tag color="blue">{status}</Tag>,
     },
     {
-      title: '音量',
+      title: (
+        <div className={styles.table_header}>
+          <SvgResource type="volume" svgSize={16} color="#ffffff"></SvgResource>音量
+        </div>
+      ),
       dataIndex: 'volume',
       key: 'volume',
       width: 80,
       render: (volume: number) => (
         <Space align="center">
-          <SvgResource type="volume" svgSize={16} color="#ffffff"></SvgResource>
           <span>{volume}%</span>
         </Space>
       ),
     },
     {
-      title: '视频模糊',
+      title: (
+        <div className={styles.table_header}>
+          <SvgResource type="blur" svgSize={16} color="#ffffff"></SvgResource>视频模糊
+        </div>
+      ),
       dataIndex: 'blur',
       key: 'blur',
       width: 100,
       render: (blur: number) => (
         <Space align="center">
-          <SvgResource type="blur" svgSize={16} color="#ffffff"></SvgResource>
           <span>{blur * 100}%</span>
         </Space>
       ),
     },
     {
-      title: '屏幕模糊',
+      title: (
+        <div className={styles.table_header}>
+          <SvgResource type="blur" svgSize={16} color="#ffffff"></SvgResource>屏幕模糊
+        </div>
+      ),
       dataIndex: 'screenBlur',
       key: 'screenBlur',
       width: 100,
+
       render: (screenBlur: number) => (
         <Space align="center">
-          <SvgResource type="blur" svgSize={16} color="#ffffff"></SvgResource>
           <span>{screenBlur * 100}%</span>
         </Space>
       ),
@@ -237,10 +231,10 @@ export default function Dashboard() {
       ),
     },
     {
-      title: '参与者ID',
-      dataIndex: 'participantId',
-      key: 'participantId',
-      width: 200,
+      title: '参会时长',
+      dataIndex: 'during',
+      key: 'during',
+      width: 100,
       ellipsis: true,
     },
   ];

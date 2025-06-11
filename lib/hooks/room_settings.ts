@@ -11,6 +11,7 @@ export interface ParticipantSettings {
   screenBlur: number;
   status: UserStatus | string;
   socketId: string;
+  startAt: number;
   virtual: {
     role: ModelRole;
     bg: ModelBg;
