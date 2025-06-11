@@ -185,3 +185,9 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] Dashboard显示用户数据
   - [x] 当前活跃房间数据
   - [ ] 历史使用记录
+  - [ ] 2个域 (space.voce.chat, meeting.vocespace.com)
+- [ ] 统一主题
+  - [ ] 鼠标
+  - [ ] device 按钮
+  - [ ] 录屏
+  - [ ] leave按钮

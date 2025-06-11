@@ -29,7 +29,28 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#070707',
+  themeColor: '#101828',
+};
+
+const neutral = {
+  25: '#FCFCFD',
+  50: '#F9FAFB',
+  100: '#F2F4F7',
+  200: '#EAECF0',
+  300: '#D0D5DD',
+  400: '#98A2B3',
+  500: '#667085',
+  600: '#475467',
+  700: '#344054',
+  800: '#1D2939',
+  900: '#101828',
+};
+
+const brand = {
+  primary: '#06AED4',
+  primaryHover: '#22CCEE', 
+  primaryActive: '#22CCEE', 
+  primaryText: '#fff',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -39,9 +60,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         token: {
           colorPrimary: '#22CCEE',
           borderRadius: 4,
-          colorText: '#8c8c8c',
+          colorText: brand.primaryText,
         },
         components: {
+          Button: {
+            defaultColor: '#8c8c8c'
+          },
           Dropdown: {
             colorBgElevated: '#1E1E1E',
             controlItemBgHover: '#333',
@@ -98,6 +122,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             metaMarginBottom: '4px',
             colorSplit: '#8c8c8c',
           },
+          Card: {
+            colorBgContainer: '#1E1E1E',
+            colorBorder: '#1E1E1E',
+            colorBorderBg: '#1E1E1E',
+            colorBorderSecondary : '#1E1E1E',
+            colorText: brand.primaryText
+          },
+          Statistic: {
+            colorText: brand.primaryText,
+            colorTextDescription: brand.primaryText,
+          },
+          Table: {
+            bodySortBg: '#1E1E1E',
+            headerBg: '#2c2c2c',
+            footerBg: '#1E1E1E',
+            colorBgContainer: '#1E1E1E',
+
+          }
         },
       }}
     >

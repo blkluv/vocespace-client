@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Card, Badge, Tag, Button, Space, Typography, Statistic, Row, Col } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SvgResource } from '../resources/svg';
+import styles from '@/styles/dashboard.module.scss';
 
 const { Title } = Typography;
 
@@ -166,7 +167,7 @@ export default function Dashboard() {
         <Space>
           <span>{roomId}</span>
           {record.isRecording && (
-            <SvgResource type="record" svgSize={16} color="#22CCEE"></SvgResource>
+            <SvgResource type="record" svgSize={16} color="#ffffff"></SvgResource>
           )}
         </Space>
       ),
@@ -197,7 +198,7 @@ export default function Dashboard() {
       width: 80,
       render: (volume: number) => (
         <Space align="center">
-          <SvgResource type="volume" svgSize={16} color="#22CCEE"></SvgResource>
+          <SvgResource type="volume" svgSize={16} color="#ffffff"></SvgResource>
           <span>{volume}%</span>
         </Space>
       ),
@@ -209,7 +210,7 @@ export default function Dashboard() {
       width: 100,
       render: (blur: number) => (
         <Space align="center">
-          <SvgResource type="blur" svgSize={16} color="#22CCEE"></SvgResource>
+          <SvgResource type="blur" svgSize={16} color="#ffffff"></SvgResource>
           <span>{blur * 100}%</span>
         </Space>
       ),
@@ -221,7 +222,7 @@ export default function Dashboard() {
       width: 100,
       render: (screenBlur: number) => (
         <Space align="center">
-          <SvgResource type="blur" svgSize={16} color="#22CCEE"></SvgResource>
+          <SvgResource type="blur" svgSize={16} color="#ffffff"></SvgResource>
           <span>{screenBlur * 100}%</span>
         </Space>
       ),
@@ -288,7 +289,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div style={{ padding: 24, background: '#f0f2f5', minHeight: '100vh', overflow: 'scroll' }}>
+    <div className={styles.container}>
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>VoceSpace Dashboard</Title>
         <Row gutter={16} style={{ marginBottom: 24 }}>
@@ -302,7 +303,7 @@ export default function Dashboard() {
               <Statistic
                 title="在线参与者"
                 value={totalParticipants}
-                prefix={<SvgResource type="user_add" svgSize={16} color="#22CCEE"></SvgResource>}
+                prefix={<SvgResource type="user" svgSize={16} color="#ffffff"></SvgResource>}
               />
             </Card>
           </Col>
@@ -311,7 +312,7 @@ export default function Dashboard() {
               <Statistic
                 title="活跃录制"
                 value={activeRecordings}
-                prefix={<SvgResource type="record" svgSize={16} color="#22CCEE"></SvgResource>}
+                prefix={<SvgResource type="record" svgSize={16} color="#ffffff"></SvgResource>}
                 valueStyle={{ color: activeRecordings > 0 ? '#cf1322' : undefined }}
               />
             </Card>
@@ -333,7 +334,7 @@ export default function Dashboard() {
         style={{ marginBottom: 24 }}
         extra={
           <Badge count={totalParticipants} showZero>
-            <SvgResource type="user" svgSize={16} color="#22CCEE" />
+            <SvgResource type="user" svgSize={16} color="#ffffff" />
           </Badge>
         }
       >
