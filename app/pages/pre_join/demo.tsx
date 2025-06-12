@@ -5,7 +5,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import styles from '@/styles/Home.module.css';
-import { Input, message, Radio } from 'antd';
+import { Button, Input, message, Radio } from 'antd';
 import { CheckboxGroupProps } from 'antd/es/checkbox';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { MessageInstance } from 'antd/es/message/interface';
@@ -83,9 +83,9 @@ export function DemoMeetingTab() {
           }}
         />
       )}
-      <button className="lk-button" onClick={startMeeting}>
+      <Button size='large' type="primary" onClick={startMeeting}>
         {t('common.start_metting')}
-      </button>
+      </Button>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
           <input

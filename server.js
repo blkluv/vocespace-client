@@ -69,6 +69,20 @@ app.prepare().then(() => {
     socket.on('invite_device', (msg) => {
       socket.to(msg.socketId).emit('invite_device_response', msg);
     });
+    // [socket: ask host to record room] ---------------------------------------------------------------------------------
+    // - on: "req_record"
+    // - emit: "req_record_response"
+    // - msg: see [`std::WsReqHost` extends [`std::WsTo`]]
+    socket.on('req_record', (msg) => {
+      socket.to(msg.socketId).emit('req_record_response', msg);
+    });
+    // [socket: ask other participant to record room] --------------------------------------------------------------------
+    // - on: "recording"
+    // - emit: "recording_response"
+    // - msg: {room: string}
+    socket.on('recording', (msg) => {
+      socket.broadcast.emit('recording_response', msg);
+    });
     // [socket: control participant event] -------------------------------------------------------------------------------
     // - on: "control_participant"
     // - emit: "control_participant_response"
@@ -82,6 +96,13 @@ app.prepare().then(() => {
     // - msg: _
     socket.on('update_user_status', () => {
       socket.broadcast.emit('user_status_updated');
+    });
+    // [socket: refetch room] --------------------------------------------------------------------------------------------
+    // - on: "refetch_room"
+    // - emit: "refetch_room_response"
+    socket.on('refetch_room', (msg) => {
+      // 广播给所有用户包括自己
+      io.emit('refetch_room_response', msg);
     });
     // [socket: mouse move event] ----------------------------------------------------------------------------------------
     // - on: "mouse_move"

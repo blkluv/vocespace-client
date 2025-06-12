@@ -10,6 +10,7 @@ interface Participant {
   screenBlur: number;
   status: UserStatus | string;
   socketId: string;
+  startAt: number;
   virtual: {
     role: ModelRole;
     bg: ModelBg;
@@ -25,6 +26,11 @@ interface RoomSettings {
     };
     status?: Status[];
     ownerId: string;
+    record: {
+      egressId?: string;
+      filePath?: string;
+      active: boolean;
+    };
   };
 }
 
@@ -121,7 +127,26 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { roomId, participantId, settings, trans } = body;
+    const { roomId, participantId, settings, trans, record } = body;
+    // 处理录制
+    if (record && roomId) {
+      console.warn(roomSettings, roomId, record, roomSettings[roomId]);
+      // 检查房间是否存在
+      if (!roomSettings[roomId]) {
+        return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+      }
+      // 更新录制设置
+      roomSettings[roomId].record = {
+        ...roomSettings[roomId].record,
+        ...record,
+      };
+      console.log(`Updated record settings for room ${roomId}:`, record);
+      return NextResponse.json(
+        { success: true, record: roomSettings[roomId].record },
+        { status: 200 },
+      );
+    }
+
     // 转让房间主持人
     if (trans && roomId && participantId) {
       // 检查房间是否存在
@@ -143,7 +168,11 @@ export async function POST(request: NextRequest) {
 
     // 初始化房间设置（如果不存在）
     if (!roomSettings[roomId]) {
-      roomSettings[roomId] = { participants: {}, ownerId: participantId };
+      roomSettings[roomId] = {
+        participants: {},
+        ownerId: participantId,
+        record: { active: false },
+      };
     }
 
     // 更新参与者设置

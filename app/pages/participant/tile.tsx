@@ -438,7 +438,7 @@ export const ParticipantItem: (
           </div>
         ),
       }));
-    }, [uState.roomStatus]);
+    }, [uState.roomStatus, t]);
     const defineStatus = useMemo(() => {
       return uState.roomStatus.find(
         (item) => item.id === settings.participants[trackReference.participant.identity]?.status,

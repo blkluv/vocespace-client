@@ -32,11 +32,13 @@ import { Settings, SettingsExports, TabKey } from './settings';
 import { useRecoilState } from 'recoil';
 import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
-import { randomColor, src, UserStatus } from '@/lib/std';
+import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
 import { EnhancedChat } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
+
+const RECORD_URL = connect_endpoint('/api/record');
 
 /** @public */
 export type ControlBarControls = {
@@ -64,6 +66,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   setUserStatus: (status: UserStatus | string) => Promise<void>;
   roomSettings: RoomSettings;
   fetchSettings: () => Promise<void>;
+  updateRecord: (active: boolean, egressId?: string, filePath?: string) => Promise<boolean>;
 }
 
 export interface ControlBarExport {
@@ -97,6 +100,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setUserStatus,
       roomSettings,
       fetchSettings,
+      updateRecord,
       ...props
     }: ControlBarProps,
     ref,
@@ -370,6 +374,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                     }}
                   >
                     <Slider
+                      disabled={!isOwner}
                       min={0.0}
                       max={100.0}
                       step={1.0}
@@ -404,6 +409,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                     }}
                   >
                     <Slider
+                      disabled={!isOwner}
                       min={0.0}
                       max={1.0}
                       step={0.05}
@@ -438,6 +444,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                     }}
                   >
                     <Slider
+                      disabled={!isOwner}
                       min={0.0}
                       max={1.0}
                       step={0.05}
@@ -488,7 +495,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const handleAdjustment = (
       key: 'control.volume' | 'control.blur_video' | 'control.blur_screen',
     ) => {
-      if (room?.localParticipant && selectedParticipant) {
+      if (room?.localParticipant && selectedParticipant && isOwner) {
         let wsTo = {
           room: room.name,
           senderName: room.localParticipant.name,
@@ -628,6 +635,148 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       items: optItems,
       onClick: handleOptClick,
     };
+    // [record] -----------------------------------------------------------------------------------------------------
+    const [openRecordModal, setOpenRecordModal] = React.useState(false);
+    const [isDownload, setIsDownload] = React.useState(false);
+    const [downloadEmail, setDownloadEmail] = React.useState<string>('');
+    const isRecording = React.useMemo(() => {
+      return roomSettings.record.active;
+    }, [roomSettings.record]);
+
+    const sendRecordRequest = (data: {
+      room: string;
+      type: 'start' | 'stop';
+      egressId?: string;
+    }): Promise<Response> => {
+      const url = new URL(RECORD_URL, window.location.origin);
+      return fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+    };
+
+    const onClickRecord = async () => {
+      if (!room && isOwner) return;
+
+      if (!isRecording) {
+        setOpenRecordModal(true);
+      } else {
+        // 停止录制
+        if (roomSettings.record.egressId && roomSettings.record.egressId !== '') {
+          const response = await sendRecordRequest({
+            room: room!.name,
+            type: 'stop',
+            egressId: roomSettings.record.egressId,
+          });
+
+          if (!response.ok) {
+            let { error } = await response.json();
+            messageApi.error(error);
+          } else {
+            messageApi.success(t('msg.success.record.stop'));
+            setIsDownload(true);
+            await updateRecord(false);
+            setOpenRecordModal(true);
+          }
+        }
+      }
+    };
+
+    const startRecord = async () => {
+      if (isRecording || !room) return;
+
+      if (isOwner) {
+        // host request to start recording
+        const response = await sendRecordRequest({
+          room: room.name,
+          type: 'start',
+        });
+        if (!response.ok) {
+          let { error } = await response.json();
+          messageApi.error(error);
+        } else {
+          let { egressId, filePath } = await response.json();
+          messageApi.success(t('msg.success.record.start'));
+          const res = await updateRecord(true, egressId, filePath);
+          console.warn(res);
+          // 这里有可能是房间数据出现问题，需要让所有参与者重新提供数据并重新updateRecord
+          if (!res) {
+            console.error('Failed to update record settings');
+            socket.emit('refetch_room', {
+              room: room.name,
+              record: {
+                active: true,
+                egressId,
+                filePath,
+              },
+            });
+          }
+          socket.emit('recording', {
+            room: room.name,
+          });
+        }
+        console.warn(roomSettings);
+      } else {
+        // participant request to start recording
+        socket.emit('req_record', {
+          room: room.name,
+          senderName: room.localParticipant.name,
+          senderId: room.localParticipant.identity,
+          receiverId: roomSettings.ownerId,
+          socketId: roomSettings.participants[roomSettings.ownerId].socketId,
+        } as WsTo);
+      }
+    };
+
+    const recordModalOnOk = async () => {
+      if (isDownload) {
+        // copy link to clipboard
+        if (roomSettings.record.filePath) {
+          try {
+            // submit email for download
+            if (downloadEmail === '') {
+              messageApi.error(t('msg.error.record.email.empty'));
+              return;
+            } else {
+              const url = 'https://space.voce.chat/api/s3/download_request';
+              const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  email: downloadEmail,
+                  key: roomSettings.record.filePath,
+                }),
+              });
+
+              if (!response.ok) {
+                let { error } = await response.json();
+                messageApi.error(error);
+              }
+            }
+
+            setOpenRecordModal(false);
+          } catch (err) {
+            messageApi.error(t('msg.error.record.copy'));
+          }
+        }
+        setIsDownload(false);
+      } else {
+        await startRecord();
+        setOpenRecordModal(false);
+      }
+    };
+
+    const recordModalOnCancel = () => {
+      if (isDownload) {
+        setIsDownload(false);
+      }
+      setOpenRecordModal(false);
+    };
 
     return (
       <div {...htmlProps} className={styles.controls}>
@@ -705,13 +854,15 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               setSettingVis(true);
             }}
           ></SettingToggle>
-          <MoreButton
-            setOpenMore={setOpenMore}
-            setMoreType={setMoreType}
-            onClick={async () => {
-              await fetchSettings();
-            }}
-          ></MoreButton>
+          {room && roomSettings.participants && (
+            <MoreButton
+              setOpenMore={setOpenMore}
+              setMoreType={setMoreType}
+              onClickRecord={onClickRecord}
+              onClickManage={fetchSettings}
+              isRecording={isRecording}
+            ></MoreButton>
+          )}
         </div>
 
         {visibleControls.leave && (
@@ -825,6 +976,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                   <List
                     itemLayout="horizontal"
                     dataSource={participantList}
+                    split={false}
                     renderItem={(item, index) => (
                       <List.Item>
                         <div className={styles.particepant_item}>
@@ -835,7 +987,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                                 backgroundColor: randomColor(item[1].name),
                               }}
                             >
-                              {item[1].name.substring(0, 2)}
+                              {item[1].name.substring(0, 3)}
                             </Avatar>
                             <span>{item[1].name}</span>
                             {roomSettings.ownerId !== '' && item[0] === roomSettings.ownerId && (
@@ -884,6 +1036,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             )}
           </div>
         </Drawer>
+        {/* ------------- share room modal -------------------------------------------------------- */}
         <Modal
           open={openShareModal}
           onCancel={() => setOpenShareModal(false)}
@@ -925,6 +1078,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             </div>
           </div>
         </Modal>
+        {/* -------------- control participant name modal ---------------------------------------- */}
         <Modal
           open={openNameModal}
           title={t('more.participant.set.control.change_name')}
@@ -935,7 +1089,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           }}
           onOk={() => {
             if (room && selectedParticipant) {
-              console.warn('setUsername', username);
               socket.emit('control_participant', {
                 room: room.name,
                 senderName: room.localParticipant.name,
@@ -952,11 +1105,41 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <Input
             placeholder={t('settings.general.username')}
             value={username}
+            style={{
+              outline: "1px solid #22CCEE"
+            }}
             onChange={(e) => {
-              console.warn('setUsername', e.target.value);
               setUsername(e.target.value);
             }}
           ></Input>
+        </Modal>
+        {/* ---------------- record modal ------------------------------------------------------- */}
+        <Modal
+          open={openRecordModal}
+          title={isDownload ? t('more.record.download') : t('more.record.title')}
+          okText={
+            isDownload
+              ? t('common.confirm')
+              : isOwner
+              ? t('more.record.confirm')
+              : t('more.record.confirm_request')
+          }
+          cancelText={t('more.record.cancel')}
+          onCancel={recordModalOnCancel}
+          onOk={recordModalOnOk}
+        >
+          {isDownload ? (
+            <div>
+              <div>{t('more.record.download_msg')}</div>
+              <Input
+                placeholder={t('common.email_placeholder')}
+                value={downloadEmail}
+                type="email"
+              ></Input>
+            </div>
+          ) : (
+            <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
+          )}
         </Modal>
       </div>
     );

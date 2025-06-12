@@ -42,18 +42,28 @@ export default {
     full_user:
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
     open: '开启',
+    email_placeholder: '请输入您的邮箱地址',
   },
   more: {
     title: '更多',
     record: {
       start: '录制',
       stop: '停止录制',
+      title: '录制房间',
+      desc: 'VoceSpace 将会录制房间中的音频和视频。请注意，录制可能会影响性能。录制结束后，您将收到一条通知，包含录制文件的下载链接。',
+      request:
+        "由于您不是房间主持人，您无法直接进行录制，若您需要录制，请点击'请求录制'按钮，房间支持人将收到您的请求，若同意将会开启录制。",
+      confirm: '开始录制',
+      confirm_request: '请求录制',
+      cancel: '取消',
+      download_msg: '录制已完成，正在传输至云端进行存储，请提交您的邮箱地址以在完成传输后获取下载链接。',
+      download: '下载录制文件',
     },
     participant: {
       title: '成员',
       manage: '管理成员',
       search: '搜索成员',
-      manager: '管理员',
+      manager: '主持人',
       invite: {
         title: '邀请成员',
         web: '浏览器中',
@@ -212,8 +222,16 @@ export default {
       virtual_loading: '虚拟形象加载中...',
       invite_device: '邀请您开启:',
       remove_participant: '您已被房间主持人移除房间',
+      req_record: '请求进行录制',
+      recording: "房间在10s后将开启录制，若您不希望被录制，可点击'离开房间'按钮退出。",
     },
     error: {
+      record: {
+        copy: '录制链接复制失败',
+        email: {
+          empty: '邮箱地址不能为空',
+        }
+      },
       virtual: {
         video_stream: '虚拟摄像头流构建错误',
         model: '模型或视频不可用',
@@ -288,6 +306,11 @@ export default {
       },
     },
     success: {
+      record: {
+        start: '房间已经成功开启录制',
+        stop: '房间录制已成功停止, 10s后录制状态将移除',
+        copy: '录制链接已复制到剪贴板',
+      },
       device: {
         granted: '已成功授予媒体权限。',
         mute: {

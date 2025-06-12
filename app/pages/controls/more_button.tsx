@@ -7,11 +7,20 @@ import { useMemo, useState } from 'react';
 export interface MoreButtonProps {
   showText?: boolean;
   setOpenMore: (open: boolean) => void;
+  isRecording: boolean;
   setMoreType: (type: 'record' | 'participant') => void;
-  onClick?: () => void;
+  onClickManage?: () => Promise<void>;
+  onClickRecord?: () => Promise<void>;
 }
 
-export function MoreButton({ showText = true, setOpenMore, setMoreType, onClick }: MoreButtonProps) {
+export function MoreButton({
+  showText = true,
+  setOpenMore,
+  setMoreType,
+  onClickManage,
+  onClickRecord,
+  isRecording,
+}: MoreButtonProps) {
   const { t } = useI18n();
 
   const showTextOrHide = useMemo(() => {
@@ -23,34 +32,43 @@ export function MoreButton({ showText = true, setOpenMore, setMoreType, onClick 
     }
   }, [window.innerWidth]);
 
-  const items: MenuProps['items'] = [
-    {
-      label: <div style={{ marginLeft: '8px' }}>{t('more.record.start')}</div>,
-      key: 'record',
-      icon: <SvgResource type="record" svgSize={16} />,
-    },
-    {
-      label: <div style={{ marginLeft: '8px' }}>{t('more.participant.title')}</div>,
-      key: 'participant',
-      icon: <SvgResource type="user" svgSize={16} />,
-    },
-  ];
+  const items: MenuProps['items'] = useMemo(() => {
+    return [
+      // 录屏功能
+      {
+        label: (
+          <div style={{ marginLeft: '8px' }}>
+            {!isRecording ? t('more.record.start') : t('more.record.stop')}
+          </div>
+        ),
+        key: 'record',
+        icon: <SvgResource type="record" svgSize={16} color={isRecording ? '#FF0000' : '#fff'} />,
+      },
+      // 参与者管理功能
+      {
+        label: <div style={{ marginLeft: '8px' }}>{t('more.participant.title')}</div>,
+        key: 'participant',
+        icon: <SvgResource type="user" svgSize={16} />,
+      },
+    ];
+  }, [isRecording]);
 
-  const handleMenuClick: MenuProps['onClick'] = (e) => {
-    setOpenMore(true);
+  const handleMenuClick: MenuProps['onClick'] = async (e) => {
     switch (e.key) {
       case 'record':
         // Handle record action
         setMoreType('record');
-        console.log('Record action clicked');
+        if (onClickRecord) {
+          await onClickRecord();
+        }
         break;
       case 'participant':
         // Handle participant action
-        if (onClick) {
-          onClick();
+        if (onClickManage) {
+          await onClickManage();
         }
         setMoreType('participant');
-        console.log('Participant action clicked');
+        setOpenMore(true);
         break;
       default:
         console.log('Unknown action');

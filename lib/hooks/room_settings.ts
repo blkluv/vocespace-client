@@ -11,6 +11,7 @@ export interface ParticipantSettings {
   screenBlur: number;
   status: UserStatus | string;
   socketId: string;
+  startAt: number;
   virtual: {
     role: ModelRole;
     bg: ModelBg;
@@ -24,12 +25,21 @@ export interface RoomSettings {
   };
   status?: UserDefineStatus[];
   ownerId: string;
+  record: {
+    egressId?: string;
+    filePath?: string;
+    active: boolean;
+  };
 }
 
 const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export function useRoomSettings(roomId: string, participantId: string) {
-  const [settings, setSettings] = useState<RoomSettings>({ participants: {}, ownerId: '' });
+  const [settings, setSettings] = useState<RoomSettings>({
+    participants: {},
+    ownerId: '',
+    record: { active: false },
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -52,38 +62,70 @@ export function useRoomSettings(roomId: string, participantId: string) {
       setSettings(data.settings || {});
       return data.settings || {};
     } catch (err) {
-      console.error('Error fetching room settings:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }
   }, [roomId]);
 
-  const updateOwnerId = useCallback(async (replacedId?: string) => {
-    const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        roomId,
-        participantId: replacedId || participantId,
-        trans: true,
-      }),
-    });
+  const updateRecord = useCallback(
+    async (active: boolean, egressId?: string, filePath?: string) => {
+      const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId,
+          record: {
+            active,
+            egressId,
+            filePath,
+          },
+        }),
+      });
 
-    if (!response.ok) {
-      return false;
-    }
+      if (!response.ok) {
+        return false;
+      }
+      const { record } = await response.json();
 
-    const { ownerId } = await response.json();
+      setSettings((prevSettings) => ({
+        ...prevSettings,
+        record,
+      }));
+      return true;
+    },
+    [participantId, roomId],
+  );
 
-    setSettings((prevSettings) => ({
-      ...prevSettings,
-      ownerId: ownerId || prevSettings.ownerId,
-    }));
+  const updateOwnerId = useCallback(
+    async (replacedId?: string) => {
+      const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId,
+          participantId: replacedId || participantId,
+          trans: true,
+        }),
+      });
 
-    return true;
-  }, [participantId, roomId]);
+      if (!response.ok) {
+        return false;
+      }
+
+      const { ownerId } = await response.json();
+
+      setSettings((prevSettings) => ({
+        ...prevSettings,
+        ownerId: ownerId || prevSettings.ownerId,
+      }));
+
+      return true;
+    },
+    [participantId, roomId],
+  );
 
   // 更新当前参与者设置
   const updateSettings = useCallback(
@@ -110,7 +152,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
 
         return Boolean(data);
       } catch (err) {
-        console.error('Error updating settings:', err);
         setError(err instanceof Error ? err : new Error(String(err)));
         return false;
       }
@@ -134,7 +175,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
             const data: { success: boolean; clearRoom?: string } = await res.json();
             if (data.clearRoom && data.clearRoom !== '') {
               socket.emit('clear_room_resources', { roomName: data.clearRoom });
-              console.warn('clear room resources', data.clearRoom);
             }
           }
         });
@@ -145,10 +185,6 @@ export function useRoomSettings(roomId: string, participantId: string) {
     [roomId, participantId],
   );
 
-  // useEffect(() => {
-  //   console.log(settings);
-  // }, [settings]);
-
   return {
     settings,
     loading,
@@ -157,6 +193,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
     updateSettings,
     fetchSettings,
     clearSettings,
-    updateOwnerId
+    updateOwnerId,
+    updateRecord,
   };
 }
