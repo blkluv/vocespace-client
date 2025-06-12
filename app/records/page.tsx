@@ -72,8 +72,8 @@ export default function RecordsPage() {
     setSearchLoading(true);
     try {
       // 这里应该调用实际的API接口
-      const response = await fetch(`/api/records?room=${encodeURIComponent(room)}`);
-      
+      const response = await fetch(`http://localhost:3060/api/records?room=${encodeURIComponent(room)}`);
+
       if (response.ok) {
         const data: RecordResponse = await response.json();
         setRecordsData(data.records);
@@ -119,7 +119,7 @@ export default function RecordsPage() {
 
       if (response.ok) {
         const { downloadUrl } = await response.json();
-        
+
         // 创建下载链接
         const link = document.createElement('a');
         link.href = downloadUrl;
@@ -127,7 +127,7 @@ export default function RecordsPage() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         messageApi.success('下载开始');
       } else {
         const { error } = await response.json();
@@ -158,7 +158,7 @@ export default function RecordsPage() {
           });
 
           if (response.ok) {
-            setRecordsData(prev => prev.filter(item => item.id !== record.id));
+            setRecordsData((prev) => prev.filter((item) => item.id !== record.id));
             messageApi.success('删除成功');
           } else {
             const { error } = await response.json();
@@ -192,9 +192,7 @@ export default function RecordsPage() {
         <Space>
           <FileOutlined style={{ color: '#1890ff' }} />
           <Text strong>{fileName}</Text>
-          {record.state === 'uploading' && (
-            <Tag color="processing">上传中</Tag>
-          )}
+          {record.state === 'uploading' && <Tag color="processing">上传中</Tag>}
         </Space>
       ),
     },
@@ -203,9 +201,7 @@ export default function RecordsPage() {
       dataIndex: 'size',
       key: 'size',
       width: 120,
-      render: (size: number) => (
-        <Text>{formatFileSize(size)}</Text>
-      ),
+      render: (size: number) => <Text>{formatFileSize(size)}</Text>,
       sorter: (a, b) => a.size - b.size,
     },
     {
@@ -213,9 +209,7 @@ export default function RecordsPage() {
       dataIndex: 'createDate',
       key: 'createDate',
       width: 180,
-      render: (date: string) => (
-        <Text>{new Date(date).toLocaleString('zh-CN')}</Text>
-      ),
+      render: (date: string) => <Text>{new Date(date).toLocaleString('zh-CN')}</Text>,
       sorter: (a, b) => new Date(a.createDate).getTime() - new Date(b.createDate).getTime(),
     },
     {
@@ -229,11 +223,7 @@ export default function RecordsPage() {
             <Space direction="vertical" size="small">
               <Tag color="processing">正在上传</Tag>
               {record.progress !== undefined && (
-                <Progress 
-                  percent={record.progress} 
-                  size="small" 
-                  status="active"
-                />
+                <Progress percent={record.progress} size="small" status="active" />
               )}
             </Space>
           );
@@ -285,39 +275,29 @@ export default function RecordsPage() {
       {contextHolder}
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>录制文件管理</Title>
-        <Text type="secondary">
-          输入房间名查找并管理该房间的录制视频文件
-        </Text>
+        <Text type="secondary">输入房间名查找并管理该房间的录制视频文件</Text>
       </div>
 
       {/* 搜索区域 */}
       <Card style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <div style={{ flex: 1, maxWidth: 400 }}>
-            <Search
-            style={{
-                outline: '1px solid #22CCEE'
-            }}
+          <div style={{ flex: 1, display: 'inline-flex', justifyContent: 'space-between' }}>
+            <Input
+              style={{
+                outline: '1px solid #22CCEE',
+                width: 'calc(100% - 100px)',
+              }}
               placeholder="请输入房间名"
-              enterButton={
-                <Button type="primary" icon={<SearchOutlined />}>
-                  搜索
-                </Button>
-              }
-              size="large"
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
-              onSearch={(value) => searchRoomRecords(value)}
-              loading={searchLoading}
             />
+            <Button type="primary" icon={<SearchOutlined />}>
+              搜索
+            </Button>
           </div>
           {currentRoom && (
             <Tooltip title="刷新数据">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={handleRefresh}
-                loading={searchLoading}
-              >
+              <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={searchLoading}>
                 刷新
               </Button>
             </Tooltip>
@@ -349,8 +329,7 @@ export default function RecordsPage() {
                 pageSize: 10,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+                showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
               }}
               scroll={{ x: 1000 }}
               locale={{

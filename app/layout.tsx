@@ -50,7 +50,7 @@ const brand = {
   primary: '#06AED4',
   primaryHover: '#22CCEE', 
   primaryActive: '#22CCEE', 
-  primaryText: '#fff',
+  primaryText: '#aaa',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

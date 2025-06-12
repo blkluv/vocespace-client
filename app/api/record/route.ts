@@ -47,8 +47,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'LIVEKIT_URL is not set' }, { status: 500 });
     }
 
-    // const hostURL = LIVEKIT_URL.replace('wss://', 'https://').replace('ws://', 'https://');
-    const hostURL = 'https://vocespace.xyz';
+    const hostURL = LIVEKIT_URL.replace('wss://', 'https://').replace('ws://', 'https://');
 
     const egressClient = new EgressClient(hostURL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 
@@ -74,6 +73,7 @@ export async function POST(req: NextRequest) {
             region: S3_REGION,
             bucket: S3_BUCKET,
             forcePathStyle: true,
+            tagging: "vocespace_record=true"
           }),
         },
       });

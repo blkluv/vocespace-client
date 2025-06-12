@@ -175,8 +175,9 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
     - [ ] 后端服务
       - [x] 请求egress server
       - [x] 视频存储s3
-      - [ ] 视频下载链接(需要接入aws s3 api进行链接请求)
-      - [ ] 视频可下载周期，超过下载周期自动清理 (3天，需要接入aws s3 api)
+      - [x] 视频下载链接(需要接入aws s3 api进行链接请求)
+      - [x] 视频可下载周期，超过下载周期自动清理 (3天)
+        - [x] 设置上传时的标签
 - [ ] 清理用户时，意外清理所有房间数据 (暂未排查出原因)
 - [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
@@ -191,3 +192,13 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
   - [ ] device 按钮
   - [ ] 录屏
   - [ ] leave按钮
+- [x] server s3
+  - [x] 构建客户端
+  - [x] 连接
+  - [x] 加载配置
+  - [x] 列出文件对象
+  - [x] 对某个对象生成下载链接
+  - [x] 删除
+  - [x] 设置自动生命周期策略
+  - [ ] 请求响应连接到前端
+- [x] 使用docker部署egress服务 新服务器
