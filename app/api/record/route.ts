@@ -21,6 +21,35 @@ const isUndefinedString = (value: string | undefined): boolean => {
   return value === undefined || value.trim() === '';
 };
 
+// 获取环境变量的接口，/api/record?env=true
+export async function GET(req: NextRequest) {
+  const env = req.nextUrl.searchParams.get('env');
+  if (env === 'true') {
+    let server_host = process.env.SERVER_HOST;
+    server_host = (server_host?.includes('localhost') || server_host?.includes('127.0.0.1'))
+      ? `http://${server_host}`
+      : `https://${server_host}`;
+
+    return NextResponse.json(
+      {
+        s3_access_key: S3_ACCESS_KEY,
+        s3_secret_key: S3_SECRET_KEY,
+        s3_bucket: S3_BUCKET,
+        s3_region: S3_REGION,
+        server_host,
+      },
+      { status: 200 },
+    );
+  } else {
+    return NextResponse.json(
+      {
+        error: 'Invalid request, please use /api/record?env=true to get environment variables',
+      },
+      { status: 400 },
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   if (
     isUndefinedString(LIVEKIT_API_KEY) ||
@@ -73,7 +102,7 @@ export async function POST(req: NextRequest) {
             region: S3_REGION,
             bucket: S3_BUCKET,
             forcePathStyle: true,
-            tagging: "vocespace_record=true"
+            tagging: 'vocespace_record=true',
           }),
         },
       });

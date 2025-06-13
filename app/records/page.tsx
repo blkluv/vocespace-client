@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Table,
   Card,
@@ -25,25 +25,56 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { connect_endpoint } from '@/lib/std';
+import { ulid } from 'ulid';
+import { SvgResource } from '../resources/svg';
 
 const { Title, Text } = Typography;
-const { Search } = Input;
 const { confirm } = Modal;
 
-interface RecordData {
-  id: string;
-  fileName: string;
+interface RecordItem {
+  key: string;
   size: number;
-  createDate: string;
-  state: 'uploading' | 'completed';
-  filePath?: string;
-  progress?: number; // 上传进度 0-100
+  last_modified: number;
+}
+
+interface RecordData extends RecordItem {
+  id: string;
+
+  // state: 'uploading' | 'completed';
+  // filePath?: string;
+  // progress?: number; // 上传进度 0-100
 }
 
 interface RecordResponse {
-  records: RecordData[];
-  total: number;
+  records: RecordItem[];
+  success: boolean;
 }
+
+enum RecordState {
+  // 获取环境变量状态，表示需要获取环境变量
+  GetEnv,
+  // 初始化状态，在初始状态时需要尝试连接s3服务
+  Init,
+  // 连接状态，表示已经连接到s3服务
+  Connected,
+  // 无法连接，表示无法连接到s3服务或后端服务没有部署s3服务或前端没有配置s3服务
+  UnAvailable,
+}
+
+export interface EnvData {
+  s3_access_key?: string;
+  s3_secret_key?: string;
+  s3_bucket?: string;
+  s3_region?: string;
+  server_host?: string;
+}
+
+const isUndefinedString = (value: string | undefined): boolean => {
+  return value === undefined || value.trim() === '';
+};
+
+const CONNECT_ENDPOINT = connect_endpoint('/api/record');
 
 export default function RecordsPage() {
   const [roomName, setRoomName] = useState<string>('');
@@ -52,6 +83,97 @@ export default function RecordsPage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<string>('');
   const [messageApi, contextHolder] = message.useMessage();
+  const [state, setState] = useState<RecordState>(RecordState.GetEnv);
+  const [env, setEnv] = useState<EnvData | null>(null);
+
+  const isConnected = useMemo(() => {
+    switch (state) {
+      case RecordState.GetEnv:
+        return '获取环境变量中...';
+      case RecordState.Init:
+        return '正在连接S3服务...';
+      case RecordState.Connected:
+        return '已连接到S3服务';
+      case RecordState.UnAvailable:
+        return '无法连接到S3服务';
+      default:
+        return '';
+    }
+  }, [state]);
+
+  const get_env = useCallback(async () => {
+    if (env != null) return;
+
+    const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+    url.searchParams.set('env', 'true');
+    const response = await fetch(url.toString());
+    if (response.ok) {
+      const { s3_access_key, s3_secret_key, s3_bucket, s3_region, server_host }: EnvData =
+        await response.json();
+
+      if (
+        isUndefinedString(s3_access_key) ||
+        isUndefinedString(s3_secret_key) ||
+        isUndefinedString(s3_bucket) ||
+        isUndefinedString(s3_region) ||
+        isUndefinedString(server_host)
+      ) {
+        setState(RecordState.UnAvailable);
+        messageApi.error('S3服务未配置或环境变量未设置');
+      } else {
+        setEnv({
+          s3_access_key,
+          s3_secret_key,
+          s3_bucket,
+          s3_region,
+          server_host,
+        });
+        setState(RecordState.Init);
+        messageApi.success('S3服务环境变量获取成功');
+      }
+    }
+  }, [env]);
+
+  const try_connectS3 = useCallback(async () => {
+    try {
+      const response = await fetch(`${env?.server_host}/api/s3/connect`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setState(RecordState.Connected);
+          messageApi.success('S3服务连接成功');
+        } else {
+          setState(RecordState.UnAvailable);
+          messageApi.error('S3服务连接失败，请检查配置');
+        }
+      }
+    } catch (error) {
+      console.error('S3连接测试失败:', error);
+      setState(RecordState.UnAvailable);
+    }
+  }, [env]);
+
+  useEffect(() => {
+    switch (state) {
+      case RecordState.GetEnv:
+        // 获取环境变量
+        get_env();
+        break;
+      case RecordState.Init:
+        // 尝试连接S3服务
+        try_connectS3();
+        break;
+      case RecordState.Connected:
+        // 已经连接到S3服务，可以进行后续操作
+        break;
+      case RecordState.UnAvailable:
+        // 无法连接到S3服务，提示用户
+        messageApi.error('无法连接到S3服务，当前可能访问了本地服务，请检查配置或联系管理员');
+        break;
+      default:
+        break;
+    }
+  }, [state, get_env, try_connectS3]);
 
   // 格式化文件大小
   const formatFileSize = (bytes: number): string => {
@@ -63,8 +185,10 @@ export default function RecordsPage() {
   };
 
   // 搜索房间录制数据
-  const searchRoomRecords = async (room: string) => {
-    if (!room.trim()) {
+  const searchRoomRecords = async (room?: string) => {
+    let seachRoom = room || roomName.trim();
+
+    if (!seachRoom) {
       messageApi.warning('请输入房间名');
       return;
     }
@@ -72,19 +196,29 @@ export default function RecordsPage() {
     setSearchLoading(true);
     try {
       // 这里应该调用实际的API接口
-      const response = await fetch(`http://localhost:3060/api/records?room=${encodeURIComponent(room)}`);
+      const response = await fetch(`${env?.server_host}/api/s3/${seachRoom}`);
 
       if (response.ok) {
-        const data: RecordResponse = await response.json();
-        setRecordsData(data.records);
-        setCurrentRoom(room);
-        messageApi.success(`找到 ${data.records.length} 个录制文件`);
-      } else {
-        const errorData = await response.json();
-        messageApi.error(errorData.error || '查找录制文件失败');
-        setRecordsData([]);
-        setCurrentRoom('');
+        const { records, success }: RecordResponse = await response.json();
+        if (success && records.length > 0) {
+          let formattedRecords: RecordData[] = records.map((record) => ({
+            ...record,
+            id: ulid(), // 使用 ulid 生成唯一 ID
+          }));
+
+          setRecordsData(formattedRecords);
+          // key 分割第一个 / 之前的部分作为房间名
+          let realRoom = records[0].key.split('/')[0];
+          setCurrentRoom(realRoom);
+          messageApi.success('查找录制文件成功');
+          return;
+        }
       }
+      messageApi.error(
+        '查找录制文件为空，请检查房间名是否正确，房间内可能没有录制视频文件或已经删除',
+      );
+      setRecordsData([]);
+      setCurrentRoom('');
     } catch (error) {
       console.error('Search failed:', error);
       messageApi.error('网络错误，请稍后重试');
@@ -97,47 +231,29 @@ export default function RecordsPage() {
 
   // 下载文件
   const handleDownload = async (record: RecordData) => {
-    if (record.state === 'uploading') {
-      messageApi.warning('文件正在上传中，请等待上传完成');
-      return;
-    }
+    const response = await fetch(`${env?.server_host}/api/s3/download?key=${record.key}`);
+    if (response.ok) {
+      const {
+        success,
+        url,
+      }: {
+        success: boolean;
+        url?: string;
+      } = await response.json();
 
-    setLoading(true);
-    try {
-      // 调用生成下载链接的API
-      const response = await fetch('/api/record', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          room: currentRoom,
-          type: 'download',
-          filePath: record.filePath,
-        }),
-      });
-
-      if (response.ok) {
-        const { downloadUrl } = await response.json();
-
-        // 创建下载链接
+      if (success) {
+        // 创建一个链接元素并触发下载
         const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = record.fileName;
+        link.href = url!;
+        link.download = record.key;
+        link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
-        messageApi.success('下载开始');
+        messageApi.success('下载链接获取成功，文件正在下载');
       } else {
-        const { error } = await response.json();
-        messageApi.error(error || '生成下载链接失败');
+        messageApi.error('下载链接获取失败，请稍后重试或联系管理员进行下载');
       }
-    } catch (error) {
-      console.error('Download failed:', error);
-      messageApi.error('下载失败，请稍后重试');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -146,24 +262,27 @@ export default function RecordsPage() {
     confirm({
       title: '确认删除',
       icon: <ExclamationCircleOutlined />,
-      content: `确定要删除录制文件 "${record.fileName}" 吗？此操作不可恢复。`,
+      content: `确定要删除录制文件 "${record.key}" 吗？此操作不可恢复。`,
       okText: '删除',
       okType: 'danger',
       cancelText: '取消',
       onOk: async () => {
         setLoading(true);
         try {
-          const response = await fetch(`/api/records/${record.id}`, {
+          const response = await fetch(`${env?.server_host}/api/s3/delete?key=${record.key}`, {
             method: 'DELETE',
           });
 
           if (response.ok) {
-            setRecordsData((prev) => prev.filter((item) => item.id !== record.id));
-            messageApi.success('删除成功');
-          } else {
-            const { error } = await response.json();
-            messageApi.error(error || '删除失败');
+            const { success }: { success: boolean } = await response.json();
+            if (success) {
+              // 从记录数据中删除该记录
+              setRecordsData((prev) => prev.filter((item) => item.id !== record.id));
+              messageApi.success('删除成功');
+              return;
+            }
           }
+          messageApi.error('删除失败');
         } catch (error) {
           console.error('Delete failed:', error);
           messageApi.error('删除失败，请稍后重试');
@@ -185,75 +304,101 @@ export default function RecordsPage() {
   const columns: ColumnsType<RecordData> = [
     {
       title: '文件名',
-      dataIndex: 'fileName',
-      key: 'fileName',
-      width: 300,
-      render: (fileName: string, record) => (
-        <Space>
-          <FileOutlined style={{ color: '#1890ff' }} />
-          <Text strong>{fileName}</Text>
-          {record.state === 'uploading' && <Tag color="processing">上传中</Tag>}
-        </Space>
+      dataIndex: 'key',
+      key: 'key',
+      width: 210,
+      render: (key: string, record) => (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <SvgResource
+            type={key.endsWith('json') ? 'file' : 'video'}
+            svgSize={16}
+            color="#22CCEE"
+          ></SvgResource>
+          <Text strong>{key.replace(`${currentRoom}/`, '')}</Text>
+        </div>
       ),
     },
     {
       title: '文件大小',
       dataIndex: 'size',
       key: 'size',
-      width: 120,
+      width: 100,
       render: (size: number) => <Text>{formatFileSize(size)}</Text>,
       sorter: (a, b) => a.size - b.size,
     },
     {
-      title: '创建时间',
-      dataIndex: 'createDate',
-      key: 'createDate',
+      title: '最后修改时间',
+      dataIndex: 'last_modified',
+      key: 'last_modified',
       width: 180,
-      render: (date: string) => <Text>{new Date(date).toLocaleString('zh-CN')}</Text>,
-      sorter: (a, b) => new Date(a.createDate).getTime() - new Date(b.createDate).getTime(),
+      ellipsis: true,
+      render: (last_modified: number) => (
+        <Text>
+          {new Date(last_modified * 1000).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })}
+        </Text>
+      ),
+      sorter: (a, b) => new Date(a.last_modified).getTime(),
     },
     {
-      title: '状态',
-      dataIndex: 'state',
-      key: 'state',
-      width: 150,
-      render: (state: string, record) => {
-        if (state === 'uploading') {
-          return (
-            <Space direction="vertical" size="small">
-              <Tag color="processing">正在上传</Tag>
-              {record.progress !== undefined && (
-                <Progress percent={record.progress} size="small" status="active" />
-              )}
-            </Space>
-          );
-        }
-        return <Tag color="success">上传完成</Tag>;
+      title: '类型',
+      dataIndex: 'key',
+      key: 'ty',
+      width: 80,
+      ellipsis: true,
+      render: (key: string) => {
+        return (
+          <Tag color={key.endsWith('json') ? 'green' : 'blue'}>
+            {key.endsWith('json') ? '记录文件' : '视频文件'}
+          </Tag>
+        );
       },
-      filters: [
-        { text: '正在上传', value: 'uploading' },
-        { text: '上传完成', value: 'completed' },
-      ],
-      onFilter: (value, record) => record.state === value,
     },
+    // {
+    //   title: '状态',
+    //   dataIndex: 'state',
+    //   key: 'state',
+    //   width: 150,
+    //   render: (state: string, record) => {
+    //     if (state === 'uploading') {
+    //       return (
+    //         <Space direction="vertical" size="small">
+    //           <Tag color="processing">正在上传</Tag>
+    //           {record.progress !== undefined && (
+    //             <Progress percent={record.progress} size="small" status="active" />
+    //           )}
+    //         </Space>
+    //       );
+    //     }
+    //     return <Tag color="success">上传完成</Tag>;
+    //   },
+    //   filters: [
+    //     { text: '正在上传', value: 'uploading' },
+    //     { text: '上传完成', value: 'completed' },
+    //   ],
+    //   onFilter: (value, record) => record.state === value,
+    // },
     {
       title: '操作',
       key: 'action',
       width: 150,
       render: (_, record) => (
         <Space>
-          <Tooltip title={record.state === 'uploading' ? '文件上传中，暂不可下载' : '下载文件'}>
-            <Button
-              type="primary"
-              size="small"
-              icon={<DownloadOutlined />}
-              onClick={() => handleDownload(record)}
-              disabled={record.state === 'uploading'}
-              loading={loading}
-            >
-              下载
-            </Button>
-          </Tooltip>
+          <Button
+            type="primary"
+            size="small"
+            icon={<DownloadOutlined />}
+            onClick={() => handleDownload(record)}
+            loading={loading}
+          >
+            下载
+          </Button>
           <Tooltip title="删除文件">
             <Button
               danger
@@ -274,8 +419,23 @@ export default function RecordsPage() {
     <div style={{ padding: 24, background: '#000', minHeight: '100vh' }}>
       {contextHolder}
       <div style={{ marginBottom: 24 }}>
-        <Title level={2}>录制文件管理</Title>
-        <Text type="secondary">输入房间名查找并管理该房间的录制视频文件</Text>
+        <div
+          style={{
+            display: 'inline-flex',
+            gap: 8,
+            width: '100%',
+            alignItems: 'center',
+            paddingBottom: '12px',
+          }}
+        >
+          <Title level={2} style={{ margin: 0 }}>
+            录制文件管理
+          </Title>
+          <div>
+            <Tag color="blue">{isConnected}</Tag>
+          </div>
+        </div>
+        <Text>输入房间名查找并管理该房间的录制视频文件</Text>
       </div>
 
       {/* 搜索区域 */}
@@ -291,7 +451,7 @@ export default function RecordsPage() {
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
             />
-            <Button type="primary" icon={<SearchOutlined />}>
+            <Button type="primary" icon={<SearchOutlined />} onClick={() => searchRoomRecords()}>
               搜索
             </Button>
           </div>
@@ -305,9 +465,9 @@ export default function RecordsPage() {
         </div>
         {currentRoom && (
           <div style={{ marginTop: 16 }}>
-            <Text strong>当前房间：</Text>
-            <Tag color="blue">{currentRoom}</Tag>
-            <Text type="secondary">共 {recordsData.length} 个文件</Text>
+            <Text strong>当前房间：{currentRoom} &nbsp;</Text>
+
+            <Text>共 {recordsData.length} 个文件</Text>
           </div>
         )}
       </Card>
@@ -324,7 +484,7 @@ export default function RecordsPage() {
             <Table
               columns={columns}
               dataSource={recordsData}
-              rowKey="id"
+              rowKey={(record) => record.id}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,

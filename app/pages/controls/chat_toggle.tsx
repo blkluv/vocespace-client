@@ -26,13 +26,13 @@ export function ChatToggle({ enabled, onClicked, showText = true }: ToggleProps)
           color="default"
           size="large"
           onClick={on_clicked}
-          style={{ backgroundColor: '#1E1E1E', height: '44px', borderRadius: '8px' }}
+          style={{ backgroundColor: '#1E1E1E', height: '46px', borderRadius: '8px' }}
         >
           <SvgResource type="chat" svgSize={18}></SvgResource>
           {t('common.chat')}
         </Button>
       ) : (
-        <Button  variant="solid" color="default" size="large" onClick={on_clicked}  style={{ backgroundColor: '#1E1E1E', height: '38px', borderRadius: '8px' }}>
+        <Button  variant="solid" color="default" size="large" onClick={on_clicked}  style={{ backgroundColor: '#1E1E1E', height: '46px', borderRadius: '8px' }}>
           <SvgResource type="chat" svgSize={18}></SvgResource>
         </Button>
       )}

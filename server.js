@@ -12,10 +12,10 @@ import express from 'express';
 
 // [args] ---------------------------------------------------------------------------------------------------------------
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
-const port = 3030;
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''; // 添加 basePath 配置
-// when using middleware `hostname` and `port` must be provided below
+const hostname = process.env.HOST || 'localhost';
+const port = process.env.PORT || 3030;
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+// [when using middleware `hostname` and `port` must be provided below] -------------------------------------------------
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

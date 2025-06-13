@@ -200,5 +200,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
   - [x] 对某个对象生成下载链接
   - [x] 删除
   - [x] 设置自动生命周期策略
-  - [ ] 请求响应连接到前端
+  - [x] 请求响应连接到前端
 - [x] 使用docker部署egress服务 新服务器
+- [x] 将设置按钮移动到more中
+- [x] 修复按钮高度差异
