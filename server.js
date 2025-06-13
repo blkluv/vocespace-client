@@ -12,7 +12,7 @@ import express from 'express';
 
 // [args] ---------------------------------------------------------------------------------------------------------------
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
+const hostname = process.env.HOST || 'localhost';
 const port = process.env.PORT || 3000;
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 // [when using middleware `hostname` and `port` must be provided below] -------------------------------------------------
