@@ -701,7 +701,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           let { egressId, filePath } = await response.json();
           messageApi.success(t('msg.success.record.start'));
           const res = await updateRecord(true, egressId, filePath);
-          console.warn(res);
           // 这里有可能是房间数据出现问题，需要让所有参与者重新提供数据并重新updateRecord
           if (!res) {
             console.error('Failed to update record settings');
@@ -826,6 +825,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           {visibleControls.screenShare && browserSupportsScreenSharing && (
             <TrackToggle
+              style={{height:'46px'}}
               source={Track.Source.ScreenShare}
               captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
               showIcon={showIcon}
@@ -847,17 +847,20 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             ></ChatToggle>
           )}
 
-          <SettingToggle
+          {/* <SettingToggle
             enabled={settingVis}
             onClicked={async () => {
               // setVirtualEnabled(false);
               setSettingVis(true);
             }}
-          ></SettingToggle>
-          {room && roomSettings.participants && (
+          ></SettingToggle> */}
+          {room && roomSettings.participants && visibleControls.microphone && (
             <MoreButton
               setOpenMore={setOpenMore}
               setMoreType={setMoreType}
+              onSettingOpen={async() => {
+                setSettingVis(true);
+              }}
               onClickRecord={onClickRecord}
               onClickManage={fetchSettings}
               isRecording={isRecording}

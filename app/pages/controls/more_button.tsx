@@ -9,6 +9,7 @@ export interface MoreButtonProps {
   setOpenMore: (open: boolean) => void;
   isRecording: boolean;
   setMoreType: (type: 'record' | 'participant') => void;
+  onSettingOpen?: () => Promise<void>;
   onClickManage?: () => Promise<void>;
   onClickRecord?: () => Promise<void>;
 }
@@ -19,6 +20,7 @@ export function MoreButton({
   setMoreType,
   onClickManage,
   onClickRecord,
+  onSettingOpen,
   isRecording,
 }: MoreButtonProps) {
   const { t } = useI18n();
@@ -50,6 +52,11 @@ export function MoreButton({
         key: 'participant',
         icon: <SvgResource type="user" svgSize={16} />,
       },
+      {
+        label: <div style={{ marginLeft: '8px' }}>{t('common.setting')}</div>,
+        key: 'setting',
+        icon: <SvgResource type="setting" svgSize={16} />,
+      },
     ];
   }, [isRecording]);
 
@@ -70,6 +77,10 @@ export function MoreButton({
         setMoreType('participant');
         setOpenMore(true);
         break;
+      case 'setting':
+        if (onSettingOpen) {
+          await onSettingOpen();
+        }
       default:
         console.log('Unknown action');
     }
@@ -86,7 +97,7 @@ export function MoreButton({
         <Button
           style={{
             backgroundColor: '#1E1E1E',
-            height: '44px',
+            height: '46px',
             borderRadius: '8px',
             border: 'none',
             color: '#fff',

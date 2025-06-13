@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       roomSettings[roomId] = {
         participants: {},
         ownerId: participantId,
-        record: { active: false },
+        record: record || { active: false },
       };
     }
 

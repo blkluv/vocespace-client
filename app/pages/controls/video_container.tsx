@@ -416,7 +416,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           };
         }) => {
           if (msg.room === room.name) {
-            await syncSettings();
+            await updateSettings(settings.participants[room.localParticipant.identity], msg.reocrd);
             socket.emit('update_user_status');
           }
         },
