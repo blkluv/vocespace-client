@@ -825,7 +825,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           {visibleControls.screenShare && browserSupportsScreenSharing && (
             <TrackToggle
-              style={{height:'46px'}}
+              style={{ height: '46px' }}
               source={Track.Source.ScreenShare}
               captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
               showIcon={showIcon}
@@ -846,7 +846,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               }}
             ></ChatToggle>
           )}
-
           {/* <SettingToggle
             enabled={settingVis}
             onClicked={async () => {
@@ -858,7 +857,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             <MoreButton
               setOpenMore={setOpenMore}
               setMoreType={setMoreType}
-              onSettingOpen={async() => {
+              onSettingOpen={async () => {
                 setSettingVis(true);
               }}
               onClickRecord={onClickRecord}
@@ -1109,7 +1108,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             placeholder={t('settings.general.username')}
             value={username}
             style={{
-              outline: "1px solid #22CCEE"
+              outline: '1px solid #22CCEE',
             }}
             onChange={(e) => {
               setUsername(e.target.value);
@@ -1134,11 +1133,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           {isDownload ? (
             <div>
               <div>{t('more.record.download_msg')}</div>
-              <Input
-                placeholder={t('common.email_placeholder')}
-                value={downloadEmail}
-                type="email"
-              ></Input>
+              <a href={`${window.location.origin}/records`} target="_blank">download records pages</a>
             </div>
           ) : (
             <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
