@@ -56,7 +56,7 @@ export default {
       confirm: '开始录制',
       confirm_request: '请求录制',
       cancel: '取消',
-      download_msg: '录制已完成，正在传输至云端进行存储，请提交您的邮箱地址以在完成传输后获取下载链接。',
+      download_msg: '录制已完成，正在传输至云端进行存储，您可以访问当前服务的records进行下载。',
       download: '下载录制文件',
     },
     participant: {
