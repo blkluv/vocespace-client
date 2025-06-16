@@ -17,6 +17,7 @@ import {
   DeviceUnsupportedError,
   RoomConnectOptions,
   MediaDeviceFailure,
+  Track,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
@@ -56,11 +57,11 @@ export const licenseState = atom({
   default: {
     id: undefined,
     email: undefined,
-    domains: "*",
+    domains: '*',
     created_at: 1747742400,
     expires_at: 1779278400,
     value: 'vocespace_pro__KUgwpDrr-g3iXIX41rTrSCsWAcn9UFX8dOYMr0gAARQ',
-    ilimit: "Free",
+    ilimit: 'Free',
   },
 });
 
@@ -166,6 +167,7 @@ function VideoConferenceComponent(props: {
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [permissionDevice, setPermissionDevice] = useState<Track.Source | null>(null);
   const videoContainerRef = React.useRef<VideoContainerExports>(null);
   const roomOptions = React.useMemo((): RoomOptions => {
     let videoCodec: VideoCodec | undefined = props.options.codec ? props.options.codec : 'vp9';
@@ -328,9 +330,22 @@ function VideoConferenceComponent(props: {
       // 尝试重新启用设备
       if (room) {
         try {
-          // 可以选择性地重新启用摄像头或麦克风
-          await room.localParticipant.setCameraEnabled(true);
-          await room.localParticipant.setMicrophoneEnabled(true);
+          switch (permissionDevice) {
+            case Track.Source.Camera:
+              await room.localParticipant.setCameraEnabled(true);
+              break;
+            case Track.Source.Microphone:
+              await room.localParticipant.setMicrophoneEnabled(true);
+              break;
+            case Track.Source.ScreenShare:
+              await room.localParticipant.setScreenShareEnabled(true);
+              break;
+            default:
+              // 如果没有指定设备，则启用摄像头和麦克风
+              await room.localParticipant.setCameraEnabled(true);
+              await room.localParticipant.setMicrophoneEnabled(true);
+              break;
+          }
         } catch (err) {
           console.error(t('msg.error.device.granted'), err);
         }
@@ -372,6 +387,7 @@ function VideoConferenceComponent(props: {
           SettingsComponent={undefined}
           messageApi={messageApi}
           noteApi={notApi}
+          setPermissionDevice={setPermissionDevice}
         ></VideoContainer>
         <DebugMode />
         <RecordingIndicator />

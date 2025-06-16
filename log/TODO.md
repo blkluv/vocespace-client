@@ -204,3 +204,8 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] 使用docker部署egress服务 新服务器
 - [x] 将设置按钮移动到more中
 - [x] 修复按钮高度差异
+- [ ] socket断开连接导致数据丢失
+- [x] record直接下载 (preview -> download)
+- [x] 手机端录屏 (增加手机端允许录屏检测)
+- [x] 录屏权限允许会开启声音，指向错误
+- [ ] chat 自动下滑 失效

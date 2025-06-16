@@ -360,30 +360,6 @@ export default function RecordsPage() {
         );
       },
     },
-    // {
-    //   title: '状态',
-    //   dataIndex: 'state',
-    //   key: 'state',
-    //   width: 150,
-    //   render: (state: string, record) => {
-    //     if (state === 'uploading') {
-    //       return (
-    //         <Space direction="vertical" size="small">
-    //           <Tag color="processing">正在上传</Tag>
-    //           {record.progress !== undefined && (
-    //             <Progress percent={record.progress} size="small" status="active" />
-    //           )}
-    //         </Space>
-    //       );
-    //     }
-    //     return <Tag color="success">上传完成</Tag>;
-    //   },
-    //   filters: [
-    //     { text: '正在上传', value: 'uploading' },
-    //     { text: '上传完成', value: 'completed' },
-    //   ],
-    //   onFilter: (value, record) => record.state === value,
-    // },
     {
       title: '操作',
       key: 'action',

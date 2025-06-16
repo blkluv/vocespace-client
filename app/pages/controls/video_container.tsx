@@ -48,6 +48,7 @@ import { Button } from 'antd';
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
   noteApi: NotificationInstance;
+  setPermissionDevice: (device: Track.Source) => void;
 }
 
 export interface VideoContainerExports {
@@ -63,6 +64,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       SettingsComponent,
       noteApi,
       messageApi,
+      setPermissionDevice,
       ...props
     }: VideoContainerProps,
     ref,
@@ -114,7 +116,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
 
       if (init) {
-        console.warn('VideoContainer init');
         syncSettings().then(() => {
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
           socket.emit('update_user_status');
@@ -176,7 +177,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 房间事件监听器 --------------------------------------------------------------------------------
       const onParticipantConnected = async (participant: Participant) => {
-        console.warn('onParticipantConnected', participant);
         // 通过许可证判断人数，free为5人，pro为20人，若超过则拒绝加入并给出提示
         let user_limit = 5;
         if (uLicenseState.id && uLicenseState.value! == '') {
@@ -687,6 +687,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 roomSettings={settings}
                 fetchSettings={fetchSettings}
                 updateRecord={updateRecord}
+                setPermissionDevice={setPermissionDevice}
               ></Controls>
             </div>
             {SettingsComponent && (
