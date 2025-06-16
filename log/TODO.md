@@ -160,7 +160,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] 去除用户之间的分割线
 - [x] 头像名称 3个字母
 - [x] state i18n
-- [ ] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
+- [x] 录屏 https://docs.livekit.io/home/egress/outputs/#supported-outputs
   - [x] S3账号并构建存储桶
   - [x] 录屏前端功能部分
     - [x] 录屏按钮
@@ -172,7 +172,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
     - [x] 录屏数据同步
     - [x] 录屏数据记录到room-setting中
     - [x] egress server部署
-    - [ ] 后端服务
+    - [x] 后端服务
       - [x] 请求egress server
       - [x] 视频存储s3
       - [x] 视频下载链接(需要接入aws s3 api进行链接请求)
@@ -183,15 +183,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 - [ ] 用户自定义虚拟形象: 用户提交虚拟形象图片 -> live2d cubism 自动处理 (代码尝试) -> 生成完整动画效果 + 模型数据 -> 存储 -> 返回
 - [ ] 录制时无法应用模糊 (录制是直接获取通道的，我们的模糊并没有替换视频而是css模糊)
-- [x] Dashboard显示用户数据
-  - [x] 当前活跃房间数据
-  - [ ] 历史使用记录
-  - [ ] 2个域 (space.voce.chat, meeting.vocespace.com)
-- [ ] 统一主题
-  - [ ] 鼠标
-  - [x] device 按钮
-  - [x] 录屏 (无法更改系统录屏方案)
-  - [x] leave按钮
+
 - [x] server s3
   - [x] 构建客户端
   - [x] 连接
@@ -203,9 +195,22 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
   - [x] 请求响应连接到前端
 - [x] 使用docker部署egress服务 新服务器
 - [x] 将设置按钮移动到more中
+- [x] Dashboard显示用户数据
+  - [x] 当前活跃房间数据
+  - [ ] 历史使用记录
+
+- [x] 统一主题
+  - [x] 鼠标
+  - [x] device 按钮
+  - [x] 录屏 (无法更改系统录屏方案)
+  - [x] leave按钮
 - [x] 修复按钮高度差异
-- [ ] socket断开连接导致数据丢失
 - [x] record直接下载 (preview -> download)
 - [x] 手机端录屏 (增加手机端允许录屏检测)
 - [x] 录屏权限允许会开启声音，指向错误
-- [ ] chat 自动下滑 失效
+- [x] chat 自动下滑 失效
+  
+- [ ] socket断开连接导致数据丢失 (转为使用redis)
+  - 特点：
+    - 房间快速构建，快速关闭
+    - 数据无需持久化存储

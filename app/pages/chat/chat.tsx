@@ -53,6 +53,7 @@ export function EnhancedChat({
 }: EnhancedChatProps) {
   const { t } = useI18n();
   const ulRef = React.useRef<HTMLUListElement>(null);
+  const bottomRef = React.useRef<HTMLDivElement>(null);
   const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
   const [value, setValue] = React.useState('');
   // 添加输入法组合状态跟踪
@@ -65,8 +66,9 @@ export function EnhancedChat({
           // 使用函数式更新来获取最新的 messages 状态
           const existingFile = prevMessages.find((m) => m.id === msg.id);
           if (!existingFile) {
-            console.warn('chat_file_response', msg);
-            setTimeout(scrollToBottom, 0); // 异步滚动到底部
+            // setTimeout(() => {
+            //   scrollToBottom();
+            // }, 0); // 异步滚动到底部
             return [...prevMessages, msg];
           }
           return prevMessages; // 如果已存在，不重复添加
@@ -80,9 +82,11 @@ export function EnhancedChat({
   React.useEffect(() => {
     const handleChatMsgResponse = (msg: ChatMsgItem) => {
       if (msg.roomName == room.name) {
-        console.warn('chat_msg_response', msg);
         setMessages((prev) => [...prev, msg]);
-        setTimeout(scrollToBottom, 0); // 异步滚动到底部
+        // setTimeout(() => {
+        //   console.warn('scrollToBottom');
+        //   scrollToBottom();
+        // }, 0); // 异步滚动到底部
       }
     };
 
@@ -113,6 +117,9 @@ export function EnhancedChat({
     };
 
     setMessages((prev) => [...prev, chatMsg]);
+    // setTimeout(() => {
+    //   scrollToBottom();
+    // }, 100); // 异步滚动到底部
     setValue('');
     socket.emit('chat_msg', chatMsg);
   };
@@ -162,10 +169,12 @@ export function EnhancedChat({
   };
 
   const scrollToBottom = () => {
-    const el = ulRef.current;
-    if (el) {
-      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-    }
+    // 使用 scrollIntoView，更可靠
+    bottomRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+      inline: 'nearest',
+    });
   };
 
   // 处理回车键事件
@@ -206,6 +215,10 @@ export function EnhancedChat({
       });
     }
   };
+
+  React.useLayoutEffect(()=> {
+    scrollToBottom();
+  }, [messages]);
 
   const msgList = React.useMemo(() => {
     console.warn('msgList', messages);
@@ -251,6 +264,7 @@ export function EnhancedChat({
         ></Dragger>
         <ul ref={ulRef} className={styles.msg_list}>
           {msgList}
+          <div ref={bottomRef} style={{ height: '1px', visibility: 'hidden' }} />
         </ul>
       </div>
 
@@ -324,7 +338,12 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
               {msg.file && (
                 <div className={styles.msg_item_content_msg}>
                   {isImg(msg.file.type) ? (
-                    <Image src={msg.file.url} width={'100%'} fallback={pictureCallback} height={160}></Image>
+                    <Image
+                      src={msg.file.url}
+                      width={'100%'}
+                      fallback={pictureCallback}
+                      height={160}
+                    ></Image>
                   ) : (
                     <div className={styles.msg_item_content_msg_file}>
                       <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
