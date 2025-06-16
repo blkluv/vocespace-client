@@ -189,9 +189,9 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
   - [ ] 2个域 (space.voce.chat, meeting.vocespace.com)
 - [ ] 统一主题
   - [ ] 鼠标
-  - [ ] device 按钮
-  - [ ] 录屏
-  - [ ] leave按钮
+  - [x] device 按钮
+  - [x] 录屏 (无法更改系统录屏方案)
+  - [x] leave按钮
 - [x] server s3
   - [x] 构建客户端
   - [x] 连接
