@@ -82,7 +82,7 @@ export function MoreButton({
           await onSettingOpen();
         }
       default:
-        console.log('Unknown action');
+        break;
     }
   };
 

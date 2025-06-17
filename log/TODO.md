@@ -196,7 +196,10 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] 将设置按钮移动到more中
 - [x] Dashboard显示用户数据
   - [x] 当前活跃房间数据
-  - [ ] 历史使用记录
+  - [x] 历史使用记录
+    - [x] redis中增加使用记录 √
+    - [x] roomManager 类管理使用记录 √
+    - [x] 使用记录api √
 
 - [x] 统一主题
   - [x] 鼠标
@@ -209,7 +212,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] 录屏权限允许会开启声音，指向错误
 - [x] chat 自动下滑 失效
   
-- [ ] socket断开连接导致数据丢失 (转为使用redis)
+- [x] socket断开连接导致数据丢失 (转为使用redis) √
   - 特点：
     - 房间快速构建，快速关闭
     - 数据无需持久化存储

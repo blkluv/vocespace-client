@@ -31,6 +31,7 @@ interface RoomSettings {
     filePath?: string;
     active: boolean;
   };
+  startAt: number;
 }
 
 interface RoomSettingsMap {
@@ -52,6 +53,16 @@ interface Status {
   volume: number;
   blur: number;
   screenBlur: number;
+}
+
+interface RoomTimeRecord {
+  start: number; // 记录开始时间戳
+  end?: number; // 记录结束时间戳
+}
+
+// 记录房间的使用情况
+interface RoomDateRecords {
+  [roomId: string]: RoomTimeRecord[];
 }
 
 // [redis config env] ----------------------------------------------------------
@@ -86,6 +97,8 @@ class RoomManager {
   private static PARTICIPANT_KEY_PREFIX = 'room:participant:';
   // 房间列表 redis key 前缀 （房间不止一个）
   private static ROOM_LIST_KEY_PREFIX = 'room:list:';
+  // 房间使用情况 redis key 前缀
+  private static ROOM_DATE_RECORDS_KEY_PREFIX = 'room:date:records:';
 
   // room redis key, like: room:test_room
   private static getRoomKey(room: string): string {
@@ -94,6 +107,84 @@ class RoomManager {
   // participant redis key
   private static getParticipantKey(room: string, participantId: string): string {
     return `${this.PARTICIPANT_KEY_PREFIX}${room}:${participantId}`;
+  }
+  // 设置房间的使用情况 --------------------------------------------------------------------
+  static async setRoomDateRecords(
+    room: string,
+    time: {
+      start: number;
+      end?: number;
+    },
+  ): Promise<boolean> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized or disabled.');
+      }
+      // 获取房间的使用情况，如果没有则创建一个新的记录，如果有则需要进行判断更新
+      let record = await this.getRoomDateRecords(room);
+      // 通过start时间戳判断是否已经存在记录，如果有则更新结束时间戳，没有则添加新的记录
+      let startRecord = record.find((r) => r.start === time.start);
+      if (startRecord) {
+        // 如果已经存在记录，则更新结束时间戳
+        startRecord.end = time.end || Date.now();
+      } else {
+        // 如果不存在记录，则添加新的记录
+        record.push({
+          start: time.start,
+          end: time.end,
+        });
+      }
+
+      // 设置回存储
+      const key = `${this.ROOM_DATE_RECORDS_KEY_PREFIX}${room}`;
+      await redisClient.set(key, JSON.stringify(record));
+      return true;
+    } catch (error) {
+      console.error('Error setting room date records:', error);
+      return false;
+    }
+  }
+
+  // 获取房间的使用情况 --------------------------------------------------------------------
+  static async getRoomDateRecords(room: string): Promise<RoomTimeRecord[]> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized or disabled.');
+      }
+      const key = `${this.ROOM_DATE_RECORDS_KEY_PREFIX}${room}`;
+      const dataStr = await redisClient.get(key);
+      if (dataStr) {
+        return JSON.parse(dataStr) as RoomTimeRecord[];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error getting room date records:', error);
+      return [];
+    }
+  }
+
+  // 获取所有房间的使用情况 -----------------------------------------------------------------
+  static async getAllRoomDateRecords(): Promise<RoomDateRecords> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized or disabled.');
+      }
+      const keys = await redisClient.keys(`${this.ROOM_DATE_RECORDS_KEY_PREFIX}*`);
+      const records: RoomDateRecords = {};
+
+      for (const key of keys) {
+        const roomId = key.replace(this.ROOM_DATE_RECORDS_KEY_PREFIX, '');
+        const dataStr = await redisClient.get(key);
+        if (dataStr) {
+          records[roomId] = JSON.parse(dataStr);
+        }
+      }
+
+      return records;
+    } catch (error) {
+      console.error('Error getting room date records:', error);
+      return {};
+    }
   }
 
   // 判断房间是否存在 ----------------------------------------------------------------------
@@ -184,11 +275,15 @@ class RoomManager {
       let roomSettings = await this.getRoomSettings(room);
       // 房间不存在说明是第一次创建
       if (!roomSettings) {
+        let startAt = Date.now();
         roomSettings = {
           participants: {},
           ownerId: participantId,
           record: { active: false },
+          startAt,
         };
+        // 这里还需要设置到房间的使用记录中
+        await this.setRoomDateRecords(room, { start: startAt });
       }
 
       // 更新参与者数据
@@ -205,7 +300,7 @@ class RoomManager {
     }
   }
   // 删除房间 -----------------------------------------------------------------------
-  static async deleteRoom(room: string): Promise<boolean> {
+  static async deleteRoom(room: string, start: number): Promise<boolean> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
@@ -215,6 +310,8 @@ class RoomManager {
       await redisClient.del(roomKey);
       // 从房间列表中删除
       await redisClient.srem(this.ROOM_LIST_KEY_PREFIX, room);
+      // 添加房间使用记录 end
+      await this.setRoomDateRecords(room, { start, end: Date.now() });
       return true;
     } catch (error) {
       console.error('Error deleting room:', error);
@@ -268,7 +365,7 @@ class RoomManager {
       await this.setRoomSettings(room, roomSettings);
       // 判断这个参与者是否是主持人，如果是则进行转让，转给第一个参与者， 如果没有参与者直接删除房间
       if (Object.keys(roomSettings.participants).length === 0) {
-        await this.deleteRoom(room);
+        await this.deleteRoom(room, roomSettings.startAt);
         return {
           success: true,
           clearAll: true,
@@ -344,11 +441,15 @@ class RoomManager {
       }
       let roomSettings = await this.getRoomSettings(room);
       if (!roomSettings) {
+        let startAt = Date.now();
         roomSettings = {
           participants: {},
           ownerId: '',
           record: { active: false },
+          startAt,
         };
+        // 这里还需要设置到房间的使用记录中
+        await this.setRoomDateRecords(room, { start: startAt });
       }
 
       // 获取所有参与者的名字
@@ -421,13 +522,22 @@ class RoomManager {
   }
 }
 
-// const roomSettings: RoomSettings = {};
-
 // 获取房间所有参与者设置
 export async function GET(request: NextRequest) {
   const all = request.nextUrl.searchParams.get('all') === 'true';
   const roomId = request.nextUrl.searchParams.get('roomId');
   const is_pre = request.nextUrl.searchParams.get('pre') === 'true';
+  const is_time_record = request.nextUrl.searchParams.get('time_record') === 'true';
+  // 如果是时间记录，则返回所有房间的使用情况
+  if (is_time_record) {
+    const allRoomDateRecords = await RoomManager.getAllRoomDateRecords();
+    return NextResponse.json(
+      {
+        records: allRoomDateRecords,
+      },
+      { status: 200 },
+    );
+  }
 
   if (all) {
     const detail = request.nextUrl.searchParams.get('detail') === 'true';
