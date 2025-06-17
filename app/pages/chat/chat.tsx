@@ -216,7 +216,7 @@ export function EnhancedChat({
     }
   };
 
-  React.useLayoutEffect(()=> {
+  React.useLayoutEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -305,8 +305,16 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
   const flexEnd = isLocal ? {} : { justifyContent: 'flex-end' };
   const textAlignPos = isLocal ? 'left' : 'end';
 
+  // 判断是否有URL，这里只需要判断URL的基本格式(http/https)
+  const containsUrl = (text: string) => {
+    // 正则表达式：匹配常见的 URL 格式
+    const urlRegex =
+      /https?:\/\/[\w\-_]+(\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/i;
+    return urlRegex.test(text);
+  };
+
   const LinkPreviewCmp = React.useMemo(() => {
-    return msg.type === 'text' && msg.message ? (
+    return msg.type === 'text' && msg.message && containsUrl(msg.message) ? (
       <LinkPreview text={msg.message}></LinkPreview>
     ) : (
       <></>
