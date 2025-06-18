@@ -223,3 +223,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] records -> recording
 - [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
 - [ ] chat，对话位置交换
+- [ ] 缩小化模糊度丢失 (模糊度只是用css进行处理，后续处理为GPU渲染)
+- [ ] 翻页功能失效，在小尺寸窗口下(livekit问题)
+- [ ] chat增加消息提醒
+- [ ] chat内容无法追溯历史 (使用redis)

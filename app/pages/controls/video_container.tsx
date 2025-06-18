@@ -448,6 +448,15 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           volume = 1.0;
         }
         rp.setVolume(volume);
+
+        // 测试代码
+        // room.localParticipant.setTrackSubscriptionPermissions(false, [
+        //   {
+
+        //   }
+        // ])
+        
+
       });
     }, [room, settings]);
 
