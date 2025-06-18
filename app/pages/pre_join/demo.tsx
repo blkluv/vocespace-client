@@ -1,6 +1,6 @@
 'use client';
 
-import { encodePassphrase, generateRoomId, randomString } from '@/lib/client-utils';
+import { encodePassphrase, generateRoomId, randomString } from '@/lib/client_utils';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
