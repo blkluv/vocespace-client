@@ -131,6 +131,10 @@ h2 a {
   background-color: #22ccee !important;
 }
 
+.lk-button[data-lk-source="screen_share"][data-lk-enabled="true"] {
+  background-color: #22ccee !important;
+}
+
 .lk-disconnect-button {
   color: #d92d20 !important;
   border: 1px solid #d92d20 !important;

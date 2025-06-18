@@ -138,7 +138,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             headerBg: '#2c2c2c',
             footerBg: '#1E1E1E',
             colorBgContainer: '#1E1E1E',
-
+          },
+          Menu: {
+            itemActiveBg: '#22CCEE',
+            itemBg: '#1E1E1E',
+            itemSelectedBg: '#22CCEE',
+            itemSelectedColor: '#fff',
           }
         },
       }}

@@ -1,0 +1,338 @@
+.container {
+  width: 280px;
+  height: 100vh;
+  background-color: #1E1E1E;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  position: relative;
+  border-right: 1px solid #2a2a2a;
+
+  &.collapsed {
+    width: 0;
+    overflow: hidden;
+  }
+}
+
+.expandButton {
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 48px;
+  background-color: #1E1E1E;
+  border: 1px solid #2a2a2a;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #2a2a2a;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.header {
+  padding: 16px;
+  border-bottom: 1px solid #2a2a2a;
+  background-color: #1a1a1a;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roomInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roomIcon {
+  width: 20px;
+  height: 20px;
+  color: #22ccee;
+}
+
+.roomName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onlineCount {
+  font-size: 12px;
+  color: #b9bbbe;
+  background-color: #2a2a2a;
+  padding: 2px 6px;
+  border-radius: 12px;
+}
+
+.collapseButton {
+  background: none;
+  border: none;
+  color: #b9bbbe;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #2a2a2a;
+    color: #ffffff;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1E1E1E;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #3a3a3a;
+    border-radius: 3px;
+
+    &:hover {
+      background: #4a4a4a;
+    }
+  }
+}
+
+.roomSection {
+  margin-bottom: 8px;
+}
+
+.roomHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #2a2a2a;
+  }
+}
+
+.roomHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.expandIcon {
+  width: 16px;
+  height: 16px;
+  color: #72767d;
+  transition: transform 0.2s;
+
+  &.expanded {
+    transform: rotate(0deg);
+  }
+
+  &:not(.expanded) {
+    transform: rotate(-90deg);
+  }
+}
+
+.roomTypeIcon {
+  width: 18px;
+  height: 18px;
+  color: #72767d;
+}
+
+.roomHeaderTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #dcddde;
+}
+
+.roomHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.actionButton {
+  background: none;
+  border: none;
+  color: #72767d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #3a3a3a;
+    color: #ffffff;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.roomContent {
+  padding: 4px 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &.active {
+    background-color: rgba(34, 204, 238, 0.1);
+    border-left: 3px solid #22ccee;
+  }
+
+  &:not(.active):hover {
+    background-color: #2a2a2a;
+  }
+}
+
+.userList {
+  padding: 0 16px 0 40px;
+}
+
+.userItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  margin-bottom: 4px;
+}
+
+.userAvatar {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.avatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  background-color: #36393f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.statusIndicator {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid #1E1E1E;
+}
+
+.status_online .statusIndicator {
+  background-color: #43b581;
+}
+
+.status_away .statusIndicator {
+  background-color: #faa61a;
+}
+
+.status_busy .statusIndicator {
+  background-color: #f04747;
+}
+
+.status_offline .statusIndicator {
+  background-color: #747f8d;
+}
+
+.userName {
+  font-size: 13px;
+  color: #dcddde;
+  font-weight: 400;
+}
+
+.bottom {
+  padding: 16px;
+  border-top: 1px solid #2a2a2a;
+}
+
+.createRoomButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  color: #dcddde;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #22ccee;
+    color: #ffffff;
+    border-color: #22ccee;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .container {
+    width: 240px;
+  }
+}

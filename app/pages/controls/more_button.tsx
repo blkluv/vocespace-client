@@ -36,6 +36,12 @@ export function MoreButton({
 
   const items: MenuProps['items'] = useMemo(() => {
     return [
+      // 频道
+      {
+        label: <div style={{ marginLeft: '8px' }}>{t('more.channel.title')}</div>,
+        key: 'channel',
+        icon: <SvgResource type="more" svgSize={16} />,
+      },
       // 录屏功能
       {
         label: (

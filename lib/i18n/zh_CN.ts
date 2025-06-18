@@ -44,8 +44,29 @@ export default {
     open: '开启',
     email_placeholder: '请输入您的邮箱地址',
   },
+  channel: {
+    menu: {
+      header: "",
+      main: "主房间",
+      sub: "子房间",
+      create: "创建房间",
+
+    }
+  },
   more: {
     title: '更多',
+    channel: {
+      title: '频道',
+      desc: '频道是 VoceSpace 的核心功能之一。它允许您创建和管理多个房间，并与其他用户共享您的房间。您可以在这里查看和管理您的频道。',
+      create: '创建频道',
+      create_desc: '创建一个新的频道以开始使用 VoceSpace。',
+      create_channel: '创建频道',
+      channel_name: '频道名称',
+      channel_desc: '频道描述',
+      create_success: '频道创建成功',
+      create_fail: '频道创建失败，请稍后再试。',
+      join: '加入频道',
+    },
     record: {
       start: '录制',
       stop: '停止录制',

@@ -227,3 +227,5 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 翻页功能失效，在小尺寸窗口下(livekit问题)
 - [ ] chat增加消息提醒
 - [ ] chat内容无法追溯历史 (使用redis)
+- [x] 共享屏幕系统色
+- [x] 去除无用文件和代码  
