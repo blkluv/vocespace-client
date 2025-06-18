@@ -1,33 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { CSSProperties, useState } from 'react';
 import styles from '@/styles/channel.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { SvgResource } from '@/app/resources/svg';
-import { Avatar, Button, Tag } from 'antd';
+import { Avatar, Badge, Button, Collapse, CollapseProps, Tag, theme } from 'antd';
 import { randomColor } from '@/lib/std';
-import { MenuFoldOutlined } from '@ant-design/icons';
+import {
+  BankOutlined,
+  CaretRightOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  PlusCircleOutlined,
+} from '@ant-design/icons';
+import { ParticipantItemType, ParticipantList } from '../participant/list';
 
 interface ChannelProps {
   roomName: string;
   onlineCount: number;
-  mainRoomUsers: Array<{
-    id: string;
-    name: string;
-    avatar?: string;
-    status: 'online' | 'away' | 'busy' | 'offline';
-  }>;
-  subRooms: Array<{
-    id: string;
-    name: string;
-    users: Array<{
-      id: string;
-      name: string;
-      avatar?: string;
-      status: 'online' | 'away' | 'busy' | 'offline';
-    }>;
-    isActive: boolean;
-  }>;
+  mainParticipants: ParticipantItemType[];
+  subParticipants: ParticipantItemType[];
+  ownerId?: string;
   currentRoom: 'main' | string; // 'main' for main room, or sub room id
   onJoinMainRoom: () => void;
   onJoinSubRoom: (roomId: string) => void;
@@ -39,19 +32,21 @@ interface ChannelProps {
 export function Channel({
   roomName,
   onlineCount,
-  mainRoomUsers,
-  subRooms,
+  mainParticipants,
+  subParticipants,
   currentRoom,
   onJoinMainRoom,
   onJoinSubRoom,
   onLeaveSubRoom,
   onCreateSubRoom,
   onSubRoomSettings,
+  ownerId = '',
 }: ChannelProps) {
   const { t } = useI18n();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set(['main']));
-
+  const { token } = theme.useToken();
+  const [selected, setSelected] = useState<'main' | 'sub'>('main');
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
   };
@@ -66,38 +61,96 @@ export function Channel({
     setExpandedRooms(newExpanded);
   };
 
-  const renderUserList = (
-    users: Array<{ id: string; name: string; avatar?: string; status: string }>,
-  ) => (
-    <div className={styles.userList}>
-      {users.map((user) => (
-        <div key={user.id} className={styles.userItem}>
-          <div className={`${styles.userAvatar} ${styles[`status_${user.status}`]}`}>
-            {user.avatar ? (
-              <Avatar
-                style={{
-                  backgroundColor: randomColor(user.name),
-                }}
-              >
-                {user.name.substring(0, 3)}
-              </Avatar>
-            ) : (
-              <div className={styles.avatarPlaceholder}>{user.name.charAt(0).toUpperCase()}</div>
-            )}
-            <div className={styles.statusIndicator} />
-          </div>
-          <span className={styles.userName}>{user.name}</span>
+  const panelStyle: React.CSSProperties = {
+    marginBottom: 0,
+    background: '#1e1e1e',
+    borderRadius: 0,
+    border: 'none',
+  };
+  const subStyle: React.CSSProperties = {
+    marginBottom: 0,
+    background: selected == 'sub' ? '#2a2a2a' : '#1e1e1e',
+    borderRadius: 0,
+    border: 'none',
+  };
+
+  const mainItems: (panelStyle: CSSProperties) => CollapseProps['items'] = (panelStyle) => [
+    {
+      key: 'main',
+      label: (
+        <div className={styles.room_header_wrapper}>
+          <BankOutlined />
+          {t('channel.menu.main')} &nbsp;
+          {roomName}
         </div>
-      ))}
-    </div>
-  );
+      ),
+      children: (
+        <ParticipantList
+          participants={mainParticipants}
+          ownerId={ownerId}
+          size="default"
+        ></ParticipantList>
+      ),
+      style: panelStyle,
+      extra: (
+        <div className={styles.room_header_extra}>
+          <Badge count={mainParticipants.length} color="#22CCEE" showZero size="small" />
+          <PlusCircleOutlined onClick={() => {}} />
+        </div>
+      ),
+    },
+    {
+      key: 'sub_main',
+      label: (
+        <div className={styles.room_header_wrapper}>
+          <BankOutlined />
+          {t('channel.menu.sub')}
+        </div>
+      ),
+      children: (
+        <Collapse
+          bordered={false}
+          defaultActiveKey={['sub']}
+          expandIconPosition="end"
+          expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+          style={{ background: token.colorBgContainer }}
+          items={subChildren(panelStyle)}
+        />
+      ),
+      style: panelStyle,
+    },
+  ];
+
+  const subChildren: (panelStyle: CSSProperties) => CollapseProps['items'] = (panelStyle) => [
+    {
+      key: 'sub',
+      label: (
+        <div className={styles.room_header_wrapper}>
+          <BankOutlined />
+          {t('channel.menu.sub')}
+        </div>
+      ),
+      children: (
+        <ParticipantList
+          participants={subParticipants}
+          ownerId={ownerId}
+          size="default"
+        ></ParticipantList>
+      ),
+      style: subStyle,
+      extra: (
+        <div className={styles.room_header_extra}>
+          <Badge count={subParticipants.length} color="#22CCEE" showZero size="small" />
+          <PlusCircleOutlined onClick={() => {}} />
+        </div>
+      ),
+    },
+  ];
 
   if (collapsed) {
     return (
       <div className={`${styles.container} ${styles.collapsed}`}>
-        <button className={styles.expandButton} onClick={toggleCollapse}>
-          {/* <SvgResource.ChevronRight /> */}
-        </button>
+        <Button type="text" onClick={toggleCollapse} icon={<MenuUnfoldOutlined />}></Button>
       </div>
     );
   }
@@ -126,93 +179,28 @@ export function Channel({
       {/* Main Content */}
       <div className={styles.main}>
         {/* Main Room */}
-        <div className={styles.roomSection}>
-          <div className={styles.roomHeader} onClick={() => toggleRoomExpansion('main')}>
-            <div className={styles.roomHeaderLeft}>
-              {/* <SvgResource.ChevronDown
-                className={`${styles.expandIcon} ${
-                  expandedRooms.has('main') ? styles.expanded : ''
-                }`}
-              />
-              <SvgResource.Hash className={styles.roomTypeIcon} /> */}
-              <span className={styles.roomHeaderTitle}>主房间</span>
-            </div>
-            <div className={styles.roomHeaderActions}>
-              {currentRoom !== 'main' && (
-                <button
-                  className={styles.actionButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onJoinMainRoom();
-                  }}
-                  title="返回主房间"
-                >
-                  {/* <SvgResource.ArrowLeft /> */}
-                </button>
-              )}
-            </div>
-          </div>
-          {expandedRooms.has('main') && (
-            <div className={`${styles.roomContent} ${currentRoom === 'main' ? styles.active : ''}`}>
-              {renderUserList(mainRoomUsers)}
-            </div>
-          )}
+        <div>
+          <Collapse
+            bordered={false}
+            defaultActiveKey={['main']}
+            expandIconPosition="end"
+            expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+            style={{ background: token.colorBgContainer }}
+            items={mainItems(panelStyle)}
+          />
         </div>
-
-        {/* Sub Rooms */}
-        {subRooms.map((subRoom) => (
-          <div key={subRoom.id} className={styles.roomSection}>
-            <div className={styles.roomHeader} onClick={() => toggleRoomExpansion(subRoom.id)}>
-              <div className={styles.roomHeaderLeft}>
-                <SvgResource type="add" />
-                <SvgResource type="channel" />
-                <span className={styles.roomHeaderTitle}>{subRoom.name}</span>
-              </div>
-              <div className={styles.roomHeaderActions}>
-                {currentRoom === subRoom.id && (
-                  <button
-                    className={styles.actionButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onLeaveSubRoom();
-                    }}
-                    title="离开子房间"
-                  >
-                    <SvgResource type="leave" />
-                  </button>
-                )}
-                <button
-                  className={styles.actionButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSubRoomSettings(subRoom.id);
-                  }}
-                  title="房间设置"
-                >
-                  <SvgResource type="setting" />
-                </button>
-              </div>
-            </div>
-            {expandedRooms.has(subRoom.id) && (
-              <div
-                className={`${styles.roomContent} ${
-                  currentRoom === subRoom.id ? styles.active : ''
-                }`}
-                onClick={() => currentRoom !== subRoom.id && onJoinSubRoom(subRoom.id)}
-              >
-                {renderUserList(subRoom.users)}
-              </div>
-            )}
-          </div>
-        ))}
       </div>
 
       {/* Bottom */}
       <div className={styles.bottom}>
-        <button className={styles.createRoomButton} onClick={onCreateSubRoom}>
-          <SvgResource type="add" />
+        <Button
+          onClick={onCreateSubRoom}
+          type="primary"
+          style={{ width: '100%' }}
+          icon={<SvgResource type="add" svgSize={16} />}
+        >
           <span>创建子房间</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

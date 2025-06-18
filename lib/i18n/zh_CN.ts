@@ -50,7 +50,7 @@ export default {
       main: "主房间",
       sub: "子房间",
       create: "创建房间",
-
+      join: "加入",
     }
   },
   more: {

@@ -222,10 +222,17 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 增加复制链接(records)
 - [ ] records -> recording
 - [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
-- [ ] chat，对话位置交换
-- [ ] 缩小化模糊度丢失 (模糊度只是用css进行处理，后续处理为GPU渲染)
-- [ ] 翻页功能失效，在小尺寸窗口下(livekit问题)
-- [ ] chat增加消息提醒
-- [ ] chat内容无法追溯历史 (使用redis)
+- [ ] chat，对话位置交换 √
+
+- [x] 翻页功能失效，在小尺寸窗口下(livekit问题)
+- [ ] chat增加消息提醒 √
+- [ ] chat内容无法追溯历史 (使用redis) √ 
 - [x] 共享屏幕系统色
 - [x] 去除无用文件和代码  
+- [ ] safari浏览器显示标签页概览截图丢失模糊度： 缩小化模糊度丢失 (模糊度只是用css进行处理，后续处理为GPU渲染)
+
+
+chat 合 space.voce.chat
+- [ ] screen share audio 关闭 （放入设置）
+- [ ] 设置持久化到localstorage
+- [ ] 设置，新用户加入时的提醒音

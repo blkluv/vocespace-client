@@ -9,10 +9,16 @@ export type ParticipantItemType = [string, ParticipantSettings];
 export interface ParticipantListProps {
   participants: ParticipantItemType[];
   ownerId: string;
+  size?: 'small' | 'large' | 'default';
   suffix?: (item: ParticipantItemType, index: number) => React.ReactNode;
 }
 
-export function ParticipantList({ participants, ownerId, suffix }: ParticipantListProps) {
+export function ParticipantList({
+  participants,
+  ownerId,
+  suffix,
+  size = 'large',
+}: ParticipantListProps) {
   const { t } = useI18n();
   return (
     <List
@@ -24,6 +30,7 @@ export function ParticipantList({ participants, ownerId, suffix }: ParticipantLi
           <div className={styles.particepant_item}>
             <div className={styles.particepant_item_left}>
               <Avatar
+                size={size}
                 style={{
                   backgroundColor: randomColor(item[1].name),
                 }}

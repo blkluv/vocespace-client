@@ -44,6 +44,7 @@ import { licenseState, socket, userState } from '@/app/rooms/[roomName]/PageClie
 import { useRouter } from 'next/navigation';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { Button } from 'antd';
+import { Channel } from './channel';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -455,8 +456,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
         //   }
         // ])
-        
-
       });
     }, [room, settings]);
 
@@ -642,30 +641,57 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     }));
 
     return (
-      <div className="lk-video-conference" {...props}>
-        {is_web() && (
-          <LayoutContextProvider
-            value={layoutContext}
-            // onPinChange={handleFocusStateChange}
-            onWidgetChange={widgetUpdate}
-          >
-            <div className="lk-video-conference-inner">
-              {!focusTrack ? (
-                <div className="lk-grid-layout-wrapper">
-                  <GridLayout tracks={tracks}>
-                    <ParticipantItem
-                      room={room?.name}
-                      settings={settings}
-                      toSettings={toSettingGeneral}
-                      messageApi={messageApi}
-                      setUserStatus={setUserStatus}
-                    ></ParticipantItem>
-                  </GridLayout>
-                </div>
-              ) : (
-                <div className="lk-focus-layout-wrapper">
-                  <FocusLayoutContainer>
-                    <CarouselLayout tracks={carouselTracks}>
+      <div className="video_container_wrapper">
+        {room && (
+          <Channel
+            roomName={room.name}
+            onlineCount={room.remoteParticipants.size + 1}
+            mainParticipants={[
+              [
+                'iaa',
+                {
+                  name: 'Zhang San',
+                  volume: 1,
+                  blur: 0,
+                  screenBlur: 0,
+                  status: 'online',
+                  socketId: 'socket-123',
+                  startAt: Date.now(),
+                  virtual: {
+                    role: ModelRole.None,
+                    bg: ModelBg.ClassRoom,
+                    enabled: false,
+                  },
+                },
+              ],
+            ]}
+            subParticipants={[]}
+            currentRoom="main"
+            onJoinMainRoom={() => {}}
+            onJoinSubRoom={() => {}}
+            onLeaveSubRoom={() => {}}
+            onCreateSubRoom={() => {}}
+            onSubRoomSettings={() => {}}
+          ></Channel>
+        )}
+        <div
+          className="lk-video-conference"
+          {...props}
+          style={{
+            height: '100vh',
+            width: 'calc(100vw - 280px)',
+          }}
+        >
+          {is_web() && (
+            <LayoutContextProvider
+              value={layoutContext}
+              // onPinChange={handleFocusStateChange}
+              onWidgetChange={widgetUpdate}
+            >
+              <div className="lk-video-conference-inner" style={{ alignItems: 'space-between' }}>
+                {!focusTrack ? (
+                  <div className="lk-grid-layout-wrapper">
+                    <GridLayout tracks={tracks}>
                       <ParticipantItem
                         room={room?.name}
                         settings={settings}
@@ -673,49 +699,63 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                         messageApi={messageApi}
                         setUserStatus={setUserStatus}
                       ></ParticipantItem>
-                    </CarouselLayout>
-                    {focusTrack && (
-                      <ParticipantItem
-                        room={room?.name}
-                        setUserStatus={setUserStatus}
-                        settings={settings}
-                        toSettings={toSettingGeneral}
-                        trackRef={focusTrack}
-                        messageApi={messageApi}
-                        isFocus={isFocus}
-                      ></ParticipantItem>
-                    )}
-                  </FocusLayoutContainer>
+                    </GridLayout>
+                  </div>
+                ) : (
+                  <div className="lk-focus-layout-wrapper">
+                    <FocusLayoutContainer>
+                      <CarouselLayout tracks={carouselTracks}>
+                        <ParticipantItem
+                          room={room?.name}
+                          settings={settings}
+                          toSettings={toSettingGeneral}
+                          messageApi={messageApi}
+                          setUserStatus={setUserStatus}
+                        ></ParticipantItem>
+                      </CarouselLayout>
+                      {focusTrack && (
+                        <ParticipantItem
+                          room={room?.name}
+                          setUserStatus={setUserStatus}
+                          settings={settings}
+                          toSettings={toSettingGeneral}
+                          trackRef={focusTrack}
+                          messageApi={messageApi}
+                          isFocus={isFocus}
+                        ></ParticipantItem>
+                      )}
+                    </FocusLayoutContainer>
+                  </div>
+                )}
+                <Controls
+                  ref={controlsRef}
+                  setUserStatus={setUserStatus}
+                  controls={{ chat: true, settings: !!SettingsComponent }}
+                  updateSettings={updateSettings}
+                  roomSettings={settings}
+                  fetchSettings={fetchSettings}
+                  updateRecord={updateRecord}
+                  setPermissionDevice={setPermissionDevice}
+                ></Controls>
+              </div>
+              {SettingsComponent && (
+                <div
+                  className="lk-settings-menu-modal"
+                  style={{ display: widgetState.showSettings ? 'block' : 'none' }}
+                >
+                  <SettingsComponent />
                 </div>
               )}
-              <Controls
-                ref={controlsRef}
-                setUserStatus={setUserStatus}
-                controls={{ chat: true, settings: !!SettingsComponent }}
-                updateSettings={updateSettings}
-                roomSettings={settings}
-                fetchSettings={fetchSettings}
-                updateRecord={updateRecord}
-                setPermissionDevice={setPermissionDevice}
-              ></Controls>
-            </div>
-            {SettingsComponent && (
-              <div
-                className="lk-settings-menu-modal"
-                style={{ display: widgetState.showSettings ? 'block' : 'none' }}
-              >
-                <SettingsComponent />
-              </div>
-            )}
-          </LayoutContextProvider>
-        )}
-        <RoomAudioRenderer />
-        <ConnectionStateToast />
-        <audio
-          ref={waveAudioRef}
-          style={{ display: 'none' }}
-          src={src('/audios/vocespacewave.m4a')}
-        ></audio>
+            </LayoutContextProvider>
+          )}
+          <RoomAudioRenderer />
+          <ConnectionStateToast />
+          <audio
+            ref={waveAudioRef}
+            style={{ display: 'none' }}
+            src={src('/audios/vocespacewave.m4a')}
+          ></audio>
+        </div>
       </div>
     );
   },

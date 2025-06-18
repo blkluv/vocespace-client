@@ -109,12 +109,12 @@ export const ParticipantItem: (
             }, 1500);
           }
         }
-      }else{
+      } else {
         setVirtualReady(false);
         if (remoteMask) {
           setDelayMask(true);
-        }else{
-          setTimeout(()=> {
+        } else {
+          setTimeout(() => {
             setDelayMask(false);
           }, 3500);
         }
@@ -175,6 +175,11 @@ export const ParticipantItem: (
       [trackReference, layoutContext],
     );
 
+    const videoFilter = React.useMemo(() => {
+      return settings.participants[trackReference.participant.identity]?.virtual?.enabled ?? false
+        ? `none`
+        : `blur(${blurValue}px)`;
+    }, [settings.participants, trackReference.participant.identity, blurValue]);
 
     const deviceTrack = React.useMemo(() => {
       if (isTrackReference(trackReference) && !loading) {
@@ -217,11 +222,8 @@ export const ParticipantItem: (
               <VideoTrack
                 ref={videoRef}
                 style={{
-                  filter:
-                    settings.participants[trackReference.participant.identity]?.virtual?.enabled ??
-                    false
-                      ? `none`
-                      : `blur(${blurValue}px)`,
+                  WebkitFilter: videoFilter,
+                  filter: videoFilter,
                   transition: 'filter 0.2s ease-in-out',
                   zIndex: '11',
                 }}
