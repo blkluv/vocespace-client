@@ -48,7 +48,7 @@
 - [x] chat
   - [x] chat tips (badage)
   - [x] link preview
-  - [ ] history msg
+  - [x] history msg
 
 
 ## Fixes
@@ -59,5 +59,6 @@
 - [x] allowing screen recording permission will turn on the sound, pointing to an error
 - [x] chat auto-slide down is invalid
 - [x] switch the local and remote chat area positions
+- [x] server.js env missing
 
 ## Details

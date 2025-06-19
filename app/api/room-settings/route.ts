@@ -705,6 +705,37 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const roomId = request.nextUrl.searchParams.get('roomId');
   const participantId = request.nextUrl.searchParams.get('participantId');
+  const socketId = request.nextUrl.searchParams.get('socketId');
+
+  if (socketId) {
+    // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
+    // 所以这里要从redis中找到这个对应socketId的参与者
+    const allRooms = await RoomManager.getAllRooms();
+    for (const [roomId, settings] of Object.entries(allRooms)) {
+      for (const [participantId, participant] of Object.entries(settings.participants)) {
+        if (participant.socketId === socketId) {
+          // 找到对应的参与者，进行删除
+          const { success, clearAll, error } = await RoomManager.removeParticipant(
+            roomId,
+            participantId,
+          );
+          if (success) {
+            if (clearAll) {
+              return NextResponse.json({ success: true, clearRoom: roomId });
+            }
+            return NextResponse.json({
+              success: true,
+              message: 'Participant removed successfully',
+            });
+          }
+          return NextResponse.json(
+            { success: false, message: 'Failed to remove participant', error },
+            { status: 500 },
+          );
+        }
+      }
+    }
+  }
 
   if (!roomId || !participantId) {
     return NextResponse.json({ error: 'Room ID and Participant ID are required' }, { status: 400 });
