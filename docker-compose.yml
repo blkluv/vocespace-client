@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  vocespace:
+    container_name: vocespace
+    image: privoce/vocespace:latest
+    build:
+      context: .
+      # args:
+      #   - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      #   - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
+      #   - LIVEKIT_URL=${LIVEKIT_URL:-wss://space.voce.chat}
+      #   - NEXT_PUBLIC_BASE_PATH=/chat
+      #   - TURN_CREDENTIAL=${TURN_CREDENTIAL:-}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY:-devkey}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET:-secret}
+      - LIVEKIT_URL=${LIVEKIT_URL:-wss://space.voce.chat}
+      - NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH:-}
+      - PORT=${PORT:-3000}
+      - TURN_CREDENTIAL=${TURN_CREDENTIAL:-}
+      - TURN_URL=${TURN_URL:-}
+      - TURN_USERNAME=${TURN_USERNAME:-}
+    networks:
+      - vocespace
+
+networks:
+  vocespace:
+    driver: bridge

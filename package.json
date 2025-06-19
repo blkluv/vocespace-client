@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ant-design/icons": "5.x",
     "@datadog/browser-logs": "^5.23.3",
     "@livekit/components-react": "2.8.1",
     "@livekit/components-styles": "1.1.4",
@@ -18,7 +19,8 @@
     "antd": "^5.24.2",
     "detect-gpu": "^5.0.70",
     "express": "^5.1.0",
-    "face-api.js": "^0.22.2",
+    "ioredis": "^5.6.1",
+    "link-preview-js": "^3.0.14",
     "live2d-motionsync": "^0.0.4",
     "livekit-client": "2.9.3",
     "livekit-server-sdk": "2.10.1",
@@ -31,6 +33,7 @@
     "rxjs": "^7.8.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "stripe": "^18.1.0",
     "tinykeys": "^3.0.0",
     "ulid": "^3.0.0"
   },

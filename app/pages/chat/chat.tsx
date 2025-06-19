@@ -5,11 +5,13 @@ import type { GetProp, UploadProps } from 'antd';
 import { pictureCallback, SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
-import { setting_drawer_header } from '@/app/devices/controls/bar';
+import { setting_drawer_header } from '@/app/pages/controls/bar';
 import { ulid } from 'ulid';
 import { Room } from 'livekit-client';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
 import { MessageInstance } from 'antd/es/message/interface';
+import { LinkPreview } from './link_preview';
+import Dragger from 'antd/es/upload/Dragger';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
@@ -22,6 +24,25 @@ export interface EnhancedChatProps {
   messageApi: MessageInstance;
 }
 
+interface ChatMsgItem {
+  id?: string;
+  sender: {
+    id: string;
+    name: string;
+  };
+  message: string | null;
+  type: 'text' | 'file';
+  roomName: string;
+  timestamp?: string;
+  file: {
+    name: string;
+    size: number;
+    type: string;
+    url?: string;
+    data?: string | ArrayBuffer | null;
+  } | null;
+}
+
 export function EnhancedChat({
   open,
   setOpen,
@@ -32,30 +53,51 @@ export function EnhancedChat({
 }: EnhancedChatProps) {
   const { t } = useI18n();
   const ulRef = React.useRef<HTMLUListElement>(null);
+  const bottomRef = React.useRef<HTMLDivElement>(null);
   const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
   const [value, setValue] = React.useState('');
   // 添加输入法组合状态跟踪
   const [isComposing, setIsComposing] = React.useState(false);
+
+  const handleFileResponse = React.useCallback(
+    (msg: ChatMsgItem) => {
+      if (msg.roomName == room.name) {
+        setMessages((prevMessages) => {
+          // 使用函数式更新来获取最新的 messages 状态
+          const existingFile = prevMessages.find((m) => m.id === msg.id);
+          if (!existingFile) {
+            // setTimeout(() => {
+            //   scrollToBottom();
+            // }, 0); // 异步滚动到底部
+            return [...prevMessages, msg];
+          }
+          return prevMessages; // 如果已存在，不重复添加
+        });
+      }
+    },
+    [room.name], // 移除 messages 依赖项
+  );
+
   // [socket] ----------------------------------------------------------------------------------
   React.useEffect(() => {
-    socket.on('chat_msg_response', (msg: ChatMsgItem) => {
+    const handleChatMsgResponse = (msg: ChatMsgItem) => {
       if (msg.roomName == room.name) {
         setMessages((prev) => [...prev, msg]);
+        // setTimeout(() => {
+        //   console.warn('scrollToBottom');
+        //   scrollToBottom();
+        // }, 0); // 异步滚动到底部
       }
-    });
+    };
 
-    socket.on('chat_file_response', (msg: ChatMsgItem) => {
-      if (msg.roomName == room.name) {
-        console.warn('chat_file_response', msg);
-        setMessages((prev) => [...prev, msg]);
-      }
-    });
+    socket.on('chat_msg_response', handleChatMsgResponse);
+    socket.on('chat_file_response', handleFileResponse);
 
     return () => {
-      socket.off('chat_msg');
-      socket.off('chat_msg_response');
+      socket.off('chat_msg', handleChatMsgResponse);
+      socket.off('chat_msg_response', handleFileResponse);
     };
-  }, [socket]);
+  }, [room.name, handleFileResponse]);
   // [send methods] ----------------------------------------------------------------------------
   const sendMsg = async () => {
     const msg = value.trim();
@@ -75,6 +117,9 @@ export function EnhancedChat({
     };
 
     setMessages((prev) => [...prev, chatMsg]);
+    // setTimeout(() => {
+    //   scrollToBottom();
+    // }, 100); // 异步滚动到底部
     setValue('');
     socket.emit('chat_msg', chatMsg);
   };
@@ -124,15 +169,13 @@ export function EnhancedChat({
   };
 
   const scrollToBottom = () => {
-    const el = ulRef.current;
-    if (el) {
-      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-    }
+    // 使用 scrollIntoView，更可靠
+    bottomRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+      inline: 'nearest',
+    });
   };
-
-  React.useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   // 处理回车键事件
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -153,7 +196,7 @@ export function EnhancedChat({
     }
   };
 
-  const is_img = (type: string) => {
+  const isImg = (type: string) => {
     return type.startsWith('image/');
   };
 
@@ -173,6 +216,23 @@ export function EnhancedChat({
     }
   };
 
+  React.useLayoutEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const msgList = React.useMemo(() => {
+    console.warn('msgList', messages);
+    return messages.map((msg) => (
+      <ChatMsgItemCmp
+        key={msg.id || ulid()}
+        isLocal={isLocal(msg.sender.id)}
+        msg={msg}
+        downloadFile={downloadFile}
+        isImg={isImg}
+      ></ChatMsgItemCmp>
+    ));
+  }, [messages]);
+
   return (
     <Drawer
       title={t('common.chat')}
@@ -187,122 +247,24 @@ export function EnhancedChat({
       styles={{
         body: {
           padding: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-        }
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+        },
       }}
     >
       <div className={styles.msg}>
+        <Dragger
+          style={{ position: 'absolute', top: 0, border: 'none' }}
+          multiple={false}
+          name="file"
+          beforeUpload={handleBeforeUpload}
+          showUploadList={false}
+        ></Dragger>
         <ul ref={ulRef} className={styles.msg_list}>
-          {messages.map((msg) =>
-            isLocal(msg.sender.id) ? (
-              <li key={ulid()} className={styles.msg_item}>
-                <div className={styles.msg_item_wrapper}>
-                  <div className={styles.msg_item_content}>
-                    <h4 className={styles.msg_item_content_name}>{msg.sender.name || 'unknown'}</h4>
-                    {msg.type === 'text' ? (
-                      <p className={styles.msg_item_content_msg}>{msg.message}</p>
-                    ) : (
-                      <Popover
-                        placement="right"
-                        style={{ background: '#1E1E1E' }}
-                        content={
-                          <Button
-                            shape="circle"
-                            type="text"
-                            onClick={() => downloadFile(msg?.file?.url)}
-                          >
-                            <SvgResource type="download" svgSize={16} color="#22CCEE"></SvgResource>
-                          </Button>
-                        }
-                      >
-                        {msg.file && (
-                          <p className={styles.msg_item_content_msg}>
-                            {is_img(msg.file.type) ? (
-                              <Image
-                                src={msg.file.url}
-                                width={'70%'}
-                                fallback={pictureCallback}
-                              ></Image>
-                            ) : (
-                              <div className={styles.msg_item_content_msg_file}>
-                                <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
-                                  <SvgResource
-                                    type="file"
-                                    color="#22CCEE"
-                                    svgSize={42}
-                                  ></SvgResource>
-                                </a>
-                                <div className={styles.msg_item_content_msg_file_info}>
-                                  <h4>{msg.file.name}</h4>
-                                  <p>{Math.round(msg.file.size / 1024)}KB</p>
-                                </div>
-                              </div>
-                            )}
-                          </p>
-                        )}
-                      </Popover>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ) : (
-              <li key={ulid()} className={styles.msg_item__remote}>
-                <div className={styles.msg_item_wrapper}>
-                  <div className={styles.msg_item_content} style={{ justifyContent: 'flex-end' }}>
-                    <h4 className={styles.msg_item_content_name} style={{ textAlign: 'end' }}>
-                      {msg.sender.name}
-                    </h4>
-                    {msg.type === 'text' ? (
-                      <p className={styles.msg_item_content_msg}>{msg.message}</p>
-                    ) : (
-                      <Popover
-                        placement="right"
-                        style={{ background: '#1E1E1E' }}
-                        content={
-                          <Button
-                            shape="circle"
-                            type="text"
-                            onClick={() => downloadFile(msg?.file?.url)}
-                          >
-                            <SvgResource type="download" svgSize={16} color="#22CCEE"></SvgResource>
-                          </Button>
-                        }
-                      >
-                        {msg.file && (
-                          <p className={styles.msg_item_content_msg}>
-                            {is_img(msg.file.type) ? (
-                              <Image
-                                src={msg.file.url}
-                                height={42}
-                                fallback={pictureCallback}
-                              ></Image>
-                            ) : (
-                              <div className={styles.msg_item_content_msg_file}>
-                                <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
-                                  <SvgResource
-                                    type="file"
-                                    color="#22CCEE"
-                                    svgSize={42}
-                                  ></SvgResource>
-                                </a>
-                                <div className={styles.msg_item_content_msg_file_info}>
-                                  <h4>{msg.file.name}</h4>
-                                  <p>{Math.round(msg.file.size / 1024)}KB</p>
-                                </div>
-                              </div>
-                            )}
-                          </p>
-                        )}
-                      </Popover>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ),
-          )}
+          {msgList}
+          <div ref={bottomRef} style={{ height: '1px', visibility: 'hidden' }} />
         </ul>
       </div>
 
@@ -331,21 +293,82 @@ export function EnhancedChat({
   );
 }
 
-interface ChatMsgItem {
-  id?: string;
-  sender: {
-    id: string;
-    name: string;
+interface ChatMsgItemProps {
+  isLocal: boolean;
+  msg: ChatMsgItem;
+  downloadFile: (url?: string) => Promise<void>;
+  isImg: (type: string) => boolean;
+}
+
+function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps) {
+  const liClass = isLocal ? styles.msg_item : styles.msg_item__remote;
+  const flexEnd = isLocal ? {} : { justifyContent: 'flex-end' };
+  const textAlignPos = isLocal ? 'left' : 'end';
+
+  // 判断是否有URL，这里只需要判断URL的基本格式(http/https)
+  const containsUrl = (text: string) => {
+    // 正则表达式：匹配常见的 URL 格式
+    const urlRegex =
+      /https?:\/\/[\w\-_]+(\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/i;
+    return urlRegex.test(text);
   };
-  message: string | null;
-  type: 'text' | 'file';
-  roomName: string;
-  timestamp?: string;
-  file: {
-    name: string;
-    size: number;
-    type: string;
-    url?: string;
-    data?: string | ArrayBuffer | null;
-  } | null;
+
+  const LinkPreviewCmp = React.useMemo(() => {
+    return msg.type === 'text' && msg.message && containsUrl(msg.message) ? (
+      <LinkPreview text={msg.message}></LinkPreview>
+    ) : (
+      <></>
+    );
+  }, [msg.message]);
+
+  return (
+    <li className={liClass}>
+      <div className={styles.msg_item_wrapper}>
+        <div className={styles.msg_item_content} style={flexEnd}>
+          <h4 className={styles.msg_item_content_name} style={{ textAlign: textAlignPos }}>
+            {msg.sender.name || 'unknown'}
+          </h4>
+          {msg.type === 'text' ? (
+            <div className={styles.msg_item_content_wrapper} style={flexEnd}>
+              <div className={styles.msg_item_content_msg}>{msg.message}</div>
+              {LinkPreviewCmp}
+            </div>
+          ) : (
+            <Popover
+              placement="right"
+              style={{ background: '#1E1E1E' }}
+              content={
+                <Button shape="circle" type="text" onClick={() => downloadFile(msg?.file?.url)}>
+                  <SvgResource type="download" svgSize={16} color="#22CCEE"></SvgResource>
+                </Button>
+              }
+            >
+              {msg.file && (
+                <div className={styles.msg_item_content_msg}>
+                  {isImg(msg.file.type) ? (
+                    <Image
+                      src={msg.file.url}
+                      width={'100%'}
+                      fallback={pictureCallback}
+                      height={160}
+                    ></Image>
+                  ) : (
+                    <div className={styles.msg_item_content_msg_file}>
+                      <a href={msg.file.url} target="_blank" rel="noopener noreferrer">
+                        <SvgResource type="file" color="#22CCEE" svgSize={42}></SvgResource>
+                      </a>
+                      <div className={styles.msg_item_content_msg_file_info}>
+                        <h4>{msg.file.name}</h4>
+                        <div>{Math.round(msg.file.size / 1024)}KB</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Popover>
+          )}
+        </div>
+      </div>
+    </li>
+  );
 }

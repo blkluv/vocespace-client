@@ -1,11 +1,10 @@
 'use client';
 
-import { VideoContainer, VideoContainerExports } from '@/app/devices/video_container';
+import { VideoContainer, VideoContainerExports } from '@/app/pages/controls/video_container';
 import { decodePassphrase } from '@/lib/client-utils';
 import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from '@/lib/RecordingIndicator';
-import { SettingsMenu } from '@/lib/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
 import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
@@ -18,8 +17,7 @@ import {
   DeviceUnsupportedError,
   RoomConnectOptions,
   MediaDeviceFailure,
-  RpcInvocationData,
-  ConnectionState,
+  Track,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, ReactNode, useState } from 'react';
@@ -29,11 +27,9 @@ import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_PATH
-  ? {
-      path: process.env.NEXT_PUBLIC_BASE_PATH,
-    }
-  : {};
+const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
+const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
+const TURN_URL = process.env.TURN_URL ?? '';
 
 export const socket = io();
 
@@ -53,6 +49,19 @@ export const userState = atom({
     //   wave: false,
     // },
     roomStatus: [] as UserDefineStatus[],
+  },
+});
+
+export const licenseState = atom({
+  key: 'licenseState',
+  default: {
+    id: undefined,
+    email: undefined,
+    domains: '*',
+    created_at: 1747742400,
+    expires_at: 1779278400,
+    value: 'vocespace_pro__KUgwpDrr-g3iXIX41rTrSCsWAcn9UFX8dOYMr0gAARQ',
+    ilimit: 'Free',
   },
 });
 
@@ -158,6 +167,7 @@ function VideoConferenceComponent(props: {
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [permissionDevice, setPermissionDevice] = useState<Track.Source | null>(null);
   const videoContainerRef = React.useRef<VideoContainerExports>(null);
   const roomOptions = React.useMemo((): RoomOptions => {
     let videoCodec: VideoCodec | undefined = props.options.codec ? props.options.codec : 'vp9';
@@ -218,13 +228,13 @@ function VideoConferenceComponent(props: {
       autoSubscribe: true,
     } as RoomConnectOptions;
 
-    if (process.env.TURN_CREDENTIAL) {
+    if (TURN_CREDENTIAL !== '' && TURN_USERNAME !== '' && TURN_URL !== '') {
       conf.rtcConfig = {
         iceServers: [
           {
-            urls: 'turn:space.voce.chat:3478',
-            username: 'privoce',
-            credential: process.env.TURN_CREDENTIAL,
+            urls: TURN_URL,
+            username: TURN_USERNAME,
+            credential: TURN_CREDENTIAL,
           },
         ],
         iceCandidatePoolSize: 20,
@@ -320,9 +330,22 @@ function VideoConferenceComponent(props: {
       // 尝试重新启用设备
       if (room) {
         try {
-          // 可以选择性地重新启用摄像头或麦克风
-          await room.localParticipant.setCameraEnabled(true);
-          await room.localParticipant.setMicrophoneEnabled(true);
+          switch (permissionDevice) {
+            case Track.Source.Camera:
+              await room.localParticipant.setCameraEnabled(true);
+              break;
+            case Track.Source.Microphone:
+              await room.localParticipant.setMicrophoneEnabled(true);
+              break;
+            case Track.Source.ScreenShare:
+              await room.localParticipant.setScreenShareEnabled(true);
+              break;
+            default:
+              // 如果没有指定设备，则启用摄像头和麦克风
+              await room.localParticipant.setCameraEnabled(true);
+              await room.localParticipant.setMicrophoneEnabled(true);
+              break;
+          }
         } catch (err) {
           console.error(t('msg.error.device.granted'), err);
         }
@@ -364,6 +387,7 @@ function VideoConferenceComponent(props: {
           SettingsComponent={undefined}
           messageApi={messageApi}
           noteApi={notApi}
+          setPermissionDevice={setPermissionDevice}
         ></VideoContainer>
         <DebugMode />
         <RecordingIndicator />

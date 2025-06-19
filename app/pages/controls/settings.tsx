@@ -1,6 +1,6 @@
-import { Button, Input, List, Radio, Slider, Switch, Tabs, TabsProps } from 'antd';
+import { Button, Input, List, Radio, Slider, Tabs, TabsProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { MessageInstance } from 'antd/es/message/interface';
 import { loadVideo, useVideoBlur } from '@/lib/std/device';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
@@ -17,6 +17,7 @@ import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/Page
 import TextArea from 'antd/es/input/TextArea';
 import { LocalParticipant } from 'livekit-client';
 import { ulid } from 'ulid';
+import { LicenseControl } from './license';
 
 const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
 
@@ -222,6 +223,11 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         ),
       },
       {
+        key: 'license',
+        label: <TabItem type="license" label={t('settings.license.title')}></TabItem>,
+        children: <LicenseControl messageApi={messageApi}></LicenseControl>,
+      },
+      {
         key: 'about_us',
         label: <TabItem type="logo" label={t('settings.about_us.title')}></TabItem>,
         children: (
@@ -254,14 +260,26 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               {t('settings.about_us.desc')}
             </div>
             <div style={{ textAlign: 'right', width: '100%' }}>
-              {t('msg.info.contact')}
-              <a
-                href="mailto:han@privoce.com"
-                style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
-              >
-                han@privoce.com
-              </a>
-              {t('msg.info.learn_more')}
+              <div>
+                {' '}
+                {t('msg.info.contact')}
+                <a
+                  href="mailto:han@privoce.com"
+                  style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
+                >
+                  han@privoce.com
+                </a>
+              </div>
+              <div>
+                {' '}
+                {t('msg.info.learn_more')}:
+                <a
+                  href="https://vocespace.com"
+                  style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
+                >
+                  {t('msg.info.offical_web')}
+                </a>
+              </div>
             </div>
           </div>
         ),

@@ -24,10 +24,10 @@
   }
 }
 
-.setting_box{
+.setting_box {
   margin: 16px 0;
   width: 100%;
-  &_line{
+  &_line {
     width: 100%;
     display: inline-flex;
     align-items: center;
@@ -36,7 +36,7 @@
   }
 }
 
-.setting_container{
+.setting_container {
   display: flex;
   align-items: space-between;
   justify-content: flex-start;
@@ -46,7 +46,16 @@
   margin: 0;
   width: 100%;
   gap: 0px;
-  &_footer{
+  &_more {
+    width: 100%;
+    &_header {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+  &_footer {
     height: fit-content;
     display: inline-flex;
     justify-content: flex-end;
@@ -55,13 +64,13 @@
   }
 }
 
-.virtual_settings{
+.virtual_settings {
   display: flex;
   align-items: flex-start;
   justify-content: center;
   width: 100%;
   flex-wrap: wrap;
-  &_header{
+  &_header {
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
@@ -71,30 +80,30 @@
   }
 }
 
-.virtual_video_box{
+.virtual_video_box {
   height: 220px;
   width: 100%;
   border: 2px solid #fff;
   overflow: hidden;
   position: relative;
   border-radius: 8px;
-  &_compare{
+  &_compare {
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
     z-index: 1111;
   }
-  &_video{
+  &_video {
     width: 100%;
     height: 100%;
     object-fit: cover;
     background-color: #000;
   }
-  &_loading{
+  &_loading {
     height: 100%;
     width: 100%;
   }
-  &_canvas{
+  &_canvas {
     height: 100%;
     width: 100%;
     position: absolute;
@@ -104,11 +113,11 @@
   }
 }
 
-.common_space{
+.common_space {
   margin: 6px 0;
 }
 
-.virtual_model_box{
+.virtual_model_box {
   background-color: #000;
   display: flex;
   align-items: center;
@@ -133,87 +142,86 @@
     align-items: center;
     justify-content: center;
   }
-  img{
+  img {
     object-fit: cover;
     height: 120px;
     width: 120px;
   }
 }
 
-.selected_mask{
+.selected_mask {
   position: absolute;
   top: 0;
   left: 0;
   display: flex;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.8);
+  background-color: rgba(0, 0, 0, 0.8);
   border-radius: 8px;
   align-items: center;
   justify-content: center;
-  border: 2px solid #22CCEE;
+  border: 2px solid #22ccee;
 }
 
-.status_item{
+.status_item {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  &_inline{
-      display: inline-flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+  &_inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
-  span{
-      margin-left: 8px;
+  span {
+    margin-left: 8px;
   }
-  div{
-      width: 100%;
-      height: fit-content;
-      margin-left: 24px;
-      font-size: 12px;
+  div {
+    width: 100%;
+    height: fit-content;
+    margin-left: 24px;
+    font-size: 12px;
   }
 }
 
-.user_info_wrap{
+.user_info_wrap {
   width: 200px;
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
   padding: 8px 0;
   gap: 8px;
-  &_name{
-      font-weight: 700;
-      font-size: 14px;
+  &_name {
+    font-weight: 700;
+    font-size: 14px;
   }
 }
-
 
 .remote_cursor {
   position: absolute;
   pointer-events: none;
   z-index: 1000;
   transition: left 0.1s ease, top 0.1s ease;
-  
+
   .cursor_icon {
     transform: translate(-50%, -50%);
   }
-  
+
   .cursor_label {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     white-space: nowrap;
     transition: opacity 0.3s;
-    
+
     &:hover {
       opacity: 1 !important;
     }
   }
-  
+
   &:hover .cursor_label {
     opacity: 1;
   }
-  
+
   // 添加鼠标点击动画
   &.cursor_click {
     .cursor_icon {
@@ -223,12 +231,18 @@
 }
 
 @keyframes cursor-pulse {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.2); }
-  100% { transform: translate(-50%, -50%) scale(1); }
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
-.build_status{
+.build_status {
   margin: 8px 0 0 0;
 }
 
@@ -246,4 +260,123 @@
   &:hover {
     filter: brightness(1.1);
   }
+}
+
+.license_wrapper {
+  height: fit-content;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  border: 2px solid #22ccee;
+  border-radius: 8px;
+  background-color: #d3f8ff;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  &_title {
+    color: #22ccee;
+    font-size: 14px;
+    width: 100%;
+  }
+  &_content {
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+.gift_box {
+  background-color: #22ccee;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.calendly_header {
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  height: fit-content;
+  padding: 8px 0;
+  margin: 0px;
+  width: 100%;
+  &_item {
+    margin: 0 auto;
+    width: 460px;
+    border: 1px solid #888;
+    font-size: 16px;
+    padding: 12px 24px;
+    border-radius: 120px;
+    gap: 8px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+.particepant_item {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  background-color: transparent;
+  width: 100%;
+  height: fit-content;
+  padding: 8px;
+  transition: all 0.2s ease;
+  &:hover {
+    background-color: #1e1e1e90;
+    cursor: pointer;
+  }
+  &_left {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: calc(100% - 100px);
+  }
+  &_right {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100px;
+    gap: 8px;
+  }
+  &_owner {
+    color: #b6f3ff;
+    font-weight: 700;
+  }
+}
+
+.invite_container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  &_item{
+    width: 100%;
+    &_justify{
+      text-align: justify;
+      margin-bottom: 2px;
+    }
+  }
+}
+
+.inline_flex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }

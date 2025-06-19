@@ -8,6 +8,35 @@ export interface Device {
   label: string;
 }
 
+export interface WsTo {
+  room: string;
+  senderName: string;
+  senderId: string;
+  receiverId: string;
+  socketId: string;
+}
+
+export interface WsInviteDevice extends WsTo {
+  device: Track.Source;
+}
+
+export enum ControlType {
+  ChangeName = 'change_name',
+  MuteAudio = 'mute_audio',
+  MuteVideo = 'mute_video',
+  Volume = 'volume',
+  BlurVideo = 'blur_video',
+  BlurScreen = 'blur_screen',
+  Transfer = 'transfer',
+}
+
+export interface WsControlParticipant extends WsTo {
+  type: ControlType;
+  username?: string;
+  volume?: number; // 音量调节
+  blur?: number; // 视频或屏幕模糊度
+}
+
 export interface LiveKitDevice {
   deviceId: string;
   kind: MediaDeviceKind;
@@ -85,8 +114,6 @@ export interface UseVideoBlurProps {
   defaultDimensions?: SizeNum;
 }
 
-
-
 export function useVideoBlur({
   videoRef,
   initialBlur = 0,
@@ -97,7 +124,7 @@ export function useVideoBlur({
 
   // 使用防抖处理尺寸更新
   const debouncedDimensions = useDebounce(dimensions, 100);
-  
+
   // 使用节流处理模糊值更新
   const throttledVideoBlur = useThrottle(videoBlur, 16); // 约60fps
 
@@ -108,7 +135,7 @@ export function useVideoBlur({
     // 只在尺寸真正变化时更新
     const newWidth = videoElement.clientWidth || defaultDimensions.width;
     const newHeight = videoElement.clientHeight || defaultDimensions.height;
-    
+
     if (newWidth !== dimensions.width || newHeight !== dimensions.height) {
       setDimensions({
         width: newWidth,

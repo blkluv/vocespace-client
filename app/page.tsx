@@ -5,7 +5,7 @@ import styles from '@/styles/Home.module.css';
 import { useI18n } from '@/lib/i18n/i18n';
 import { DemoMeetingTab } from './pages/pre_join/demo';
 import { src } from '@/lib/std';
-import { LangSelect } from './devices/controls/lang_select';
+import { LangSelect } from './pages/controls/lang_select';
 import { Skeleton } from 'antd';
 import { SvgResource } from './resources/svg';
 
@@ -80,7 +80,13 @@ export default function Page() {
           >
             han@privoce.com
           </a>
-          {t('msg.info.learn_more')}
+          {t('msg.info.learn_more')}:{' '}
+          <a
+            href="https://vocespace.com"
+            style={{ color: '#22CCEE', textDecorationLine: 'none', margin: '0 4px' }}
+          >
+            {t('msg.info.offical_web')}
+          </a>
         </footer>
       )}
     </>

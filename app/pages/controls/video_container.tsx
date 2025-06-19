@@ -1,7 +1,13 @@
-import { is_web, src, UserDefineStatus, UserStatus } from '@/lib/std';
+import {
+  connect_endpoint,
+  getServerIp,
+  is_web,
+  src,
+  UserDefineStatus,
+  UserStatus,
+} from '@/lib/std';
 import {
   CarouselLayout,
-  Chat,
   ConnectionStateToast,
   FocusLayoutContainer,
   GridLayout,
@@ -18,34 +24,37 @@ import {
 } from '@livekit/components-react';
 import {
   ConnectionState,
+  LocalTrackPublication,
   Participant,
   ParticipantEvent,
   RoomEvent,
-  RpcInvocationData,
   Track,
   TrackPublication,
 } from 'livekit-client';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { ControlBarExport, Controls } from './controls/bar';
+import { ControlBarExport, Controls } from './bar';
 import { useRecoilState } from 'recoil';
-import { socket, userState } from '../rooms/[roomName]/PageClientImpl';
-import { ParticipantItem } from '../pages/participant/tile';
+import { ParticipantItem } from '../participant/tile';
 import { useRoomSettings } from '@/lib/hooks/room_settings';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
-import { EnhancedChat } from '../pages/chat/chat';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
+import { licenseState, socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { useRouter } from 'next/navigation';
+import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
+import { Button } from 'antd';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
   noteApi: NotificationInstance;
+  setPermissionDevice: (device: Track.Source) => void;
 }
 
 export interface VideoContainerExports {
   removeLocalSettings: () => Promise<void>;
 }
-
+const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
   (
     {
@@ -55,61 +64,110 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       SettingsComponent,
       noteApi,
       messageApi,
+      setPermissionDevice,
       ...props
     }: VideoContainerProps,
     ref,
   ) => {
     const room = useMaybeRoomContext();
+
     const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [uState, setUState] = useRecoilState(userState);
+    const [uLicenseState, setULicenseState] = useRecoilState(licenseState);
     const controlsRef = React.useRef<ControlBarExport>(null);
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
     const [isFocus, setIsFocus] = useState(false);
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
-    const { settings, updateSettings, fetchSettings, clearSettings } = useRoomSettings(
-      room?.name || '', // 房间 ID
-      room?.localParticipant?.identity || '', // 参与者 ID
-    );
+    const router = useRouter();
+    const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId, updateRecord } =
+      useRoomSettings(
+        room?.name || '', // 房间 ID
+        room?.localParticipant?.identity || '', // 参与者 ID
+      );
     useEffect(() => {
-      if (!room || room.state !== ConnectionState.Connected) return;
+      if (!room) return;
+      if (
+        room.state === ConnectionState.Connecting ||
+        room.state === ConnectionState.Reconnecting
+      ) {
+        setInit(true);
+        return;
+      } else if (room.state !== ConnectionState.Connected) {
+        return;
+      }
 
       const syncSettings = async () => {
         // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
         await updateSettings({
           name: room.localParticipant.name || room.localParticipant.identity,
           blur: uState.blur,
+          screenBlur: uState.screenBlur,
           volume: uState.volume,
           status: UserStatus.Online,
           socketId: socket.id,
+          startAt: new Date().getTime(),
           virtual: {
             enabled: false,
             role: ModelRole.None,
             bg: ModelBg.ClassRoom,
           },
         });
-
-        // const newSettings = await fetchSettings();
-        // setSettings(newSettings);
       };
 
       if (init) {
-        syncSettings();
+        syncSettings().then(() => {
+          // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
+          socket.emit('update_user_status');
+        });
         setInit(false);
       }
 
+      // license 检测 -----------------------------------------------------------------------------
+      const checkLicense = async () => {
+        let url = `https://space.voce.chat/api/license/${IP}`;
+        const response = await fetch(url, {
+          method: 'GET',
+        });
+        if (response.ok) {
+          const { id, email, domains, created_at, expires_at, ilimit, value } =
+            await response.json();
+          setULicenseState((prev) => ({
+            ...prev,
+            id,
+            email,
+            domains,
+            created_at,
+            expires_at,
+            ilimit,
+            value,
+          }));
+        }
+      };
+
+      if (uLicenseState.value !== '') {
+        if (!(IP === 'localhost' || IP.startsWith('192.168.'))) {
+          checkLicense();
+        }
+      } else {
+        let value = window.localStorage.getItem('license');
+        if (value && value !== '') {
+          setULicenseState((prev) => ({
+            ...prev,
+            value,
+          }));
+        }
+      }
+
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
-      socket.on(
-        'wave_response',
-        (msg: { senderId: string; senderName: string; receiverId: string; room: string }) => {
-          if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
-            waveAudioRef.current?.play();
-            noteApi.info({
-              message: `${msg.senderName} ${t('common.wave_msg')}`,
-            });
-          }
-        },
-      );
+      socket.on('wave_response', (msg: WsTo) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          waveAudioRef.current?.play();
+          noteApi.info({
+            message: `${msg.senderName} ${t('common.wave_msg')}`,
+          });
+        }
+      });
 
       // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
       socket.on('user_status_updated', async () => {
@@ -119,7 +177,24 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 房间事件监听器 --------------------------------------------------------------------------------
       const onParticipantConnected = async (participant: Participant) => {
-        await fetchSettings();
+        // 通过许可证判断人数，free为5人，pro为20人，若超过则拒绝加入并给出提示
+        let user_limit = 5;
+        if (uLicenseState.id && uLicenseState.value! == '') {
+          if (uLicenseState.ilimit === 'pro') {
+            user_limit = 20;
+          }
+        }
+
+        if (room.remoteParticipants.size > user_limit) {
+          if (room.localParticipant.identity === participant.identity) {
+            messageApi.error({
+              content: t('common.full_user'),
+              duration: 3,
+            });
+            room.disconnect(true);
+          }
+          return;
+        }
       };
       const onParticipantDisConnected = async (participant: Participant) => {
         socket.emit('mouse_remove', {
@@ -134,7 +209,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
       // 监听远程参与者连接事件 --------------------------------------------------------------------------
       room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
-
+      // room.on(RoomEvent.TrackSub)
       // 监听本地用户开关摄像头事件 ----------------------------------------------------------------------
       const onTrackHandler = (track: TrackPublication) => {
         if (track.source === Track.Source.Camera) {
@@ -174,16 +249,196 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       room.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
       room.on(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
+
+      // [用户邀请事件] -------------------------------------------------------------------------
+      socket.on('invite_device_response', (msg: WsInviteDevice) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          let device_str;
+          let open: () => Promise<LocalTrackPublication | undefined>;
+          switch (msg.device) {
+            case Track.Source.Camera:
+              device_str = '摄像头';
+              open = () => room.localParticipant.setCameraEnabled(true);
+              break;
+            case Track.Source.Microphone:
+              device_str = '麦克风';
+              open = () => room.localParticipant.setMicrophoneEnabled(true);
+              break;
+            case Track.Source.ScreenShare:
+              device_str = '屏幕共享';
+              open = () => room.localParticipant.setScreenShareEnabled(true);
+              break;
+            default:
+              return;
+          }
+
+          const btn = (
+            <Button
+              type="primary"
+              size="small"
+              onClick={async () => {
+                await open();
+                noteApi.destroy();
+              }}
+            >
+              {t('common.open')}
+            </Button>
+          );
+
+          noteApi.info({
+            message: `${msg.senderName} ${t('msg.info.invite_device')} ${device_str}`,
+            duration: 5,
+            btn,
+          });
+        }
+      });
+      // [用户被移除出房间] ----------------------------------------------------------------
+      socket.on('remove_participant_response', async (msg: WsTo) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          await onParticipantDisConnected(room.localParticipant);
+          messageApi.error({
+            content: t('msg.info.remove_participant'),
+            duration: 3,
+          });
+          room.disconnect(true);
+          router.push('/');
+          socket.emit('update_user_status');
+        }
+      });
+      // [用户控制事件] -------------------------------------------------------------------
+      socket.on('control_participant_response', async (msg: WsControlParticipant) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          switch (msg.type) {
+            case ControlType.ChangeName: {
+              await room.localParticipant?.setMetadata(JSON.stringify({ name: msg.username! }));
+              await room.localParticipant.setName(msg.username!);
+              await updateSettings({
+                name: msg.username!,
+              });
+              messageApi.success(t('msg.success.user.username.change'));
+              socket.emit('update_user_status');
+              break;
+            }
+            case ControlType.MuteAudio: {
+              await room.localParticipant.setMicrophoneEnabled(false);
+              messageApi.success(t('msg.success.device.mute.audio'));
+              break;
+            }
+            case ControlType.MuteVideo: {
+              await room.localParticipant.setCameraEnabled(false);
+              messageApi.success(t('msg.success.device.mute.video'));
+              break;
+            }
+            case ControlType.Transfer: {
+              const success = await updateOwnerId(room.localParticipant.identity);
+              if (success) {
+                messageApi.success(t('msg.success.user.transfer'));
+              }
+              socket.emit('update_user_status');
+              break;
+            }
+            case ControlType.Volume: {
+              setUState((prev) => ({
+                ...prev,
+                volume: msg.volume!,
+              }));
+              await updateSettings({
+                volume: msg.volume!,
+              });
+              socket.emit('update_user_status');
+              break;
+            }
+            case ControlType.BlurVideo: {
+              setUState((prev) => ({
+                ...prev,
+                blur: msg.blur!,
+              }));
+              await updateSettings({
+                blur: msg.blur!,
+              });
+              socket.emit('update_user_status');
+              break;
+            }
+            case ControlType.BlurScreen: {
+              setUState((prev) => ({
+                ...prev,
+                screenBlur: msg.blur!,
+              }));
+              await updateSettings({
+                screenBlur: msg.blur!,
+              });
+              socket.emit('update_user_status');
+              break;
+            }
+          }
+        }
+      });
+      // [参与者请求主持人录屏] ---------------------------------------------------
+      socket.on('req_record_response', (msg: WsTo) => {
+        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          noteApi.info({
+            message: `${msg.senderName} ${t('msg.info.req_record')}`,
+            duration: 5,
+          });
+        }
+      });
+      // [主持人进行了录屏，询问参会者是否还要呆在房间] -----------------------------------
+      socket.on('recording_response', (msg: { room: string }) => {
+        if (msg.room === room.name) {
+          noteApi.warning({
+            message: t('msg.info.recording'),
+            btn: (
+              <Button
+                color="danger"
+                size="small"
+                onClick={async () => {
+                  await onParticipantDisConnected(room.localParticipant);
+                  room.disconnect(true);
+                  router.push('/');
+                  socket.emit('update_user_status');
+                }}
+              >
+                {t('common.leave')}
+              </Button>
+            ),
+          });
+        }
+      });
+      // [重新fetch room，这里有可能是因为房间初始化设置时出现问题] ------------------------
+      socket.on(
+        'refetch_room_response',
+        async (msg: {
+          room: string;
+          reocrd: {
+            active: boolean;
+            egressId: string;
+            filePath: string;
+          };
+        }) => {
+          if (msg.room === room.name) {
+            await updateSettings(settings.participants[room.localParticipant.identity], msg.reocrd);
+            socket.emit('update_user_status');
+          }
+        },
+      );
+
       return () => {
         socket.off('wave_response');
         socket.off('user_status_updated');
         socket.off('mouse_move_response');
         socket.off('mouse_remove_response');
+        socket.off('new_user_status_response');
+        socket.off('invite_device_response');
+        socket.off('remove_participant_response');
+        socket.off('control_participant_response');
+        socket.off('req_record_response');
+        socket.off('recording_response');
+        socket.off('refetch_room_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init]);
+    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
@@ -429,6 +684,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 setUserStatus={setUserStatus}
                 controls={{ chat: true, settings: !!SettingsComponent }}
                 updateSettings={updateSettings}
+                roomSettings={settings}
+                fetchSettings={fetchSettings}
+                updateRecord={updateRecord}
+                setPermissionDevice={setPermissionDevice}
               ></Controls>
             </div>
             {SettingsComponent && (

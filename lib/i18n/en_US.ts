@@ -37,8 +37,76 @@ export default {
     send_file_or: 'Do you want to send this file?',
     leave: 'Leave',
     share_screen: 'Share Screen',
-    stop_share: 'Stop Share Share',
+    stop_share: 'Stop Share Screen',
     wave_msg: 'sent you a reminder!',
+    full_user:
+      'The room user has exceeded the limit and cannot join. You can join other rooms or inform the builder to upgrade your license to obtain more user slots.',
+    open: 'Open',
+  },
+  more: {
+    title: 'More',
+    record: {
+      start: 'Record',
+      stop: 'Stop Recording',
+      title: 'Recording Room',
+      desc: 'VoceSpace will record the audio and video in the room. Please note that recording may affect performance. After the recording is completed, you will receive a notification with a download link for the recording file. ',
+      request:
+        "Since you are not the room host, you cannot record directly. If you need to record, please click the 'Request Recording' button. The room host will receive your request and will start recording if he agrees.",
+      confirm: 'Start recording',
+      confirm_request: 'Request recording',
+      cancel: 'Cancel',
+      download_msg:
+        'The recording is complete. You can download the recording file or access the AWS S3 bucket at the following link. ',
+      download: 'Download recording file',
+      download_link: 'Download link',
+    },
+    participant: {
+      title: 'Participants',
+      manage: 'Manage Participants',
+      search: 'Search Participants',
+      manager: 'host',
+      invite: {
+        title: 'Invite Participants',
+        web: 'in Browser',
+        add: 'add into VoceSpace Room',
+        texts: [
+          'Invite you to join VoceSpace',
+          'Please click|copy the following link to',
+          'Please copy the following room name to',
+        ],
+        ok: 'Copy Invite',
+        cancel: 'Cancel',
+        link: 'Link',
+        room: 'Room Name',
+      },
+      set: {
+        invite: {
+          title: 'Participant Invite',
+          video: 'Invite to Enable Camera',
+          wave: 'Send a Reminder',
+          audio: 'Invite to Enable Microphone',
+          share: 'Invite to Share Screen',
+        },
+        control: {
+          title: 'Participant Control',
+          trans: 'Transfer Room Host',
+          change_name: 'Change Name',
+          mute: {
+            audio: 'Mute Microphone',
+            video: 'Turn Off Video',
+          },
+          volume: 'Volume Adjustment',
+          blur: {
+            video: 'Video Blur',
+            screen: 'Screen Blur',
+          },
+        },
+        safe: {
+          title: 'Safety',
+          remove: 'Remove Participant',
+        },
+      },
+    },
   },
   settings: {
     title: 'Settings',
@@ -56,20 +124,56 @@ export default {
         busy_desc: "Busy, user's video will be blurred, audio will be muted",
         offline: 'Away',
         offline_desc: "Away, user's video and audio will be turned off",
+        define: {
+          title: 'Custom state',
+          name: 'State name',
+          desc: 'State description',
+          icon: 'State icon',
+          placeholder: {
+            name: 'Please enter the state name',
+            desc: 'Please enter the state description',
+          },
+          save: 'Save state',
+          success: 'Create new state successfully',
+          fail: 'Failed to create new state',
+        },
       },
       define: {
-        title: "Custom Status",
-        name: "Status Name",
-        desc: "Status Description",
-        icon: "Status Icon",
+        title: 'Custom Status',
+        name: 'Status Name',
+        desc: 'Status Description',
+        icon: 'Status Icon',
         placeholder: {
-          name: "Please enter status name",
-          desc: "Please enter status description",
+          name: 'Please enter status name',
+          desc: 'Please enter status description',
         },
-        save: "Save Status",
-        success: "Status saved successfully",
-        fail: "Failed to save status",
-      }
+        save: 'Save Status',
+        success: 'Status saved successfully',
+        fail: 'Failed to save status',
+      },
+    },
+    license: {
+      title: 'License',
+      signed: 'Signed',
+      domains: 'Domains',
+      limit: 'Limit',
+      created_at: 'Created At',
+      expires_at: 'Expires At',
+      value: 'License Value',
+      renew: 'Renew License',
+      update: 'Update Manually',
+      input: 'Please enter license',
+      gift: {
+        title: 'A chance to get a free upgrade! 🎁',
+        desc: 'Share your experience through blog posts or social media to get a chance to upgrade for free. Add WeChat to get: Privoce',
+      },
+      license_pro: 'VoceSpace Pro [$499/year]',
+      license_custom: 'VoceSpace Custom',
+      price_select: 'Please choose a price package',
+      meeting: 'Book Meeting',
+      circle_ip:
+        'Your current IP address is a loopback address/private address, and we do not recommend purchasing a license for this address. Please purchase a license using a public IP address. If you need to purchase licenses and support services for private addresses, please contact WeChat: Privose.',
+      confirm_ip: 'Please confirm your IP address is correct!',
     },
     audio: {
       title: 'Audio',
@@ -119,14 +223,21 @@ export default {
       title: 'Your cyber co-working space developed by Privoce',
       contact: 'Contact',
       learn_more: 'Learn More',
+      offical_web: 'official website',
       try_free: 'Create a one-time new VoceSpace.',
       try_enter_room: 'Enter your VoceSpace name or link to join or create.',
       connect_with_server: 'Connect Voce Space with a custom server using Voce Space Server.',
       enabled_e2ee: 'End-to-end encryption enabled',
       enter_room: 'Please enter the space name or link',
       virtual_loading: 'Loading virtual role, please wait...',
+      invite_device: 'Inviting you to enable:',
+      remove_participant: 'You have been removed from the room by the room host',
+      req_record: 'Request to start recording',
     },
     error: {
+      record: {
+        copy: 'Failed to copy the recording link',
+      },
       virtual: {
         video_stream: 'Virtual camera stream construction error',
         model: 'Model or video unavailable',
@@ -164,7 +275,7 @@ export default {
       file: {
         upload: 'File upload failed',
         download: 'File download failed',
-      }
+      },
     },
     request: {
       device: {
@@ -207,14 +318,24 @@ export default {
       },
     },
     success: {
+      record: {
+        start: 'The room has successfully started recording',
+        stop: 'The room recording has been successfully stopped. The recording status will be removed after 10 seconds.',
+        copy: 'Recording link copied to clipboard',
+      },
       device: {
         granted: 'Media permissions have been successfully granted.',
+        mute: {
+          audio: 'Audio-Microphone device muted',
+          video: 'Video-Camera device is turned off',
+        },
       },
       user: {
         username: {
           change: 'Username changed successfully',
         },
         lang: 'Language changed successfully',
+        transfer: 'You have been successfully transferred to the room host',
       },
     },
   },

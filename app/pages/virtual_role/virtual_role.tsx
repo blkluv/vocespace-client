@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import { MotionSync } from 'live2d-motionsync/stream';
-import * as faceapi from 'face-api.js';
+// import * as faceapi from 'face-api.js';
 import styles from '@/styles/virtual_role.module.scss';
 import { VirtualRoleProps } from './live2d';
 import { ModelRole } from '@/lib/std/virtual';
@@ -293,6 +293,7 @@ export const Live2DComponent = ({
       // }, 300);
 
       originTrackRef.current = originalTrack;
+      onReady();
       // console.log('虚拟摄像头流创建成功');
     } catch (error) {
       console.error('虚拟摄像头流构建失败:', error);
@@ -423,12 +424,12 @@ export const Live2DComponent = ({
       try {
         // 加载faceapi需要的模型
         if (!cState.detectorReady) {
-          await faceapi.loadTinyFaceDetectorModel(
-            src(`/models/tiny_face_detector_model-weights_manifest.json`),
-          );
-          await faceapi.loadFaceLandmarkModel(
-            src(`/models/face_landmark_68_model-weights_manifest.json`),
-          );
+          // await faceapi.loadTinyFaceDetectorModel(
+          //   src(`/models/tiny_face_detector_model-weights_manifest.json`),
+          // );
+          // await faceapi.loadFaceLandmarkModel(
+          //   src(`/models/face_landmark_68_model-weights_manifest.json`),
+          // );
           if (!isActive) return;
           setCState((prev) => ({
             ...prev,
@@ -487,7 +488,6 @@ export const Live2DComponent = ({
       // startFaceTracking(); 暂时停用
       startVirtualCamera();
     }
-    onReady();
   }, [screenSize, enabled, cState.trackingActive, isReplace]);
 
   //创建虚拟视频流
