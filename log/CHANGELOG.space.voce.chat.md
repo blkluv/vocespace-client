@@ -2,7 +2,7 @@
 
 ## v0.2.0_pre (2025-06-18)
 
-## General
+### General
 
 - [x] unified theme
   - [x] other buttons
@@ -21,15 +21,15 @@
     - [x] download
     - [x] delete
   - [x] recording room
-- [x] Moderator function
+- [x] host
   - [x] Add room user data (ownerId)
-  - [x] The first user in the room is the moderator
-  - [x] Moderator manages the room
+  - [x] The first user in the room is the host
+  - [x] host manages the room
     - [x] Synchronize member data
     - [x] Separate permissions
     - [x] Conference members
     - [x] Member management
-      - [x] Transfer moderator
+      - [x] Transfer host
       - [x] Modify name
       - [x] Mute
       - [x] Turn off video
@@ -50,8 +50,7 @@
   - [x] link preview
   - [x] history msg
 
-
-## Fixes
+### Fixes
 
 - [x] control button height difference (in bar controls)
 - [x] i18n
@@ -60,5 +59,3 @@
 - [x] chat auto-slide down is invalid
 - [x] switch the local and remote chat area positions
 - [x] server.js env missing
-
-## Details
