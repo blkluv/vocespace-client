@@ -131,6 +131,10 @@ h2 a {
   background-color: #22ccee !important;
 }
 
+.lk-button[data-lk-source="screen_share"][data-lk-enabled="true"] {
+  background-color: #22ccee !important;
+}
+
 .lk-disconnect-button {
   color: #d92d20 !important;
   border: 1px solid #d92d20 !important;
@@ -140,4 +144,15 @@ h2 a {
 .lk-disconnect-button:hover {
   color: #fff !important;
   background-color: #d92d20 !important;
+}
+
+.video_container_wrapper {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+}
+
+.lk-pagination-control {
+  z-index: 1111 !important;
 }

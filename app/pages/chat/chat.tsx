@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Chat, useChat, useLocalParticipant } from '@livekit/components-react';
-import { Avatar, Button, Drawer, Image, Input, message, Modal, Popover, Upload } from 'antd';
+import { useLocalParticipant } from '@livekit/components-react';
+import { Button, Drawer, Image, Input, Popover, Upload } from 'antd';
 import type { GetProp, UploadProps } from 'antd';
 import { pictureCallback, SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
@@ -8,10 +8,12 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { setting_drawer_header } from '@/app/pages/controls/bar';
 import { ulid } from 'ulid';
 import { Room } from 'livekit-client';
-import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
+import { chatMsgState, socket } from '@/app/rooms/[roomName]/PageClientImpl';
 import { MessageInstance } from 'antd/es/message/interface';
 import { LinkPreview } from './link_preview';
 import Dragger from 'antd/es/upload/Dragger';
+import { useRecoilState } from 'recoil';
+import { ChatMsgItem } from '@/lib/std/chat';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
@@ -24,274 +26,223 @@ export interface EnhancedChatProps {
   messageApi: MessageInstance;
 }
 
-interface ChatMsgItem {
-  id?: string;
-  sender: {
-    id: string;
-    name: string;
-  };
-  message: string | null;
-  type: 'text' | 'file';
-  roomName: string;
-  timestamp?: string;
-  file: {
-    name: string;
-    size: number;
-    type: string;
-    url?: string;
-    data?: string | ArrayBuffer | null;
-  } | null;
-}
+export interface EnhancedChatExports {}
 
-export function EnhancedChat({
-  open,
-  setOpen,
-  onClose,
-  room,
-  sendFileConfirm,
-  messageApi,
-}: EnhancedChatProps) {
-  const { t } = useI18n();
-  const ulRef = React.useRef<HTMLUListElement>(null);
-  const bottomRef = React.useRef<HTMLDivElement>(null);
-  const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
-  const [value, setValue] = React.useState('');
-  // 添加输入法组合状态跟踪
-  const [isComposing, setIsComposing] = React.useState(false);
+export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatProps>(
+  ({ open, setOpen, onClose, room, sendFileConfirm, messageApi }: EnhancedChatProps, ref) => {
+    const { t } = useI18n();
+    const ulRef = React.useRef<HTMLUListElement>(null);
+    const bottomRef = React.useRef<HTMLDivElement>(null);
+    const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
+    // const [messages, setMessages] = React.useState<ChatMsgItem[]>([]);
+    const [value, setValue] = React.useState('');
+    const [unhandleMsgCount, setUnhandleMsgCount] = React.useState(0);
+    // 添加输入法组合状态跟踪
+    const [isComposing, setIsComposing] = React.useState(false);
 
-  const handleFileResponse = React.useCallback(
-    (msg: ChatMsgItem) => {
-      if (msg.roomName == room.name) {
-        setMessages((prevMessages) => {
-          // 使用函数式更新来获取最新的 messages 状态
-          const existingFile = prevMessages.find((m) => m.id === msg.id);
-          if (!existingFile) {
-            // setTimeout(() => {
-            //   scrollToBottom();
-            // }, 0); // 异步滚动到底部
-            return [...prevMessages, msg];
-          }
-          return prevMessages; // 如果已存在，不重复添加
-        });
+    React.useEffect(() => {
+      if (open) {
+        setChatMsg((prev) => ({
+          unhandled: 0,
+          msgs: prev.msgs,
+        }));
       }
-    },
-    [room.name], // 移除 messages 依赖项
-  );
+    }, [open]);
 
-  // [socket] ----------------------------------------------------------------------------------
-  React.useEffect(() => {
-    const handleChatMsgResponse = (msg: ChatMsgItem) => {
-      if (msg.roomName == room.name) {
-        setMessages((prev) => [...prev, msg]);
-        // setTimeout(() => {
-        //   console.warn('scrollToBottom');
-        //   scrollToBottom();
-        // }, 0); // 异步滚动到底部
+    // [send methods] ----------------------------------------------------------------------------
+    const sendMsg = async () => {
+      const msg = value.trim();
+      if (msg === '') {
+        return;
       }
+
+      const newMsg: ChatMsgItem = {
+        sender: {
+          id: room.localParticipant.identity,
+          name: room.localParticipant.name || room.localParticipant.identity,
+        },
+        message: msg,
+        type: 'text',
+        roomName: room.name,
+        file: null,
+      };
+
+      setChatMsg((prev) => ({
+        unhandled: prev.unhandled,
+        msgs: [...prev.msgs, newMsg],
+      }));
+      setValue('');
+      socket.emit('chat_msg', newMsg);
     };
 
-    socket.on('chat_msg_response', handleChatMsgResponse);
-    socket.on('chat_file_response', handleFileResponse);
+    // [upload] ----------------------------------------------------------------------------------
+    const handleBeforeUpload = (file: FileType) => {
+      sendFileConfirm(async () => {
+        const reader = new FileReader();
+        try {
+          reader.onload = (e) => {
+            const fileData = e.target?.result;
+            // 更新本地消息记录
+            const fileMessage: ChatMsgItem = {
+              sender: {
+                id: localParticipant.identity,
+                name: localParticipant.name || localParticipant.identity,
+              },
+              message: null,
+              type: 'file',
+              roomName: room.name,
+              file: {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                data: fileData,
+              },
+            };
 
-    return () => {
-      socket.off('chat_msg', handleChatMsgResponse);
-      socket.off('chat_msg_response', handleFileResponse);
-    };
-  }, [room.name, handleFileResponse]);
-  // [send methods] ----------------------------------------------------------------------------
-  const sendMsg = async () => {
-    const msg = value.trim();
-    if (msg === '') {
-      return;
-    }
-
-    const chatMsg: ChatMsgItem = {
-      sender: {
-        id: room.localParticipant.identity,
-        name: room.localParticipant.name || room.localParticipant.identity,
-      },
-      message: msg,
-      type: 'text',
-      roomName: room.name,
-      file: null,
-    };
-
-    setMessages((prev) => [...prev, chatMsg]);
-    // setTimeout(() => {
-    //   scrollToBottom();
-    // }, 100); // 异步滚动到底部
-    setValue('');
-    socket.emit('chat_msg', chatMsg);
-  };
-
-  // [upload] ----------------------------------------------------------------------------------
-  const handleBeforeUpload = (file: FileType) => {
-    sendFileConfirm(async () => {
-      const reader = new FileReader();
-      try {
-        reader.onload = (e) => {
-          const fileData = e.target?.result;
-          // 更新本地消息记录
-          const fileMessage: ChatMsgItem = {
-            sender: {
-              id: localParticipant.identity,
-              name: localParticipant.name || localParticipant.identity,
-            },
-            message: null,
-            type: 'file',
-            roomName: room.name,
-            file: {
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              data: fileData,
-            },
+            // 发送文件消息
+            socket.emit('chat_file', fileMessage);
           };
-
-          // 发送文件消息
-          socket.emit('chat_file', fileMessage);
-        };
-        if (file.size < 5 * 1024 * 1024) {
-          // 小于5MB的文件
-          reader.readAsDataURL(file);
-        } else {
-          reader.readAsArrayBuffer(file);
+          if (file.size < 5 * 1024 * 1024) {
+            // 小于5MB的文件
+            reader.readAsDataURL(file);
+          } else {
+            reader.readAsArrayBuffer(file);
+          }
+        } catch (e) {
+          messageApi.error({
+            content: `${t('msg.error.file.upload')}: ${e}`,
+            duration: 1,
+          });
+          console.error('Error reading file:', e);
         }
-      } catch (e) {
+      });
+      return false; // 阻止自动上传
+    };
+
+    const scrollToBottom = () => {
+      // 使用 scrollIntoView，更可靠
+      bottomRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest',
+      });
+    };
+
+    // 处理回车键事件
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // 只有在不处于输入法组合状态且按下回车键时才发送消息
+      if (e.key === 'Enter' && !isComposing) {
+        e.preventDefault();
+        sendMsg();
+      }
+    };
+
+    const { localParticipant } = useLocalParticipant();
+    const isLocal = (identity?: string): boolean => {
+      if (identity) {
+        console.log('localParticipant', identity, localParticipant.identity);
+        return localParticipant.identity === identity;
+      } else {
+        return false;
+      }
+    };
+
+    const isImg = (type: string) => {
+      return type.startsWith('image/');
+    };
+
+    const downloadFile = async (url?: string) => {
+      if (url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = url.split('/').pop() || 'file';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
         messageApi.error({
-          content: `${t('msg.error.file.upload')}: ${e}`,
+          content: t('msg.error.file.download'),
           duration: 1,
         });
-        console.error('Error reading file:', e);
       }
-    });
-    return false; // 阻止自动上传
-  };
+    };
 
-  const scrollToBottom = () => {
-    // 使用 scrollIntoView，更可靠
-    bottomRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'end',
-      inline: 'nearest',
-    });
-  };
+    React.useLayoutEffect(() => {
+      scrollToBottom();
+    }, [chatMsg.msgs]);
 
-  // 处理回车键事件
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // 只有在不处于输入法组合状态且按下回车键时才发送消息
-    if (e.key === 'Enter' && !isComposing) {
-      e.preventDefault();
-      sendMsg();
-    }
-  };
+    const msgList = React.useMemo(() => {
+      return chatMsg.msgs.map((msg) => (
+        <ChatMsgItemCmp
+          key={msg.id || ulid()}
+          isLocal={isLocal(msg.sender.id)}
+          msg={msg}
+          downloadFile={downloadFile}
+          isImg={isImg}
+        ></ChatMsgItemCmp>
+      ));
+    }, [chatMsg.msgs]);
 
-  const { localParticipant } = useLocalParticipant();
-  const isLocal = (identity?: string): boolean => {
-    if (identity) {
-      console.log('localParticipant', identity, localParticipant.identity);
-      return localParticipant.identity === identity;
-    } else {
-      return false;
-    }
-  };
-
-  const isImg = (type: string) => {
-    return type.startsWith('image/');
-  };
-
-  const downloadFile = async (url?: string) => {
-    if (url) {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = url.split('/').pop() || 'file';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } else {
-      messageApi.error({
-        content: t('msg.error.file.download'),
-        duration: 1,
-      });
-    }
-  };
-
-  React.useLayoutEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const msgList = React.useMemo(() => {
-    console.warn('msgList', messages);
-    return messages.map((msg) => (
-      <ChatMsgItemCmp
-        key={msg.id || ulid()}
-        isLocal={isLocal(msg.sender.id)}
-        msg={msg}
-        downloadFile={downloadFile}
-        isImg={isImg}
-      ></ChatMsgItemCmp>
-    ));
-  }, [messages]);
-
-  return (
-    <Drawer
-      title={t('common.chat')}
-      onClose={onClose}
-      open={open}
-      closable={false}
-      width={'440px'}
-      extra={setting_drawer_header({
-        on_clicked: () => setOpen(false),
-      })}
-      style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
-      styles={{
-        body: {
-          padding: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-        },
-      }}
-    >
-      <div className={styles.msg}>
-        <Dragger
-          style={{ position: 'absolute', top: 0, border: 'none' }}
-          multiple={false}
-          name="file"
-          beforeUpload={handleBeforeUpload}
-          showUploadList={false}
-        ></Dragger>
-        <ul ref={ulRef} className={styles.msg_list}>
-          {msgList}
-          <div ref={bottomRef} style={{ height: '1px', visibility: 'hidden' }} />
-        </ul>
-      </div>
-
-      <div className={styles.tool}>
-        <Upload beforeUpload={handleBeforeUpload} showUploadList={false}>
-          <Button shape="circle" style={{ background: 'transparent', border: 'none' }}>
-            <SvgResource type="add" svgSize={18} color="#fff" />
-          </Button>
-        </Upload>
-        <div className={styles.tool_input}>
-          <Input
-            value={value}
-            placeholder={t('common.chat_placeholder')}
-            onChange={(e) => setValue(e.target.value)}
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
-            onKeyDown={handleKeyDown}
-            style={{ paddingRight: 0, backgroundColor: '#333' }}
-          />
+    return (
+      <Drawer
+        title={t('common.chat')}
+        onClose={onClose}
+        open={open}
+        closable={false}
+        width={'440px'}
+        extra={setting_drawer_header({
+          on_clicked: () => setOpen(false),
+        })}
+        style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
+        styles={{
+          body: {
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+          },
+        }}
+      >
+        <div className={styles.msg}>
+          <Dragger
+            style={{ position: 'absolute', top: 0, border: 'none' }}
+            multiple={false}
+            name="file"
+            beforeUpload={handleBeforeUpload}
+            showUploadList={false}
+          ></Dragger>
+          <ul ref={ulRef} className={styles.msg_list}>
+            {msgList}
+            <div ref={bottomRef} style={{ height: '1px', visibility: 'hidden' }} />
+          </ul>
         </div>
-        <Button style={{ border: 'none' }} type="primary" onClick={sendMsg}>
-          {t('common.send')}
-        </Button>
-      </div>
-    </Drawer>
-  );
-}
+
+        <div className={styles.tool}>
+          <Upload beforeUpload={handleBeforeUpload} showUploadList={false}>
+            <Button shape="circle" style={{ background: 'transparent', border: 'none' }}>
+              <SvgResource type="add" svgSize={18} color="#fff" />
+            </Button>
+          </Upload>
+          <div className={styles.tool_input}>
+            <Input
+              value={value}
+              placeholder={t('common.chat_placeholder')}
+              onChange={(e) => setValue(e.target.value)}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
+              onKeyDown={handleKeyDown}
+              style={{ paddingRight: 0, backgroundColor: '#333' }}
+            />
+          </div>
+          <Button style={{ border: 'none' }} type="primary" onClick={sendMsg}>
+            {t('common.send')}
+          </Button>
+        </div>
+      </Drawer>
+    );
+  },
+);
 
 interface ChatMsgItemProps {
   isLocal: boolean;
@@ -302,8 +253,9 @@ interface ChatMsgItemProps {
 
 function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps) {
   const liClass = isLocal ? styles.msg_item : styles.msg_item__remote;
-  const flexEnd = isLocal ? {} : { justifyContent: 'flex-end' };
-  const textAlignPos = isLocal ? 'left' : 'end';
+  const flexEnd = isLocal ? { justifyContent: 'flex-end' } : {};
+  const textAlignPos = isLocal ? 'end' : 'left';
+  const itemClass = isLocal ? styles.msg_item_wrapper : styles.msg_item__remote_wrapper;
 
   // 判断是否有URL，这里只需要判断URL的基本格式(http/https)
   const containsUrl = (text: string) => {
@@ -323,7 +275,7 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
 
   return (
     <li className={liClass}>
-      <div className={styles.msg_item_wrapper}>
+      <div className={itemClass}>
         <div className={styles.msg_item_content} style={flexEnd}>
           <h4 className={styles.msg_item_content_name} style={{ textAlign: textAlignPos }}>
             {msg.sender.name || 'unknown'}

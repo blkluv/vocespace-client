@@ -26,6 +26,7 @@ import { atom, RecoilRoot, useRecoilState } from 'recoil';
 import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
+import { ChatMsgItem } from '@/lib/std/chat';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -73,6 +74,14 @@ export const roomIdTmpState = atom({
 export const virtualMaskState = atom({
   key: 'virtualMaskState',
   default: false,
+});
+
+export const chatMsgState = atom({
+  key: 'chatMsgState',
+  default: {
+    msgs: [] as ChatMsgItem[],
+    unhandled: 0,
+  },
 });
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint(

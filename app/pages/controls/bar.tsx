@@ -30,10 +30,10 @@ import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { useRecoilState } from 'recoil';
-import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { chatMsgState, socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
 import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
-import { EnhancedChat } from '@/app/pages/chat/chat';
+import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
@@ -112,6 +112,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [settingVis, setSettingVis] = React.useState(false);
     const layoutContext = useMaybeLayoutContext();
     const inviteTextRef = React.useRef<HTMLDivElement>(null);
+    const enhanceChatRef = React.useRef<EnhancedChatExports>(null);
+    const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
+
     React.useEffect(() => {
       if (layoutContext?.widget.state?.showChat !== undefined) {
         setIsChatOpen(layoutContext?.widget.state?.showChat);
@@ -851,6 +854,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               onClicked={() => {
                 setChatOpen(!chatOpen);
               }}
+              count={chatMsg.unhandled}
             ></ChatToggle>
           )}
           {room && roomSettings.participants && visibleControls.microphone && (
@@ -876,6 +880,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         {/* <StartMediaButton /> */}
         {room && (
           <EnhancedChat
+            ref={enhanceChatRef}
             messageApi={messageApi}
             open={chatOpen}
             setOpen={setChatOpen}
