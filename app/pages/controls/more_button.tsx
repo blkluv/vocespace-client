@@ -37,15 +37,15 @@ export function MoreButton({
   const items: MenuProps['items'] = useMemo(() => {
     return [
       // 录屏功能
-      {
-        label: (
-          <div style={{ marginLeft: '8px' }}>
-            {!isRecording ? t('more.record.start') : t('more.record.stop')}
-          </div>
-        ),
-        key: 'record',
-        icon: <SvgResource type="record" svgSize={16} color={isRecording ? '#FF0000' : '#fff'} />,
-      },
+      // {
+      //   label: (
+      //     <div style={{ marginLeft: '8px' }}>
+      //       {!isRecording ? t('more.record.start') : t('more.record.stop')}
+      //     </div>
+      //   ),
+      //   key: 'record',
+      //   icon: <SvgResource type="record" svgSize={16} color={isRecording ? '#FF0000' : '#fff'} />,
+      // },
       // 参与者管理功能
       {
         label: <div style={{ marginLeft: '8px' }}>{t('more.participant.title')}</div>,
@@ -63,11 +63,12 @@ export function MoreButton({
   const handleMenuClick: MenuProps['onClick'] = async (e) => {
     switch (e.key) {
       case 'record':
+        // space.voce.chat中暂不开启
         // Handle record action
-        setMoreType('record');
-        if (onClickRecord) {
-          await onClickRecord();
-        }
+        // setMoreType('record');
+        // if (onClickRecord) {
+        //   await onClickRecord();
+        // }
         break;
       case 'participant':
         // Handle participant action
