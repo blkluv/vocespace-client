@@ -46,8 +46,9 @@
   - [x] Search user + sort by user alphabetically
   - [x] Share room
 - [x] chat
-  - [ ] chat tips (badage)
+  - [x] chat tips (badage)
   - [x] link preview
+  - [ ] history msg
 
 
 ## Fixes

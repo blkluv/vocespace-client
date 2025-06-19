@@ -3,6 +3,7 @@ import { UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { NextRequest, NextResponse } from 'next/server';
 import Redis from 'ioredis';
+import { ChatMsgItem } from '@/lib/std/chat';
 
 interface Participant {
   name: string;
@@ -99,6 +100,12 @@ class RoomManager {
   private static ROOM_LIST_KEY_PREFIX = 'room:list:';
   // 房间使用情况 redis key 前缀
   private static ROOM_DATE_RECORDS_KEY_PREFIX = 'room:date:records:';
+  // 聊天记录 redis key 前缀
+  private static CHAT_KEY_PREFIX = 'chat:';
+
+  private static getChatKey(room: string): string {
+    return `${this.CHAT_KEY_PREFIX}${room}`;
+  }
 
   // room redis key, like: room:test_room
   private static getRoomKey(room: string): string {
@@ -108,6 +115,43 @@ class RoomManager {
   private static getParticipantKey(room: string, participantId: string): string {
     return `${this.PARTICIPANT_KEY_PREFIX}${room}:${participantId}`;
   }
+  // 删除房间聊天记录 ----------------------------------------------------------------------
+  static async deleteChatRecords(room: string): Promise<boolean> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized or disabled.');
+      }
+      const chatKey = this.getChatKey(room);
+      const exists = await redisClient.exists(chatKey);
+      if (exists) {
+        await redisClient.del(chatKey);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error deleting chat records:', error);
+      return false;
+    }
+  }
+  // 获取房间聊天记录 ----------------------------------------------------------------------
+  // get chat messages from redis
+  static async getChatMessages(room: string): Promise<ChatMsgItem[]> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized');
+      }
+      const chatKey = this.getChatKey(room);
+      const messages = await redisClient.get(chatKey);
+      if (!messages) {
+        return [];
+      }
+      return JSON.parse(messages) as ChatMsgItem[];
+    } catch (error) {
+      console.error('Error getting chat messages from Redis:', error);
+      return [];
+    }
+  }
+
   // 设置房间的使用情况 --------------------------------------------------------------------
   static async setRoomDateRecords(
     room: string,
@@ -312,6 +356,8 @@ class RoomManager {
       await redisClient.srem(this.ROOM_LIST_KEY_PREFIX, room);
       // 添加房间使用记录 end
       await this.setRoomDateRecords(room, { start, end: Date.now() });
+      // 删除房间聊天记录
+      await this.deleteChatRecords(room);
       return true;
     } catch (error) {
       console.error('Error deleting room:', error);
@@ -528,6 +574,19 @@ export async function GET(request: NextRequest) {
   const roomId = request.nextUrl.searchParams.get('roomId');
   const is_pre = request.nextUrl.searchParams.get('pre') === 'true';
   const is_time_record = request.nextUrl.searchParams.get('time_record') === 'true';
+  const is_chat_history = request.nextUrl.searchParams.get('chat_history') === 'true';
+
+  if (is_chat_history && roomId) {
+    // 获取房间的聊天记录
+    const chatMessages = await RoomManager.getChatMessages(roomId);
+    return NextResponse.json(
+      {
+        msgs: chatMessages,
+      },
+      { status: 200 },
+    );
+  }
+
   // 如果是时间记录，则返回所有房间的使用情况
   if (is_time_record) {
     const allRoomDateRecords = await RoomManager.getAllRoomDateRecords();

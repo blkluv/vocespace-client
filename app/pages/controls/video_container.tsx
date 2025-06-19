@@ -60,6 +60,7 @@ export interface VideoContainerProps extends VideoConferenceProps {
 export interface VideoContainerExports {
   removeLocalSettings: () => Promise<void>;
 }
+const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
   (
@@ -122,7 +123,26 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         });
       };
 
+      // 获取历史聊天记录 ---------------------------------------------------------------------------
+      const fetchChatMsg = async () => {
+        const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+        url.searchParams.append('roomId', room.name);
+        url.searchParams.append('chat_history', 'true');
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const { msgs }: { msgs: ChatMsgItem[] } = await response.json();
+          setChatMsg((prev) => ({
+            unhandled: prev.unhandled + msgs.length,
+            msgs: [...prev.msgs, ...msgs],
+          }));
+        } else {
+          console.error('Failed to fetch chat messages:', response.statusText);
+        }
+      };
+
       if (init) {
+        // 获取历史聊天记录
+        fetchChatMsg();
         syncSettings().then(() => {
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
           socket.emit('update_user_status');
