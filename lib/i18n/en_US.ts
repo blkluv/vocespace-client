@@ -47,18 +47,17 @@ export default {
     title: 'More',
     record: {
       start: 'Record',
-      stop: 'Stop Recording',
-      title: 'Recording Room',
-      desc: 'VoceSpace will record the audio and video in the room. Please note that recording may affect performance. After the recording is completed, you will receive a notification with a download link for the recording file. ',
+      stop: 'Stop recording',
+      title: 'Record room',
+      desc: 'VoceSpace will record the audio and video in the room. Please note that recording may affect performance. After the recording is finished, you will receive a notification with a download link for the recording file. ',
       request:
-        "Since you are not the room host, you cannot record directly. If you need to record, please click the 'Request Recording' button. The room host will receive your request and will start recording if he agrees.",
+        "Since you are not the room host, you cannot record directly. If you need to record, please click the 'Request recording' button. The room host will receive your request and will start recording if they agree.",
       confirm: 'Start recording',
       confirm_request: 'Request recording',
       cancel: 'Cancel',
       download_msg:
-        'The recording is complete. You can download the recording file or access the AWS S3 bucket at the following link. ',
+        'The recording is complete and is being transferred to the cloud for storage. You can access the records of the current service to download it. ',
       download: 'Download recording file',
-      download_link: 'Download link',
     },
     participant: {
       title: 'Participants',
@@ -102,8 +101,13 @@ export default {
           },
         },
         safe: {
-          title: 'Safety',
-          remove: 'Remove Participant',
+          title: 'Safe',
+          remove: {
+            title: 'Remove member',
+            desc: 'Are you sure you want to remove this member? ',
+            confirm: 'Confirm removal',
+            cancel: 'Cancel',
+          },
         },
       },
     },
@@ -169,8 +173,11 @@ export default {
       },
       license_pro: 'VoceSpace Pro [$499/year]',
       license_custom: 'VoceSpace Custom',
-      price_select: 'Please choose a price package',
-      meeting: 'Book Meeting',
+      price_select: 'Please select a price package',
+      meeting: 'Subscribe to a meeting',
+      buy: 'Purchase a certificate',
+      invalid: 'The certificate is invalid or expired. Please check if it is correct.',
+      update_success: 'The certificate was updated successfully',
       circle_ip:
         'Your current IP address is a loopback address/private address, and we do not recommend purchasing a license for this address. Please purchase a license using a public IP address. If you need to purchase licenses and support services for private addresses, please contact WeChat: Privose.',
       confirm_ip: 'Please confirm your IP address is correct!',
@@ -237,6 +244,9 @@ export default {
     error: {
       record: {
         copy: 'Failed to copy the recording link',
+        email: {
+          empty: 'Email address cannot be empty',
+        },
       },
       virtual: {
         video_stream: 'Virtual camera stream construction error',
