@@ -2,6 +2,7 @@
  * @description: This is a simple Node.js server using Express and Socket.IO to handle real-time communication and file uploads.
  * @author: Will Sheng
  */
+import dotenv from 'dotenv';
 import { createServer } from 'node:http';
 import next from 'next';
 import { Server } from 'socket.io';
@@ -9,12 +10,121 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import express from 'express';
+import Redis from 'ioredis';
+
+const __filename = fileURLToPath(import.meta.url);
+const __cfg = path.dirname(__filename);
+
+// Load environment files in order of priority
+const envFiles = [
+  '.env.local',
+  '.env.development',
+  '.env',
+];
+
+envFiles.forEach(file => {
+  const envPath = path.join(__cfg, file);
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  }
+});
 
 // [args] ---------------------------------------------------------------------------------------------------------------
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOST || 'localhost';
 const port = process.env.PORT || 3030;
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const {
+  REDIS_ENABLED = 'false',
+  REDIS_HOST = 'localhost',
+  REDIS_PORT = '6379',
+  REDIS_PASSWORD,
+  REDIS_DB = '0',
+} = process.env;
+
+console.warn(REDIS_ENABLED, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB);
+
+let redisClient = null;
+
+// [build redis client] --------------------------------------------------------
+if (REDIS_ENABLED === 'true') {
+  let host = REDIS_HOST;
+  let port = parseInt(REDIS_PORT, 10);
+  let db = parseInt(REDIS_DB, 10);
+
+  redisClient = new Redis({
+    host,
+    port,
+    password: REDIS_PASSWORD,
+    db,
+  });
+}
+
+// redis chat manager, use to store room chat messages into redis see interface [std.chat.ChatMsgItem]
+class ChatManager {
+  static CHAT_KEY_PREFIX = 'chat:';
+
+  static getChatKey(roomName) {
+    return `${this.CHAT_KEY_PREFIX}${roomName}`;
+  }
+
+  // delete chat messages from redis
+  static async deleteChatMessages(room) {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized');
+      }
+      const chatKey = this.getChatKey(room);
+      // Delete the chat key from Redis
+      const exists = await redisClient.exists(chatKey);
+      if (exists) {
+        await redisClient.del(chatKey);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error deleting chat messages from Redis:', error);
+      return false;
+    }
+  }
+
+  // get chat messages from redis
+    static async getChatMessages(room){
+      try {
+        if (!redisClient) {
+          throw new Error('Redis client is not initialized');
+        }
+        const chatKey = this.getChatKey(room);
+        const messages = await redisClient.get(chatKey);
+        if (!messages) {
+          return [];
+        }
+        return JSON.parse(messages);
+      } catch (error) {
+        console.error('Error getting chat messages from Redis:', error);
+        return [];
+      }
+    }
+
+  // set/push chat message to redis
+  static async setChatMessage(room, msg) {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized');
+      }
+      const msgs = await this.getChatMessages(room);
+      msgs.push(msg);
+      const chatKey = this.getChatKey(room);
+      // Store the messages as a JSON string
+      await redisClient.set(chatKey, JSON.stringify(msgs));
+      return true;
+    } catch (error) {
+      console.error('Error setting chat message to Redis:', error);
+      return false;
+    }
+  }
+}
+
 // [when using middleware `hostname` and `port` must be provided below] -------------------------------------------------
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
@@ -141,6 +251,8 @@ app.prepare().then(() => {
     });
     // [socket: chat message event] -------------------------------------------------------------------------------------
     socket.on('chat_msg', (msg) => {
+      // store in redis
+      ChatManager.setChatMessage(msg.roomName, msg);
       socket.broadcast.emit('chat_msg_response', msg);
     });
     // [socket: chat file event] ----------------------------------------------------------------------------------------
@@ -192,7 +304,8 @@ app.prepare().then(() => {
             url: fileUrl,
           },
         };
-
+        // store in redis
+        ChatManager.setChatMessage(roomName, fileMessage);
         io.emit('chat_file_response', fileMessage);
       } catch (error) {
         console.error('文件处理失败', error);
@@ -211,14 +324,24 @@ app.prepare().then(() => {
       if (fs.existsSync(roomDir)) {
         fs.rmdirSync(roomDir, { recursive: true });
       }
+      // delete chat messages from redis
+      await ChatManager.deleteChatMessages(roomName);
     });
     // [socket: create a new user status] ------------------------------------------------------------------------------------
     socket.on('new_user_status', (msg) => {
       io.emit('new_user_status_response', msg);
     });
-    // [socket: new user] ----------------------------------------------------------------------------------------------------
-    socket.on('disconnect', (msg) => {
+    // [socket: del user] ----------------------------------------------------------------------------------------------------
+    socket.on('disconnect', async (_msg) => {
       console.log('Socket disconnected', socket.id);
+      // 当某个用户断开连接我们需要请求http服务器删除用户在房间中的数据
+      const url = `http://${hostname}:${port}${basePath}/api/room-settings/socketId=${socket.id}`;
+      const response = await fetch(url.toString(), {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        console.error('Failed to delete user data, socketId:', socket.id);
+      } 
     });
   });
   // [http server] ----------------------------------------------------------------------------------------------------------

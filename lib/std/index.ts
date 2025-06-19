@@ -81,36 +81,25 @@ export const randomColor = (participantId: string): string => {
 
   // 根据哈希值选择预定义的颜色
   const colors = [
-    '#FF5733', // 红色
-    '#d54941',
-    '#ff9285',
-    '#881f1c',
-    '#33FF57', // 绿色
-    '#2ba471',
-    '#92dbb2',
-    '#006c45',
-    '#3357FF', // 蓝色
-    '#0052d9',
-    '#3663f4',
-    '002a7c',
-    '#F033FF', // 紫色
-    '#8e56dd',
-    '#c69cff',
-    '#8e56dd',
-    '#3b007b',
-    '#FF33F0', // 粉色
-    '#e851b3',
-    '#ffaedc',
-    '#800a5f',
-    '#33FFF0', // 青色
-    '#f5a623', // 橙色
-    '#f5ba18',
-    '#029cd4',
-    '#00668e',
-    '#85d3ff',
-    '#e37318',
-    '#fa9550',
-    '#954500',
+    '#667085',
+    '#D0D5DD',
+    '#22CCEE',
+    '#A4F0FC',
+    '#F97066',
+    '#FDA29B',
+    '#FDB022',
+    '#FFC84B',
+    '#32D583',
+    '#A6F4C4',
+    '#717BBC',
+    '#B3B8DB',
+    '#5FE9D0',
+    '#36BFFB',
+    '#528AFF',
+    '#865BF7',
+    '#EE45BC',
+    '#FF682F',
+    '#FDEAD7'
   ];
 
   const index = Math.abs(hash) % colors.length;

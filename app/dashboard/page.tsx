@@ -1,10 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Badge, Tag, Button, Space, Typography, Statistic, Row, Col } from 'antd';
+import {
+  Table,
+  Card,
+  Badge,
+  Tag,
+  Button,
+  Space,
+  Typography,
+  Statistic,
+  Row,
+  Col,
+  message,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SvgResource } from '../resources/svg';
 import styles from '@/styles/dashboard.module.scss';
+import { connect_endpoint } from '@/lib/std';
 
 const { Title } = Typography;
 
@@ -16,6 +29,23 @@ const countDuring = (startAt: number): string => {
   const minutes = Math.floor((duration % 3600) / 60);
   return `${hours}h ${minutes}m`;
 };
+
+interface RoomTimeRecord {
+  start: number; // 记录开始时间戳
+  end?: number; // 记录结束时间戳
+}
+
+// 记录房间的使用情况
+interface RoomDateRecords {
+  [roomId: string]: RoomTimeRecord[];
+}
+
+interface HistoryRoomData {
+  key: string;
+  room: string;
+  during: string; // 总使用时长
+  today: string; // 今日使用时长
+}
 
 interface ParticipantTableData {
   key: string;
@@ -32,12 +62,7 @@ interface ParticipantTableData {
   during: string;
 }
 
-interface HistoryRoomData {
-  key: string;
-  room: string;
-  during: string;
-  today: string;
-}
+const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export default function Dashboard() {
   const [currentRoomsData, setCurrentRoomsData] = useState<ParticipantTableData[]>([]);
@@ -46,12 +71,16 @@ export default function Dashboard() {
   const [totalRooms, setTotalRooms] = useState(0);
   const [totalParticipants, setTotalParticipants] = useState(0);
   const [activeRecordings, setActiveRecordings] = useState(0);
+  const [messageApi, contextHolder] = message.useMessage();
 
   // 获取当前房间数据
   const fetchCurrentRooms = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/room-settings?all=true&detail=true');
+      const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+      url.searchParams.append('all', 'true');
+      url.searchParams.append('detail', 'true');
+      const response = await fetch(url.toString());
       if (response.ok) {
         const roomSettings = await response.json();
 
@@ -103,29 +132,47 @@ export default function Dashboard() {
 
   // 获取历史房间数据（模拟数据）
   const fetchHistoryRooms = async () => {
-    // 这里应该从实际的数据库或日志中获取历史数据
-    // 目前使用模拟数据
-    const mockHistoryData: HistoryRoomData[] = [
-      {
-        key: '1',
-        room: 'meeting-room-001',
-        during: '2h 30m',
-        today: '45m',
-      },
-      {
-        key: '2',
-        room: 'conference-hall',
-        during: '5h 15m',
-        today: '1h 20m',
-      },
-      {
-        key: '3',
-        room: 'team-sync',
-        during: '1h 45m',
-        today: '0m',
-      },
-    ];
-    setHistoryRoomsData(mockHistoryData);
+    const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+    url.searchParams.append('time_record', 'true');
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      messageApi.error('获取历史房间数据失败');
+      return;
+    } else {
+      const { records }: { records: RoomDateRecords } = await response.json();
+      // 转为 HistoryRoomData 格式
+      const historyData: HistoryRoomData[] = [];
+      const todayStart = new Date().setHours(0, 0, 0, 0);
+      const todayEnd = new Date().setHours(23, 59, 59, 999);
+      // 遍历records中的记录，只要是todayStart < start < todayEnd的记录就是当天的记录
+      // 但也需要处理end > todayEnd的情况，这时候就累加todayEnd - start, 否则就是end - start
+      for (const [roomId, timeRecords] of Object.entries(records)) {
+        let total = 0;
+        let today = 0;
+        timeRecords.forEach((record) => {
+          // 判断当前end是否存在，不存在就是当前的时间
+          const end = record.end || Date.now();
+          total += end - record.start;
+          if (record.start >= todayStart && record.start <= todayEnd) {
+            // 如果开始时间在今天范围内
+            if (end > todayEnd) {
+              // 如果结束时间超过今天的结束时间
+              today += todayEnd - record.start;
+            } else {
+              // 否则就是正常的结束时间
+              today += end - record.start;
+            }
+          }
+        });
+        historyData.push({
+          key: roomId,
+          room: roomId,
+          during: `${Math.floor(total / 3600000)}h ${Math.floor((total % 3600000) / 60000)}m`,
+          today: `${Math.floor(today / 3600000)}h ${Math.floor((today % 3600000) / 60000)}m`,
+        });
+      }
+      setHistoryRoomsData(historyData);
+    }
   };
 
   useEffect(() => {
@@ -135,6 +182,7 @@ export default function Dashboard() {
     // 每60秒刷新一次数据
     const interval = setInterval(() => {
       fetchCurrentRooms();
+      fetchHistoryRooms();
     }, 60000);
 
     return () => clearInterval(interval);

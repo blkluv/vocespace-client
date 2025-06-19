@@ -32,6 +32,7 @@ export interface RoomSettings {
   status?: UserDefineStatus[];
   ownerId: string;
   record: RecordSettings;
+  startAt: number;
 }
 
 const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/room-settings');
@@ -41,6 +42,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
     participants: {},
     ownerId: '',
     record: { active: false },
+    startAt: Date.now(),
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

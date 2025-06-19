@@ -30,10 +30,10 @@ import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { useRecoilState } from 'recoil';
-import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { chatMsgState, socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
 import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
-import { EnhancedChat } from '@/app/pages/chat/chat';
+import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
@@ -67,6 +67,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   roomSettings: RoomSettings;
   fetchSettings: () => Promise<void>;
   updateRecord: (active: boolean, egressId?: string, filePath?: string) => Promise<boolean>;
+  setPermissionDevice: (device: Track.Source) => void;
 }
 
 export interface ControlBarExport {
@@ -101,6 +102,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       roomSettings,
       fetchSettings,
       updateRecord,
+      setPermissionDevice,
       ...props
     }: ControlBarProps,
     ref,
@@ -110,6 +112,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [settingVis, setSettingVis] = React.useState(false);
     const layoutContext = useMaybeLayoutContext();
     const inviteTextRef = React.useRef<HTMLDivElement>(null);
+    const enhanceChatRef = React.useRef<EnhancedChatExports>(null);
+    const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
+
     React.useEffect(() => {
       if (layoutContext?.widget.state?.showChat !== undefined) {
         setIsChatOpen(layoutContext?.widget.state?.showChat);
@@ -787,9 +792,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 source={Track.Source.Microphone}
                 showIcon={showIcon}
                 onChange={microphoneOnChange}
-                onDeviceError={(error) =>
-                  onDeviceError?.({ source: Track.Source.Microphone, error })
-                }
+                onDeviceError={(error) => {
+                  setPermissionDevice(Track.Source.Microphone);
+                  onDeviceError?.({ source: Track.Source.Microphone, error });
+                }}
               >
                 {showText && t('common.device.microphone')}
               </TrackToggle>
@@ -809,7 +815,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 source={Track.Source.Camera}
                 showIcon={showIcon}
                 onChange={cameraOnChange}
-                onDeviceError={(error) => onDeviceError?.({ source: Track.Source.Camera, error })}
+                onDeviceError={(error) => {
+                  setPermissionDevice(Track.Source.Camera);
+                  onDeviceError?.({ source: Track.Source.Camera, error });
+                }}
               >
                 {showText && t('common.device.camera')}
               </TrackToggle>
@@ -830,9 +839,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
               showIcon={showIcon}
               onChange={onScreenShareChange}
-              onDeviceError={(error) =>
-                onDeviceError?.({ source: Track.Source.ScreenShare, error })
-              }
+              onDeviceError={(error) => {
+                setPermissionDevice(Track.Source.ScreenShare);
+                onDeviceError?.({ source: Track.Source.ScreenShare, error });
+              }}
             >
               {showText &&
                 (isScreenShareEnabled ? t('common.stop_share') : t('common.share_screen'))}
@@ -844,15 +854,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               onClicked={() => {
                 setChatOpen(!chatOpen);
               }}
+              count={chatMsg.unhandled}
             ></ChatToggle>
           )}
-          {/* <SettingToggle
-            enabled={settingVis}
-            onClicked={async () => {
-              // setVirtualEnabled(false);
-              setSettingVis(true);
-            }}
-          ></SettingToggle> */}
           {room && roomSettings.participants && visibleControls.microphone && (
             <MoreButton
               setOpenMore={setOpenMore}
@@ -876,6 +880,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         {/* <StartMediaButton /> */}
         {room && (
           <EnhancedChat
+            ref={enhanceChatRef}
             messageApi={messageApi}
             open={chatOpen}
             setOpen={setChatOpen}
@@ -1133,7 +1138,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           {isDownload ? (
             <div>
               <div>{t('more.record.download_msg')}</div>
-              <a href={`${window.location.origin}/records`} target="_blank">download records pages</a>
+              <a href={`${window.location.origin}/records`} target="_blank">
+                download records pages
+              </a>
             </div>
           ) : (
             <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
