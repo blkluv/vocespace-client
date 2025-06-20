@@ -31,7 +31,7 @@ import {
   Track,
   TrackPublication,
 } from 'livekit-client';
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { ControlBarExport, Controls } from './bar';
 import { useRecoilState } from 'recoil';
 import { ParticipantItem } from '../participant/tile';
@@ -45,6 +45,7 @@ import { useRouter } from 'next/navigation';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { Button } from 'antd';
 import { Channel } from './channel';
+import { ParticipantTileMini } from '../participant/mini';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -640,31 +641,21 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       removeLocalSettings: () => clearSettings(),
     }));
 
+    const mainParticipants = useMemo(() => {
+      return Object.entries(settings.participants);
+    }, [settings.participants]);
+
+    const onlineCount = useMemo(() => {
+      return mainParticipants.length;
+    }, [mainParticipants]);
+
     return (
       <div className="video_container_wrapper">
         {room && (
           <Channel
             roomName={room.name}
-            onlineCount={room.remoteParticipants.size + 1}
-            mainParticipants={[
-              [
-                'iaa',
-                {
-                  name: 'Zhang San',
-                  volume: 1,
-                  blur: 0,
-                  screenBlur: 0,
-                  status: 'online',
-                  socketId: 'socket-123',
-                  startAt: Date.now(),
-                  virtual: {
-                    role: ModelRole.None,
-                    bg: ModelBg.ClassRoom,
-                    enabled: false,
-                  },
-                },
-              ],
-            ]}
+            onlineCount={onlineCount}
+            mainParticipants={mainParticipants}
             subParticipants={[]}
             currentRoom="main"
             onJoinMainRoom={() => {}}
@@ -672,6 +663,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             onLeaveSubRoom={() => {}}
             onCreateSubRoom={() => {}}
             onSubRoomSettings={() => {}}
+            mainContext={
+              <GridLayout tracks={tracks} style={{height: "120px"}}>
+                <ParticipantTileMini></ParticipantTileMini>
+              </GridLayout>
+            }
           ></Channel>
         )}
         <div

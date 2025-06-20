@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useState } from 'react';
+import { CSSProperties, ReactNode, useMemo, useState } from 'react';
 import styles from '@/styles/channel.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { SvgResource } from '@/app/resources/svg';
@@ -14,6 +14,7 @@ import {
   PlusCircleOutlined,
 } from '@ant-design/icons';
 import { ParticipantItemType, ParticipantList } from '../participant/list';
+import { GridLayout } from '@livekit/components-react';
 
 interface ChannelProps {
   roomName: string;
@@ -27,6 +28,7 @@ interface ChannelProps {
   onLeaveSubRoom: () => void;
   onCreateSubRoom: () => void;
   onSubRoomSettings: (roomId: string) => void;
+  mainContext: ReactNode;
 }
 
 export function Channel({
@@ -41,9 +43,10 @@ export function Channel({
   onCreateSubRoom,
   onSubRoomSettings,
   ownerId = '',
+  mainContext,
 }: ChannelProps) {
   const { t } = useI18n();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [expandedRooms, setExpandedRooms] = useState<Set<string>>(new Set(['main']));
   const { token } = theme.useToken();
   const [selected, setSelected] = useState<'main' | 'sub'>('main');
@@ -73,55 +76,7 @@ export function Channel({
     borderRadius: 0,
     border: 'none',
   };
-
-  const mainItems: (panelStyle: CSSProperties) => CollapseProps['items'] = (panelStyle) => [
-    {
-      key: 'main',
-      label: (
-        <div className={styles.room_header_wrapper}>
-          <BankOutlined />
-          {t('channel.menu.main')} &nbsp;
-          {roomName}
-        </div>
-      ),
-      children: (
-        <ParticipantList
-          participants={mainParticipants}
-          ownerId={ownerId}
-          size="default"
-        ></ParticipantList>
-      ),
-      style: panelStyle,
-      extra: (
-        <div className={styles.room_header_extra}>
-          <Badge count={mainParticipants.length} color="#22CCEE" showZero size="small" />
-          <PlusCircleOutlined onClick={() => {}} />
-        </div>
-      ),
-    },
-    {
-      key: 'sub_main',
-      label: (
-        <div className={styles.room_header_wrapper}>
-          <BankOutlined />
-          {t('channel.menu.sub')}
-        </div>
-      ),
-      children: (
-        <Collapse
-          bordered={false}
-          defaultActiveKey={['sub']}
-          expandIconPosition="end"
-          expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-          style={{ background: token.colorBgContainer }}
-          items={subChildren(panelStyle)}
-        />
-      ),
-      style: panelStyle,
-    },
-  ];
-
-  const subChildren: (panelStyle: CSSProperties) => CollapseProps['items'] = (panelStyle) => [
+  const subChildren: CollapseProps['items'] = [
     {
       key: 'sub',
       label: (
@@ -146,6 +101,54 @@ export function Channel({
       ),
     },
   ];
+  const mainItems: CollapseProps['items'] = useMemo(() => {
+    return [
+      {
+        key: 'main',
+        label: (
+          <div className={styles.room_header_wrapper}>
+            <BankOutlined />
+            {t('channel.menu.main')} &nbsp;
+            {roomName}
+          </div>
+        ),
+        children:
+          // <ParticipantList
+          //   participants={mainParticipants}
+          //   ownerId={ownerId}
+          //   size="default"
+          // ></ParticipantList>
+          mainContext,
+        style: panelStyle,
+        extra: (
+          <div className={styles.room_header_extra}>
+            <Badge count={mainParticipants.length} color="#22CCEE" showZero size="small" />
+            <PlusCircleOutlined onClick={() => {}} />
+          </div>
+        ),
+      },
+      {
+        key: 'sub_main',
+        label: (
+          <div className={styles.room_header_wrapper}>
+            <BankOutlined />
+            {t('channel.menu.sub')}
+          </div>
+        ),
+        children: (
+          <Collapse
+            bordered={false}
+            defaultActiveKey={['sub']}
+            expandIconPosition="end"
+            expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+            style={{ background: token.colorBgContainer }}
+            items={subChildren}
+          />
+        ),
+        style: panelStyle,
+      },
+    ];
+  }, [mainContext, subChildren]);
 
   if (collapsed) {
     return (
@@ -186,7 +189,7 @@ export function Channel({
             expandIconPosition="end"
             expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
             style={{ background: token.colorBgContainer }}
-            items={mainItems(panelStyle)}
+            items={mainItems}
           />
         </div>
       </div>
