@@ -40,10 +40,16 @@ import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
-import { licenseState, socket, userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import {
+  chatMsgState,
+  licenseState,
+  socket,
+  userState,
+} from '@/app/rooms/[roomName]/PageClientImpl';
 import { useRouter } from 'next/navigation';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { Button } from 'antd';
+import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
 import { ParticipantTileMini } from '../participant/mini';
 
@@ -56,6 +62,7 @@ export interface VideoContainerProps extends VideoConferenceProps {
 export interface VideoContainerExports {
   removeLocalSettings: () => Promise<void>;
 }
+const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
   (
@@ -81,6 +88,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
     const [isFocus, setIsFocus] = useState(false);
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
+    const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
     const router = useRouter();
     const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId, updateRecord } =
       useRoomSettings(
@@ -117,7 +125,26 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         });
       };
 
+      // 获取历史聊天记录 ---------------------------------------------------------------------------
+      const fetchChatMsg = async () => {
+        const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+        url.searchParams.append('roomId', room.name);
+        url.searchParams.append('chat_history', 'true');
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const { msgs }: { msgs: ChatMsgItem[] } = await response.json();
+          setChatMsg((prev) => ({
+            unhandled: prev.unhandled + msgs.length,
+            msgs: [...prev.msgs, ...msgs],
+          }));
+        } else {
+          console.error('Failed to fetch chat messages:', response.statusText);
+        }
+      };
+
       if (init) {
+        // 获取历史聊天记录
+        fetchChatMsg();
         syncSettings().then(() => {
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
           socket.emit('update_user_status');
@@ -423,6 +450,33 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           }
         },
       );
+      // [用户获取到其他参与者聊天信息事件] ------------------------------------------------
+      socket.on('chat_msg_response', (msg: ChatMsgItem) => {
+        if (msg.roomName === room.name) {
+          setChatMsg((prev) => {
+            return {
+              unhandled: prev.unhandled + 1,
+              msgs: [...prev.msgs, msg],
+            };
+          });
+        }
+      });
+
+      socket.on('chat_file_response', (msg: ChatMsgItem) => {
+        if (msg.roomName === room.name) {
+          setChatMsg((prev) => {
+            // 使用函数式更新来获取最新的 messages 状态
+            const existingFile = prev.msgs.find((m) => m.id === msg.id);
+            if (!existingFile) {
+              return {
+                unhandled: prev.unhandled + 1,
+                msgs: [...prev.msgs, msg],
+              };
+            }
+            return prev; // 如果文件已存在，则不更新状态
+          });
+        }
+      });
 
       return () => {
         socket.off('wave_response');
@@ -436,11 +490,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('req_record_response');
         socket.off('recording_response');
         socket.off('refetch_room_response');
+        socket.off('chat_msg_response');
+        socket.off('chat_file_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP]);
+    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;

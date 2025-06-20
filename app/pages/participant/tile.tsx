@@ -144,16 +144,16 @@ export const ParticipantItem: (
     }>({});
     const { blurValue, setVideoBlur } = useVideoBlur({
       videoRef,
-      initialBlur: 100.0,
+      initialBlur: 0.0,
     });
     const [loading, setLoading] = React.useState(true);
     useEffect(() => {
       if (settings.participants && Object.keys(settings.participants).length > 0) {
         if (trackReference.source === Track.Source.Camera) {
-          setVideoBlur(settings.participants[trackReference.participant.identity]?.blur ?? 0.15);
+          setVideoBlur(settings.participants[trackReference.participant.identity]?.blur ?? 0.0);
         } else {
           setVideoBlur(
-            settings.participants[trackReference.participant.identity]?.screenBlur ?? 0.15,
+            settings.participants[trackReference.participant.identity]?.screenBlur ?? 0.0,
           );
         }
         setLoading(false);

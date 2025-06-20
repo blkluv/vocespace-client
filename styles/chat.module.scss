@@ -22,7 +22,7 @@
     justify-content: flex-start;
     width: 100%;
     &_wrapper {
-      width: 75%;
+      width: calc(100% - 24px);
       display: flex;
       align-items: flex-start;
       justify-content: flex-end;
@@ -85,7 +85,13 @@
     align-items: flex-start;
     height: fit-content;
     justify-content: flex-end;
-    width: 100%;
+    width: calc(100% - 24px);
+    &_wrapper {
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+    }
   }
 }
 
