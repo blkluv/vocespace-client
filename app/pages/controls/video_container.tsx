@@ -701,6 +701,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       return Object.entries(settings.participants);
     }, [settings.participants]);
 
+    const childRooms = useMemo(() => {
+      return settings.children || [];
+    }, [settings.children]);
+
     const onlineCount = useMemo(() => {
       return mainParticipants.length;
     }, [mainParticipants]);
@@ -710,20 +714,22 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         {room && (
           <Channel
             roomName={room.name}
+            participantId={room.localParticipant.identity}
             onlineCount={onlineCount}
             mainParticipants={mainParticipants}
-            subParticipants={[]}
-            currentRoom="main"
-            onJoinMainRoom={() => {}}
-            onJoinSubRoom={() => {}}
-            onLeaveSubRoom={() => {}}
-            onCreateSubRoom={() => {}}
-            onSubRoomSettings={() => {}}
+            fetchSettings={fetchSettings}
+            childRooms={childRooms}
             mainContext={
-              <GridLayout tracks={tracks} style={{height: "120px"}}>
+              <GridLayout tracks={tracks} style={{ height: '120px' }}>
                 <ParticipantTileMini></ParticipantTileMini>
               </GridLayout>
             }
+            subContext={
+              <GridLayout tracks={tracks} style={{ height: '120px' }}>
+                <ParticipantTileMini></ParticipantTileMini>
+              </GridLayout>
+            }
+            messageApi={messageApi}
           ></Channel>
         )}
         <div

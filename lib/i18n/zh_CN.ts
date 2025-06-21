@@ -46,12 +46,23 @@ export default {
   },
   channel: {
     menu: {
-      header: "",
-      main: "主房间",
-      sub: "子房间",
-      create: "创建房间",
-      join: "加入",
-    }
+      header: '',
+      main: '主房间',
+      sub: '子房间',
+      create: '创建房间',
+      join: '加入',
+    },
+    join: {
+      success: '加入房间成功',
+    },
+    delete: {
+      success: '删除房间成功',
+      error: '删除房间失败，请稍后再试。',
+    },
+    create: {
+      success: '房间创建成功',
+      error: '房间创建失败，请稍后再试。',
+    },
   },
   more: {
     title: '更多',
@@ -251,7 +262,7 @@ export default {
         copy: '录制链接复制失败',
         email: {
           empty: '邮箱地址不能为空',
-        }
+        },
       },
       virtual: {
         video_stream: '虚拟摄像头流构建错误',

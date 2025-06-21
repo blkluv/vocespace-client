@@ -32,7 +32,7 @@ import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, src, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
-import { RoomSettings } from '@/lib/hooks/room_settings';
+import { RoomSettings } from '@/lib/std/room';
 import { statusDefaultList } from '@/app/pages/controls/status_select';
 
 export interface ParticipantItemProps extends ParticipantTileProps {

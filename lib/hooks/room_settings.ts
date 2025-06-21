@@ -1,39 +1,8 @@
 // lib/hooks/useRoomSettings.ts
-import { useState, useEffect, useCallback } from 'react';
-import { connect_endpoint, UserDefineStatus, UserStatus } from '../std';
-import { ModelBg, ModelRole } from '../std/virtual';
+import { useState, useCallback } from 'react';
+import { connect_endpoint } from '../std';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
-
-export interface ParticipantSettings {
-  name: string;
-  volume: number;
-  blur: number;
-  screenBlur: number;
-  status: UserStatus | string;
-  socketId: string;
-  startAt: number;
-  virtual: {
-    role: ModelRole;
-    bg: ModelBg;
-    enabled: boolean;
-  };
-}
-
-export interface RecordSettings {
-  egressId?: string;
-  filePath?: string;
-  active: boolean;
-}
-
-export interface RoomSettings {
-  participants: {
-    [participantId: string]: ParticipantSettings;
-  };
-  status?: UserDefineStatus[];
-  ownerId: string;
-  record: RecordSettings;
-  startAt: number;
-}
+import { ParticipantSettings, RecordSettings, RoomSettings } from '../std/room';
 
 const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/room-settings');
 
@@ -43,6 +12,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
     ownerId: '',
     record: { active: false },
     startAt: Date.now(),
+    children: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

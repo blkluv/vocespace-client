@@ -64,9 +64,9 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
         {deviceTrack}
-        <div className="lk-participant-placeholder" style={{border: "1px solid #111"}}>
-            <ParticipantPlaceholder />
-          </div>
+        <div className="lk-participant-placeholder" style={{ border: '1px solid #111' }}>
+          <ParticipantPlaceholder />
+        </div>
       </ParticipantTile>
     );
   },
