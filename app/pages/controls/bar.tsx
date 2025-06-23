@@ -125,6 +125,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       controlLeftRef.current ? controlLeftRef.current.clientWidth : window.innerWidth,
     );
 
+    React.useEffect(() => {
+      if (controlLeftRef.current) {
+        setControlWidth(controlLeftRef.current.clientWidth);
+      }
+    }, [controlLeftRef.current]);
+
     // 当window大小变化时，重新计算controlWidth
     window.addEventListener('resize', () => {
       if (controlLeftRef.current) {

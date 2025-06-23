@@ -378,6 +378,7 @@ export const ParticipantItem: (
       isLocal,
       deleyMask,
       virtualReady,
+      videoFilter,
     ]);
 
     // [status] ------------------------------------------------------------

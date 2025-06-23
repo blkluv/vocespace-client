@@ -1,11 +1,10 @@
 'use client';
 
-import { CSSProperties, ReactNode, useCallback, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useMemo, useState } from 'react';
 import styles from '@/styles/channel.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { SvgResource } from '@/app/resources/svg';
 import {
-  Avatar,
   Badge,
   Button,
   Collapse,
@@ -17,20 +16,16 @@ import {
   Tag,
   theme,
 } from 'antd';
-import { connect_endpoint, randomColor } from '@/lib/std';
+import { connect_endpoint } from '@/lib/std';
 import {
-  BankOutlined,
-  CaretRightOutlined,
-  DeleteOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PlusCircleOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons';
-import { ParticipantItemType, ParticipantList } from '../participant/list';
 import { GridLayout, TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { MessageInstance } from 'antd/es/message/interface';
-import { ChildRoom, RoomSettings } from '@/lib/std/room';
+import { RoomSettings } from '@/lib/std/room';
 import { ParticipantTileMini } from '../participant/mini';
 
 interface ChannelProps {
@@ -117,7 +112,6 @@ export function Channel({
       setDeleteChildRoomName('');
       await fetchSettings();
     }
-    
   };
 
   const leaveChildRoom = async () => {
@@ -222,10 +216,10 @@ export function Channel({
 
     return (
       <GridLayout tracks={mainTracks} style={{ height: '120px' }}>
-        <ParticipantTileMini></ParticipantTileMini>
+        <ParticipantTileMini settings={settings}></ParticipantTileMini>
       </GridLayout>
     );
-  }, [tracks, childRooms]);
+  }, [tracks, childRooms, settings]);
 
   const subContext = useCallback(
     (name: string): ReactNode => {
@@ -241,11 +235,11 @@ export function Channel({
 
       return (
         <GridLayout tracks={subTracks} style={{ height: '120px' }}>
-          <ParticipantTileMini></ParticipantTileMini>
+          <ParticipantTileMini settings={settings}></ParticipantTileMini>
         </GridLayout>
       );
     },
-    [tracks, childRooms],
+    [tracks, childRooms, settings],
   );
 
   const subChildren: CollapseProps['items'] = useMemo(() => {
@@ -257,9 +251,8 @@ export function Channel({
           menu={{ items: subContextItems }}
           onOpenChange={(open) => {
             if (open) {
-              console.warn('open sub room context menu', room.name);
               setDeleteChildRoomName(room.name);
-            } 
+            }
           }}
         >
           <div className={styles.room_header_wrapper}>
@@ -279,7 +272,7 @@ export function Channel({
         </div>
       ),
     }));
-  }, [subContext, childRooms]);
+  }, [subContext, childRooms, deleteChildRoomName]);
 
   const mainItems: CollapseProps['items'] = useMemo(() => {
     return [
