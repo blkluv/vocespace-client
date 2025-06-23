@@ -95,6 +95,7 @@ export function Channel({
     }
     await fetchSettings();
   };
+
   const deleteChildRoom = async () => {
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
     url.searchParams.append('roomId', roomName);
@@ -113,6 +114,38 @@ export function Channel({
         content: t('channel.delete.success'),
         duration: 2,
       });
+      setDeleteChildRoomName('');
+      await fetchSettings();
+    }
+    
+  };
+
+  const leaveChildRoom = async () => {
+    const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+    url.searchParams.append('leaveChildRoom', 'true');
+    const response = await fetch(url.toString(), {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        roomId: roomName,
+        childRoom: deleteChildRoomName,
+        participantId,
+      }),
+    });
+
+    if (!response.ok) {
+      const { error } = await response.json();
+      messageApi.error({
+        content: error,
+        duration: 2,
+      });
+    } else {
+      messageApi.success({
+        content: t('channel.leave.success'),
+        duration: 2,
+      });
+      setDeleteChildRoomName('');
+      await fetchSettings();
     }
   };
 
@@ -154,6 +187,11 @@ export function Channel({
       key: 'delete',
       label: t('channel.menu.delete'),
       onClick: deleteChildRoom,
+    },
+    {
+      key: 'leave',
+      label: t('channel.menu.leave'),
+      onClick: leaveChildRoom,
     },
   ];
 
@@ -219,10 +257,9 @@ export function Channel({
           menu={{ items: subContextItems }}
           onOpenChange={(open) => {
             if (open) {
+              console.warn('open sub room context menu', room.name);
               setDeleteChildRoomName(room.name);
-            } else {
-              setDeleteChildRoomName('');
-            }
+            } 
           }}
         >
           <div className={styles.room_header_wrapper}>

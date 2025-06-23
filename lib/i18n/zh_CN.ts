@@ -51,8 +51,9 @@ export default {
       sub: '子房间',
       create: '创建房间',
       join: '加入',
-      setting: "设置",
+      setting: '设置',
       delete: '删除房间',
+      leave: '离开房间',
     },
     join: {
       success: '加入房间成功',
@@ -64,6 +65,10 @@ export default {
     create: {
       success: '房间创建成功',
       error: '房间创建失败，请稍后再试。',
+    },
+    leave: {
+      success: '离开子房间，返回主房间成功',
+      error: '离开子房间失败，请稍后再试。',
     },
   },
   more: {

@@ -69,6 +69,111 @@ class RoomManager {
     return `${this.PARTICIPANT_KEY_PREFIX}${room}:${participantId}`;
   }
 
+  // 修改子房间的名字 ---------------------------------------------------------------------
+  static async renameChildRoom(
+    room: string,
+    childRoom: string,
+    newChildRoomName: string,
+  ): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized or disabled.');
+      }
+
+      const roomSettings = await this.getRoomSettings(room);
+      if (!roomSettings) {
+        throw new Error(`Room ${room} does not exist.`);
+      }
+
+      // 查找子房间
+      const childRoomData = roomSettings.children.find((c) => c.name === childRoom);
+      if (!childRoomData) {
+        throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
+      }
+
+      // 检查新名字是否已经存在
+      if (roomSettings.children.some((c) => c.name === newChildRoomName)) {
+        return {
+          success: false,
+          error: `Child room with name ${newChildRoomName} already exists.`,
+        };
+      }
+
+      // 修改子房间名字
+      childRoomData.name = newChildRoomName;
+
+      // 设置回存储
+      await this.setRoomSettings(room, roomSettings);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred while renaming child room.',
+      };
+    }
+  }
+
+  // 从子房间中移除参与者 ------------------------------------------------------------------
+  static async removeParticipantFromChildRoom(
+    room: string,
+    childRoom: string,
+    participantId: string,
+  ): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized or disabled.');
+      }
+
+      const roomSettings = await this.getRoomSettings(room);
+      if (!roomSettings) {
+        throw new Error(`Room ${room} does not exist.`);
+      }
+
+      // 查找子房间
+      const childRoomData = roomSettings.children.find((c) => c.name === childRoom);
+      if (!childRoomData) {
+        throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
+      }
+
+      // 检查参与者是否在子房间中
+      const participantIndex = childRoomData.participants.indexOf(participantId);
+      if (participantIndex === -1) {
+        return {
+          success: false,
+          error: `Participant ${participantId} is not in child room ${childRoom}.`,
+        }; // 参与者不在子房间中
+      }
+
+      // 从子房间中移除参与者
+      childRoomData.participants.splice(participantIndex, 1);
+
+      // 设置回存储
+      await this.setRoomSettings(room, roomSettings);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred while removing participant from child room.',
+      };
+    }
+  }
+
   // 向子房间添加参与者 --------------------------------------------------------------------
   static async addParticipantToChildRoom(
     room: string,
@@ -820,6 +925,36 @@ export async function DELETE(request: NextRequest) {
   const socketId = request.nextUrl.searchParams.get('socketId');
   // ?roomId=xxx&childRoom=xxx
   const deleteChildRoom = request.nextUrl.searchParams.get('childRoom');
+  // ?leaveChildRoom=true
+  const leaveChildRoom = request.nextUrl.searchParams.get('leaveChildRoom');
+
+  if (leaveChildRoom == 'true') {
+    const body = await request.json();
+    console.warn('Leave child room request body:', body);
+    const { roomId, participantId, childRoom } = body;
+
+    if (!roomId || !participantId || !childRoom) {
+      return NextResponse.json(
+        { error: 'Room ID, Participant ID and Child Room are required' },
+        { status: 400 },
+      );
+    }
+
+    // 从子房间中移除参与者
+    const { success, error } = await RoomManager.removeParticipantFromChildRoom(
+      roomId,
+      childRoom,
+      participantId,
+    );
+    if (success) {
+      return NextResponse.json({ success: true, message: 'Participant removed from child room' });
+    } else {
+      return NextResponse.json(
+        { success: false, message: 'Failed to remove participant from child room', error },
+        { status: 500 },
+      );
+    }
+  }
 
   if (deleteChildRoom && roomId) {
     // 删除子房间
