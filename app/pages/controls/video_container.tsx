@@ -27,6 +27,7 @@ import {
   LocalTrackPublication,
   Participant,
   ParticipantEvent,
+  ParticipantTrackPermission,
   RoomEvent,
   Track,
   TrackPublication,
@@ -500,6 +501,20 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
+      let subAuth = [] as ParticipantTrackPermission[];
+
+      // 判断当前自己在哪个房间中，在不同的房间中设置不同用户的订阅权限
+      let selfRoom = settings.children.find((child) => {
+        return child.participants.includes(room.localParticipant.identity);
+      });
+
+      if (!selfRoom) {
+        selfRoom = {
+          name: room.name,
+          participants: Object.keys(settings.participants),
+        };
+      }
+
       room.remoteParticipants.forEach((rp) => {
         let volume = settings.participants[rp.identity]?.volume / 100.0;
         if (isNaN(volume)) {
@@ -507,13 +522,17 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
         rp.setVolume(volume);
 
-        // 测试代码
-        // room.localParticipant.setTrackSubscriptionPermissions(false, [
-        //   {
-
-        //   }
-        // ])
+        // 判断远程参与者是否在当前用户所在的房间中
+        if (selfRoom.participants.includes(rp.identity)) {
+          subAuth.push({
+            participantIdentity: rp.identity,
+            allowAll: true,
+          });
+        }
       });
+      
+      // 设置房间订阅权限 ------------------------------------------------
+      room.localParticipant.setTrackSubscriptionPermissions(false, subAuth);
     }, [room, settings]);
 
     useEffect(() => {
@@ -697,8 +716,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       removeLocalSettings: () => clearSettings(),
     }));
 
-
-
     return (
       <div className="video_container_wrapper">
         {room && (
@@ -706,7 +723,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             roomName={room.name}
             participantId={room.localParticipant.identity}
             settings={settings}
-            fetchSettings={fetchSettings}
+            onUpdate={async ()=> {
+              await fetchSettings();
+              socket.emit('update_user_status');
+            }}
             tracks={tracks}
             messageApi={messageApi}
           ></Channel>

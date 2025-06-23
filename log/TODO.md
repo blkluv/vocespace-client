@@ -233,12 +233,13 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 右键菜单
   - [ ] 用户管理，用户列表
   - [ ] 主页，用户视口
+  - [x] menu
 
 - [x] chat 合 space.voce.chat
 - [ ] screen share audio 关闭 （放入设置）
 - [ ] 设置持久化到localstorage
 - [ ] 设置，新用户加入时的提醒音
-- [ ] 去不同房间需要从主房间列表中隐藏
+- [x] 去不同房间需要从主房间列表中隐藏
 
 - [x] 性能测试:
 ```

@@ -32,7 +32,7 @@ interface ChannelProps {
   roomName: string;
   messageApi: MessageInstance;
   participantId: string;
-  fetchSettings: () => Promise<void>;
+  onUpdate: () => Promise<void>;
   tracks: TrackReferenceOrPlaceholder[];
   settings: RoomSettings;
 }
@@ -44,7 +44,7 @@ export function Channel({
   settings,
   messageApi,
   participantId,
-  fetchSettings,
+  onUpdate,
   tracks,
 }: ChannelProps) {
   const { t } = useI18n();
@@ -88,7 +88,7 @@ export function Channel({
       });
       setRoomCreateModalOpen(false);
     }
-    await fetchSettings();
+   await onUpdate();
   };
 
   const deleteChildRoom = async () => {
@@ -110,7 +110,7 @@ export function Channel({
         duration: 2,
       });
       setDeleteChildRoomName('');
-      await fetchSettings();
+     await onUpdate();
     }
   };
 
@@ -139,7 +139,7 @@ export function Channel({
         duration: 2,
       });
       setDeleteChildRoomName('');
-      await fetchSettings();
+     await onUpdate();
     }
   };
 
@@ -166,7 +166,7 @@ export function Channel({
         content: t('channel.join.success'),
         duration: 2,
       });
-      await fetchSettings();
+     await onUpdate();
     }
   };
 
