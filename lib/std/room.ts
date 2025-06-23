@@ -4,7 +4,7 @@ import { ModelBg, ModelRole } from "./virtual";
 export interface ChildRoom {
   name: string;
   // 参与者ID
-  participants: String[];
+  participants: string[];
 }
 
 export interface ParticipantSettings {

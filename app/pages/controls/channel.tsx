@@ -25,6 +25,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PlusCircleOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons';
 import { ParticipantItemType, ParticipantList } from '../participant/list';
 import { GridLayout, TrackReferenceOrPlaceholder } from '@livekit/components-react';
@@ -172,14 +173,21 @@ export function Channel({
   };
 
   const mainContext: ReactNode = useMemo(() => {
-    // 处理tracks
+    let allChildParticipants = childRooms.reduce((acc, room) => {
+      return acc.concat(room.participants);
+    }, [] as string[]);
+
+    // 从tracks中将所有子房间的参与者过滤掉
+    let mainTracks = tracks.filter(
+      (track) => !allChildParticipants.includes(track.participant.identity),
+    );
 
     return (
-      <GridLayout tracks={tracks} style={{ height: '120px' }}>
+      <GridLayout tracks={mainTracks} style={{ height: '120px' }}>
         <ParticipantTileMini></ParticipantTileMini>
       </GridLayout>
     );
-  }, [tracks]);
+  }, [tracks, childRooms]);
 
   const subContext = useCallback(
     (name: string): ReactNode => {
@@ -199,7 +207,7 @@ export function Channel({
         </GridLayout>
       );
     },
-    [tracks, settings, childRooms],
+    [tracks, childRooms],
   );
 
   const subChildren: CollapseProps['items'] = useMemo(() => {
@@ -218,7 +226,7 @@ export function Channel({
           }}
         >
           <div className={styles.room_header_wrapper}>
-            <BankOutlined />
+            <VideoCameraOutlined />
             {room.name}
           </div>
         </Dropdown>
@@ -242,7 +250,7 @@ export function Channel({
         key: 'main',
         label: (
           <div className={styles.room_header_wrapper}>
-            <BankOutlined />
+            <VideoCameraOutlined />
             {t('channel.menu.main')} &nbsp;
             {roomName}
           </div>
@@ -262,7 +270,7 @@ export function Channel({
         key: 'sub_main',
         label: (
           <div className={styles.room_header_wrapper}>
-            <BankOutlined />
+            <VideoCameraOutlined />
             {t('channel.menu.sub')}
           </div>
         ),
