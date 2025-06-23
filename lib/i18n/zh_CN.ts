@@ -51,6 +51,8 @@ export default {
       sub: '子房间',
       create: '创建房间',
       join: '加入',
+      setting: "设置",
+      delete: '删除房间',
     },
     join: {
       success: '加入房间成功',

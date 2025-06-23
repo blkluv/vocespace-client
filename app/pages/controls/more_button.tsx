@@ -3,6 +3,7 @@ import { Button, Dropdown, MenuProps, Space } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useMemo, useState } from 'react';
+import { DownOutlined } from '@ant-design/icons';
 
 export interface MoreButtonProps {
   showText?: boolean;
@@ -12,6 +13,7 @@ export interface MoreButtonProps {
   onSettingOpen?: () => Promise<void>;
   onClickManage?: () => Promise<void>;
   onClickRecord?: () => Promise<void>;
+  controlWidth: number;
 }
 
 export function MoreButton({
@@ -22,17 +24,18 @@ export function MoreButton({
   onClickRecord,
   onSettingOpen,
   isRecording,
+  controlWidth,
 }: MoreButtonProps) {
   const { t } = useI18n();
 
   const showTextOrHide = useMemo(() => {
-    // 判断窗口的宽度是否大于760px, 如果小于则需要隐藏文字
-    if (window.innerWidth < 760) {
+    // 判断窗口的宽度是否大于720px, 如果小于则需要隐藏文字
+    if (controlWidth < 720) {
       return false;
     } else {
       return showText;
     }
-  }, [window.innerWidth]);
+  }, [controlWidth]);
 
   const items: MenuProps['items'] = useMemo(() => {
     return [
@@ -111,9 +114,9 @@ export function MoreButton({
           }}
         >
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <SvgResource type="more" svgSize={16}></SvgResource>
+            <SvgResource type="more" svgSize={18}></SvgResource>
             {showTextOrHide && t('more.title')}
-            <SvgResource type="down" svgSize={16}></SvgResource>
+            <SvgResource type="down" svgSize={14}></SvgResource>
           </div>
         </Button>
       </Dropdown>

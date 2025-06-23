@@ -107,9 +107,9 @@ h2 a {
   height: 100%;
 }
 
-.ant-collapse-header {
+/* .ant-collapse-header {
   padding: 8px !important;
-}
+} */
 
 :where(.css-dev-only-do-not-override-fx2ox2).ant-dropdown .ant-dropdown-menu {
   background-color: #1e1e1e;
@@ -155,4 +155,28 @@ h2 a {
 
 .lk-pagination-control {
   z-index: 1111 !important;
+}
+
+.vocespace_button {
+  background-color: #333;
+  border: none;
+  display: inline-flex;
+  gap: 6px;
+  border-radius: 6px;
+  padding: 4px 8px;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.vocespace_button:hover {
+  background-color: #444;
+}
+
+.ant-collapse-header-text{
+  height: fit-content;
+  display: flex;
+  align-content: center;
+  align-items: center;
 }

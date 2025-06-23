@@ -12,15 +12,21 @@ import {
 import { Track } from 'livekit-client';
 import { forwardRef, useCallback, useMemo, useRef } from 'react';
 import { isTrackReferencePinned } from './tile';
+import { ParticipantSettings } from '@/lib/std/room';
 
-export interface ParticipantTileMiniProps extends ParticipantTileProps {}
+export interface ParticipantTileMiniProps extends ParticipantTileProps {
+  participants?: ParticipantSettings[];
+}
 
 export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMiniProps>(
-  ({ trackRef }: ParticipantTileMiniProps, ref) => {
+  ({ trackRef, participants }: ParticipantTileMiniProps, ref) => {
     const trackReference = useEnsureTrackRef(trackRef);
     const videoRef = useRef<HTMLVideoElement>(null);
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
+
+    console.warn(trackReference.participant);
+
     const handleSubscribe = useCallback(
       (subscribed: boolean) => {
         if (
@@ -60,6 +66,8 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
         }
       }
     }, [trackReference, videoRef]);
+
+    
 
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>

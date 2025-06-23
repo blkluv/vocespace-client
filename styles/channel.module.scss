@@ -15,34 +15,6 @@
   }
 }
 
-.expandButton {
-  position: absolute;
-  right: -32px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 48px;
-  background-color: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-left: none;
-  border-radius: 0 8px 8px 0;
-  color: #ffffff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #2a2a2a;
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
 .header {
   padding: 16px 8px;
   border-bottom: 1px solid #2a2a2a;
@@ -338,6 +310,15 @@
   align-items: center;
   gap: 8px;
   display: inline-flex;
+  height: 30px;
+  width: 100%; 
+  padding-left: 4px;
+  transition: all 0.2s ease-in-out;
+  margin-right: 4px;
+  &:hover {
+    background-color: #333;
+    cursor: pointer;
+  }
 }
 
 .room_header_extra {
@@ -345,6 +326,7 @@
   align-items: center;
   gap: 8px;
   display: inline-flex;
+  height: 100%;
 }
 
 .extra_icon {

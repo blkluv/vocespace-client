@@ -146,7 +146,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             itemSelectedColor: '#fff',
           },
           Collapse: {
-            contentPadding: "0px"
+            contentPadding: "6px 0 6px 6px",
+            headerPadding: "8px 8px 8px 4px",
           }
         },
       }}

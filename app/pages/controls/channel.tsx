@@ -1,10 +1,22 @@
 'use client';
 
-import { CSSProperties, ReactNode, useMemo, useState } from 'react';
+import { CSSProperties, ReactNode, useCallback, useMemo, useState } from 'react';
 import styles from '@/styles/channel.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { SvgResource } from '@/app/resources/svg';
-import { Avatar, Badge, Button, Collapse, CollapseProps, Input, Modal, Tag, theme } from 'antd';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Collapse,
+  CollapseProps,
+  Dropdown,
+  Input,
+  MenuProps,
+  Modal,
+  Tag,
+  theme,
+} from 'antd';
 import { connect_endpoint, randomColor } from '@/lib/std';
 import {
   BankOutlined,
@@ -15,47 +27,47 @@ import {
   PlusCircleOutlined,
 } from '@ant-design/icons';
 import { ParticipantItemType, ParticipantList } from '../participant/list';
-import { GridLayout } from '@livekit/components-react';
+import { GridLayout, TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { MessageInstance } from 'antd/es/message/interface';
-import { ChildRoom } from '@/lib/std/room';
+import { ChildRoom, RoomSettings } from '@/lib/std/room';
+import { ParticipantTileMini } from '../participant/mini';
 
 interface ChannelProps {
   roomName: string;
-  onlineCount: number;
-  mainParticipants: ParticipantItemType[];
-  // subParticipants: ParticipantItemType[];
-  ownerId?: string;
-  mainContext: ReactNode;
-  subContext: ReactNode;
   messageApi: MessageInstance;
-  childRooms: ChildRoom[];
   participantId: string;
   fetchSettings: () => Promise<void>;
+  tracks: TrackReferenceOrPlaceholder[];
+  settings: RoomSettings;
 }
 
 const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export function Channel({
   roomName,
-  onlineCount,
-  mainParticipants,
-  ownerId = '',
+  settings,
   messageApi,
-  mainContext,
-  subContext,
-  childRooms,
   participantId,
-  fetchSettings
+  fetchSettings,
+  tracks,
 }: ChannelProps) {
   const { t } = useI18n();
   const [collapsed, setCollapsed] = useState(false);
   const { token } = theme.useToken();
   const [selected, setSelected] = useState<'main' | 'sub'>('main');
   const [roomCreateModalOpen, setRoomCreateModalOpen] = useState(false);
+  const [deleteChildRoomName, setDeleteChildRoomName] = useState('');
+  const childRooms = useMemo(() => {
+    return settings.children || [];
+  }, [settings.children]);
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
   };
   const [childRoomName, setChildRoomName] = useState('');
+  const onlineCount = useMemo(() => {
+    return Object.keys(settings.participants).length;
+  }, [settings.participants]);
+
   const createChildRoom = async () => {
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
     url.searchParams.append('childRoom', 'true');
@@ -85,7 +97,7 @@ export function Channel({
   const deleteChildRoom = async () => {
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
     url.searchParams.append('roomId', roomName);
-    url.searchParams.append('childRoom', childRoomName);
+    url.searchParams.append('childRoom', deleteChildRoomName);
     const response = await fetch(url.toString(), {
       method: 'DELETE',
     });
@@ -130,6 +142,20 @@ export function Channel({
     }
   };
 
+  const joinMainRoom = async () => {};
+
+  const subContextItems: MenuProps['items'] = [
+    {
+      key: 'setting',
+      label: t('channel.menu.setting'),
+    },
+    {
+      key: 'delete',
+      label: t('channel.menu.delete'),
+      onClick: deleteChildRoom,
+    },
+  ];
+
   const panelStyle: React.CSSProperties = {
     marginBottom: 0,
     background: '#1e1e1e',
@@ -137,34 +163,74 @@ export function Channel({
     border: 'none',
     padding: '0px',
   };
+
   const subStyle: React.CSSProperties = {
     marginBottom: 0,
     background: selected == 'sub' ? '#2a2a2a' : '#1e1e1e',
     borderRadius: 0,
     border: 'none',
   };
+
+  const mainContext: ReactNode = useMemo(() => {
+    // 处理tracks
+
+    return (
+      <GridLayout tracks={tracks} style={{ height: '120px' }}>
+        <ParticipantTileMini></ParticipantTileMini>
+      </GridLayout>
+    );
+  }, [tracks]);
+
+  const subContext = useCallback(
+    (name: string): ReactNode => {
+      let childRoom = childRooms.find((room) => room.name === name);
+
+      if (!childRoom) {
+        return <></>;
+      }
+
+      let subTracks = tracks.filter((track) =>
+        childRoom.participants.includes(track.participant.identity),
+      );
+
+      return (
+        <GridLayout tracks={subTracks} style={{ height: '120px' }}>
+          <ParticipantTileMini></ParticipantTileMini>
+        </GridLayout>
+      );
+    },
+    [tracks, settings, childRooms],
+  );
+
   const subChildren: CollapseProps['items'] = useMemo(() => {
     return childRooms.map((room) => ({
       key: 'sub',
       label: (
-        <div className={styles.room_header_wrapper}>
-          <BankOutlined />
-          {room.name}
-        </div>
+        <Dropdown
+          trigger={['contextMenu']}
+          menu={{ items: subContextItems }}
+          onOpenChange={(open) => {
+            if (open) {
+              setDeleteChildRoomName(room.name);
+            } else {
+              setDeleteChildRoomName('');
+            }
+          }}
+        >
+          <div className={styles.room_header_wrapper}>
+            <BankOutlined />
+            {room.name}
+          </div>
+        </Dropdown>
       ),
-      children:
-        // <ParticipantList
-        //   participants={subParticipants}
-        //   ownerId={ownerId}
-        //   size="default"
-        // ></ParticipantList>
-        subContext,
+      children: subContext(room.name),
       style: subStyle,
       extra: (
         <div className={styles.room_header_extra}>
-          <Badge count={room.participants.length} color="#22CCEE" showZero size="small" />
-          <PlusCircleOutlined onClick={() => addIntoRoom(room.name)} />
-          <DeleteOutlined onClick={deleteChildRoom} />
+          <button onClick={() => addIntoRoom(room.name)} className="vocespace_button">
+            <PlusCircleOutlined />
+            {t('channel.menu.join')}
+          </button>
         </div>
       ),
     }));
@@ -181,18 +247,14 @@ export function Channel({
             {roomName}
           </div>
         ),
-        children:
-          // <ParticipantList
-          //   participants={mainParticipants}
-          //   ownerId={ownerId}
-          //   size="default"
-          // ></ParticipantList>
-          mainContext,
+        children: mainContext,
         style: panelStyle,
         extra: (
           <div className={styles.room_header_extra}>
-            <Badge count={mainParticipants.length} color="#22CCEE" showZero size="small" />
-            <PlusCircleOutlined onClick={() => {}} />
+            <button onClick={joinMainRoom} className="vocespace_button">
+              <PlusCircleOutlined />
+              {t('channel.menu.join')}
+            </button>
           </div>
         ),
       },
@@ -208,15 +270,16 @@ export function Channel({
           <Collapse
             bordered={false}
             defaultActiveKey={['sub']}
-            expandIcon={() => <></>}
+            expandIcon={() => undefined}
             style={{ background: token.colorBgContainer }}
             items={subChildren}
           />
         ),
         style: panelStyle,
+        extra: <Badge count={childRooms.length} color="#22CCEE" showZero size="small" />,
       },
     ];
-  }, [mainContext, subChildren]);
+  }, [mainContext, subChildren, childRooms]);
 
   if (collapsed) {
     return (
@@ -255,8 +318,7 @@ export function Channel({
             <Collapse
               bordered={false}
               defaultActiveKey={['main']}
-              expandIconPosition="end"
-              expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
+              expandIcon={() => undefined}
               style={{ background: token.colorBgContainer }}
               items={mainItems}
             />

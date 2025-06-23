@@ -240,7 +240,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 设置，新用户加入时的提醒音
 - [ ] 去不同房间需要从主房间列表中隐藏
 
-- [ ] 性能测试:
+- [x] 性能测试:
 ```
 lk load-test \
   --url <YOUR-SERVER-URL> \

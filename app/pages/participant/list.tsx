@@ -1,8 +1,8 @@
-import { ParticipantSettings } from '@/lib/hooks/room_settings';
 import { Avatar, List } from 'antd';
 import styles from '@/styles/controls.module.scss';
 import { randomColor } from '@/lib/std';
 import { useI18n } from '@/lib/i18n/i18n';
+import { ParticipantSettings } from '@/lib/std/room';
 
 export type ParticipantItemType = [string, ParticipantSettings];
 

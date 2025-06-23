@@ -697,17 +697,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       removeLocalSettings: () => clearSettings(),
     }));
 
-    const mainParticipants = useMemo(() => {
-      return Object.entries(settings.participants);
-    }, [settings.participants]);
 
-    const childRooms = useMemo(() => {
-      return settings.children || [];
-    }, [settings.children]);
-
-    const onlineCount = useMemo(() => {
-      return mainParticipants.length;
-    }, [mainParticipants]);
 
     return (
       <div className="video_container_wrapper">
@@ -715,20 +705,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           <Channel
             roomName={room.name}
             participantId={room.localParticipant.identity}
-            onlineCount={onlineCount}
-            mainParticipants={mainParticipants}
+            settings={settings}
             fetchSettings={fetchSettings}
-            childRooms={childRooms}
-            mainContext={
-              <GridLayout tracks={tracks} style={{ height: '120px' }}>
-                <ParticipantTileMini></ParticipantTileMini>
-              </GridLayout>
-            }
-            subContext={
-              <GridLayout tracks={tracks} style={{ height: '120px' }}>
-                <ParticipantTileMini></ParticipantTileMini>
-              </GridLayout>
-            }
+            tracks={tracks}
             messageApi={messageApi}
           ></Channel>
         )}

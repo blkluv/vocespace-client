@@ -30,8 +30,13 @@ import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { useRecoilState } from 'recoil';
-import { chatMsgState, socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
-import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
+import {
+  chatMsgState,
+  socket,
+  userState,
+  virtualMaskState,
+} from '@/app/rooms/[roomName]/PageClientImpl';
+import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
@@ -115,6 +120,17 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const inviteTextRef = React.useRef<HTMLDivElement>(null);
     const enhanceChatRef = React.useRef<EnhancedChatExports>(null);
     const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
+    const controlLeftRef = React.useRef<HTMLDivElement>(null);
+    const [controlWidth, setControlWidth] = React.useState(
+      controlLeftRef.current ? controlLeftRef.current.clientWidth : window.innerWidth,
+    );
+
+    // 当window大小变化时，重新计算controlWidth
+    window.addEventListener('resize', () => {
+      if (controlLeftRef.current) {
+        setControlWidth(controlLeftRef.current.clientWidth);
+      }
+    });
 
     React.useEffect(() => {
       if (layoutContext?.widget.state?.showChat !== undefined) {
@@ -146,10 +162,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       () => variation === 'minimal' || variation === 'verbose',
       [variation],
     );
-    const showText = React.useMemo(
-      () => variation === 'textOnly' || variation === 'verbose',
-      [variation],
-    );
+    const showText = React.useMemo(() => {
+      if (controlWidth < 720) {
+        return false;
+      } else {
+        return variation === 'textOnly' || variation === 'verbose';
+      }
+    }, [variation, controlWidth]);
 
     const browserSupportsScreenSharing = supportsScreenSharing();
 
@@ -786,7 +805,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     return (
       <div {...htmlProps} className={styles.controls}>
         {contextHolder}
-        <div className={styles.controls_left}>
+        <div className={styles.controls_left} ref={controlLeftRef}>
           {visibleControls.microphone && (
             <div className="lk-button-group">
               <TrackToggle
@@ -851,6 +870,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           {visibleControls.chat && (
             <ChatToggle
+              controlWidth={controlWidth}
               enabled={chatOpen}
               onClicked={() => {
                 setChatOpen(!chatOpen);
@@ -860,6 +880,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           {room && roomSettings.participants && visibleControls.microphone && (
             <MoreButton
+              controlWidth={controlWidth}
               setOpenMore={setOpenMore}
               setMoreType={setMoreType}
               onSettingOpen={async () => {
