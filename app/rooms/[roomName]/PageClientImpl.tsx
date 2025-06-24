@@ -27,6 +27,7 @@ import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
+import { WsTo } from '@/lib/std/device';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -263,6 +264,7 @@ function VideoConferenceComponent(props: {
       receiverId: '',
       receSocketId: '',
     });
+    socket.emit('update_user_status');
     await videoContainerRef.current?.removeLocalSettings();
     socket.disconnect();
     router.push('/');

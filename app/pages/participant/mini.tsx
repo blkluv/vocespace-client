@@ -1,11 +1,17 @@
 import {
   AudioTrack,
+  ConnectionQualityIndicator,
   isTrackReference,
+  LockLockedIcon,
+  ParticipantName,
   ParticipantPlaceholder,
   ParticipantTile,
   ParticipantTileProps,
+  ScreenShareIcon,
+  TrackMutedIndicator,
   useEnsureTrackRef,
   useFeatureContext,
+  useIsEncrypted,
   useMaybeLayoutContext,
   VideoTrack,
 } from '@livekit/components-react';
@@ -14,6 +20,10 @@ import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 import { isTrackReferencePinned } from './tile';
 import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { useVideoBlur } from '@/lib/std/device';
+import { SvgResource } from '@/app/resources/svg';
+import { useRecoilState } from 'recoil';
+import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { UserStatus } from '@/lib/std';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
   participants?: ParticipantSettings[];
@@ -24,9 +34,10 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
   ({ trackRef, participants, settings }: ParticipantTileMiniProps, ref) => {
     const trackReference = useEnsureTrackRef(trackRef);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [uState, setUState] = useRecoilState(userState);
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
-
+    const isEncrypted = useIsEncrypted(trackReference.participant);
     const { blurValue, setVideoBlur } = useVideoBlur({
       videoRef,
       initialBlur: 0.0,
@@ -44,7 +55,11 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
         // setLoading(false);
       }
     }, [settings.participants, trackReference]);
-
+    const defineStatus = useMemo(() => {
+      return uState.roomStatus.find(
+        (item) => item.id === settings.participants[trackReference.participant.identity]?.status,
+      );
+    }, [uState.roomStatus, settings.participants, trackReference]);
     const videoFilter = useMemo(() => {
       return settings.participants[trackReference.participant.identity]?.virtual?.enabled ?? false
         ? `none`
@@ -65,6 +80,21 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
       },
       [trackReference, layoutContext],
     );
+    
+    const userStatusDisply = useMemo(() => {
+      switch (settings.participants[trackReference.participant.identity]?.status) {
+        case UserStatus.Online:
+          return 'online_dot';
+        case UserStatus.Offline:
+          return 'offline_dot';
+        case UserStatus.Busy:
+          return 'busy_dot';
+        case UserStatus.Leisure:
+          return 'leisure_dot';
+        default:
+          return 'online_dot';
+      }
+    }, [settings.participants, trackReference.participant.identity]);
 
     const deviceTrack = useMemo(() => {
       if (isTrackReference(trackReference)) {
@@ -99,6 +129,43 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
         {deviceTrack}
         <div className="lk-participant-placeholder" style={{ border: '1px solid #111' }}>
           <ParticipantPlaceholder />
+        </div>
+        <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
+          <div className="lk-participant-metadata-item">
+            {trackReference.source === Track.Source.Camera ? (
+              <>
+                {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
+                <TrackMutedIndicator
+                  trackRef={{
+                    participant: trackReference.participant,
+                    source: Track.Source.Microphone,
+                  }}
+                  show={'muted'}
+                ></TrackMutedIndicator>
+                <ParticipantName />
+                <div
+                  style={{ marginLeft: '0.25rem', display: 'inline-flex', alignItems: 'center' }}
+                >
+                  {defineStatus ? (
+                    <SvgResource
+                      type="dot"
+                      svgSize={16}
+                      color={defineStatus.icon.color}
+                    ></SvgResource>
+                  ) : (
+                    <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
+                <ParticipantName>&apos;s screen</ParticipantName>
+              </>
+            )}
+          </div>
+
+          <ConnectionQualityIndicator className="lk-participant-metadata-item" />
         </div>
       </ParticipantTile>
     );

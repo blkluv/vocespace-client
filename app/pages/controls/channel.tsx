@@ -60,9 +60,6 @@ export function Channel({
     setCollapsed(!collapsed);
   };
   const [childRoomName, setChildRoomName] = useState('');
-  const onlineCount = useMemo(() => {
-    return Object.keys(settings.participants).length;
-  }, [settings.participants]);
 
   const createChildRoom = async () => {
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
@@ -338,7 +335,7 @@ export function Channel({
               <span className={styles.roomName}>{roomName}</span>
             </div>
             <div className={styles.headerActions}>
-              <Tag color="#22CCEE">{onlineCount} 在线</Tag>
+              <Tag color="#22CCEE">{Object.keys(settings.participants).length} 在线</Tag>
               <Button
                 className={styles.collapseButton}
                 onClick={toggleCollapse}

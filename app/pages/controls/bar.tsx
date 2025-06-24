@@ -169,7 +169,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       [variation],
     );
     const showText = React.useMemo(() => {
-      if (controlWidth < 720) {
+      if (controlWidth < 700) {
         return false;
       } else {
         return variation === 'textOnly' || variation === 'verbose';

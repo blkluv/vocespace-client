@@ -30,7 +30,7 @@ export function MoreButton({
 
   const showTextOrHide = useMemo(() => {
     // 判断窗口的宽度是否大于720px, 如果小于则需要隐藏文字
-    if (controlWidth < 720) {
+    if (controlWidth < 700) {
       return false;
     } else {
       return showText;

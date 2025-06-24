@@ -499,41 +499,66 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
     }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg]);
 
-    useEffect(() => {
+    const selfRoom = useMemo(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
-      let subAuth = [] as ParticipantTrackPermission[];
-
-      // 判断当前自己在哪个房间中，在不同的房间中设置不同用户的订阅权限
+      console.warn('selfRoom', settings);
       let selfRoom = settings.children.find((child) => {
         return child.participants.includes(room.localParticipant.identity);
       });
 
+      let allChildParticipants = settings.children.reduce((acc, room) => {
+        return acc.concat(room.participants);
+      }, [] as string[]);
+
       if (!selfRoom) {
+        // 这里还需要过滤掉进入子房间的参与者
         selfRoom = {
           name: room.name,
-          participants: Object.keys(settings.participants),
+          participants: Object.keys(settings.participants).filter((pid) => {
+            return !allChildParticipants.includes(pid);
+          }),
         };
       }
+      return selfRoom;
+    }, [settings.children, room]);
 
+    useEffect(() => {
+      if (!room || room.state !== ConnectionState.Connected || !selfRoom) return;
+
+      // 判断当前自己在哪个房间中，在不同的房间中设置不同用户的订阅权限
+      // 订阅规则:
+      // 1. 当用户在主房间时，可以订阅所有参与者的视频轨道，但不能订阅子房间用户的音频轨道
+      // 2. 当用户在子房间时，可以订阅该子房间内的所有参与者的视频和音频轨道，包括主房间的参与者的视频轨道，但不能订阅主房间参与者的音频轨道
+      let auth = [] as ParticipantTrackPermission[];
+
+      // 遍历所有的远程参与者，根据规则进行处理
       room.remoteParticipants.forEach((rp) => {
-        let volume = settings.participants[rp.identity]?.volume / 100.0;
-        if (isNaN(volume)) {
-          volume = 1.0;
-        }
-        rp.setVolume(volume);
-
-        // 判断远程参与者是否在当前用户所在的房间中
+        // 由于我们已经可以从selfRoom中获取当前用户所在的房间信息，所以通过selfRoom进行判断
         if (selfRoom.participants.includes(rp.identity)) {
-          subAuth.push({
+          auth.push({
             participantIdentity: rp.identity,
             allowAll: true,
           });
+          let volume = settings.participants[rp.identity]?.volume / 100.0;
+          if (isNaN(volume)) {
+            volume = 1.0;
+          }
+          rp.setVolume(volume);
+        } else {
+          // 远程参与者不在同一房间内，只订阅视频轨道
+          let videoTrackSid = rp.getTrackPublication(Track.Source.Camera)?.trackSid;
+
+          auth.push({
+            participantIdentity: rp.identity,
+            allowAll: false,
+            allowedTrackSids: videoTrackSid ? [videoTrackSid] : [],
+          });
         }
       });
-      
-      // 设置房间订阅权限 ------------------------------------------------
-      room.localParticipant.setTrackSubscriptionPermissions(false, subAuth);
-    }, [room, settings]);
+
+      // // 设置房间订阅权限 ------------------------------------------------
+      // room.localParticipant.setTrackSubscriptionPermissions(false, subAuth);
+    }, [room, settings.participants, selfRoom]);
 
     useEffect(() => {
       // 当settings.status发生变化时，更新用户状态 --------------------------------------------------
@@ -552,13 +577,24 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     });
     const lastAutoFocusedScreenShareTrack = React.useRef<TrackReferenceOrPlaceholder | null>(null);
     // [track] -----------------------------------------------------------------------------------------------------
-    const tracks = useTracks(
+    const originTracks = useTracks(
       [
         { source: Track.Source.Camera, withPlaceholder: true },
         { source: Track.Source.ScreenShare, withPlaceholder: false },
       ],
       { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false },
     );
+
+    const tracks = useMemo(() => {
+      if (!selfRoom) return originTracks;
+      // 过滤参与者轨道，只身下selfRoom中的参与者的轨道
+      const roomTracks = originTracks.filter((track) =>
+        selfRoom.participants.includes(track.participant.identity),
+      );
+
+      return roomTracks;
+    }, [originTracks, selfRoom]);
+
     // [widget update and layout adjust] --------------------------------------------------------------------------
     const widgetUpdate = (state: WidgetState) => {
       if (cacheWidgetState && cacheWidgetState == state) {
@@ -723,11 +759,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             roomName={room.name}
             participantId={room.localParticipant.identity}
             settings={settings}
-            onUpdate={async ()=> {
+            onUpdate={async () => {
               await fetchSettings();
               socket.emit('update_user_status');
             }}
-            tracks={tracks}
+            tracks={originTracks}
             messageApi={messageApi}
           ></Channel>
         )}

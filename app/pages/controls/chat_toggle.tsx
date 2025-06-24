@@ -21,7 +21,7 @@ export function ChatToggle({
   const { t } = useI18n();
   const [show, setShow] = useState(true);
   const showTextOrHide = useMemo(() => {
-    if (controlWidth < 720) {
+    if (controlWidth < 700) {
       return false;
     } else {
       return showText;
