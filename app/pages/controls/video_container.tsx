@@ -546,8 +546,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           rp.setVolume(volume);
         } else {
           // 远程参与者不在同一房间内，只订阅视频轨道
-          let videoTrackSid = rp.getTrackPublication(Track.Source.Camera)?.trackSid;
-
+          let videoTrackSid = room.localParticipant.getTrackPublication(Track.Source.Camera)
+            ?.trackSid;
           auth.push({
             participantIdentity: rp.identity,
             allowAll: false,

@@ -19,6 +19,7 @@ import {
 import { connect_endpoint } from '@/lib/std';
 import {
   MenuFoldOutlined,
+  MenuUnfoldOutlined,
   PlusCircleOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons';
@@ -170,7 +171,9 @@ export function Channel({
     }
   };
 
-  const joinMainRoom = async () => {};
+  const joinMainRoom = async () => {
+    await leaveChildRoom();
+  };
 
   const subContextItems: MenuProps['items'] = [
     {
@@ -322,7 +325,7 @@ export function Channel({
   if (collapsed) {
     return (
       <div className={`${styles.container} ${styles.collapsed}`}>
-        {/* <Button type="text" onClick={toggleCollapse} icon={<MenuUnfoldOutlined />}></Button> */}
+        <Button type="text" onClick={toggleCollapse} icon={<MenuUnfoldOutlined />}></Button>
       </div>
     );
   }
