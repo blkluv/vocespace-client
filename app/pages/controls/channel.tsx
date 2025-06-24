@@ -19,7 +19,6 @@ import {
 import { connect_endpoint } from '@/lib/std';
 import {
   MenuFoldOutlined,
-  MenuUnfoldOutlined,
   PlusCircleOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons';

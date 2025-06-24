@@ -52,7 +52,6 @@ import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/s
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
-import { ParticipantTileMini } from '../participant/mini';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;

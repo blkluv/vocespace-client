@@ -11,12 +11,10 @@ import {
   usePersistentUserChoices,
 } from '@livekit/components-react';
 import {
-  Avatar,
   Button,
   Drawer,
   Dropdown,
   Input,
-  List,
   MenuProps,
   message,
   Modal,
@@ -25,7 +23,6 @@ import {
 } from 'antd';
 import { Participant, Track } from 'livekit-client';
 import * as React from 'react';
-import { SettingToggle } from './setting_toggle';
 import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';

@@ -1,9 +1,7 @@
-import { Button, Dropdown, MenuProps, Space } from 'antd';
-
+import { Button, Dropdown, MenuProps} from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
-import { useMemo, useState } from 'react';
-import { DownOutlined } from '@ant-design/icons';
+import { useMemo} from 'react';
 
 export interface MoreButtonProps {
   showText?: boolean;
