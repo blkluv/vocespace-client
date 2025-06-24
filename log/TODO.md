@@ -226,15 +226,15 @@ lk load-test \
       2. 当用户在子房间时，可以订阅该子房间内的所有参与者的视频和音频轨道，包括主房间的参与者的视频轨道，但不能订阅主房间参与者的音频轨道
 
 - [ ] 重写MicrophoneTraggle组件
-- [ ] 增加复制链接(records)
-- [ ] records -> recording
+- [x] 增加复制链接(records)
+- [x] records -> recording
 - [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
 - [ ] screen share audio 关闭 （放入设置）
 - [ ] 设置持久化到localstorage
 - [ ] 设置，新用户加入时的提醒音
 - [ ] safari浏览器显示标签页概览截图丢失模糊度： 缩小化模糊度丢失 (模糊度只是用css进行处理，后续处理为GPU渲染)
 - [ ] 右键菜单
-  - [ ] 用户管理，用户列表
+  - [x] 用户管理，用户列表
   - [ ] 主页，用户视口
   - [x] menu
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)

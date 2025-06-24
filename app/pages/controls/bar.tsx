@@ -10,17 +10,7 @@ import {
   useMaybeRoomContext,
   usePersistentUserChoices,
 } from '@livekit/components-react';
-import {
-  Button,
-  Drawer,
-  Dropdown,
-  Input,
-  MenuProps,
-  message,
-  Modal,
-  Select,
-  Slider,
-} from 'antd';
+import { Button, Drawer, Dropdown, Input, MenuProps, message, Modal, Select, Slider } from 'antd';
 import { Participant, Track } from 'livekit-client';
 import * as React from 'react';
 import { SvgResource } from '@/app/resources/svg';
@@ -1015,7 +1005,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                   <ParticipantList
                     participants={participantList}
                     ownerId={roomSettings.ownerId}
-                    suffix={(item, index) => (
+                    menu={optMenu}
+                    onOpenMenu={(open, pid) => {
+                       optOpen(open, room.getParticipantByIdentity(pid)!)
+                    }}
+                    suffix={(item, _index) => (
                       <>
                         {room.getParticipantByIdentity(item[0]) && (
                           <div className={styles.particepant_item_right}>

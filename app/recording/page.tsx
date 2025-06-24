@@ -23,6 +23,7 @@ import {
   FileOutlined,
   ExclamationCircleOutlined,
   ReloadOutlined,
+  ScissorOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { connect_endpoint } from '@/lib/std';
@@ -257,6 +258,32 @@ export default function RecordsPage() {
     }
   };
 
+  const copyDownloadLink = async (record: RecordData) => {
+    const response = await fetch(`${env?.server_host}/api/s3/download?key=${record.key}`);
+    if (response.ok) {
+      const {
+        success,
+        url,
+      }: {
+        success: boolean;
+        url?: string;
+      } = await response.json();
+
+      if (success) {
+        // 复制链接到剪贴板
+        try {
+          await navigator.clipboard.writeText(url!);
+          messageApi.success('下载链接已复制到剪贴板');
+        } catch (err) {
+          console.error('Failed to copy:', err);
+          messageApi.error('复制链接失败，请手动复制');
+        }
+      } else {
+        messageApi.error('获取下载链接失败，请稍后重试');
+      }
+    }
+  };
+
   // 删除文件
   const handleDelete = (record: RecordData) => {
     confirm({
@@ -386,6 +413,14 @@ export default function RecordsPage() {
               删除
             </Button>
           </Tooltip>
+          <Button
+            type="default"
+            size="small"
+            icon={<ScissorOutlined />}
+            onClick={() => copyDownloadLink(record)}
+          >
+            复制链接
+          </Button>
         </Space>
       ),
     },
