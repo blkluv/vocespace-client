@@ -216,8 +216,6 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
   - 特点：
     - 房间快速构建，快速关闭
     - 数据无需持久化存储
-- [ ] 根据状态区分不同的room （同一状态能看到对方）(tandem)
-  - [ ] 尝试Room内对用户之间的通道进行分割 （A <-> B <-> C | D <-> E）
 - [ ] 重写MicrophoneTraggle组件
 - [ ] 增加复制链接(records)
 - [ ] records -> recording
@@ -250,13 +248,16 @@ lk load-test \
   --room load-test \
   --video-publishers 30 \
   --subscribers 30
-
-lk load-test \
-  --url wss://meeting.vocespace.com \
-  --api-key API6pvau5u8DWf4 \
-  --api-secret x7KIub0p6OKmzYzhlXYeJnAQX1VVkHk0ahIRUdzLp0J \
-  --room load-test \
-  --video-publishers 30 \
-  --subscribers 30
-
 ```
+- [x] Space-Room 空间与房间概念(频道)
+  - [x] 侧边栏
+  - [x] 主房间
+  - [x] 子房间
+    - [x] 创建
+    - [x] 离开
+    - [x] 删除
+    - [x] 加入
+  - [x] 参与者频道订阅权限处理
+    - 规则: 
+      1. 当用户在主房间时，可以订阅所有参与者的视频轨道，但不能订阅子房间用户的音频轨道
+      2. 当用户在子房间时，可以订阅该子房间内的所有参与者的视频和音频轨道，包括主房间的参与者的视频轨道，但不能订阅主房间参与者的音频轨道

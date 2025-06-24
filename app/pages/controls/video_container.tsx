@@ -557,8 +557,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
       });
 
-      // // 设置房间订阅权限 ------------------------------------------------
-      // room.localParticipant.setTrackSubscriptionPermissions(false, subAuth);
+      // 设置房间订阅权限 ------------------------------------------------
+      room.localParticipant.setTrackSubscriptionPermissions(false, auth);
     }, [room, settings.participants, selfRoom]);
 
     useEffect(() => {
