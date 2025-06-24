@@ -35,6 +35,8 @@ interface ChannelProps {
   onUpdate: () => Promise<void>;
   tracks: TrackReferenceOrPlaceholder[];
   settings: RoomSettings;
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
 const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
@@ -46,9 +48,11 @@ export function Channel({
   participantId,
   onUpdate,
   tracks,
+  collapsed,
+  setCollapsed,
 }: ChannelProps) {
   const { t } = useI18n();
-  const [collapsed, setCollapsed] = useState(false);
+
   const { token } = theme.useToken();
   const [selected, setSelected] = useState<'main' | 'sub'>('main');
   const [roomCreateModalOpen, setRoomCreateModalOpen] = useState(false);
@@ -85,7 +89,7 @@ export function Channel({
       });
       setRoomCreateModalOpen(false);
     }
-   await onUpdate();
+    await onUpdate();
   };
 
   const deleteChildRoom = async () => {
@@ -107,7 +111,7 @@ export function Channel({
         duration: 2,
       });
       setDeleteChildRoomName('');
-     await onUpdate();
+      await onUpdate();
     }
   };
 
@@ -136,7 +140,7 @@ export function Channel({
         duration: 2,
       });
       setDeleteChildRoomName('');
-     await onUpdate();
+      await onUpdate();
     }
   };
 
@@ -163,7 +167,7 @@ export function Channel({
         content: t('channel.join.success'),
         duration: 2,
       });
-     await onUpdate();
+      await onUpdate();
     }
   };
 
@@ -319,7 +323,7 @@ export function Channel({
   if (collapsed) {
     return (
       <div className={`${styles.container} ${styles.collapsed}`}>
-        <Button type="text" onClick={toggleCollapse} icon={<MenuUnfoldOutlined />}></Button>
+        {/* <Button type="text" onClick={toggleCollapse} icon={<MenuUnfoldOutlined />}></Button> */}
       </div>
     );
   }
@@ -370,24 +374,24 @@ export function Channel({
             style={{ width: '100%' }}
             icon={<SvgResource type="add" svgSize={16} />}
           >
-            <span>创建子房间</span>
+            <span>{t('channel.menu.create')}</span>
           </Button>
         </div>
       </div>
       <Modal
         open={roomCreateModalOpen}
-        title="创建子房间"
+        title={t('channel.modal.title')}
         onCancel={() => {
           setRoomCreateModalOpen(false);
         }}
         onOk={createChildRoom}
+        okText={t('channel.modal.ok')}
+        cancelText={t('channel.modal.cancel')}
       >
-        <p>创建子房间后，您可以邀请其他参与者加入该子房间。子房间可以用于特定的讨论或活动。</p>
-        <p>
-          在子房间中，主房间依然可见，您可以随时返回主房间进行交流。对于主房间的参与者，他们无法听到子房间的讨论内容，但可以看到子房间的存在。
-        </p>
+        <p>{t('channel.modal.desc.0')}</p>
+        <p>{t('channel.modal.desc.1')}</p>
         <Input
-          placeholder="请输入子房间名称"
+          placeholder={t('channel.modal.placeholder')}
           style={{
             outline: '1px solid #22CCEE',
           }}

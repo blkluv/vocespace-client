@@ -13,6 +13,7 @@ export interface MoreButtonProps {
   onSettingOpen?: () => Promise<void>;
   onClickManage?: () => Promise<void>;
   onClickRecord?: () => Promise<void>;
+  onClickChannel?: () => Promise<void>;
   controlWidth: number;
 }
 
@@ -23,6 +24,7 @@ export function MoreButton({
   onClickManage,
   onClickRecord,
   onSettingOpen,
+  onClickChannel,
   isRecording,
   controlWidth,
 }: MoreButtonProps) {
@@ -41,20 +43,20 @@ export function MoreButton({
     return [
       // 频道
       {
-        label: <div style={{ marginLeft: '8px' }}>{t('more.channel.title')}</div>,
+        label: <div style={{ marginLeft: '8px' }}>{t('more.channel')}</div>,
         key: 'channel',
         icon: <SvgResource type="more" svgSize={16} />,
       },
       // 录屏功能
-      // {
-      //   label: (
-      //     <div style={{ marginLeft: '8px' }}>
-      //       {!isRecording ? t('more.record.start') : t('more.record.stop')}
-      //     </div>
-      //   ),
-      //   key: 'record',
-      //   icon: <SvgResource type="record" svgSize={16} color={isRecording ? '#FF0000' : '#fff'} />,
-      // },
+      {
+        label: (
+          <div style={{ marginLeft: '8px' }}>
+            {!isRecording ? t('more.record.start') : t('more.record.stop')}
+          </div>
+        ),
+        key: 'record',
+        icon: <SvgResource type="record" svgSize={16} color={isRecording ? '#FF0000' : '#fff'} />,
+      },
       // 参与者管理功能
       {
         label: <div style={{ marginLeft: '8px' }}>{t('more.participant.title')}</div>,
@@ -74,10 +76,10 @@ export function MoreButton({
       case 'record':
         // space.voce.chat中暂不开启
         // Handle record action
-        // setMoreType('record');
-        // if (onClickRecord) {
-        //   await onClickRecord();
-        // }
+        setMoreType('record');
+        if (onClickRecord) {
+          await onClickRecord();
+        }
         break;
       case 'participant':
         // Handle participant action
@@ -90,6 +92,11 @@ export function MoreButton({
       case 'setting':
         if (onSettingOpen) {
           await onSettingOpen();
+        }
+      case 'channel':
+        // 展开左侧频道侧边栏
+        if (onClickChannel) {
+          await onClickChannel();
         }
       default:
         break;

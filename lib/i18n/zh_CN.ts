@@ -70,21 +70,20 @@ export default {
       success: '离开子房间，返回主房间成功',
       error: '离开子房间失败，请稍后再试。',
     },
+    modal: {
+      title: '创建子房间',
+      desc: [
+        "创建子房间后，您可以邀请其他参与者加入该子房间。子房间可以用于特定的讨论或活动。",
+        "在子房间中，主房间依然可见，您可以随时返回主房间进行交流。对于主房间的参与者，他们无法听到子房间的讨论内容，但可以看到子房间的存在。"
+      ],
+      placeholder: '请输入子房间名称',
+      cancel: "取消",
+      ok: "创建子房间",
+    }
   },
   more: {
     title: '更多',
-    channel: {
-      title: '频道',
-      desc: '频道是 VoceSpace 的核心功能之一。它允许您创建和管理多个房间，并与其他用户共享您的房间。您可以在这里查看和管理您的频道。',
-      create: '创建频道',
-      create_desc: '创建一个新的频道以开始使用 VoceSpace。',
-      create_channel: '创建频道',
-      channel_name: '频道名称',
-      channel_desc: '频道描述',
-      create_success: '频道创建成功',
-      create_fail: '频道创建失败，请稍后再试。',
-      join: '加入频道',
-    },
+    channel: "频道",
     record: {
       start: '录制',
       stop: '停止录制',

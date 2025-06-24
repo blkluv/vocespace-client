@@ -74,6 +74,8 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   fetchSettings: () => Promise<void>;
   updateRecord: (active: boolean, egressId?: string, filePath?: string) => Promise<boolean>;
   setPermissionDevice: (device: Track.Source) => void;
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
 export interface ControlBarExport {
@@ -109,6 +111,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       fetchSettings,
       updateRecord,
       setPermissionDevice,
+      collapsed,
+      setCollapsed,
       ...props
     }: ControlBarProps,
     ref,
@@ -894,6 +898,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               }}
               onClickRecord={onClickRecord}
               onClickManage={fetchSettings}
+              onClickChannel={async () => {
+                setCollapsed(!collapsed);
+              }}
               isRecording={isRecording}
             ></MoreButton>
           )}

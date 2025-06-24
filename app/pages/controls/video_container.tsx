@@ -84,6 +84,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [uState, setUState] = useRecoilState(userState);
+    const [collapsed, setCollapsed] = useState(false);
     const [uLicenseState, setULicenseState] = useRecoilState(licenseState);
     const controlsRef = React.useRef<ControlBarExport>(null);
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
@@ -764,6 +765,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
               socket.emit('update_user_status');
             }}
             tracks={originTracks}
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
             messageApi={messageApi}
           ></Channel>
         )}
@@ -772,7 +775,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           {...props}
           style={{
             height: '100vh',
-            width: 'calc(100vw - 280px)',
+            width: collapsed ? '100vw': 'calc(100vw - 280px)',
           }}
         >
           {is_web() && (
@@ -829,6 +832,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   fetchSettings={fetchSettings}
                   updateRecord={updateRecord}
                   setPermissionDevice={setPermissionDevice}
+                  collapsed={collapsed}
+                  setCollapsed={setCollapsed}
                 ></Controls>
               </div>
               {SettingsComponent && (
