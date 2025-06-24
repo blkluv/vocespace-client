@@ -93,11 +93,13 @@ export function MoreButton({
         if (onSettingOpen) {
           await onSettingOpen();
         }
+        break;
       case 'channel':
         // 展开左侧频道侧边栏
         if (onClickChannel) {
           await onClickChannel();
         }
+        break;
       default:
         break;
     }
