@@ -16,13 +16,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __cfg = path.dirname(__filename);
 
 // Load environment files in order of priority
-const envFiles = [
-  '.env.local',
-  '.env.development',
-  '.env',
-];
+const envFiles = ['.env.local', '.env.development', '.env'];
 
-envFiles.forEach(file => {
+envFiles.forEach((file) => {
   const envPath = path.join(__cfg, file);
   if (fs.existsSync(envPath)) {
     dotenv.config({ path: envPath });
@@ -42,7 +38,11 @@ const {
   REDIS_DB = '0',
 } = process.env;
 
-console.warn(REDIS_ENABLED, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB);
+console.log(`env: {
+    REDIS_ENABLED: ${REDIS_ENABLED}
+    REDIS_HOST: ${REDIS_HOST}
+    REDIS_PORT: ${REDIS_PORT}
+}`);
 
 let redisClient = null;
 
@@ -89,22 +89,22 @@ class ChatManager {
   }
 
   // get chat messages from redis
-    static async getChatMessages(room){
-      try {
-        if (!redisClient) {
-          throw new Error('Redis client is not initialized');
-        }
-        const chatKey = this.getChatKey(room);
-        const messages = await redisClient.get(chatKey);
-        if (!messages) {
-          return [];
-        }
-        return JSON.parse(messages);
-      } catch (error) {
-        console.error('Error getting chat messages from Redis:', error);
+  static async getChatMessages(room) {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized');
+      }
+      const chatKey = this.getChatKey(room);
+      const messages = await redisClient.get(chatKey);
+      if (!messages) {
         return [];
       }
+      return JSON.parse(messages);
+    } catch (error) {
+      console.error('Error getting chat messages from Redis:', error);
+      return [];
     }
+  }
 
   // set/push chat message to redis
   static async setChatMessage(room, msg) {
@@ -341,7 +341,7 @@ app.prepare().then(() => {
       });
       if (!response.ok) {
         console.error('Failed to delete user data, socketId:', socket.id);
-      } 
+      }
     });
   });
   // [http server] ----------------------------------------------------------------------------------------------------------

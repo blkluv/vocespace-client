@@ -1,10 +1,10 @@
 'use client';
 
 import { VideoContainer, VideoContainerExports } from '@/app/pages/controls/video_container';
-import { decodePassphrase } from '@/lib/client-utils';
+import { decodePassphrase } from '@/lib/client_utils';
 import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
-import { RecordingIndicator } from '@/lib/RecordingIndicator';
+import { RecordingIndicator } from './RecordingIndicator';
 import { ConnectionDetails } from '@/lib/types';
 import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
@@ -27,6 +27,7 @@ import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
+import { WsTo } from '@/lib/std/device';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -263,6 +264,7 @@ function VideoConferenceComponent(props: {
       receiverId: '',
       receSocketId: '',
     });
+    socket.emit('update_user_status');
     await videoContainerRef.current?.removeLocalSettings();
     socket.disconnect();
     router.push('/');

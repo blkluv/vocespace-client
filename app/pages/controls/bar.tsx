@@ -30,13 +30,19 @@ import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { useRecoilState } from 'recoil';
-import { chatMsgState, socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
-import { ParticipantSettings, RoomSettings } from '@/lib/hooks/room_settings';
+import {
+  chatMsgState,
+  socket,
+  userState,
+  virtualMaskState,
+} from '@/app/rooms/[roomName]/PageClientImpl';
+import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
+import { ParticipantList } from '../participant/list';
 
 const RECORD_URL = connect_endpoint('/api/record');
 
@@ -68,6 +74,8 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   fetchSettings: () => Promise<void>;
   updateRecord: (active: boolean, egressId?: string, filePath?: string) => Promise<boolean>;
   setPermissionDevice: (device: Track.Source) => void;
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
 export interface ControlBarExport {
@@ -103,6 +111,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       fetchSettings,
       updateRecord,
       setPermissionDevice,
+      collapsed,
+      setCollapsed,
       ...props
     }: ControlBarProps,
     ref,
@@ -114,6 +124,23 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const inviteTextRef = React.useRef<HTMLDivElement>(null);
     const enhanceChatRef = React.useRef<EnhancedChatExports>(null);
     const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
+    const controlLeftRef = React.useRef<HTMLDivElement>(null);
+    const [controlWidth, setControlWidth] = React.useState(
+      controlLeftRef.current ? controlLeftRef.current.clientWidth : window.innerWidth,
+    );
+
+    React.useEffect(() => {
+      if (controlLeftRef.current) {
+        setControlWidth(controlLeftRef.current.clientWidth);
+      }
+    }, [controlLeftRef.current]);
+
+    // 当window大小变化时，重新计算controlWidth
+    window.addEventListener('resize', () => {
+      if (controlLeftRef.current) {
+        setControlWidth(controlLeftRef.current.clientWidth);
+      }
+    });
 
     React.useEffect(() => {
       if (layoutContext?.widget.state?.showChat !== undefined) {
@@ -145,10 +172,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       () => variation === 'minimal' || variation === 'verbose',
       [variation],
     );
-    const showText = React.useMemo(
-      () => variation === 'textOnly' || variation === 'verbose',
-      [variation],
-    );
+    const showText = React.useMemo(() => {
+      if (controlWidth < 700) {
+        return false;
+      } else {
+        return variation === 'textOnly' || variation === 'verbose';
+      }
+    }, [variation, controlWidth]);
 
     const browserSupportsScreenSharing = supportsScreenSharing();
 
@@ -785,7 +815,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     return (
       <div {...htmlProps} className={styles.controls}>
         {contextHolder}
-        <div className={styles.controls_left}>
+        <div className={styles.controls_left} ref={controlLeftRef}>
           {visibleControls.microphone && (
             <div className="lk-button-group">
               <TrackToggle
@@ -850,6 +880,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           {visibleControls.chat && (
             <ChatToggle
+              controlWidth={controlWidth}
               enabled={chatOpen}
               onClicked={() => {
                 setChatOpen(!chatOpen);
@@ -859,6 +890,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           {room && roomSettings.participants && visibleControls.microphone && (
             <MoreButton
+              controlWidth={controlWidth}
               setOpenMore={setOpenMore}
               setMoreType={setMoreType}
               onSettingOpen={async () => {
@@ -866,6 +898,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               }}
               onClickRecord={onClickRecord}
               onClickManage={fetchSettings}
+              onClickChannel={async () => {
+                setCollapsed(!collapsed);
+              }}
               isRecording={isRecording}
             ></MoreButton>
           )}
@@ -980,64 +1015,103 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                   </Button>
                 </div>
                 {room && (
-                  <List
-                    itemLayout="horizontal"
-                    dataSource={participantList}
-                    split={false}
-                    renderItem={(item, index) => (
-                      <List.Item>
-                        <div className={styles.particepant_item}>
-                          <div className={styles.particepant_item_left}>
-                            <Avatar
-                              size={'large'}
-                              style={{
-                                backgroundColor: randomColor(item[1].name),
+                  <ParticipantList
+                    participants={participantList}
+                    ownerId={roomSettings.ownerId}
+                    suffix={(item, index) => (
+                      <>
+                        {room.getParticipantByIdentity(item[0]) && (
+                          <div className={styles.particepant_item_right}>
+                            <TrackMutedIndicator
+                              trackRef={{
+                                participant: room.getParticipantByIdentity(item[0])!,
+                                source: Track.Source.Microphone,
                               }}
-                            >
-                              {item[1].name.substring(0, 3)}
-                            </Avatar>
-                            <span>{item[1].name}</span>
-                            {roomSettings.ownerId !== '' && item[0] === roomSettings.ownerId && (
-                              <span className={styles.particepant_item_owner}>
-                                ( {t('more.participant.manager')} )
-                              </span>
+                              show={'always'}
+                            ></TrackMutedIndicator>
+                            <TrackMutedIndicator
+                              trackRef={{
+                                participant: room.getParticipantByIdentity(item[0])!,
+                                source: Track.Source.Camera,
+                              }}
+                              show={'always'}
+                            ></TrackMutedIndicator>
+                            {room.localParticipant.identity !== item[0] && (
+                              <Dropdown
+                                menu={optMenu}
+                                trigger={['click']}
+                                onOpenChange={(open) =>
+                                  optOpen(open, room.getParticipantByIdentity(item[0])!)
+                                }
+                              >
+                                <Button shape="circle" type="text">
+                                  <SvgResource type="more2" svgSize={16}></SvgResource>
+                                </Button>
+                              </Dropdown>
                             )}
                           </div>
-                          {room.getParticipantByIdentity(item[0]) && (
-                            <div className={styles.particepant_item_right}>
-                              <TrackMutedIndicator
-                                trackRef={{
-                                  participant: room.getParticipantByIdentity(item[0])!,
-                                  source: Track.Source.Microphone,
-                                }}
-                                show={'always'}
-                              ></TrackMutedIndicator>
-                              <TrackMutedIndicator
-                                trackRef={{
-                                  participant: room.getParticipantByIdentity(item[0])!,
-                                  source: Track.Source.Camera,
-                                }}
-                                show={'always'}
-                              ></TrackMutedIndicator>
-                              {room.localParticipant.identity !== item[0] && (
-                                <Dropdown
-                                  menu={optMenu}
-                                  trigger={['click']}
-                                  onOpenChange={(open) =>
-                                    optOpen(open, room.getParticipantByIdentity(item[0])!)
-                                  }
-                                >
-                                  <Button shape="circle" type="text">
-                                    <SvgResource type="more2" svgSize={16}></SvgResource>
-                                  </Button>
-                                </Dropdown>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </List.Item>
+                        )}
+                      </>
                     )}
-                  />
+                  ></ParticipantList>
+                  // <List
+                  //   itemLayout="horizontal"
+                  //   dataSource={participantList}
+                  //   split={false}
+                  //   renderItem={(item, index) => (
+                  //     <List.Item>
+                  //       <div className={styles.particepant_item}>
+                  //         <div className={styles.particepant_item_left}>
+                  //           <Avatar
+                  //             size={'large'}
+                  //             style={{
+                  //               backgroundColor: randomColor(item[1].name),
+                  //             }}
+                  //           >
+                  //             {item[1].name.substring(0, 3)}
+                  //           </Avatar>
+                  //           <span>{item[1].name}</span>
+                  //           {roomSettings.ownerId !== '' && item[0] === roomSettings.ownerId && (
+                  //             <span className={styles.particepant_item_owner}>
+                  //               ( {t('more.participant.manager')} )
+                  //             </span>
+                  //           )}
+                  //         </div>
+                  //         {room.getParticipantByIdentity(item[0]) && (
+                  //           <div className={styles.particepant_item_right}>
+                  //             <TrackMutedIndicator
+                  //               trackRef={{
+                  //                 participant: room.getParticipantByIdentity(item[0])!,
+                  //                 source: Track.Source.Microphone,
+                  //               }}
+                  //               show={'always'}
+                  //             ></TrackMutedIndicator>
+                  //             <TrackMutedIndicator
+                  //               trackRef={{
+                  //                 participant: room.getParticipantByIdentity(item[0])!,
+                  //                 source: Track.Source.Camera,
+                  //               }}
+                  //               show={'always'}
+                  //             ></TrackMutedIndicator>
+                  //             {room.localParticipant.identity !== item[0] && (
+                  //               <Dropdown
+                  //                 menu={optMenu}
+                  //                 trigger={['click']}
+                  //                 onOpenChange={(open) =>
+                  //                   optOpen(open, room.getParticipantByIdentity(item[0])!)
+                  //                 }
+                  //               >
+                  //                 <Button shape="circle" type="text">
+                  //                   <SvgResource type="more2" svgSize={16}></SvgResource>
+                  //                 </Button>
+                  //               </Dropdown>
+                  //             )}
+                  //           </div>
+                  //         )}
+                  //       </div>
+                  //     </List.Item>
+                  //   )}
+                  // />
                 )}
               </div>
             )}

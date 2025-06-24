@@ -27,11 +27,12 @@ import {
   LocalTrackPublication,
   Participant,
   ParticipantEvent,
+  ParticipantTrackPermission,
   RoomEvent,
   Track,
   TrackPublication,
 } from 'livekit-client';
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { ControlBarExport, Controls } from './bar';
 import { useRecoilState } from 'recoil';
 import { ParticipantItem } from '../participant/tile';
@@ -50,6 +51,8 @@ import { useRouter } from 'next/navigation';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
+import { Channel } from './channel';
+import { ParticipantTileMini } from '../participant/mini';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -81,6 +84,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [uState, setUState] = useRecoilState(userState);
+    const [collapsed, setCollapsed] = useState(false);
     const [uLicenseState, setULicenseState] = useRecoilState(licenseState);
     const controlsRef = React.useRef<ControlBarExport>(null);
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
@@ -496,16 +500,66 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
     }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg]);
 
-    useEffect(() => {
+    const selfRoom = useMemo(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
-      room.remoteParticipants.forEach((rp) => {
-        let volume = settings.participants[rp.identity]?.volume / 100.0;
-        if (isNaN(volume)) {
-          volume = 1.0;
-        }
-        rp.setVolume(volume);
+      console.warn('selfRoom', settings);
+      let selfRoom = settings.children.find((child) => {
+        return child.participants.includes(room.localParticipant.identity);
       });
-    }, [room, settings]);
+
+      let allChildParticipants = settings.children.reduce((acc, room) => {
+        return acc.concat(room.participants);
+      }, [] as string[]);
+
+      if (!selfRoom) {
+        // 这里还需要过滤掉进入子房间的参与者
+        selfRoom = {
+          name: room.name,
+          participants: Object.keys(settings.participants).filter((pid) => {
+            return !allChildParticipants.includes(pid);
+          }),
+        };
+      }
+      return selfRoom;
+    }, [settings.children, room]);
+
+    useEffect(() => {
+      if (!room || room.state !== ConnectionState.Connected || !selfRoom) return;
+
+      // 判断当前自己在哪个房间中，在不同的房间中设置不同用户的订阅权限
+      // 订阅规则:
+      // 1. 当用户在主房间时，可以订阅所有参与者的视频轨道，但不能订阅子房间用户的音频轨道
+      // 2. 当用户在子房间时，可以订阅该子房间内的所有参与者的视频和音频轨道，包括主房间的参与者的视频轨道，但不能订阅主房间参与者的音频轨道
+      let auth = [] as ParticipantTrackPermission[];
+
+      // 遍历所有的远程参与者，根据规则进行处理
+      room.remoteParticipants.forEach((rp) => {
+        // 由于我们已经可以从selfRoom中获取当前用户所在的房间信息，所以通过selfRoom进行判断
+        if (selfRoom.participants.includes(rp.identity)) {
+          auth.push({
+            participantIdentity: rp.identity,
+            allowAll: true,
+          });
+          let volume = settings.participants[rp.identity]?.volume / 100.0;
+          if (isNaN(volume)) {
+            volume = 1.0;
+          }
+          rp.setVolume(volume);
+        } else {
+          // 远程参与者不在同一房间内，只订阅视频轨道
+          let videoTrackSid = rp.getTrackPublication(Track.Source.Camera)?.trackSid;
+
+          auth.push({
+            participantIdentity: rp.identity,
+            allowAll: false,
+            allowedTrackSids: videoTrackSid ? [videoTrackSid] : [],
+          });
+        }
+      });
+
+      // // 设置房间订阅权限 ------------------------------------------------
+      // room.localParticipant.setTrackSubscriptionPermissions(false, subAuth);
+    }, [room, settings.participants, selfRoom]);
 
     useEffect(() => {
       // 当settings.status发生变化时，更新用户状态 --------------------------------------------------
@@ -524,13 +578,24 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     });
     const lastAutoFocusedScreenShareTrack = React.useRef<TrackReferenceOrPlaceholder | null>(null);
     // [track] -----------------------------------------------------------------------------------------------------
-    const tracks = useTracks(
+    const originTracks = useTracks(
       [
         { source: Track.Source.Camera, withPlaceholder: true },
         { source: Track.Source.ScreenShare, withPlaceholder: false },
       ],
       { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false },
     );
+
+    const tracks = useMemo(() => {
+      if (!selfRoom) return originTracks;
+      // 过滤参与者轨道，只身下selfRoom中的参与者的轨道
+      const roomTracks = originTracks.filter((track) =>
+        selfRoom.participants.includes(track.participant.identity),
+      );
+
+      return roomTracks;
+    }, [originTracks, selfRoom]);
+
     // [widget update and layout adjust] --------------------------------------------------------------------------
     const widgetUpdate = (state: WidgetState) => {
       if (cacheWidgetState && cacheWidgetState == state) {
@@ -689,30 +754,40 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     }));
 
     return (
-      <div className="lk-video-conference" {...props}>
-        {is_web() && (
-          <LayoutContextProvider
-            value={layoutContext}
-            // onPinChange={handleFocusStateChange}
-            onWidgetChange={widgetUpdate}
-          >
-            <div className="lk-video-conference-inner">
-              {!focusTrack ? (
-                <div className="lk-grid-layout-wrapper">
-                  <GridLayout tracks={tracks}>
-                    <ParticipantItem
-                      room={room?.name}
-                      settings={settings}
-                      toSettings={toSettingGeneral}
-                      messageApi={messageApi}
-                      setUserStatus={setUserStatus}
-                    ></ParticipantItem>
-                  </GridLayout>
-                </div>
-              ) : (
-                <div className="lk-focus-layout-wrapper">
-                  <FocusLayoutContainer>
-                    <CarouselLayout tracks={carouselTracks}>
+      <div className="video_container_wrapper">
+        {room && (
+          <Channel
+            roomName={room.name}
+            participantId={room.localParticipant.identity}
+            settings={settings}
+            onUpdate={async () => {
+              await fetchSettings();
+              socket.emit('update_user_status');
+            }}
+            tracks={originTracks}
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
+            messageApi={messageApi}
+          ></Channel>
+        )}
+        <div
+          className="lk-video-conference"
+          {...props}
+          style={{
+            height: '100vh',
+            width: collapsed ? '100vw': 'calc(100vw - 280px)',
+          }}
+        >
+          {is_web() && (
+            <LayoutContextProvider
+              value={layoutContext}
+              // onPinChange={handleFocusStateChange}
+              onWidgetChange={widgetUpdate}
+            >
+              <div className="lk-video-conference-inner" style={{ alignItems: 'space-between' }}>
+                {!focusTrack ? (
+                  <div className="lk-grid-layout-wrapper">
+                    <GridLayout tracks={tracks}>
                       <ParticipantItem
                         room={room?.name}
                         settings={settings}
@@ -720,49 +795,65 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                         messageApi={messageApi}
                         setUserStatus={setUserStatus}
                       ></ParticipantItem>
-                    </CarouselLayout>
-                    {focusTrack && (
-                      <ParticipantItem
-                        room={room?.name}
-                        setUserStatus={setUserStatus}
-                        settings={settings}
-                        toSettings={toSettingGeneral}
-                        trackRef={focusTrack}
-                        messageApi={messageApi}
-                        isFocus={isFocus}
-                      ></ParticipantItem>
-                    )}
-                  </FocusLayoutContainer>
+                    </GridLayout>
+                  </div>
+                ) : (
+                  <div className="lk-focus-layout-wrapper">
+                    <FocusLayoutContainer>
+                      <CarouselLayout tracks={carouselTracks}>
+                        <ParticipantItem
+                          room={room?.name}
+                          settings={settings}
+                          toSettings={toSettingGeneral}
+                          messageApi={messageApi}
+                          setUserStatus={setUserStatus}
+                        ></ParticipantItem>
+                      </CarouselLayout>
+                      {focusTrack && (
+                        <ParticipantItem
+                          room={room?.name}
+                          setUserStatus={setUserStatus}
+                          settings={settings}
+                          toSettings={toSettingGeneral}
+                          trackRef={focusTrack}
+                          messageApi={messageApi}
+                          isFocus={isFocus}
+                        ></ParticipantItem>
+                      )}
+                    </FocusLayoutContainer>
+                  </div>
+                )}
+                <Controls
+                  ref={controlsRef}
+                  setUserStatus={setUserStatus}
+                  controls={{ chat: true, settings: !!SettingsComponent }}
+                  updateSettings={updateSettings}
+                  roomSettings={settings}
+                  fetchSettings={fetchSettings}
+                  updateRecord={updateRecord}
+                  setPermissionDevice={setPermissionDevice}
+                  collapsed={collapsed}
+                  setCollapsed={setCollapsed}
+                ></Controls>
+              </div>
+              {SettingsComponent && (
+                <div
+                  className="lk-settings-menu-modal"
+                  style={{ display: widgetState.showSettings ? 'block' : 'none' }}
+                >
+                  <SettingsComponent />
                 </div>
               )}
-              <Controls
-                ref={controlsRef}
-                setUserStatus={setUserStatus}
-                controls={{ chat: true, settings: !!SettingsComponent }}
-                updateSettings={updateSettings}
-                roomSettings={settings}
-                fetchSettings={fetchSettings}
-                updateRecord={updateRecord}
-                setPermissionDevice={setPermissionDevice}
-              ></Controls>
-            </div>
-            {SettingsComponent && (
-              <div
-                className="lk-settings-menu-modal"
-                style={{ display: widgetState.showSettings ? 'block' : 'none' }}
-              >
-                <SettingsComponent />
-              </div>
-            )}
-          </LayoutContextProvider>
-        )}
-        <RoomAudioRenderer />
-        <ConnectionStateToast />
-        <audio
-          ref={waveAudioRef}
-          style={{ display: 'none' }}
-          src={src('/audios/vocespacewave.m4a')}
-        ></audio>
+            </LayoutContextProvider>
+          )}
+          <RoomAudioRenderer />
+          <ConnectionStateToast />
+          <audio
+            ref={waveAudioRef}
+            style={{ display: 'none' }}
+            src={src('/audios/vocespacewave.m4a')}
+          ></audio>
+        </div>
       </div>
     );
   },

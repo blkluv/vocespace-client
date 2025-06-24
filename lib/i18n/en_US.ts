@@ -43,8 +43,46 @@ export default {
       'The room user has exceeded the limit and cannot join. You can join other rooms or inform the builder to upgrade your license to obtain more user slots.',
     open: 'Open',
   },
+  channel: {
+    menu: {
+      header: '',
+      main: 'Main room',
+      sub: 'Sub room',
+      create: 'Create room',
+      join: 'Join',
+      setting: 'Settings',
+      delete: 'Delete room',
+      leave: 'Leave room',
+    },
+    join: {
+      success: 'Join room successfully',
+    },
+    delete: {
+      success: 'Delete room successfully',
+      error: 'Failed to delete room, please try again later. ',
+    },
+    create: {
+      success: 'Room created successfully',
+      error: 'Failed to create room, please try again later. ',
+    },
+    leave: {
+      success: 'Leave sub room, return to main room successfully',
+      error: 'Failed to leave sub room, please try again later. ',
+    },
+    modal: {
+      title: 'Create a subroom',
+      desc: [
+        'After creating a subroom, you can invite other participants to join the subroom. Subrooms can be used for specific discussions or activities.',
+        'In a subroom, the main room is still visible, and you can return to the main room at any time to communicate. For participants in the main room, they cannot hear the discussion content of the subroom, but they can see the existence of the subroom.',
+      ],
+      placeholder: 'Please enter the subroom name',
+      cancel: 'Cancel',
+      ok: 'Create a subroom',
+    },
+  },
   more: {
     title: 'More',
+    channel: "Channel",
     record: {
       start: 'Record',
       stop: 'Stop recording',

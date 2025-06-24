@@ -197,9 +197,9 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] Dashboard显示用户数据
   - [x] 当前活跃房间数据
   - [x] 历史使用记录
-    - [x] redis中增加使用记录 √
-    - [x] roomManager 类管理使用记录 √
-    - [x] 使用记录api √
+    - [x] redis中增加使用记录 
+    - [x] roomManager 类管理使用记录 
+    - [x] 使用记录api
 
 - [x] 统一主题
   - [x] 鼠标
@@ -212,7 +212,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] 录屏权限允许会开启声音，指向错误
 - [x] chat 自动下滑 失效
   
-- [x] socket断开连接导致数据丢失 (转为使用redis) √
+- [x] socket断开连接导致数据丢失 (转为使用redis)
   - 特点：
     - 房间快速构建，快速关闭
     - 数据无需持久化存储
@@ -222,4 +222,41 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [ ] 增加复制链接(records)
 - [ ] records -> recording
 - [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
-- [ ] chat，对话位置交换
+- [x] chat，对话位置交换
+- [x] chat 小圆点去除边框 改styles
+- [x] 翻页功能失效，在小尺寸窗口下(livekit问题)
+- [x] chat增加消息提醒
+- [x] chat内容无法追溯历史 (使用redis)
+- [x] 共享屏幕系统色
+- [x] 去除无用文件和代码  
+- [ ] safari浏览器显示标签页概览截图丢失模糊度： 缩小化模糊度丢失 (模糊度只是用css进行处理，后续处理为GPU渲染)
+- [ ] 右键菜单
+  - [ ] 用户管理，用户列表
+  - [ ] 主页，用户视口
+  - [x] menu
+
+- [x] chat 合 space.voce.chat
+- [ ] screen share audio 关闭 （放入设置）
+- [ ] 设置持久化到localstorage
+- [ ] 设置，新用户加入时的提醒音
+- [x] 去不同房间需要从主房间列表中隐藏
+
+- [x] 性能测试:
+```
+lk load-test \
+  --url <YOUR-SERVER-URL> \
+  --api-key <YOUR-KEY> \
+  --api-secret <YOUR-SECRET> \
+  --room load-test \
+  --video-publishers 30 \
+  --subscribers 30
+
+lk load-test \
+  --url wss://meeting.vocespace.com \
+  --api-key API6pvau5u8DWf4 \
+  --api-secret x7KIub0p6OKmzYzhlXYeJnAQX1VVkHk0ahIRUdzLp0J \
+  --room load-test \
+  --video-publishers 30 \
+  --subscribers 30
+
+```

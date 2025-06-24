@@ -44,8 +44,46 @@ export default {
     open: '开启',
     email_placeholder: '请输入您的邮箱地址',
   },
+  channel: {
+    menu: {
+      header: '',
+      main: '主房间',
+      sub: '子房间',
+      create: '创建房间',
+      join: '加入',
+      setting: '设置',
+      delete: '删除房间',
+      leave: '离开房间',
+    },
+    join: {
+      success: '加入房间成功',
+    },
+    delete: {
+      success: '删除房间成功',
+      error: '删除房间失败，请稍后再试。',
+    },
+    create: {
+      success: '房间创建成功',
+      error: '房间创建失败，请稍后再试。',
+    },
+    leave: {
+      success: '离开子房间，返回主房间成功',
+      error: '离开子房间失败，请稍后再试。',
+    },
+    modal: {
+      title: '创建子房间',
+      desc: [
+        "创建子房间后，您可以邀请其他参与者加入该子房间。子房间可以用于特定的讨论或活动。",
+        "在子房间中，主房间依然可见，您可以随时返回主房间进行交流。对于主房间的参与者，他们无法听到子房间的讨论内容，但可以看到子房间的存在。"
+      ],
+      placeholder: '请输入子房间名称',
+      cancel: "取消",
+      ok: "创建子房间",
+    }
+  },
   more: {
     title: '更多',
+    channel: "频道",
     record: {
       start: '录制',
       stop: '停止录制',
@@ -230,7 +268,7 @@ export default {
         copy: '录制链接复制失败',
         email: {
           empty: '邮箱地址不能为空',
-        }
+        },
       },
       virtual: {
         video_stream: '虚拟摄像头流构建错误',
