@@ -52,7 +52,6 @@ import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/s
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
-import { ParticipantTileMini } from '../participant/mini';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -97,6 +96,47 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room?.name || '', // 房间 ID
         room?.localParticipant?.identity || '', // 参与者 ID
       );
+    const [isMouseNearLeftEdge, setIsMouseNearLeftEdge] = useState(false);
+    const timeoutRef = React.useRef<NodeJS.Timeout>();
+    // 判断用户的鼠标位置是否在window的左侧200px以内，如果是为用户激活左侧channel侧边栏
+    const handleMouseMove = React.useCallback(
+      (event: MouseEvent) => {
+        
+        if(!collapsed) {
+          return;
+        }
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        const isNearLeft = event.clientX <= 200;
+        if (isNearLeft && !isMouseNearLeftEdge) {
+          setIsMouseNearLeftEdge(true);
+        }
+        // 如果鼠标离开左侧，延迟隐藏
+        else if (!isNearLeft && isMouseNearLeftEdge) {
+          timeoutRef.current = setTimeout(() => {
+            setIsMouseNearLeftEdge(false);
+          }, 300); // 300ms延迟隐藏
+        }
+      },
+      [isMouseNearLeftEdge, collapsed],
+    );
+
+    const isActive = useMemo(() => {
+      return isMouseNearLeftEdge && collapsed;
+    }, [isMouseNearLeftEdge, collapsed]);
+    useEffect(() => {
+      window.addEventListener('mousemove', handleMouseMove);
+
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
+    }, [handleMouseMove]);
     useEffect(() => {
       if (!room) return;
       if (
@@ -502,7 +542,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
     const selfRoom = useMemo(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
-      console.warn('selfRoom', settings);
+
       let selfRoom = settings.children.find((child) => {
         return child.participants.includes(room.localParticipant.identity);
       });
@@ -547,8 +587,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           rp.setVolume(volume);
         } else {
           // 远程参与者不在同一房间内，只订阅视频轨道
-          let videoTrackSid = rp.getTrackPublication(Track.Source.Camera)?.trackSid;
-
+          let videoTrackSid = room.localParticipant.getTrackPublication(
+            Track.Source.Camera,
+          )?.trackSid;
           auth.push({
             participantIdentity: rp.identity,
             allowAll: false,
@@ -768,6 +809,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             collapsed={collapsed}
             setCollapsed={setCollapsed}
             messageApi={messageApi}
+            isActive={isActive}
           ></Channel>
         )}
         <div
@@ -775,7 +817,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           {...props}
           style={{
             height: '100vh',
-            width: collapsed ? '100vw': 'calc(100vw - 280px)',
+            transition: 'width 0.3s ease-in-out',
+            width: collapsed ? (isActive ? 'calc(100vw - 28px)' : '100vw') : 'calc(100vw - 280px)',
           }}
         >
           {is_web() && (

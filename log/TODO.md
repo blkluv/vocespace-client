@@ -3,31 +3,24 @@
 - [x] wave hand该用服务器通信
 - [x] select 组件hover效果
 - [x] 虚拟形象去除开始启动
-
 - [x] 用户名改为 User [01~99]
 - [x] 用户状态通过服务器同步
 - [x] 虚拟视频使用用户id隔离
-
-
 - [x] 虚拟形象页面UI优化
 - [x] 虚拟形象丢失（重更新后消失）
-
 - [x] 屏幕分享时传输其他用户鼠标位置
 - [x] 区分用户显示虚拟形象
 - [x] 同步修改用户视频模糊
 - [x] 同步修改用户屏幕分享模糊度
-
 - [x] focus视图无需点击就能传输用户鼠标位置
 - [x] 让所有人共享鼠标位置视图
 - [x] 开启虚拟形象之后其他用户会变黑
 - [x] 开启按钮改为model - none
-
 - [x] 鼠标位置同步(cover content获取video组件的宽高进行映射比例)
 - [x] wave 双方都要发出声音提示
 - [x] 设置页，点击外部遮罩关闭
 - [x] 声音改为用户输入声音音量
 - [x] 进入房间i18n修改
-
 - [x] 鼠标离开去除
 - [x] 默认prejoin页面聚焦用户名输入框
 - [x] 虚拟形象层级低于触发层
@@ -36,35 +29,26 @@
 - [x] tradition，去除Screen Share模糊度
 - [x] 用户鼠标颜色
 - [x] 多个人开启虚拟形象之后，上一个人的会消失
-
 - [x] 用户状态同步失败
 - [x] 鼠标移除，用户10s超时移除
 - [x] 设置音量绑定失效
 - [x] 退出设置后关闭视频获取
 - [x] 限制虚拟形象对比
 - [x] 本地模糊 (webGL)
-
 - [x] css虚化
 - [x] 虚拟形象暂停追踪(该用动画)
 - [x] 服务器room数据接口 http://localhost:3000/chat/api/room-settings?all="true"
 - [x] 搜索时www.会加上 (在DNS设置中，添加一个CNAME记录，将www.vocespace.com指向vocespace.com)
-
---- 0.1.4
-
 - [x] 客户端性能检测
 - [x] 服务端性能检测
 - [x] 聊天传输文件
   - [x] 重写Chat组件
   - [x] socket传输
-
 - [x] 离开按钮移动到最右边
 - [x] 状态图标没有正确修改 (设置时正常的，状态没有同步)
 - [x] 虚拟形象是否可以去除视频 (实际是不行的，因为虚拟视频的流替换需要原始视频流持续流入)
 - [x] 名字修改后没有同步到组件上
 - [x] 测试服务器瓶颈
-
---- 
-
 - [x] 切换布局或开启摄像头时有一瞬间清晰 ❗️
 - [x] Blur布局切换时异常 ❗️
 - [x] 模型在切换背景后消失 ❗️
@@ -72,11 +56,9 @@
 - [x] 房间区分
 - [x] API用户下线清理
 - [x] 完善chat-file
-
 - [x] 屏幕分享其他人首次加载事件很长
 由于布局进行切换，通道会进行重新订阅，元素会进行重新加载因此会导致加载延时
 - [x] Screen增加video相同滤镜切换效果
-
 - [x] 重新增加虚拟形象切换时的遮罩
 - [x] 更换压缩率较低的编解码器
 - [x] 调整chat时图片大小 = 文件大小
@@ -102,31 +84,18 @@
 - [x] focus布局时点击状态修改事件丢失
 - [x] Turn 测试 https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/ （测试成功）
 - [x] 进入link regex  (特殊字符)
-
-Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	relayProtocol (if present)
-0.001	host	0	udp	192.168.31.211	52248	126 | 32512 | 255		
-0.001	host	3	tcp	192.168.31.211	9	125 | 32704 | 255		
-0.002	host	0	udp	192.168.31.211	57546	126 | 32512 | 254		
-0.002	host	3	tcp	192.168.31.211	9	125 | 32704 | 254		
-0.658	srflx	1	udp	101.83.176.123	57546	100 | 32543 | 254		
-0.658	relay	2	udp	158.247.198.2	53072	5 | 32543 | 254		
-0.886	Done
-
-
 - [x] Docker部署
 - [x] 视频加载两次（prejoin）video track
 - [x] Caddy 
 - [x] 自定义错误页面
 - [x] 视频教程
 - [x] 部署测试基础版本
-  
 - [x] license服务
 - [x] chat增加link跳转 ->hover 之后
 - [x] docker - 无虚化 （tradition）
 - [x] 时间戳转正常时间
-
 - [x] 文件拖拽发送
-- [x] 多次接收文件
+- [x] 修复多次接收文件
 - [ ] 模糊混用
 - [x] 主持人功能(腾讯视频 参考)
   - [x] 增加房间用户数据 (ownerId)
@@ -178,11 +147,7 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
       - [x] 视频下载链接(需要接入aws s3 api进行链接请求)
       - [x] 视频可下载周期，超过下载周期自动清理 (3天)
         - [x] 设置上传时的标签
-- [ ] 清理用户时，意外清理所有房间数据 (暂未排查出原因)
-- [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
-- [ ] 用户自定义虚拟形象: 用户提交虚拟形象图片 -> live2d cubism 自动处理 (代码尝试) -> 生成完整动画效果 + 模型数据 -> 存储 -> 返回
-- [ ] 录制时无法应用模糊 (录制是直接获取通道的，我们的模糊并没有替换视频而是css模糊)
-
+- [x] 清理用户时，意外清理所有房间数据 (暂未排查出原因)
 - [x] server s3
   - [x] 构建客户端
   - [x] 连接
@@ -200,7 +165,6 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
     - [x] redis中增加使用记录 
     - [x] roomManager 类管理使用记录 
     - [x] 使用记录api
-
 - [x] 统一主题
   - [x] 鼠标
   - [x] device 按钮
@@ -216,10 +180,6 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
   - 特点：
     - 房间快速构建，快速关闭
     - 数据无需持久化存储
-- [ ] 重写MicrophoneTraggle组件
-- [ ] 增加复制链接(records)
-- [ ] records -> recording
-- [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
 - [x] chat，对话位置交换
 - [x] chat 小圆点去除边框 改styles
 - [x] 翻页功能失效，在小尺寸窗口下(livekit问题)
@@ -227,18 +187,8 @@ Time 	Type 	Foundation 	Protocol 	Address 	Port 	Priority 	URL (if present) 	rel
 - [x] chat内容无法追溯历史 (使用redis)
 - [x] 共享屏幕系统色
 - [x] 去除无用文件和代码  
-- [ ] safari浏览器显示标签页概览截图丢失模糊度： 缩小化模糊度丢失 (模糊度只是用css进行处理，后续处理为GPU渲染)
-- [ ] 右键菜单
-  - [ ] 用户管理，用户列表
-  - [ ] 主页，用户视口
-  - [x] menu
-
 - [x] chat 合 space.voce.chat
-- [ ] screen share audio 关闭 （放入设置）
-- [ ] 设置持久化到localstorage
-- [ ] 设置，新用户加入时的提醒音
 - [x] 去不同房间需要从主房间列表中隐藏
-
 - [x] 性能测试:
 ```
 lk load-test \
@@ -261,3 +211,37 @@ lk load-test \
     - 规则: 
       1. 当用户在主房间时，可以订阅所有参与者的视频轨道，但不能订阅子房间用户的音频轨道
       2. 当用户在子房间时，可以订阅该子房间内的所有参与者的视频和音频轨道，包括主房间的参与者的视频轨道，但不能订阅主房间参与者的音频轨道
+
+- [ ] 重写MicrophoneTraggle组件
+- [x] 增加复制链接(records)
+- [x] records -> recording
+- [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
+- [ ] screen share audio 关闭 （放入设置）
+- [ ] 设置持久化到localstorage
+- [ ] 设置，新用户加入时的提醒音
+- [ ] safari浏览器显示标签页概览截图丢失模糊度： 缩小化模糊度丢失 (模糊度只是用css进行处理，后续处理为GPU渲染)
+- [ ] 右键菜单
+  - [x] 用户管理，用户列表
+  - [ ] 主页，用户视口
+  - [x] menu
+- [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
+- [ ] 用户自定义虚拟形象: 用户提交虚拟形象图片 -> live2d cubism 自动处理 (代码尝试) -> 生成完整动画效果 + 模型数据 -> 存储 -> 返回
+- [ ] 录制时无法应用模糊 (录制是直接获取通道的，我们的模糊并没有替换视频而是css模糊)
+- [x] 用户遮罩mini tile
+- [x] 自动收缩
+- [x] 主房间 -> Space, Sub room -> Rooms
+- [x] 侧边栏收回状态，hover (window.innerWidth) 10% 显示
+- [x] livekit - pagination 自定义
+  - [x] 重写GridLayout
+  - [x] 重写Pagination
+    - [x] info
+    - [x] control
+- [x] 修改子房间计数 -> + 按钮，创建房间，移除底部创建房间按钮
+- [ ] 隐私房间与公开房间
+  - [ ] 用户进入时自动创建一个隐私房间
+  - [ ] 隐私房间其他用户加入需要房主同意
+  - [ ] 创建房间时设置是否为隐私
+  - [ ] 删除房间socket控制所有在房间内的用户返回到主空间
+  - [ ] 仅房主可删除房间或修改房间
+  - [ ] 修改房间名称
+  - [ ] 修改房间隐私类型

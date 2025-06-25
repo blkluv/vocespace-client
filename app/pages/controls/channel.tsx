@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useCallback, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import styles from '@/styles/channel.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { SvgResource } from '@/app/resources/svg';
@@ -25,8 +25,9 @@ import {
 } from '@ant-design/icons';
 import { GridLayout, TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { MessageInstance } from 'antd/es/message/interface';
-import { RoomSettings } from '@/lib/std/room';
+import { ChildRoom, RoomSettings } from '@/lib/std/room';
 import { ParticipantTileMini } from '../participant/mini';
+import { GLayout } from '../layout/grid';
 
 interface ChannelProps {
   roomName: string;
@@ -37,6 +38,7 @@ interface ChannelProps {
   settings: RoomSettings;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  isActive?: boolean;
 }
 
 const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
@@ -50,6 +52,7 @@ export function Channel({
   tracks,
   collapsed,
   setCollapsed,
+  isActive = false,
 }: ChannelProps) {
   const { t } = useI18n();
 
@@ -57,6 +60,16 @@ export function Channel({
   const [selected, setSelected] = useState<'main' | 'sub'>('main');
   const [roomCreateModalOpen, setRoomCreateModalOpen] = useState(false);
   const [deleteChildRoomName, setDeleteChildRoomName] = useState('');
+  const [selfRoomName, setSelfRoomName] = useState<string>(() => {
+    // 需要从settings中获取当前用户所在的子房间
+    const childRoom = settings.children?.find((room) => {
+      return room.participants.includes(participantId);
+    });
+    return childRoom ? childRoom.name : roomName;
+  });
+  const [subActiveKey, setSubActiveKey] = useState<string[]>([]);
+  const [mainActiveKey, setMainActiveKey] = useState<string[]>(['main', 'sub']);
+
   const childRooms = useMemo(() => {
     return settings.children || [];
   }, [settings.children]);
@@ -65,9 +78,26 @@ export function Channel({
   };
   const [childRoomName, setChildRoomName] = useState('');
 
+  useEffect(() => {
+    if (selfRoomName) {
+      setSubActiveKey([selfRoomName]);
+    }
+    return () => {
+      setSubActiveKey([]);
+    };
+  }, [selfRoomName]);
+
   const createChildRoom = async () => {
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
     url.searchParams.append('childRoom', 'true');
+    if (childRoomName.trim() === '') {
+      messageApi.error({
+        content: t('channel.create.empty_name'),
+        duration: 2,
+      });
+      return;
+    }
+
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -93,6 +123,19 @@ export function Channel({
   };
 
   const deleteChildRoom = async () => {
+    // 使用socket提醒所有子房间的参与者返回主房间 TODO
+    // 暂时处理为：当房间中还有人就不能删除子房间
+    if (
+      (settings.children.find((room) => room.name === deleteChildRoomName)?.participants.length ||
+        0) > 0
+    ) {
+      messageApi.error({
+        content: t('channel.delete.remain'),
+        duration: 2,
+      });
+      return;
+    }
+
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
     url.searchParams.append('roomId', roomName);
     url.searchParams.append('childRoom', deleteChildRoomName);
@@ -106,16 +149,16 @@ export function Channel({
       });
       return;
     } else {
+      setDeleteChildRoomName('');
+      await onUpdate();
       messageApi.success({
         content: t('channel.delete.success'),
         duration: 2,
       });
-      setDeleteChildRoomName('');
-      await onUpdate();
     }
   };
 
-  const leaveChildRoom = async () => {
+  const leaveChildRoom = async (room?: string) => {
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
     url.searchParams.append('leaveChildRoom', 'true');
     const response = await fetch(url.toString(), {
@@ -123,7 +166,7 @@ export function Channel({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         roomId: roomName,
-        childRoom: deleteChildRoomName,
+        childRoom: room || deleteChildRoomName,
         participantId,
       }),
     });
@@ -135,12 +178,15 @@ export function Channel({
         duration: 2,
       });
     } else {
+      setSelfRoomName(roomName);
+      setMainActiveKey(['main', 'sub']);
+      setSubActiveKey([]);
+      setDeleteChildRoomName('');
+      await onUpdate();
       messageApi.success({
         content: t('channel.leave.success'),
         duration: 2,
       });
-      setDeleteChildRoomName('');
-      await onUpdate();
     }
   };
 
@@ -163,15 +209,21 @@ export function Channel({
       });
       return;
     } else {
+      // 进入子房间后 subActiveKey 就是当前子房间的key
+      setSelfRoomName(room);
+      setMainActiveKey(['sub']);
+      await onUpdate();
       messageApi.success({
         content: t('channel.join.success'),
         duration: 2,
       });
-      await onUpdate();
     }
   };
 
-  const joinMainRoom = async () => {};
+  const joinMainRoom = async () => {
+    // 设置为当前自己所在的房间
+    await leaveChildRoom(selfRoomName);
+  };
 
   const subContextItems: MenuProps['items'] = [
     {
@@ -186,7 +238,7 @@ export function Channel({
     {
       key: 'leave',
       label: t('channel.menu.leave'),
-      onClick: leaveChildRoom,
+      onClick: () => leaveChildRoom(),
     },
   ];
 
@@ -216,9 +268,9 @@ export function Channel({
     );
 
     return (
-      <GridLayout tracks={mainTracks} style={{ height: '120px' }}>
+      <GLayout tracks={mainTracks} style={{ height: '120px', position: 'relative' }}>
         <ParticipantTileMini settings={settings}></ParticipantTileMini>
-      </GridLayout>
+      </GLayout>
     );
   }, [tracks, childRooms, settings]);
 
@@ -235,9 +287,9 @@ export function Channel({
       );
 
       return (
-        <GridLayout tracks={subTracks} style={{ height: '120px' }}>
+        <GLayout tracks={subTracks} style={{ height: '120px', position: 'relative' }}>
           <ParticipantTileMini settings={settings}></ParticipantTileMini>
-        </GridLayout>
+        </GLayout>
       );
     },
     [tracks, childRooms, settings],
@@ -245,7 +297,7 @@ export function Channel({
 
   const subChildren: CollapseProps['items'] = useMemo(() => {
     return childRooms.map((room) => ({
-      key: 'sub',
+      key: room.name,
       label: (
         <Dropdown
           trigger={['contextMenu']}
@@ -273,7 +325,7 @@ export function Channel({
         </div>
       ),
     }));
-  }, [subContext, childRooms, deleteChildRoomName]);
+  }, [subContext, childRooms, deleteChildRoomName, selfRoomName]);
 
   const mainItems: CollapseProps['items'] = useMemo(() => {
     return [
@@ -298,7 +350,7 @@ export function Channel({
         ),
       },
       {
-        key: 'sub_main',
+        key: 'sub',
         label: (
           <div className={styles.room_header_wrapper}>
             <VideoCameraOutlined />
@@ -308,22 +360,41 @@ export function Channel({
         children: (
           <Collapse
             bordered={false}
-            defaultActiveKey={['sub']}
+            defaultActiveKey={subActiveKey}
+            activeKey={subActiveKey}
             expandIcon={() => undefined}
             style={{ background: token.colorBgContainer }}
             items={subChildren}
           />
         ),
         style: panelStyle,
-        extra: <Badge count={childRooms.length} color="#22CCEE" showZero size="small" />,
+        extra: (
+          <PlusCircleOutlined
+            onClick={() => {
+              setRoomCreateModalOpen(true);
+            }}
+          ></PlusCircleOutlined>
+        ),
       },
     ];
-  }, [mainContext, subChildren, childRooms]);
+  }, [mainContext, subChildren, childRooms, subActiveKey]);
 
   if (collapsed) {
     return (
-      <div className={`${styles.container} ${styles.collapsed}`}>
-        {/* <Button type="text" onClick={toggleCollapse} icon={<MenuUnfoldOutlined />}></Button> */}
+      <div
+        className={`${styles.container} ${styles.collapsed}`}
+        style={{
+          width: isActive ? 'fit-content' : '0px',
+        }}
+      >
+        <Button
+          type="text"
+          onClick={toggleCollapse}
+          icon={<MenuUnfoldOutlined />}
+          style={{
+            height: '100%',
+          }}
+        ></Button>
       </div>
     );
   }
@@ -356,7 +427,8 @@ export function Channel({
           <div>
             <Collapse
               bordered={false}
-              defaultActiveKey={['main']}
+              defaultActiveKey={['main', 'sub']}
+              activeKey={mainActiveKey}
               expandIcon={() => undefined}
               style={{ background: token.colorBgContainer }}
               items={mainItems}
@@ -365,7 +437,7 @@ export function Channel({
         </div>
 
         {/* Bottom */}
-        <div className={styles.bottom}>
+        {/* <div className={styles.bottom}>
           <Button
             onClick={() => {
               setRoomCreateModalOpen(true);
@@ -376,7 +448,7 @@ export function Channel({
           >
             <span>{t('channel.menu.create')}</span>
           </Button>
-        </div>
+        </div> */}
       </div>
       <Modal
         open={roomCreateModalOpen}
