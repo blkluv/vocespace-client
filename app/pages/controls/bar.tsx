@@ -885,9 +885,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               }}
               onClickRecord={onClickRecord}
               onClickManage={fetchSettings}
-              onClickChannel={async () => {
-                setCollapsed(!collapsed);
-              }}
               isRecording={isRecording}
             ></MoreButton>
           )}

@@ -1,7 +1,7 @@
-import { Button, Dropdown, MenuProps} from 'antd';
+import { Button, Dropdown, MenuProps } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
-import { useMemo} from 'react';
+import { useMemo } from 'react';
 
 export interface MoreButtonProps {
   showText?: boolean;
@@ -11,7 +11,6 @@ export interface MoreButtonProps {
   onSettingOpen?: () => Promise<void>;
   onClickManage?: () => Promise<void>;
   onClickRecord?: () => Promise<void>;
-  onClickChannel?: () => Promise<void>;
   controlWidth: number;
 }
 
@@ -22,7 +21,6 @@ export function MoreButton({
   onClickManage,
   onClickRecord,
   onSettingOpen,
-  onClickChannel,
   isRecording,
   controlWidth,
 }: MoreButtonProps) {
@@ -39,12 +37,6 @@ export function MoreButton({
 
   const items: MenuProps['items'] = useMemo(() => {
     return [
-      // 频道
-      {
-        label: <div style={{ marginLeft: '8px' }}>{t('more.channel')}</div>,
-        key: 'channel',
-        icon: <SvgResource type="more" svgSize={16} />,
-      },
       // 录屏功能
       {
         label: (
@@ -90,12 +82,6 @@ export function MoreButton({
       case 'setting':
         if (onSettingOpen) {
           await onSettingOpen();
-        }
-        break;
-      case 'channel':
-        // 展开左侧频道侧边栏
-        if (onClickChannel) {
-          await onClickChannel();
         }
         break;
       default:

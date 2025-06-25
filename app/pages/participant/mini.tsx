@@ -22,7 +22,7 @@ import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { useVideoBlur } from '@/lib/std/device';
 import { SvgResource } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
-import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
@@ -38,6 +38,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
     const isEncrypted = useIsEncrypted(trackReference.participant);
+    const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const { blurValue, setVideoBlur } = useVideoBlur({
       videoRef,
       initialBlur: 0.0,
@@ -80,7 +81,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
       },
       [trackReference, layoutContext],
     );
-    
+
     const userStatusDisply = useMemo(() => {
       switch (settings.participants[trackReference.participant.identity]?.status) {
         case UserStatus.Online:
@@ -96,38 +97,32 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
       }
     }, [settings.participants, trackReference.participant.identity]);
 
-    const deviceTrack = useMemo(() => {
-      if (isTrackReference(trackReference)) {
-        if (
-          trackReference.source === Track.Source.Camera ||
-          trackReference.source === Track.Source.ScreenShare
-        ) {
-          return (
-            <VideoTrack
-              ref={videoRef}
-              style={{
-                WebkitFilter: videoFilter,
-                filter: videoFilter,
-                transition: 'filter 0.2s ease-in-out',
-                zIndex: '11',
-              }}
-              trackRef={trackReference}
-              onSubscriptionStatusChanged={handleSubscribe}
-              manageSubscription={autoManageSubscription}
-            />
-          );
-        } else {
-          return (
-            <AudioTrack trackRef={trackReference} onSubscriptionStatusChanged={handleSubscribe} />
-          );
-        }
-      }
-    }, [trackReference, videoRef, videoFilter]);
-
     return (
       <ParticipantTile ref={ref} trackRef={trackReference}>
-        {deviceTrack}
-        <div className="lk-participant-placeholder" style={{ border: '1px solid #111' }}>
+        {isTrackReference(trackReference) &&
+        (trackReference.source === Track.Source.Camera ||
+          trackReference.source === Track.Source.ScreenShare) ? (
+          <VideoTrack
+            ref={videoRef}
+            style={{
+              WebkitFilter: videoFilter,
+              filter: videoFilter,
+              transition: 'filter 0.2s ease-in-out',
+              zIndex: '11',
+            }}
+            trackRef={trackReference}
+            onSubscriptionStatusChanged={handleSubscribe}
+            manageSubscription={autoManageSubscription}
+          />
+        ) : (
+          isTrackReference(trackReference) && (
+            <AudioTrack trackRef={trackReference} onSubscriptionStatusChanged={handleSubscribe} />
+          )
+        )}
+        <div
+          className="lk-participant-placeholder"
+          style={{ border: '1px solid #111', zIndex: 110 }}
+        >
           <ParticipantPlaceholder />
         </div>
         <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>

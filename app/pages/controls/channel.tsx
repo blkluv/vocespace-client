@@ -37,6 +37,7 @@ interface ChannelProps {
   settings: RoomSettings;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  isActive?: boolean;
 }
 
 const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
@@ -50,6 +51,7 @@ export function Channel({
   tracks,
   collapsed,
   setCollapsed,
+  isActive = false,
 }: ChannelProps) {
   const { t } = useI18n();
 
@@ -64,6 +66,8 @@ export function Channel({
     setCollapsed(!collapsed);
   };
   const [childRoomName, setChildRoomName] = useState('');
+
+ 
 
   const createChildRoom = async () => {
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
@@ -317,15 +321,19 @@ export function Channel({
           />
         ),
         style: panelStyle,
-        extra: <Badge count={childRooms.length} color="#22CCEE" showZero size="small" />,
+        extra: <PlusCircleOutlined></PlusCircleOutlined>,
       },
     ];
   }, [mainContext, subChildren, childRooms]);
 
   if (collapsed) {
     return (
-      <div className={`${styles.container} ${styles.collapsed}`}>
-        <Button type="text" onClick={toggleCollapse} icon={<MenuUnfoldOutlined />}></Button>
+      <div className={`${styles.container} ${styles.collapsed}`} style={{
+        width: isActive ? 'fit-content' : '0px',
+      }}>
+         <Button type="text" onClick={toggleCollapse} icon={<MenuUnfoldOutlined />} style={{
+          height: '100%',
+         }}></Button>
       </div>
     );
   }
