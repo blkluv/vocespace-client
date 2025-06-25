@@ -46,8 +46,8 @@ export default {
   channel: {
     menu: {
       header: '',
-      main: 'Main room',
-      sub: 'Sub room',
+      main: 'Space',
+      sub: 'Rooms',
       create: 'Create room',
       join: 'Join',
       setting: 'Settings',
@@ -60,24 +60,26 @@ export default {
     delete: {
       success: 'Delete room successfully',
       error: 'Failed to delete room, please try again later. ',
+      remain: "There are still members in the room and it cannot be deleted. Please notify all members to leave the room first.",
     },
     create: {
       success: 'Room created successfully',
       error: 'Failed to create room, please try again later. ',
+      empty_name: 'Room name cannot be empty',
     },
     leave: {
-      success: 'Leave sub room, return to main room successfully',
-      error: 'Failed to leave sub room, please try again later. ',
+      success: 'Leave room, return to Space successfully',
+      error: 'Failed to leave room, please try again later. ',
     },
     modal: {
-      title: 'Create a subroom',
+      title: 'Create a room',
       desc: [
-        'After creating a subroom, you can invite other participants to join the subroom. Subrooms can be used for specific discussions or activities.',
-        'In a subroom, the main room is still visible, and you can return to the main room at any time to communicate. For participants in the main room, they cannot hear the discussion content of the subroom, but they can see the existence of the subroom.',
+        'After creating a room, you can invite other participants to join the room. Rooms can be used for specific discussions or activities.',
+        'In a room, the Space is still visible, and you can return to the Space at any time to communicate. For participants in the Space, they cannot hear the discussion content of the room, but they can see the existence of the room.',
       ],
-      placeholder: 'Please enter the subroom name',
+      placeholder: 'Please enter the room name',
       cancel: 'Cancel',
-      ok: 'Create a subroom',
+      ok: 'Create a room',
     },
   },
   more: {

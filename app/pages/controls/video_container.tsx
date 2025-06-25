@@ -101,6 +101,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     // 判断用户的鼠标位置是否在window的左侧200px以内，如果是为用户激活左侧channel侧边栏
     const handleMouseMove = React.useCallback(
       (event: MouseEvent) => {
+        
+        if(!collapsed) {
+          return;
+        }
+
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
@@ -116,7 +121,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           }, 300); // 300ms延迟隐藏
         }
       },
-      [isMouseNearLeftEdge],
+      [isMouseNearLeftEdge, collapsed],
     );
 
     const isActive = useMemo(() => {
@@ -537,7 +542,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
     const selfRoom = useMemo(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
-      console.warn('selfRoom', settings);
+
       let selfRoom = settings.children.find((child) => {
         return child.participants.includes(room.localParticipant.identity);
       });
