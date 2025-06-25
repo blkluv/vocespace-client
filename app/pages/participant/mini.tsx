@@ -126,7 +126,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
           <ParticipantPlaceholder />
         </div>
         <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
-          <div className="lk-participant-metadata-item">
+          <div className="lk-participant-metadata-item" style={{ maxWidth: 'calc(100% - 32px)' }}>
             {trackReference.source === Track.Source.Camera ? (
               <>
                 {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
@@ -137,7 +137,14 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
                   }}
                   show={'muted'}
                 ></TrackMutedIndicator>
-                <ParticipantName />
+                <ParticipantName
+                  style={{
+                    maxWidth: 'calc(100% - 2.5rem)',
+                    overflow: 'clip',
+                    textWrap: 'nowrap',
+                    textOverflow: 'ellipsis',
+                  }}
+                />
                 <div
                   style={{ marginLeft: '0.25rem', display: 'inline-flex', alignItems: 'center' }}
                 >
@@ -155,7 +162,16 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
             ) : (
               <>
                 <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
-                <ParticipantName>&apos;s screen</ParticipantName>
+                <ParticipantName
+                  style={{
+                    maxWidth: 'calc(100% - 2.5rem)',
+                    overflow: 'clip',
+                    textWrap: 'nowrap',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  &apos;s screen
+                </ParticipantName>
               </>
             )}
           </div>

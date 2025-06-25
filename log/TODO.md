@@ -244,7 +244,11 @@ lk load-test \
 - [x] 自动收缩
 - [x] 主房间 -> Space, Sub room -> Rooms
 - [x] 侧边栏收回状态，hover (window.innerWidth) 10% 显示
-- [ ] livekit - pagination 自定义
+- [x] livekit - pagination 自定义
+  - [x] 重写GridLayout
+  - [x] 重写Pagination
+    - [x] info
+    - [x] control
 - [x] 修改子房间计数 -> + 按钮，创建房间，移除底部创建房间按钮
 - [ ] 隐私房间与公开房间
   - [ ] 用户进入时自动创建一个隐私房间

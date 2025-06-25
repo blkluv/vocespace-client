@@ -27,6 +27,7 @@ import { GridLayout, TrackReferenceOrPlaceholder } from '@livekit/components-rea
 import { MessageInstance } from 'antd/es/message/interface';
 import { ChildRoom, RoomSettings } from '@/lib/std/room';
 import { ParticipantTileMini } from '../participant/mini';
+import { GLayout } from '../layout/grid';
 
 interface ChannelProps {
   roomName: string;
@@ -125,7 +126,8 @@ export function Channel({
     // 使用socket提醒所有子房间的参与者返回主房间 TODO
     // 暂时处理为：当房间中还有人就不能删除子房间
     if (
-      settings.children.find((room) => room.name === deleteChildRoomName)?.participants.length > 0
+      (settings.children.find((room) => room.name === deleteChildRoomName)?.participants.length ||
+        0) > 0
     ) {
       messageApi.error({
         content: t('channel.delete.remain'),
@@ -266,9 +268,9 @@ export function Channel({
     );
 
     return (
-      <GridLayout tracks={mainTracks} style={{ height: '120px' }}>
+      <GLayout tracks={mainTracks} style={{ height: '120px', position: 'relative' }}>
         <ParticipantTileMini settings={settings}></ParticipantTileMini>
-      </GridLayout>
+      </GLayout>
     );
   }, [tracks, childRooms, settings]);
 
@@ -285,9 +287,9 @@ export function Channel({
       );
 
       return (
-        <GridLayout tracks={subTracks} style={{ height: '120px' }}>
+        <GLayout tracks={subTracks} style={{ height: '120px', position: 'relative' }}>
           <ParticipantTileMini settings={settings}></ParticipantTileMini>
-        </GridLayout>
+        </GLayout>
       );
     },
     [tracks, childRooms, settings],
