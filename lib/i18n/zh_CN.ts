@@ -110,7 +110,7 @@ export default {
       cancel: '取消',
       download_msg: '录制已完成，正在传输至云端进行存储，您可以访问当前服务的records进行下载。',
       download: '下载录制文件',
-      to_donwload: "前往下载"
+      to_download: "前往下载"
     },
     participant: {
       title: '成员',

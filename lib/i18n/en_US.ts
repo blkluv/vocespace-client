@@ -112,7 +112,7 @@ export default {
       download_msg:
         'The recording is complete and is being transferred to the cloud for storage. You can access the records of the current service to download it. ',
       download: 'Download recording file',
-      to_donwload: 'To download Page',
+      to_download: 'To download Page',
     },
     participant: {
       title: 'Participants',
