@@ -65,7 +65,7 @@ export function Channel({
   const { token } = theme.useToken();
   const [selected, setSelected] = useState<'main' | 'sub'>('main');
   const [roomCreateModalOpen, setRoomCreateModalOpen] = useState(false);
-  const [deleteChildRoomName, setDeleteChildRoomName] = useState('');
+  const [selectedRoom, setSelectedRoom] = useState<ChildRoom | null>(null);
   const [mainJoinVis, setMainJoinVis] = useState<'hidden' | 'visible'>('hidden');
   const [roomJoinVis, setRoomJoinVis] = useState<number | null>(null);
   const [selfRoomName, setSelfRoomName] = useState<string>(() => {
@@ -123,6 +123,8 @@ export function Channel({
       body: JSON.stringify({
         roomId: roomName,
         childRoomName,
+        participantId,
+        isPrivate: roomPrivacy === 'private',
       }),
     });
     if (!response.ok) {
@@ -142,10 +144,12 @@ export function Channel({
   };
 
   const deleteChildRoom = async () => {
+    if (!selectedRoom) return;
+
     // 使用socket提醒所有子房间的参与者返回主房间 TODO
     // 暂时处理为：当房间中还有人就不能删除子房间
     if (
-      (settings.children.find((room) => room.name === deleteChildRoomName)?.participants.length ||
+      (settings.children.find((room) => room.name === selectedRoom.name)?.participants.length ||
         0) > 0
     ) {
       messageApi.error({
@@ -157,7 +161,7 @@ export function Channel({
 
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
     url.searchParams.append('roomId', roomName);
-    url.searchParams.append('childRoom', deleteChildRoomName);
+    url.searchParams.append('childRoom', selectedRoom.name);
     const response = await fetch(url.toString(), {
       method: 'DELETE',
     });
@@ -168,7 +172,7 @@ export function Channel({
       });
       return;
     } else {
-      setDeleteChildRoomName('');
+      setSelectedRoom(null);
       await onUpdate();
       messageApi.success({
         content: t('channel.delete.success'),
@@ -178,6 +182,8 @@ export function Channel({
   };
 
   const leaveChildRoom = async (room?: string) => {
+    if (!selectedRoom && !room) return;
+
     const url = new URL(CONNECT_ENDPOINT, window.location.origin);
     url.searchParams.append('leaveChildRoom', 'true');
     const response = await fetch(url.toString(), {
@@ -185,7 +191,7 @@ export function Channel({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         roomId: roomName,
-        childRoom: room || deleteChildRoomName,
+        childRoom: room || selectedRoom?.name,
         participantId,
       }),
     });
@@ -200,7 +206,7 @@ export function Channel({
       setSelfRoomName(roomName);
       // setMainActiveKey(['main', 'sub']);
       setSubActiveKey([]);
-      setDeleteChildRoomName('');
+      setSelectedRoom(null);
       await onUpdate();
       messageApi.success({
         content: t('channel.leave.success'),
@@ -246,13 +252,15 @@ export function Channel({
 
   const subContextItems: MenuProps['items'] = [
     {
-      key: 'setting',
-      label: t('channel.menu.setting'),
+      key: 'rename',
+      label: t('channel.menu.rename'),
+      disabled: selectedRoom?.ownerId !== participantId,
     },
     {
       key: 'delete',
       label: t('channel.menu.delete'),
       onClick: deleteChildRoom,
+      disabled: selectedRoom?.ownerId !== participantId,
     },
     {
       key: 'leave',
@@ -318,26 +326,38 @@ export function Channel({
     return childRooms.map((room, index) => ({
       key: room.name,
       label: (
-        <div className={styles.room_header_wrapper}>
+        <div
+          className={styles.room_header_wrapper}
+          onMouseEnter={() => {
+            setRoomJoinVis(index);
+          }}
+          onMouseLeave={() => {
+            setRoomJoinVis(null);
+          }}
+        >
           <Dropdown
             trigger={['contextMenu']}
             menu={{ items: subContextItems }}
             onOpenChange={(open) => {
               if (open) {
-                setDeleteChildRoomName(room.name);
+                setSelectedRoom(room);
               }
             }}
           >
             <div
               className={styles.room_header_wrapper_title}
-              onMouseEnter={() => {
-                setRoomJoinVis(index);
-              }}
-              onMouseLeave={() => {
-                setRoomJoinVis(null);
+              onClick={() => {
+                setSubActiveKey((prev) => {
+                  if (prev.includes(room.name)) {
+                    return prev.filter((r) => r !== room.name);
+                  } else {
+                    prev.push(room.name);
+                  }
+                  return prev;
+                });
               }}
             >
-              <VideoCameraOutlined />
+              {room.isPrivate ? <LockOutlined /> : <VideoCameraOutlined />}
               {room.name}
             </div>
           </Dropdown>
@@ -355,7 +375,7 @@ export function Channel({
       children: subContext(room.name),
       style: subStyle,
     }));
-  }, [subContext, childRooms, deleteChildRoomName, selfRoomName, roomJoinVis]);
+  }, [subContext, childRooms, selectedRoom, selfRoomName, roomJoinVis]);
 
   const mainItems: CollapseProps['items'] = useMemo(() => {
     return [
@@ -371,7 +391,17 @@ export function Channel({
               setMainJoinVis('hidden');
             }}
           >
-            <div className={styles.room_header_wrapper_title}>
+            <div
+              className={styles.room_header_wrapper_title}
+              onClick={() => {
+                setMainActiveKey((prev) => {
+                  if (prev.includes('main')) {
+                    return [];
+                  }
+                  return ['main', 'sub'];
+                });
+              }}
+            >
               <VideoCameraOutlined />
               <span>{t('channel.menu.main')}</span>
             </div>
@@ -523,12 +553,12 @@ export function Channel({
         <div className={styles.modal_item}>
           <Popover
             content={
-              <>
-                <p>{t('channel.modal.privacy.public')}</p>
-                <p>{t('channel.modal.privacy.private')}</p>
-              </>
+              <div style={{ maxWidth: 200 }}>
+                <p>{t('channel.modal.privacy.public.desc')}</p>
+                <p>{t('channel.modal.privacy.private.desc')}</p>
+              </div>
             }
-            title="Title"
+            title={t('channel.modal.privacy.title')}
           >
             <span className={styles.modal_item_label}>
               <LockOutlined />
@@ -539,6 +569,9 @@ export function Channel({
             options={roomPrivacyOptions}
             defaultValue={roomPrivacy}
             value={roomPrivacy}
+            onChange={(e) => {
+              setRoomPrivacy(e.target.value as RoomPrivacy);
+            }}
           />
         </div>
       </Modal>

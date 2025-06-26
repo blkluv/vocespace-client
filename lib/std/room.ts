@@ -2,9 +2,13 @@ import { UserDefineStatus, UserStatus } from ".";
 import { ModelBg, ModelRole } from "./virtual";
 
 export interface ChildRoom {
+  // room name
   name: string;
   // 参与者ID
   participants: string[];
+  ownerId: string;
+  // is private room
+  isPrivate: boolean;
 }
 
 export interface ParticipantSettings {

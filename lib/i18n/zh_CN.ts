@@ -54,6 +54,8 @@ export default {
       setting: '设置',
       delete: '删除房间',
       leave: '离开房间',
+      rename: "重命名",
+      switch_privacy: "切换隐私性",
     },
     join: {
       success: '加入房间成功',
