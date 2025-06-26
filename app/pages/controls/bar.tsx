@@ -1179,7 +1179,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           {isDownload ? (
             <div>
               <div>{t('more.record.download_msg')}</div>
-              <a href={`${window.location.origin}/recording`} target="_blank">
+              <a href={`${window.location.origin}/recording?room=${room!.name}`} target="_blank">
                 download records pages
               </a>
             </div>
