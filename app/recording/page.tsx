@@ -29,6 +29,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { connect_endpoint } from '@/lib/std';
 import { ulid } from 'ulid';
 import { SvgResource } from '../resources/svg';
+import { useSearchParams } from 'next/navigation';
 
 const { Title, Text } = Typography;
 const { confirm } = Modal;
@@ -78,6 +79,7 @@ const isUndefinedString = (value: string | undefined): boolean => {
 const CONNECT_ENDPOINT = connect_endpoint('/api/record');
 
 export default function RecordsPage() {
+  const searchParams = useSearchParams();
   const [roomName, setRoomName] = useState<string>('');
   const [recordsData, setRecordsData] = useState<RecordData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -86,6 +88,17 @@ export default function RecordsPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const [state, setState] = useState<RecordState>(RecordState.GetEnv);
   const [env, setEnv] = useState<EnvData | null>(null);
+
+  useEffect(() => {
+    const roomParam = searchParams.get('room');
+    if (roomParam) {
+      setRoomName(roomParam);
+      // 如果S3服务已连接，自动搜索该房间的录制文件
+      if (state === RecordState.Connected) {
+        searchRoomRecords(roomParam);
+      }
+    }
+  }, [searchParams, state]);
 
   const isConnected = useMemo(() => {
     switch (state) {
