@@ -257,6 +257,7 @@ function VideoConferenceComponent(props: {
 
   const router = useRouter();
   const handleOnLeave = React.useCallback(async () => {
+    
     socket.emit('mouse_remove', {
       room: room.name,
       senderName: room.localParticipant.name || room.localParticipant.identity,
@@ -264,10 +265,10 @@ function VideoConferenceComponent(props: {
       receiverId: '',
       receSocketId: '',
     });
+    router.push('/');
     socket.emit('update_user_status');
     await videoContainerRef.current?.removeLocalSettings();
     socket.disconnect();
-    router.push('/');
   }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {
     console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);

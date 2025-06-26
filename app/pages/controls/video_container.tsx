@@ -181,7 +181,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           messageApi.error({
             content: t('channel.create.error'),
           });
-        }else{
+        } else {
           await fetchSettings();
         }
       };
@@ -611,10 +611,15 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           let videoTrackSid = room.localParticipant.getTrackPublication(
             Track.Source.Camera,
           )?.trackSid;
+
+          let shareTackSid = room.localParticipant.getTrackPublication(
+            Track.Source.ScreenShare,
+          )?.trackSid;
+
           auth.push({
             participantIdentity: rp.identity,
             allowAll: false,
-            allowedTrackSids: videoTrackSid ? [videoTrackSid] : [],
+            allowedTrackSids: videoTrackSid && shareTackSid ? [videoTrackSid, shareTackSid] : [],
           });
         }
       });

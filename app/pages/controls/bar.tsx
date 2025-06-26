@@ -115,7 +115,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [controlWidth, setControlWidth] = React.useState(
       controlLeftRef.current ? controlLeftRef.current.clientWidth : window.innerWidth,
     );
-  
+
     // 当controlLeftRef的大小发生变化时，更新controlWidth
     React.useEffect(() => {
       const resizeObserver = new ResizeObserver(() => {
@@ -755,42 +755,10 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
 
     const recordModalOnOk = async () => {
+      // 创建一个新recording页面，相当于点击了a标签的href
       if (isDownload) {
-        // copy link to clipboard
-        if (roomSettings.record.filePath) {
-          try {
-            // submit email for download
-            if (downloadEmail === '') {
-              messageApi.error(t('msg.error.record.email.empty'));
-              return;
-            } else {
-              const url = 'https://space.voce.chat/api/s3/download_request';
-              const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  email: downloadEmail,
-                  key: roomSettings.record.filePath,
-                }),
-              });
-
-              if (!response.ok) {
-                let { error } = await response.json();
-                messageApi.error(error);
-              }
-            }
-
-            setOpenRecordModal(false);
-          } catch (err) {
-            messageApi.error(t('msg.error.record.copy'));
-          }
-        }
+        window.open(`${window.location.origin}/recording`, '_blank');
         setIsDownload(false);
-      } else {
-        await startRecord();
-        setOpenRecordModal(false);
       }
     };
 
@@ -1190,7 +1158,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           title={isDownload ? t('more.record.download') : t('more.record.title')}
           okText={
             isDownload
-              ? t('common.confirm')
+              ? t('more.record.to_download')
               : isOwner
               ? t('more.record.confirm')
               : t('more.record.confirm_request')
@@ -1202,7 +1170,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           {isDownload ? (
             <div>
               <div>{t('more.record.download_msg')}</div>
-              <a href={`${window.location.origin}/records`} target="_blank">
+              <a href={`${window.location.origin}/recording`} target="_blank">
                 download records pages
               </a>
             </div>
