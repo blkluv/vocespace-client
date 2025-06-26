@@ -194,7 +194,7 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
           chatMsg.msgs[index - 1] &&
           chatMsg.msgs[index - 1].timestamp
         ) {
-          if (msg.timestamp - chatMsg.msgs[index - 1].timestamp > 5 * 60 * 1000) {
+          if (msg.timestamp - chatMsg.msgs[index - 1].timestamp > 5 * 60) {
             msgItemNodes.push(
               <ChatMsgTimeSplit key={`time-split-${msg.id || ulid()}`} timestamp={msg.timestamp} />,
             );

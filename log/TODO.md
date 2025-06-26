@@ -258,3 +258,6 @@ lk load-test \
 -  [ ] ui 参考tandom
 - [x] 修复bar部分resize异常
 - [x] 重写Collapse事件部分 
+- [ ] chat消息提醒，用户第一次进入不在时为dot,在房间但没有打开聊天面板为badge
+- [x] 增加子房间对于Space的屏幕分享的权限
+- [x] recording地址修改，确定按钮跳转修改
