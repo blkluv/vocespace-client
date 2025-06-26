@@ -65,6 +65,7 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
         type: 'text',
         roomName: room.name,
         file: null,
+        timestamp: Date.now(),
       };
 
       setChatMsg((prev) => ({
@@ -97,6 +98,7 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
                 type: file.type,
                 data: fileData,
               },
+              timestamp: Date.now(),
             };
 
             // 发送文件消息
@@ -172,15 +174,45 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
     }, [chatMsg.msgs]);
 
     const msgList = React.useMemo(() => {
-      return chatMsg.msgs.map((msg) => (
-        <ChatMsgItemCmp
-          key={msg.id || ulid()}
-          isLocal={isLocal(msg.sender.id)}
-          msg={msg}
-          downloadFile={downloadFile}
-          isImg={isImg}
-        ></ChatMsgItemCmp>
-      ));
+      // return chatMsg.msgs.map((msg) => (
+      //   <ChatMsgItemCmp
+      //     key={msg.id || ulid()}
+      //     isLocal={isLocal(msg.sender.id)}
+      //     msg={msg}
+      //     downloadFile={downloadFile}
+      //     isImg={isImg}
+      //   ></ChatMsgItemCmp>
+      // ));
+
+      let msgItemNodes: React.ReactNode[] = [];
+
+      chatMsg.msgs.forEach((msg, index) => {
+        // 判断是否需要添加时间分割线
+        if (
+          index !== 0 &&
+          msg.timestamp &&
+          chatMsg.msgs[index - 1] &&
+          chatMsg.msgs[index - 1].timestamp
+        ) {
+          if (msg.timestamp - chatMsg.msgs[index - 1].timestamp > 5 * 60 * 1000) {
+            msgItemNodes.push(
+              <ChatMsgTimeSplit key={`time-split-${msg.id || ulid()}`} timestamp={msg.timestamp} />,
+            );
+          }
+        }
+
+        msgItemNodes.push(
+          <ChatMsgItemCmp
+            key={msg.id || ulid()}
+            isLocal={isLocal(msg.sender.id)}
+            msg={msg}
+            downloadFile={downloadFile}
+            isImg={isImg}
+          ></ChatMsgItemCmp>,
+        );
+      });
+
+      return msgItemNodes;
     }, [chatMsg.msgs]);
 
     return (
@@ -324,4 +356,13 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
       </div>
     </li>
   );
+}
+
+function ChatMsgTimeSplit({ timestamp }: { timestamp: number }) {
+  const time = new Date(timestamp).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  return <li className={styles.msg_time_split}>{time}</li>;
 }
