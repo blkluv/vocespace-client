@@ -16,8 +16,8 @@
     align-items: stretch;
     justify-content: space-between;
     &_inner {
-        width: calc(100% - 36px);
         height: 100%;
+        width: calc(100% - 36px);
     }
     &_btn {
         padding: 2px;

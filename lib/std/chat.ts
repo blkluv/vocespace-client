@@ -7,7 +7,7 @@ export interface ChatMsgItem {
   message: string | null;
   type: 'text' | 'file';
   roomName: string;
-  timestamp?: string;
+  timestamp: number;
   file: {
     name: string;
     size: number;

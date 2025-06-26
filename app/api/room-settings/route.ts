@@ -813,12 +813,20 @@ export async function POST(request: NextRequest) {
   try {
     const childRoomReq = request.nextUrl.searchParams.get('childRoom');
     const body = await request.json();
-    const { roomId, participantId, settings, trans, record, childRoomName } = body;
+    const { roomId, participantId, settings, trans, record, childRoomName, isPrivate } = body;
     // 如果是创建子房间
-    if (childRoomReq == 'true' && roomId && childRoomName) {
+    if (
+      childRoomReq == 'true' &&
+      roomId &&
+      childRoomName &&
+      participantId &&
+      typeof isPrivate === 'boolean'
+    ) {
       const childRoom = {
         name: childRoomName,
         participants: [],
+        ownerId: participantId,
+        isPrivate,
       } as ChildRoom;
 
       const success = await RoomManager.setChildRoom(roomId, childRoom);

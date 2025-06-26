@@ -52,6 +52,7 @@ import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/s
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
+import { createRoom } from '@/lib/hooks/channel';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -96,47 +97,49 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room?.name || '', // 房间 ID
         room?.localParticipant?.identity || '', // 参与者 ID
       );
-    const [isMouseNearLeftEdge, setIsMouseNearLeftEdge] = useState(false);
-    const timeoutRef = React.useRef<NodeJS.Timeout>();
+    // const [isMouseNearLeftEdge, setIsMouseNearLeftEdge] = useState(false);
+    // const timeoutRef = React.useRef<NodeJS.Timeout>();
     // 判断用户的鼠标位置是否在window的左侧200px以内，如果是为用户激活左侧channel侧边栏
-    const handleMouseMove = React.useCallback(
-      (event: MouseEvent) => {
-        
-        if(!collapsed) {
-          return;
-        }
+    // const handleMouseMove = React.useCallback(
+    //   (event: MouseEvent) => {
 
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
+    //     if(!collapsed) {
+    //       return;
+    //     }
 
-        const isNearLeft = event.clientX <= 200;
-        if (isNearLeft && !isMouseNearLeftEdge) {
-          setIsMouseNearLeftEdge(true);
-        }
-        // 如果鼠标离开左侧，延迟隐藏
-        else if (!isNearLeft && isMouseNearLeftEdge) {
-          timeoutRef.current = setTimeout(() => {
-            setIsMouseNearLeftEdge(false);
-          }, 300); // 300ms延迟隐藏
-        }
-      },
-      [isMouseNearLeftEdge, collapsed],
-    );
+    //     if (timeoutRef.current) {
+    //       clearTimeout(timeoutRef.current);
+    //     }
 
-    const isActive = useMemo(() => {
-      return isMouseNearLeftEdge && collapsed;
-    }, [isMouseNearLeftEdge, collapsed]);
-    useEffect(() => {
-      window.addEventListener('mousemove', handleMouseMove);
+    //     const isNearLeft = event.clientX <= 200;
+    //     if (isNearLeft && !isMouseNearLeftEdge) {
+    //       setIsMouseNearLeftEdge(true);
+    //     }
+    //     // 如果鼠标离开左侧，延迟隐藏
+    //     else if (!isNearLeft && isMouseNearLeftEdge) {
+    //       timeoutRef.current = setTimeout(() => {
+    //         setIsMouseNearLeftEdge(false);
+    //       }, 300); // 300ms延迟隐藏
+    //     }
+    //   },
+    //   [isMouseNearLeftEdge, collapsed],
+    // );
 
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-      };
-    }, [handleMouseMove]);
+    // const isActive = useMemo(() => {
+    //   return isMouseNearLeftEdge && collapsed;
+    // }, [isMouseNearLeftEdge, collapsed]);
+    // useEffect(() => {
+    //   window.addEventListener('mousemove', handleMouseMove);
+
+    //   return () => {
+    //     window.removeEventListener('mousemove', handleMouseMove);
+    //     if (timeoutRef.current) {
+    //       clearTimeout(timeoutRef.current);
+    //     }
+    //   };
+    // }, [handleMouseMove]);
+    const isActive = true;
+
     useEffect(() => {
       if (!room) return;
       if (
@@ -165,6 +168,22 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             bg: ModelBg.ClassRoom,
           },
         });
+
+        // 为新加入的参与者创建一个自己的私人房间
+        const response = await createRoom({
+          hostRoom: room.name,
+          roomName: `${room.localParticipant.name}'s room`,
+          ownerId: room.localParticipant.identity,
+          isPrivate: true,
+        });
+
+        if (!response.ok) {
+          messageApi.error({
+            content: t('channel.create.error'),
+          });
+        }else{
+          await fetchSettings();
+        }
       };
 
       // 获取历史聊天记录 ---------------------------------------------------------------------------
@@ -558,6 +577,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           participants: Object.keys(settings.participants).filter((pid) => {
             return !allChildParticipants.includes(pid);
           }),
+          ownerId: settings.ownerId,
+          isPrivate: false,
         };
       }
       return selfRoom;
@@ -600,7 +621,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 设置房间订阅权限 ------------------------------------------------
       room.localParticipant.setTrackSubscriptionPermissions(false, auth);
-    }, [room, settings.participants, selfRoom]);
+    }, [room, settings, selfRoom]);
 
     useEffect(() => {
       // 当settings.status发生变化时，更新用户状态 --------------------------------------------------

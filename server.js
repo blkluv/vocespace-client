@@ -258,7 +258,7 @@ app.prepare().then(() => {
     // [socket: chat file event] ----------------------------------------------------------------------------------------
     socket.on('chat_file', async (msg) => {
       try {
-        const { file, sender, roomName } = msg;
+        const { file, sender, roomName, timestamp } = msg;
         const fileId = Date.now().toString();
         const fileExt = path.extname(file.name);
         const fileName = `${fileId}${fileExt}`;
@@ -295,7 +295,7 @@ app.prepare().then(() => {
           },
           roomName,
           message: `文件: ${file.name}`,
-          timestamp: Date.now(),
+          timestamp: timestamp || Date.now(),
           type: 'file',
           file: {
             name: file.name,

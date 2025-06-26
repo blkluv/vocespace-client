@@ -115,19 +115,21 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [controlWidth, setControlWidth] = React.useState(
       controlLeftRef.current ? controlLeftRef.current.clientWidth : window.innerWidth,
     );
-
+  
+    // 当controlLeftRef的大小发生变化时，更新controlWidth
     React.useEffect(() => {
+      const resizeObserver = new ResizeObserver(() => {
+        if (controlLeftRef.current) {
+          setControlWidth(controlLeftRef.current.clientWidth);
+        }
+      });
       if (controlLeftRef.current) {
-        setControlWidth(controlLeftRef.current.clientWidth);
+        resizeObserver.observe(controlLeftRef.current);
       }
+      return () => {
+        resizeObserver.disconnect();
+      };
     }, [controlLeftRef.current]);
-
-    // 当window大小变化时，重新计算controlWidth
-    window.addEventListener('resize', () => {
-      if (controlLeftRef.current) {
-        setControlWidth(controlLeftRef.current.clientWidth);
-      }
-    });
 
     React.useEffect(() => {
       if (layoutContext?.widget.state?.showChat !== undefined) {
@@ -1004,7 +1006,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                     ownerId={roomSettings.ownerId}
                     menu={optMenu}
                     onOpenMenu={(open, pid) => {
-                       optOpen(open, room.getParticipantByIdentity(pid)!)
+                      optOpen(open, room.getParticipantByIdentity(pid)!);
                     }}
                     suffix={(item, _index) => (
                       <>

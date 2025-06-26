@@ -146,8 +146,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             itemSelectedColor: '#fff',
           },
           Collapse: {
-            contentPadding: "8px",
-            headerPadding: "8px 8px 8px 4px",
+            contentPadding: "4px",
+            headerPadding: "4px",
           },
           Badge: {
             colorBorderBg: 'transparent',
