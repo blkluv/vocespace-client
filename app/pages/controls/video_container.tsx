@@ -602,7 +602,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 设置房间订阅权限 ------------------------------------------------
       room.localParticipant.setTrackSubscriptionPermissions(false, auth);
-    }, [room, settings.participants, selfRoom]);
+    }, [room, settings, selfRoom]);
 
     useEffect(() => {
       // 当settings.status发生变化时，更新用户状态 --------------------------------------------------

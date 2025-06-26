@@ -147,7 +147,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           },
           Collapse: {
             contentPadding: "8px",
-            headerPadding: "8px 8px 8px 4px",
+            headerPadding: "8px",
           },
           Badge: {
             colorBorderBg: 'transparent',

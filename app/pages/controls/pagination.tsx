@@ -2,6 +2,7 @@ import { TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import styles from '@/styles/pagination.module.scss';
 import { Button } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { CSSProperties, useMemo } from 'react';
 
 export interface Pagination {
   totalPageCount: number;
@@ -56,16 +57,30 @@ export interface PaginationCtlProps {
  * @returns
  */
 export function PaginationCtl({ pagination, children }: PaginationCtlProps) {
+  const vis = useMemo(() => {
+    return pagination.totalPageCount > 1
+      ? {
+        width: {width: `calc(100% - 36px)`},
+        dis: {}
+      }
+      : {
+          width: {width: '100%'},
+          dis:{ display: 'none'},
+        };
+  }, [pagination]);
+
   return (
     <div className={styles.ctl}>
       <button
+        style={vis.dis}
         className={`${styles.ctl_btn} vocespace_button`}
         onClick={() => pagination.prevPage()}
       >
         <LeftOutlined />
       </button>
-      <div className={styles.ctl_inner}>{children}</div>
+      <div className={styles.ctl_inner} style={vis.width}>{children}</div>
       <button
+        style={vis.dis}
         className={`${styles.ctl_btn} vocespace_button`}
         onClick={() => pagination.nextPage()}
       >

@@ -131,7 +131,7 @@ h2 a {
   background-color: #22ccee !important;
 }
 
-.lk-button[data-lk-source="screen_share"][data-lk-enabled="true"] {
+.lk-button[data-lk-source='screen_share'][data-lk-enabled='true'] {
   background-color: #22ccee !important;
 }
 
@@ -170,11 +170,30 @@ h2 a {
   transition: all 0.3s ease-in-out;
 }
 
-.vocespace_button:hover {
-  background-color: #444;
+.vocespace_button_text {
+  background-color: transparent;
+  border: none;
+  display: inline-flex;
+  gap: 6px;
+  border-radius: 6px;
+  padding: 4px 8px;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
 }
 
-.ant-collapse-header-text{
+.vocespace_button_text:hover {
+  background-color: #22ccee;
+  color: #fff;
+}
+
+.vocespace_button:hover {
+  background-color: #22ccee;
+  color: #fff;
+}
+
+.ant-collapse-header-text {
   height: fit-content;
   display: flex;
   align-content: center;

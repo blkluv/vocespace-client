@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from '@/styles/channel.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { SvgResource } from '@/app/resources/svg';
@@ -66,6 +66,8 @@ export function Channel({
   const [selected, setSelected] = useState<'main' | 'sub'>('main');
   const [roomCreateModalOpen, setRoomCreateModalOpen] = useState(false);
   const [deleteChildRoomName, setDeleteChildRoomName] = useState('');
+  const [mainJoinVis, setMainJoinVis] = useState<'hidden' | 'visible'>('hidden');
+  const [roomJoinVis, setRoomJoinVis] = useState<number | null>(null);
   const [selfRoomName, setSelfRoomName] = useState<string>(() => {
     // 需要从settings中获取当前用户所在的子房间
     const childRoom = settings.children?.find((room) => {
@@ -196,7 +198,7 @@ export function Channel({
       });
     } else {
       setSelfRoomName(roomName);
-      setMainActiveKey(['main', 'sub']);
+      // setMainActiveKey(['main', 'sub']);
       setSubActiveKey([]);
       setDeleteChildRoomName('');
       await onUpdate();
@@ -228,7 +230,7 @@ export function Channel({
     } else {
       // 进入子房间后 subActiveKey 就是当前子房间的key
       setSelfRoomName(room);
-      setMainActiveKey(['sub']);
+      // setMainActiveKey(['sub']);
       await onUpdate();
       messageApi.success({
         content: t('channel.join.success'),
@@ -313,65 +315,97 @@ export function Channel({
   );
 
   const subChildren: CollapseProps['items'] = useMemo(() => {
-    return childRooms.map((room) => ({
+    return childRooms.map((room, index) => ({
       key: room.name,
       label: (
-        <Dropdown
-          trigger={['contextMenu']}
-          menu={{ items: subContextItems }}
-          onOpenChange={(open) => {
-            if (open) {
-              setDeleteChildRoomName(room.name);
-            }
-          }}
-        >
-          <div className={styles.room_header_wrapper}>
-            <VideoCameraOutlined />
-            {room.name}
+        <div className={styles.room_header_wrapper}>
+          <Dropdown
+            trigger={['contextMenu']}
+            menu={{ items: subContextItems }}
+            onOpenChange={(open) => {
+              if (open) {
+                setDeleteChildRoomName(room.name);
+              }
+            }}
+          >
+            <div
+              className={styles.room_header_wrapper_title}
+              onMouseEnter={() => {
+                setRoomJoinVis(index);
+              }}
+              onMouseLeave={() => {
+                setRoomJoinVis(null);
+              }}
+            >
+              <VideoCameraOutlined />
+              {room.name}
+            </div>
+          </Dropdown>
+          <div
+            className={styles.room_header_extra}
+            style={{ visibility: roomJoinVis === index ? 'visible' : 'hidden' }}
+          >
+            <button onClick={() => addIntoRoom(room.name)} className="vocespace_button">
+              <PlusCircleOutlined />
+              {t('channel.menu.join')}
+            </button>
           </div>
-        </Dropdown>
+        </div>
       ),
       children: subContext(room.name),
       style: subStyle,
-      extra: (
-        <div className={styles.room_header_extra}>
-          <button onClick={() => addIntoRoom(room.name)} className="vocespace_button">
-            <PlusCircleOutlined />
-            {t('channel.menu.join')}
-          </button>
-        </div>
-      ),
     }));
-  }, [subContext, childRooms, deleteChildRoomName, selfRoomName]);
+  }, [subContext, childRooms, deleteChildRoomName, selfRoomName, roomJoinVis]);
 
   const mainItems: CollapseProps['items'] = useMemo(() => {
     return [
       {
         key: 'main',
         label: (
-          <div className={styles.room_header_wrapper}>
-            <VideoCameraOutlined />
-            {t('channel.menu.main')} &nbsp;
-            {roomName}
+          <div
+            className={styles.room_header_wrapper}
+            onMouseEnter={() => {
+              setMainJoinVis('visible');
+            }}
+            onMouseLeave={() => {
+              setMainJoinVis('hidden');
+            }}
+          >
+            <div className={styles.room_header_wrapper_title}>
+              <VideoCameraOutlined />
+              <span>{t('channel.menu.main')}</span>
+            </div>
+
+            <div className={styles.room_header_extra} style={{ visibility: mainJoinVis }}>
+              <button onClick={joinMainRoom} className="vocespace_button">
+                <PlusCircleOutlined />
+                {t('channel.menu.join')}
+              </button>
+            </div>
           </div>
         ),
         children: mainContext,
         style: panelStyle,
-        extra: (
-          <div className={styles.room_header_extra}>
-            <button onClick={joinMainRoom} className="vocespace_button">
-              <PlusCircleOutlined />
-              {t('channel.menu.join')}
-            </button>
-          </div>
-        ),
       },
       {
         key: 'sub',
         label: (
           <div className={styles.room_header_wrapper}>
-            <VideoCameraOutlined />
-            {t('channel.menu.sub')}
+            <div className={styles.room_header_wrapper_title}>
+              {/* <VideoCameraOutlined /> */}
+              <span>{t('channel.menu.sub')}</span>
+            </div>
+            <div className={styles.room_header_extra} style={{ height: '30px' }}>
+              <button
+                className="vocespace_button_text"
+                style={{ height: '100%' }}
+                onClick={() => {
+                  setRoomCreateModalOpen(true);
+                }}
+              >
+                <PlusCircleOutlined></PlusCircleOutlined>
+              </button>
+            </div>
           </div>
         ),
         children: (
@@ -385,16 +419,9 @@ export function Channel({
           />
         ),
         style: panelStyle,
-        extra: (
-          <PlusCircleOutlined
-            onClick={() => {
-              setRoomCreateModalOpen(true);
-            }}
-          ></PlusCircleOutlined>
-        ),
       },
     ];
-  }, [mainContext, subChildren, childRooms, subActiveKey]);
+  }, [mainContext, subChildren, childRooms, subActiveKey, mainJoinVis]);
 
   if (collapsed) {
     return (
@@ -413,7 +440,7 @@ export function Channel({
             height: '100%',
             display: 'flex',
             alignItems: 'flex-start',
-            paddingTop: 20
+            paddingTop: 20,
           }}
         ></Button>
       </div>

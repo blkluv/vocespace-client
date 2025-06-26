@@ -309,18 +309,28 @@
 }
 
 .room_header_wrapper {
-  justify-content: flex-start;
-  align-items: center;
-  gap: 8px;
-  display: inline-flex;
   height: 30px;
-  width: 100%; 
-  padding-left: 4px;
-  transition: all 0.2s ease-in-out;
-  margin-right: 4px;
-  &:hover {
-    background-color: #333;
-    cursor: pointer;
+  width: 100%;
+  
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  &_title {
+    transition: all 0.2s ease-in-out;
+    margin-right: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+    display: inline-flex;
+    flex-grow: 1;
+    height: 100%;
+    padding-left: 4px;
+    &:hover {
+      background-color: #333;
+      cursor: pointer;
+    }
   }
 }
 
@@ -337,7 +347,7 @@
   width: fit-content;
 }
 
-.modal_item{
+.modal_item {
   width: 100%;
   height: fit-content;
   margin: 12px 0;
