@@ -103,7 +103,7 @@ export default {
       start: 'Record',
       stop: 'Stop recording',
       title: 'Record room',
-      desc: 'VoceSpace will record the audio and video in the room. Please note that recording may affect performance. After the recording is finished, you will receive a notification with a download link for the recording file. ',
+      desc: 'VoceSpace will record the audio and video in the room. Please note that recording may affect performance. You will receive a notification after the recording is finished and can download it from the download page after the transfer is complete.',
       request:
         "Since you are not the room host, you cannot record directly. If you need to record, please click the 'Request recording' button. The room host will receive your request and will start recording if they agree.",
       confirm: 'Start recording',

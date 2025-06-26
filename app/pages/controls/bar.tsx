@@ -755,10 +755,14 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
 
     const recordModalOnOk = async () => {
-      // 创建一个新recording页面，相当于点击了a标签的href
       if (isDownload) {
+        // copy link to clipboard
+        // 创建一个新recording页面，相当于点击了a标签的href
         window.open(`${window.location.origin}/recording`, '_blank');
         setIsDownload(false);
+      } else {
+        await startRecord();
+        setOpenRecordModal(false);
       }
     };
 
