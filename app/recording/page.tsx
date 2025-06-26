@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import {
   Table,
   Card,
@@ -78,7 +78,7 @@ const isUndefinedString = (value: string | undefined): boolean => {
 
 const CONNECT_ENDPOINT = connect_endpoint('/api/record');
 
-export default function RecordsPage() {
+function RecordsPageContent() {
   const searchParams = useSearchParams();
   const [roomName, setRoomName] = useState<string>('');
   const [recordsData, setRecordsData] = useState<RecordData[]>([]);
@@ -524,5 +524,29 @@ export default function RecordsPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+
+// 添加一个加载组件
+function RecordsPageFallback() {
+  return (
+    <div style={{ padding: 24, background: '#000', minHeight: '100vh' }}>
+      <div style={{ textAlign: 'center', marginTop: '20%' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: 16, color: '#fff' }}>
+          loading...
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 主导出组件
+export default function RecordsPage() {
+  return (
+    <Suspense fallback={<RecordsPageFallback />}>
+      <RecordsPageContent />
+    </Suspense>
   );
 }
