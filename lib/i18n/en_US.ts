@@ -53,6 +53,8 @@ export default {
       setting: 'Settings',
       delete: 'Delete room',
       leave: 'Leave room',
+      rename: 'Rename',
+      switch_privacy: 'Switch Privacy',
     },
     join: {
       success: 'Join room successfully',
@@ -60,7 +62,8 @@ export default {
     delete: {
       success: 'Delete room successfully',
       error: 'Failed to delete room, please try again later. ',
-      remain: "There are still members in the room and it cannot be deleted. Please notify all members to leave the room first.",
+      remain:
+        'There are still members in the room and it cannot be deleted. Please notify all members to leave the room first.',
     },
     create: {
       success: 'Room created successfully',
@@ -80,11 +83,22 @@ export default {
       placeholder: 'Please enter the room name',
       cancel: 'Cancel',
       ok: 'Create a room',
+      privacy: {
+        title: 'Privacy',
+        public: {
+          title: 'Public',
+          desc: 'Public rooms, any participant in the space can join freely, room permissions are loose, suitable for open discussions.',
+        },
+        private: {
+          title: 'Private',
+          desc: 'Private rooms, room permissions are completely controlled by the owner, only with the consent of the room owner can join, suitable for discussions that require privacy protection.',
+        },
+      },
     },
   },
   more: {
     title: 'More',
-    channel: "Channel",
+    channel: 'Channel',
     record: {
       start: 'Record',
       stop: 'Stop recording',
@@ -98,7 +112,7 @@ export default {
       download_msg:
         'The recording is complete and is being transferred to the cloud for storage. You can access the records of the current service to download it. ',
       download: 'Download recording file',
-      to_donwload: "To download Page",
+      to_donwload: 'To download Page',
     },
     participant: {
       title: 'Participants',

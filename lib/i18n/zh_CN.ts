@@ -42,7 +42,6 @@ export default {
     full_user:
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
     open: '开启',
-    email_placeholder: '请输入您的邮箱地址',
   },
   channel: {
     menu: {
