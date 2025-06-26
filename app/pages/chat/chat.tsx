@@ -211,6 +211,7 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
             name="file"
             beforeUpload={handleBeforeUpload}
             showUploadList={false}
+            openFileDialogOnClick={false}
           ></Dragger>
           <ul ref={ulRef} className={styles.msg_list}>
             {msgList}

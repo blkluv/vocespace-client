@@ -336,3 +336,18 @@
   height: 16px;
   width: fit-content;
 }
+
+.modal_item{
+  width: 100%;
+  height: fit-content;
+  margin: 12px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  &_label {
+    display: inline-flex;
+    gap: 8px;
+    width: fit-content;
+  }
+}

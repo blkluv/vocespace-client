@@ -13,6 +13,7 @@ import {
   useFeatureContext,
   useIsEncrypted,
   useMaybeLayoutContext,
+  useTrackMutedIndicator,
   VideoTrack,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
@@ -126,7 +127,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
           <ParticipantPlaceholder />
         </div>
         <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
-          <div className="lk-participant-metadata-item" style={{ maxWidth: 'calc(100% - 32px)' }}>
+          <div className="lk-participant-metadata-item" style={{ maxWidth: 'calc(100% - 32px)', width: 'max-content' }}>
             {trackReference.source === Track.Source.Camera ? (
               <>
                 {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
@@ -139,10 +140,17 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
                 ></TrackMutedIndicator>
                 <ParticipantName
                   style={{
-                    maxWidth: 'calc(100% - 2.5rem)',
+                    maxWidth: `calc(100% - ${
+                      useTrackMutedIndicator({
+                        participant: trackReference.participant,
+                        source: Track.Source.Microphone,
+                      }).isMuted
+                        ? 2.5
+                        : 1.25
+                    }rem)`,
                     overflow: 'clip',
                     textWrap: 'nowrap',
-                    textOverflow: 'ellipsis',
+                    width: '100%',
                   }}
                 />
                 <div
@@ -164,7 +172,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
                 <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
                 <ParticipantName
                   style={{
-                    maxWidth: 'calc(100% - 2.5rem)',
+                    maxWidth: 'calc(100% - 1.5rem)',
                     overflow: 'clip',
                     textWrap: 'nowrap',
                     textOverflow: 'ellipsis',

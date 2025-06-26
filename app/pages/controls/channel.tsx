@@ -13,11 +13,14 @@ import {
   Input,
   MenuProps,
   Modal,
+  Popover,
+  Radio,
   Tag,
   theme,
 } from 'antd';
 import { connect_endpoint } from '@/lib/std';
 import {
+  LockOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PlusCircleOutlined,
@@ -28,6 +31,7 @@ import { MessageInstance } from 'antd/es/message/interface';
 import { ChildRoom, RoomSettings } from '@/lib/std/room';
 import { ParticipantTileMini } from '../participant/mini';
 import { GLayout } from '../layout/grid';
+import { CheckboxGroupProps } from 'antd/es/checkbox';
 
 interface ChannelProps {
   roomName: string;
@@ -42,6 +46,8 @@ interface ChannelProps {
 }
 
 const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
+
+type RoomPrivacy = 'public' | 'private';
 
 export function Channel({
   roomName,
@@ -69,6 +75,17 @@ export function Channel({
   });
   const [subActiveKey, setSubActiveKey] = useState<string[]>([]);
   const [mainActiveKey, setMainActiveKey] = useState<string[]>(['main', 'sub']);
+  const [roomPrivacy, setRoomPrivacy] = useState<RoomPrivacy>('public');
+  const roomPrivacyOptions: CheckboxGroupProps<string>['options'] = [
+    {
+      label: t('channel.modal.privacy.public.title'),
+      value: 'public',
+    },
+    {
+      label: t('channel.modal.privacy.private.title'),
+      value: 'private',
+    },
+  ];
 
   const childRooms = useMemo(() => {
     return settings.children || [];
@@ -392,7 +409,11 @@ export function Channel({
           onClick={toggleCollapse}
           icon={<MenuUnfoldOutlined />}
           style={{
+            backgroundColor: '#1a1a1a',
             height: '100%',
+            display: 'flex',
+            alignItems: 'flex-start',
+            paddingTop: 20
           }}
         ></Button>
       </div>
@@ -472,6 +493,27 @@ export function Channel({
             setChildRoomName(e.target.value);
           }}
         ></Input>
+        <div className={styles.modal_item}>
+          <Popover
+            content={
+              <>
+                <p>{t('channel.modal.privacy.public')}</p>
+                <p>{t('channel.modal.privacy.private')}</p>
+              </>
+            }
+            title="Title"
+          >
+            <span className={styles.modal_item_label}>
+              <LockOutlined />
+              {t('channel.modal.privacy.title')}:
+            </span>
+          </Popover>
+          <Radio.Group
+            options={roomPrivacyOptions}
+            defaultValue={roomPrivacy}
+            value={roomPrivacy}
+          />
+        </div>
       </Modal>
     </>
   );

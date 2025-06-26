@@ -81,6 +81,17 @@ export default {
       placeholder: '请输入房间名称',
       cancel: "取消",
       ok: "创建房间",
+      privacy: {
+        title: "隐私性",
+        public: {
+          title:"公开",
+          desc: "公开房间，任何在空间中的参与者都可以自由加入，房间权限宽松，适合开放讨论。"
+        },
+        private: {
+          title: "私有",
+          desc: "私有房间，房间权限完全被拥有者控制，只有经过房间拥有者的同意才能加入，适用于需要隐私保护的讨论。"
+        }
+      }
     }
   },
   more: {
