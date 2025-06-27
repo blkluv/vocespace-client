@@ -111,8 +111,8 @@ export default {
       cancel: 'Cancel',
       download_msg:
         'The recording is complete and is being transferred to the cloud for storage. You can access the records of the current service to download it. ',
-      download: 'Download recording file',
-      to_download: 'To download Page',
+      download: 'Download recording',
+      to_download: 'Download Page',
     },
     participant: {
       title: 'Participants',
