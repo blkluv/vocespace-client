@@ -46,3 +46,74 @@ export const deleteRoom = async ({ roomName, selectedRoomName }: DeleteRoomParam
     method: 'DELETE',
   });
 };
+
+export interface LeaveRoomParam {
+  hostRoom: string;
+  roomName: string;
+  participantId: string;
+}
+
+export const leaveRoom = async ({ hostRoom, roomName, participantId }: LeaveRoomParam) => {
+  const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+  url.searchParams.append('leaveChildRoom', 'true');
+  return await fetch(url.toString(), {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      roomId: hostRoom,
+      childRoom: roomName,
+      participantId,
+    }),
+  });
+};
+
+export interface JoinRoomParam {
+  hostRoom: string;
+  roomName: string;
+  participantId: string;
+}
+
+export const joinRoom = async ({ hostRoom, roomName, participantId }: JoinRoomParam) => {
+  const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+  return await fetch(url.toString(), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      roomId: hostRoom,
+      childRoom: roomName,
+      participantId,
+    }),
+  });
+};
+
+export type UpdateRoomType = 'name' | 'privacy';
+
+export interface UpdateRoomParam {
+  ty: UpdateRoomType;
+  hostRoom: string;
+  roomName: string;
+  newRoomName?: string;
+  isPrivate?: boolean;
+}
+
+export const updateRoom = async ({
+  ty,
+  roomName,
+  isPrivate,
+  hostRoom,
+  newRoomName,
+}: UpdateRoomParam) => {
+  const url = new URL(CONNECT_ENDPOINT, window.location.origin);
+  url.searchParams.append('updateChildRoom', 'true');
+  return await fetch(url.toString(), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      roomId: hostRoom,
+      childRoom: roomName,
+      ty,
+      isPrivate,
+      newRoomName,
+    }),
+  });
+};

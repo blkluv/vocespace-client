@@ -331,6 +331,15 @@ app.prepare().then(() => {
     socket.on('new_user_status', (msg) => {
       io.emit('new_user_status_response', msg);
     });
+    // [socket: join privacy room] ------------------------------------------------------------------------------------------
+    socket.on('join_privacy_room', (msg) => {
+      socket.to(msg.socketId).emit('join_privacy_room_response', msg);
+    });
+    // [socket: clear all room user] ----------------------------------------------------------------------------------------
+    // let room users know that thay are cleared by host
+    socket.on('clear_all_room_user', (msg) => {
+      socket.broadcast.emit('clear_all_room_user_response', msg);
+    });
     // [socket: del user] ----------------------------------------------------------------------------------------------------
     socket.on('disconnect', async (_msg) => {
       console.log('Socket disconnected', socket.id);

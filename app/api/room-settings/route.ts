@@ -69,6 +69,50 @@ class RoomManager {
     return `${this.PARTICIPANT_KEY_PREFIX}${room}:${participantId}`;
   }
 
+  // 切换房间隐私性 ----------------------------------------------------------------------
+  static async switchChildRoomPrivacy(
+    room: string,
+    childRoom: string,
+    isPrivate: boolean,
+  ): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized or disabled.');
+      }
+
+      const roomSettings = await this.getRoomSettings(room);
+      if (!roomSettings) {
+        throw new Error(`Room ${room} does not exist.`);
+      }
+
+      // 查找子房间
+      const childRoomData = roomSettings.children.find((c) => c.name === childRoom);
+      if (!childRoomData) {
+        throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
+      }
+
+      // 修改子房间的隐私性
+      childRoomData.isPrivate = isPrivate;
+
+      // 设置回存储
+      await this.setRoomSettings(room, roomSettings);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred while switching child room privacy.',
+      };
+    }
+  }
+
   // 修改子房间的名字 ---------------------------------------------------------------------
   static async renameChildRoom(
     room: string,
@@ -877,14 +921,60 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const body = await request.json();
+  const isUpdateChildRoom = request.nextUrl.searchParams.get('updateChildRoom') === 'true';
+
   const {
     roomId,
     status,
     participantId,
     childRoom,
-  }: { roomId?: string; status?: UserDefineStatus; childRoom?: string; participantId?: string } =
-    body;
+    ty,
+    isPrivate,
+    newRoomName,
+  }: {
+    roomId?: string;
+    status?: UserDefineStatus;
+    childRoom?: string;
+    participantId?: string;
+    ty: 'name' | 'privacy';
+    isPrivate?: boolean;
+    newRoomName?: string;
+  } = await request.json();
+
+  if (isUpdateChildRoom && ty && roomId && childRoom) {
+    if (ty === 'name' && newRoomName) {
+      const { success, error } = await RoomManager.renameChildRoom(roomId, childRoom, newRoomName);
+      if (success) {
+        return NextResponse.json(
+          { success: true, message: 'Child room renamed successfully' },
+          { status: 200 },
+        );
+      } else {
+        return NextResponse.json(
+          { success: false, error: error || 'Failed to rename child room' },
+          { status: 500 },
+        );
+      }
+    } else if (ty === 'privacy' && isPrivate !== undefined) {
+      const { success, error } = await RoomManager.switchChildRoomPrivacy(
+        roomId,
+        childRoom,
+        isPrivate,
+      );
+      if (success) {
+        return NextResponse.json(
+          { success: true, message: 'Child room privacy updated successfully' },
+          { status: 200 },
+        );
+      } else {
+        return NextResponse.json(
+          { success: false, error: error || 'Failed to update child room privacy' },
+          { status: 500 },
+        );
+      }
+    }
+  }
+
   // 向子房间中添加参与者
   if (roomId && participantId && childRoom) {
     const { success, error } = await RoomManager.addParticipantToChildRoom(

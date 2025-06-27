@@ -8,12 +8,20 @@ export interface Device {
   label: string;
 }
 
-export interface WsTo {
+export interface WsSender {
   room: string;
   senderName: string;
   senderId: string;
+}
+
+export interface WsTo extends WsSender {
   receiverId: string;
   socketId: string;
+}
+
+export interface WsJoinRoom extends WsTo {
+  childRoom: string;
+  confirm?: boolean; // 是否确认加入
 }
 
 export interface WsInviteDevice extends WsTo {
