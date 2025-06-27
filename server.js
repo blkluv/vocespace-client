@@ -28,7 +28,7 @@ envFiles.forEach((file) => {
 // [args] ---------------------------------------------------------------------------------------------------------------
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOST || 'localhost';
-const port = process.env.PORT || 3030;
+const port = process.env.PORT || 3000;
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 const {
   REDIS_ENABLED = 'false',
