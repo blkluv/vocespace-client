@@ -767,8 +767,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         setIsDownload(false);
       } else {
         await startRecord();
-        setOpenRecordModal(false);
       }
+      setOpenRecordModal(false);
     };
 
     const recordModalOnCancel = () => {
@@ -1177,12 +1177,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           onOk={recordModalOnOk}
         >
           {isDownload ? (
-            <div>
-              <div>{t('more.record.download_msg')}</div>
-              <a href={`${window.location.origin}/recording?room=${room!.name}`} target="_blank">
-                download records pages
-              </a>
-            </div>
+            <div>{t('more.record.download_msg')}</div>
           ) : (
             <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
           )}
