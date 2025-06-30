@@ -372,10 +372,10 @@ export function SvgResource({ type, svgSize = 24, color = '#ffffff' }: SvgResour
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <path d="M12 19V27" stroke={color} stroke-width="4" stroke-linecap="round" />
-          <path d="M20 16V30" stroke={color} stroke-width="4" stroke-linecap="round" />
-          <path d="M28 21V25" stroke={color} stroke-width="4" stroke-linecap="round" />
-          <path d="M36 19V27" stroke={color} stroke-width="4" stroke-linecap="round" />
+          <path d="M12 19V27" stroke={color} strokeWidth="4" strokeLinecap="round" />
+          <path d="M20 16V30" stroke={color} strokeWidth="4" strokeLinecap="round" />
+          <path d="M28 21V25" stroke={color} strokeWidth="4" strokeLinecap="round" />
+          <path d="M36 19V27" stroke={color} strokeWidth="4" strokeLinecap="round" />
         </svg>
       );
     case 'room':

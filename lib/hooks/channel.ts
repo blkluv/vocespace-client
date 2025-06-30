@@ -3,6 +3,10 @@ import { ChildRoom } from '../std/room';
 
 const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
 
+export interface BasicParam {
+  hostRoom: string;
+  roomName: string;
+}
 /**
  *  Create a new room with the given parameters.
  *  @param hostRoom - The space (host room) where the new room will be created.
@@ -10,9 +14,7 @@ const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
  *  @param ownerId - The ID of the user who will own the room.
  *  @param isPrivate - Whether the room is private or not.
  */
-export interface CreateRoomParam {
-  hostRoom: string;
-  roomName: string;
+export interface CreateRoomParam extends BasicParam {
   ownerId: string;
   isPrivate: boolean;
 }
@@ -33,29 +35,30 @@ export const createRoom = async ({ hostRoom, roomName, ownerId, isPrivate }: Cre
   });
 };
 
-export interface DeleteRoomParam {
-  roomName: string;
-  selectedRoomName: string;
-}
+export interface DeleteRoomParam extends BasicParam {}
 
-export const deleteRoom = async ({ roomName, selectedRoomName }: DeleteRoomParam) => {
+export const deleteRoom = async ({ hostRoom, roomName }: DeleteRoomParam) => {
   const url = new URL(CONNECT_ENDPOINT, window.location.origin);
-  url.searchParams.append('roomId', roomName);
-  url.searchParams.append('childRoom', selectedRoomName);
+  url.searchParams.append('childRoom', 'true');
+  url.searchParams.append('delete', 'true');
   return await fetch(url.toString(), {
     method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      roomId: hostRoom,
+      childRoom: roomName,
+    }),
   });
 };
 
-export interface LeaveRoomParam {
-  hostRoom: string;
-  roomName: string;
+export interface LeaveRoomParam extends BasicParam {
   participantId: string;
 }
 
 export const leaveRoom = async ({ hostRoom, roomName, participantId }: LeaveRoomParam) => {
   const url = new URL(CONNECT_ENDPOINT, window.location.origin);
-  url.searchParams.append('leaveChildRoom', 'true');
+  url.searchParams.append('childRoom', 'true');
+  url.searchParams.append('leave', 'true');
   return await fetch(url.toString(), {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
@@ -67,9 +70,7 @@ export const leaveRoom = async ({ hostRoom, roomName, participantId }: LeaveRoom
   });
 };
 
-export interface JoinRoomParam {
-  hostRoom: string;
-  roomName: string;
+export interface JoinRoomParam extends BasicParam {
   participantId: string;
 }
 
@@ -88,10 +89,8 @@ export const joinRoom = async ({ hostRoom, roomName, participantId }: JoinRoomPa
 
 export type UpdateRoomType = 'name' | 'privacy';
 
-export interface UpdateRoomParam {
+export interface UpdateRoomParam extends BasicParam {
   ty: UpdateRoomType;
-  hostRoom: string;
-  roomName: string;
   newRoomName?: string;
   isPrivate?: boolean;
 }

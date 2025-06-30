@@ -42,7 +42,7 @@ import {
   UpdateRoomType,
 } from '@/lib/hooks/channel';
 import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
-import { WsJoinRoom, WsSender, WsTo } from '@/lib/std/device';
+import { WsJoinRoom, WsRemove, WsSender, WsTo } from '@/lib/std/device';
 
 interface ChannelProps {
   roomName: string;
@@ -126,6 +126,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     }, [roomName, participantId, settings]);
 
     useEffect(() => {
+      // 监听加入私密房间的socket事件 --------------------------------------------------------------------------
       socket.on('join_privacy_room_response', (msg: WsJoinRoom) => {
         if (msg.room === roomName && msg.receiverId === participantId) {
           if (!joinModalOpen) {
@@ -134,7 +135,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
               messageApi.warning({
                 content: t('channel.modal.join.reject'),
               });
-               setJoinModalOpen(false);
+              setJoinModalOpen(false);
             } else {
               setJoinParticipant({
                 id: msg.senderId,
@@ -146,9 +147,20 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           }
         }
       });
+      // 监听从私密房间移除的socket事件 -----------------------------------------------------------------------
+      socket.on('removed_from_privacy_room_response', (msg: WsRemove) => {
+        if (msg.room === roomName && msg.participants.includes(participantId)) {
+          messageApi.info({
+            content: `${t('channel.modal.remove.before')}${msg.childRoom}${t(
+              'channel.modal.remove.after',
+            )}`,
+          });
+        }
+      });
 
       return () => {
         socket.off('join_privacy_room_response');
+        socket.off('removed_from_privacy_room_response');
       };
     }, [socket, roomName, participantId, joinModalOpen]);
 
@@ -204,22 +216,23 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     const deleteChildRoom = async () => {
       if (!selectedRoom) return;
 
-      // 使用socket提醒所有子房间的参与者返回主房间 TODO
-      // 暂时处理为：当房间中还有人就不能删除子房间
-      if (
-        (settings.children.find((room) => room.name === selectedRoom.name)?.participants.length ||
-          0) > 0
-      ) {
-        messageApi.error({
-          content: t('channel.delete.remain'),
-          duration: 2,
+      if (selectedRoom.participants.length > 0) {
+        let socketIds = selectedRoom.participants.map((pid) => {
+          return settings.participants[pid].socketId;
         });
-        return;
+
+        // socket通知用户移除
+        socket.emit('removed_from_privacy_room', {
+          room: roomName,
+          participants: selectedRoom.participants,
+          socketIds,
+          childRoom: selectedRoom.name,
+        } as WsRemove);
       }
 
       const response = await deleteRoom({
-        roomName,
-        selectedRoomName: selectedRoom.name,
+        hostRoom: roomName,
+        roomName: selectedRoom.name,
       });
 
       if (!response.ok) {
@@ -266,7 +279,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       }
     };
 
-    const joinChildRoom = async (room: ChildRoom) => {
+    const joinChildRoom = async (room: ChildRoom, participantId: string) => {
       const response = await joinRoom({
         hostRoom: roomName,
         roomName: room.name,
@@ -283,6 +296,12 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       } else {
         // 进入子房间后 subActiveKey 就是当前子房间的key
         setSelfRoomName(room.name);
+        setSubActiveKey((prev) => {
+          if (!prev.includes(room.name)) {
+            prev.push(room.name);
+          }
+          return prev;
+        });
         // setMainActiveKey(['sub']);
         await onUpdate();
         messageApi.success({
@@ -303,7 +322,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         } as WsJoinRoom);
         return;
       }
-      await joinChildRoom(room);
+      await joinChildRoom(room, participantId);
     };
 
     const confirmJoinRoom = async (confirm: boolean) => {
@@ -316,10 +335,9 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
       if (confirm) {
         // 同意加入
-        console.warn('joinParticipant', joinParticipant);
         const childRoom = settings.children.find((c) => c.name === joinParticipant?.targetRoom);
         if (childRoom) {
-          await joinChildRoom(childRoom);
+          await joinChildRoom(childRoom, joinParticipant.id);
         } else {
           messageApi.error({
             content: t('channel.modal.join.missing_data'),
@@ -508,7 +526,11 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                   });
                 }}
               >
-                {room.isPrivate ? <LockOutlined /> : <VideoCameraOutlined />}
+                {room.isPrivate ? (
+                  <LockOutlined />
+                ) : (
+                  <SvgResource type="public" svgSize={16} color="#aaa"></SvgResource>
+                )}
                 {room.name}
               </div>
             </Dropdown>
@@ -553,7 +575,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                   });
                 }}
               >
-                <VideoCameraOutlined />
+                <SvgResource type="space" svgSize={16} color="#aaa"></SvgResource>
                 <span>{t('channel.menu.main')}</span>
               </div>
 
@@ -573,7 +595,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           label: (
             <div className={styles.room_header_wrapper}>
               <div className={styles.room_header_wrapper_title}>
-                {/* <VideoCameraOutlined /> */}
+                <SvgResource type="room" svgSize={16} color="#aaa"></SvgResource>
                 <span>{t('channel.menu.sub')}</span>
               </div>
               <div className={styles.room_header_extra} style={{ height: '30px' }}>

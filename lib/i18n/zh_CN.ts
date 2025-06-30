@@ -113,6 +113,10 @@ export default {
         error: '房间重命名失败，请稍后再试。',
         repeat: '房间名称已存在，请选择其他名称。',
       },
+      remove: {
+        before: "您已被移出: ",
+        after: " 房间，该房间已被删除。"
+      }
     },
   },
   more: {

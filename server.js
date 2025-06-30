@@ -335,10 +335,13 @@ app.prepare().then(() => {
     socket.on('join_privacy_room', (msg) => {
       socket.to(msg.socketId).emit('join_privacy_room_response', msg);
     });
-    // [socket: clear all room user] ----------------------------------------------------------------------------------------
+    // [socket: remove from room] ----------------------------------------------------------------------------------------
     // let room users know that thay are cleared by host
-    socket.on('clear_all_room_user', (msg) => {
-      socket.broadcast.emit('clear_all_room_user_response', msg);
+    socket.on('removed_from_privacy_room', (msg) => {
+      // socket.broadcast.emit('removed_from_privacy_room_response', msg);
+      msg.socketIds.forEach((socketId) => {
+        socket.to(socketId).emit('removed_from_privacy_room_response', msg);
+      });
     });
     // [socket: del user] ----------------------------------------------------------------------------------------------------
     socket.on('disconnect', async (_msg) => {

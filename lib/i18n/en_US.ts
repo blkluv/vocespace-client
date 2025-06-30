@@ -400,7 +400,7 @@ export default {
           change: 'Username changed successfully',
         },
         lang: 'Language changed successfully',
-        transfer: 'You have been successfully transferred to the room host',
+        transfer: 'You are now the host',
       },
     },
   },
