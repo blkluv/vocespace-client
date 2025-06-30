@@ -296,7 +296,13 @@ class RoomManager {
   }
 
   // 设置新子房间 ------------------------------------------------------------------------
-  static async setChildRoom(room: string, childRoom: ChildRoom): Promise<boolean> {
+  static async setChildRoom(
+    room: string,
+    childRoom: ChildRoom,
+  ): Promise<{
+    error?: string;
+    success: boolean;
+  }> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
@@ -307,13 +313,24 @@ class RoomManager {
       }
       // 如果子房间已经存在，则不添加
       if (roomSettings.children.some((c) => c.name === childRoom.name)) {
-        return false;
+        return {
+          success: true,
+        };
       }
       roomSettings.children.push(childRoom);
-      return await this.setRoomSettings(room, roomSettings);
+      await this.setRoomSettings(room, roomSettings);
+      return {
+        success: true,
+      };
     } catch (error) {
       console.error('Error setting child room:', error);
-      return false;
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred while setting child room.',
+      };
     }
   }
 
@@ -879,7 +896,7 @@ export async function POST(request: NextRequest) {
         isPrivate,
       } as ChildRoom;
 
-      const success = await RoomManager.setChildRoom(roomId, childRoom);
+      const {success, error} = await RoomManager.setChildRoom(roomId, childRoom);
       if (success) {
         return NextResponse.json({ success: true }, { status: 200 });
       } else {

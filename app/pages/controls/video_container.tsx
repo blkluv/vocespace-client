@@ -168,21 +168,24 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             bg: ModelBg.ClassRoom,
           },
         });
+        const roomName = `${room.localParticipant.name}'s room`;
 
         // 为新加入的参与者创建一个自己的私人房间
-        const response = await createRoom({
-          hostRoom: room.name,
-          roomName: `${room.localParticipant.name}'s room`,
-          ownerId: room.localParticipant.identity,
-          isPrivate: true,
-        });
-
-        if (!response.ok) {
-          messageApi.error({
-            content: t('channel.create.error'),
+        if (!settings.children.some((child) => child.name === roomName)) {
+          const response = await createRoom({
+            hostRoom: room.name,
+            roomName,
+            ownerId: room.localParticipant.identity,
+            isPrivate: true,
           });
-        } else {
-          await fetchSettings();
+
+          if (!response.ok) {
+            messageApi.error({
+              content: t('channel.create.error'),
+            });
+          } else {
+            await fetchSettings();
+          }
         }
       };
 
