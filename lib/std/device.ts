@@ -8,12 +8,29 @@ export interface Device {
   label: string;
 }
 
-export interface WsTo {
-  room: string;
+export interface WsBase {
+  room: string; // 房间名
+}
+
+export interface WsRemove extends WsBase {
+  participants: string[]; // 参与者ID列表
+  childRoom: string; // 子房间名
+  socketIds: string[]; // 参与者的socket ID列表
+}
+
+export interface WsSender extends WsBase {
   senderName: string;
   senderId: string;
+}
+
+export interface WsTo extends WsSender {
   receiverId: string;
   socketId: string;
+}
+
+export interface WsJoinRoom extends WsTo {
+  childRoom: string;
+  confirm?: boolean; // 是否确认加入
 }
 
 export interface WsInviteDevice extends WsTo {

@@ -28,7 +28,7 @@ envFiles.forEach((file) => {
 // [args] ---------------------------------------------------------------------------------------------------------------
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOST || 'localhost';
-const port = process.env.PORT || 3030;
+const port = process.env.PORT || 3000;
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 const {
   REDIS_ENABLED = 'false',
@@ -330,6 +330,18 @@ app.prepare().then(() => {
     // [socket: create a new user status] ------------------------------------------------------------------------------------
     socket.on('new_user_status', (msg) => {
       io.emit('new_user_status_response', msg);
+    });
+    // [socket: join privacy room] ------------------------------------------------------------------------------------------
+    socket.on('join_privacy_room', (msg) => {
+      socket.to(msg.socketId).emit('join_privacy_room_response', msg);
+    });
+    // [socket: remove from room] ----------------------------------------------------------------------------------------
+    // let room users know that thay are cleared by host
+    socket.on('removed_from_privacy_room', (msg) => {
+      // socket.broadcast.emit('removed_from_privacy_room_response', msg);
+      msg.socketIds.forEach((socketId) => {
+        socket.to(socketId).emit('removed_from_privacy_room_response', msg);
+      });
     });
     // [socket: del user] ----------------------------------------------------------------------------------------------------
     socket.on('disconnect', async (_msg) => {

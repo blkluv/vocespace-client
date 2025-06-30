@@ -141,10 +141,13 @@ export function useRoomSettings(roomId: string, participantId: string) {
       let removeId = id || participantId;
       try {
         const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-        url.searchParams.append('roomId', roomId);
-        url.searchParams.append('participantId', removeId);
         await fetch(url.toString(), {
           method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomId,
+            participantId: removeId,
+          }),
         }).then(async (res) => {
           if (res.ok) {
             const data: { success: boolean; clearRoom?: string } = await res.json();

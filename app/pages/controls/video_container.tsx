@@ -48,7 +48,7 @@ import {
   userState,
 } from '@/app/rooms/[roomName]/PageClientImpl';
 import { useRouter } from 'next/navigation';
-import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
+import { ControlType, WsBase, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
@@ -260,9 +260,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       });
 
       // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
-      socket.on('user_status_updated', async () => {
+      socket.on('user_status_updated', async (msg: WsBase) => {
         // 调用fetchSettings
         await fetchSettings();
+        console.warn('update ------', settings);
       });
 
       // 房间事件监听器 --------------------------------------------------------------------------------
@@ -616,10 +617,18 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             Track.Source.ScreenShare,
           )?.trackSid;
 
+          let allowedTrackSids = [];
+          if (videoTrackSid) {
+            allowedTrackSids.push(videoTrackSid);
+          }
+          if (shareTackSid) {
+            allowedTrackSids.push(shareTackSid);
+          }
+
           auth.push({
             participantIdentity: rp.identity,
             allowAll: false,
-            allowedTrackSids: videoTrackSid && shareTackSid ? [videoTrackSid, shareTackSid] : [],
+            allowedTrackSids,
           });
         }
       });

@@ -69,6 +69,50 @@ class RoomManager {
     return `${this.PARTICIPANT_KEY_PREFIX}${room}:${participantId}`;
   }
 
+  // 切换房间隐私性 ----------------------------------------------------------------------
+  static async switchChildRoomPrivacy(
+    room: string,
+    childRoom: string,
+    isPrivate: boolean,
+  ): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    try {
+      if (!redisClient) {
+        throw new Error('Redis client is not initialized or disabled.');
+      }
+
+      const roomSettings = await this.getRoomSettings(room);
+      if (!roomSettings) {
+        throw new Error(`Room ${room} does not exist.`);
+      }
+
+      // 查找子房间
+      const childRoomData = roomSettings.children.find((c) => c.name === childRoom);
+      if (!childRoomData) {
+        throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
+      }
+
+      // 修改子房间的隐私性
+      childRoomData.isPrivate = isPrivate;
+
+      // 设置回存储
+      await this.setRoomSettings(room, roomSettings);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred while switching child room privacy.',
+      };
+    }
+  }
+
   // 修改子房间的名字 ---------------------------------------------------------------------
   static async renameChildRoom(
     room: string,
@@ -580,6 +624,12 @@ class RoomManager {
           success: false,
         }; // 房间或参与者不存在可能出现了问题
       }
+      // 删除参与者前删除该参与者构建的子房间
+      roomSettings.children
+        .filter((child) => child.ownerId === participantId)
+        .forEach(async (childRoom) => {
+          await this.deleteChildRoom(room, childRoom.name);
+        });
 
       // 删除参与者
       delete roomSettings.participants[participantId];
@@ -877,14 +927,60 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const body = await request.json();
+  const isUpdateChildRoom = request.nextUrl.searchParams.get('updateChildRoom') === 'true';
+
   const {
     roomId,
     status,
     participantId,
     childRoom,
-  }: { roomId?: string; status?: UserDefineStatus; childRoom?: string; participantId?: string } =
-    body;
+    ty,
+    isPrivate,
+    newRoomName,
+  }: {
+    roomId?: string;
+    status?: UserDefineStatus;
+    childRoom?: string;
+    participantId?: string;
+    ty: 'name' | 'privacy';
+    isPrivate?: boolean;
+    newRoomName?: string;
+  } = await request.json();
+
+  if (isUpdateChildRoom && ty && roomId && childRoom) {
+    if (ty === 'name' && newRoomName) {
+      const { success, error } = await RoomManager.renameChildRoom(roomId, childRoom, newRoomName);
+      if (success) {
+        return NextResponse.json(
+          { success: true, message: 'Child room renamed successfully' },
+          { status: 200 },
+        );
+      } else {
+        return NextResponse.json(
+          { success: false, error: error || 'Failed to rename child room' },
+          { status: 500 },
+        );
+      }
+    } else if (ty === 'privacy' && isPrivate !== undefined) {
+      const { success, error } = await RoomManager.switchChildRoomPrivacy(
+        roomId,
+        childRoom,
+        isPrivate,
+      );
+      if (success) {
+        return NextResponse.json(
+          { success: true, message: 'Child room privacy updated successfully' },
+          { status: 200 },
+        );
+      } else {
+        return NextResponse.json(
+          { success: false, error: error || 'Failed to update child room privacy' },
+          { status: 500 },
+        );
+      }
+    }
+  }
+
   // 向子房间中添加参与者
   if (roomId && participantId && childRoom) {
     const { success, error } = await RoomManager.addParticipantToChildRoom(
@@ -928,17 +1024,19 @@ export async function PUT(request: NextRequest) {
 
 // 清除参与者设置（当参与者离开房间时）
 export async function DELETE(request: NextRequest) {
-  const roomId = request.nextUrl.searchParams.get('roomId');
-  const participantId = request.nextUrl.searchParams.get('participantId');
+  // const roomId = request.nextUrl.searchParams.get('roomId');
+  // const participantId = request.nextUrl.searchParams.get('participantId');
   const socketId = request.nextUrl.searchParams.get('socketId');
-  // ?roomId=xxx&childRoom=xxx
-  const deleteChildRoom = request.nextUrl.searchParams.get('childRoom');
-  // ?leaveChildRoom=true
-  const leaveChildRoom = request.nextUrl.searchParams.get('leaveChildRoom');
-
-  if (leaveChildRoom == 'true') {
+  // // ?roomId=xxx&childRoom=xxx
+  // const deleteChildRoom = request.nextUrl.searchParams.get('childRoom');
+  // // ?leaveChildRoom=true
+  // const leaveChildRoom = request.nextUrl.searchParams.get('leaveChildRoom');
+  const isChildRoom = request.nextUrl.searchParams.get('childRoom');
+  const isDelete = request.nextUrl.searchParams.get('delete') === 'true';
+  const isLeave = request.nextUrl.searchParams.get('leave') === 'true';
+  // [离开子房间] ---------------------------------------------------------------------------------------------
+  if (isChildRoom === 'true' && isLeave) {
     const body = await request.json();
-    console.warn('Leave child room request body:', body);
     const { roomId, participantId, childRoom } = body;
 
     if (!roomId || !participantId || !childRoom) {
@@ -962,11 +1060,10 @@ export async function DELETE(request: NextRequest) {
         { status: 500 },
       );
     }
-  }
-
-  if (deleteChildRoom && roomId) {
-    // 删除子房间
-    const success = await RoomManager.deleteChildRoom(roomId, deleteChildRoom);
+  } else if (isChildRoom === 'true' && isDelete) {
+    // 删除子房间 ----------------------------------------------------------------------------------------------
+    const { roomId, childRoom } = await request.json();
+    const success = await RoomManager.deleteChildRoom(roomId, childRoom);
     if (success) {
       return NextResponse.json({ success: true, message: 'Child room deleted successfully' });
     } else {
@@ -975,52 +1072,56 @@ export async function DELETE(request: NextRequest) {
         { status: 500 },
       );
     }
-  }
-
-  if (socketId) {
-    // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
-    // 所以这里要从redis中找到这个对应socketId的参与者
-    const allRooms = await RoomManager.getAllRooms();
-    for (const [roomId, settings] of Object.entries(allRooms)) {
-      for (const [participantId, participant] of Object.entries(settings.participants)) {
-        if (participant.socketId === socketId) {
-          // 找到对应的参与者，进行删除
-          const { success, clearAll, error } = await RoomManager.removeParticipant(
-            roomId,
-            participantId,
-          );
-          if (success) {
-            if (clearAll) {
-              return NextResponse.json({ success: true, clearRoom: roomId });
+  } else {
+    if (socketId) {
+      // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
+      // 所以这里要从redis中找到这个对应socketId的参与者
+      const allRooms = await RoomManager.getAllRooms();
+      for (const [roomId, settings] of Object.entries(allRooms)) {
+        for (const [participantId, participant] of Object.entries(settings.participants)) {
+          if (participant.socketId === socketId) {
+            // 找到对应的参与者，进行删除
+            const { success, clearAll, error } = await RoomManager.removeParticipant(
+              roomId,
+              participantId,
+            );
+            if (success) {
+              if (clearAll) {
+                return NextResponse.json({ success: true, clearRoom: roomId });
+              }
+              return NextResponse.json({
+                success: true,
+                message: 'Participant removed successfully',
+              });
             }
-            return NextResponse.json({
-              success: true,
-              message: 'Participant removed successfully',
-            });
+            return NextResponse.json(
+              { success: false, message: 'Failed to remove participant', error },
+              { status: 500 },
+            );
           }
-          return NextResponse.json(
-            { success: false, message: 'Failed to remove participant', error },
-            { status: 500 },
-          );
         }
       }
     }
-  }
-
-  if (!roomId || !participantId) {
-    return NextResponse.json({ error: 'Room ID and Participant ID are required' }, { status: 400 });
-  }
-
-  let { success, clearAll, error } = await RoomManager.removeParticipant(roomId, participantId);
-  if (success) {
-    if (clearAll) {
-      return NextResponse.json({ success: true, clearRoom: roomId });
+    // 不是使用socketId断开来处理离开房间 --------------------------------------------------------------------
+    const { roomId, participantId } = await request.json();
+    if (!roomId || !participantId) {
+      return NextResponse.json(
+        { error: 'Room ID and Participant ID are required' },
+        { status: 400 },
+      );
     }
-    return NextResponse.json({ success: true, message: 'Participant removed successfully' });
-  }
 
-  return NextResponse.json(
-    { success: false, message: 'Failed to remove participant', error },
-    { status: 500 },
-  );
+    let { success, clearAll, error } = await RoomManager.removeParticipant(roomId, participantId);
+    if (success) {
+      if (clearAll) {
+        return NextResponse.json({ success: true, clearRoom: roomId });
+      }
+      return NextResponse.json({ success: true, message: 'Participant removed successfully' });
+    }
+
+    return NextResponse.json(
+      { success: false, message: 'Failed to remove participant', error },
+      { status: 500 },
+    );
+  }
 }
