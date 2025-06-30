@@ -8,12 +8,13 @@ export interface ChatToggleProps extends ToggleProps {
   count?: number;
 }
 
-export function ChatToggle({ enabled, onClicked, showText = true, count=0 }: ChatToggleProps ) {
+export function ChatToggle({ enabled, onClicked, showText = true, count = 0 }: ChatToggleProps) {
+  const { t } = useI18n();
+  const [isDot, setIsDot] = useState(true);
   const on_clicked = () => {
     onClicked(enabled);
+    setIsDot(false);
   };
-  const { t } = useI18n();
-const [show, setShow] = useState(true);
   const showTextOrHide = useMemo(() => {
     if (window.innerWidth < 760) {
       return false;
@@ -23,8 +24,8 @@ const [show, setShow] = useState(true);
   }, [window.innerWidth]);
 
   return (
-    <Badge count={count} color='#22CCEE' size='small' offset={[-4, 4]}>
-        {showTextOrHide ? (
+    <Badge count={count} color="#22CCEE" size="small" offset={[-4, 4]} dot={isDot}>
+      {showTextOrHide ? (
         <Button
           variant="solid"
           color="default"
@@ -36,10 +37,16 @@ const [show, setShow] = useState(true);
           {t('common.chat')}
         </Button>
       ) : (
-        <Button  variant="solid" color="default" size="large" onClick={on_clicked}  style={{ backgroundColor: '#1E1E1E', height: '46px', borderRadius: '8px' }}>
+        <Button
+          variant="solid"
+          color="default"
+          size="large"
+          onClick={on_clicked}
+          style={{ backgroundColor: '#1E1E1E', height: '46px', borderRadius: '8px' }}
+        >
           <SvgResource type="chat" svgSize={18}></SvgResource>
         </Button>
       )}
-      </Badge>
+    </Badge>
   );
 }
