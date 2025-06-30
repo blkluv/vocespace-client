@@ -46,7 +46,7 @@ import {
   licenseState,
   socket,
   userState,
-} from '@/app/rooms/[roomName]/PageClientImpl';
+} from '@/app/[roomName]/PageClientImpl';
 import { useRouter } from 'next/navigation';
 import { ControlType, WsBase, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { Button } from 'antd';

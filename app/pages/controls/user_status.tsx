@@ -1,4 +1,4 @@
-import { socket } from "@/app/rooms/[roomName]/PageClientImpl";
+import { socket } from "@/app/[roomName]/PageClientImpl";
 import { useI18n } from "@/lib/i18n/i18n";
 import { connect_endpoint, UserDefineStatus } from "@/lib/std";
 import { MessageInstance } from "antd/es/message/interface";

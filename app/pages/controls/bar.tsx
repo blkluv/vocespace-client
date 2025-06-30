@@ -22,7 +22,7 @@ import {
   socket,
   userState,
   virtualMaskState,
-} from '@/app/rooms/[roomName]/PageClientImpl';
+} from '@/app/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';

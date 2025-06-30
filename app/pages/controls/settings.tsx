@@ -13,7 +13,7 @@ import VirtualRoleCanvas from '@/app/pages/virtual_role/live2d';
 import { src, UserStatus } from '@/lib/std';
 import { StatusSelect } from './status_select';
 import { useRecoilState } from 'recoil';
-import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import { LocalParticipant } from 'livekit-client';
 import { LicenseControl } from './license';
 import { BuildUserStatus } from './user_status';

@@ -43,10 +43,10 @@ export function DemoMeetingTab() {
   // start meeting if valid ------------------------------------------------------------------
   const startMeeting = () => {
     if (e2ee) {
-      router.push(`/rooms/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
+      router.push(`/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}`);
     } else {
       if (roomUrl == '') {
-        router.push(`/rooms/${generateRoomId()}`);
+        router.push(`/${generateRoomId()}`);
       } else {
         // 对roomUrl进行判断，如果是个有效的网址则直接跳转，否则跳转到房间
         isAllowUrlAnd(roomUrl, router, messageApi, t('msg.error.room.invalid'));
@@ -83,7 +83,7 @@ export function DemoMeetingTab() {
           }}
         />
       )}
-      <Button size='large' type="primary" onClick={startMeeting}>
+      <Button size="large" type="primary" onClick={startMeeting}>
         {t('common.start_metting')}
       </Button>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -131,15 +131,15 @@ const isAllowUrlAnd = (
 ) => {
   // 判断是否是允许的url，拼接AllowUrls，并且可能是没有AllowUrls的，当用户输入的只是一个房间名时
   // 格式为: ^(https?:\/\/)?(vocespace.com|space.voce.chat)?\/rooms\/([a-zA-Z0-9_-]+)$
-  let regax = new RegExp(`^(https?:\/\/)?(${SERVER_NAMES})?(${ENV_PRIFIX})?(\/rooms\/)?([^/]+)$`);
+  let regax = new RegExp(`^(https?:\/\/)?(${SERVER_NAMES})?(${ENV_PRIFIX})?([^/]+)$`);
   let match = url.match(regax);
   if (match) {
     if (!match[1] && !match[2] && !match[3]) {
       // 如果是房间名则拼接
-      router.push(`/rooms/${match[5]}`);
+      router.push(`/${match[4]}`);
     } else {
       // 只要match[2]可以成功匹配到，就直接进行外部跳转
-      if (match[2] && match[4] == '/rooms/' && match[5]) {
+      if (match[2] && match[4]) {
         router.replace(`${match[0]}`);
       }
     }

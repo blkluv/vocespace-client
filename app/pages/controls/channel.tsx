@@ -40,7 +40,7 @@ import {
   UpdateRoomParam,
   UpdateRoomType,
 } from '@/lib/hooks/channel';
-import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket } from '@/app/[roomName]/PageClientImpl';
 import { WsJoinRoom, WsRemove, WsSender, WsTo } from '@/lib/std/device';
 
 interface ChannelProps {

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Trans, useI18n } from '@/lib/i18n/i18n';
 import { UserStatus } from '@/lib/std';
 import { useRecoilState } from 'recoil';
-import { userState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { userState } from '@/app/[roomName]/PageClientImpl';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { BaseOptionType } from 'antd/es/select';

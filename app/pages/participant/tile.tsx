@@ -25,7 +25,7 @@ import { Track } from 'livekit-client';
 import React, { useEffect, useMemo } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
-import { socket, userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
 import { SvgResource} from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
