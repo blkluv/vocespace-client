@@ -93,7 +93,31 @@ export default {
           title: 'Private',
           desc: 'Private rooms, room permissions are completely controlled by the owner, only with the consent of the room owner can join, suitable for discussions that require privacy protection.',
         },
+        success: "Privacy switch successful, currently is"
       },
+      join: {
+title: 'Request to join the room',
+want: 'Want to join the room, do you agree? ',
+ok: 'Agree',
+cancel: 'Reject',
+missing_data: 'Joining data is not available. If you see this error, please contact the development team. ',
+reject: 'Sorry! You are rejected to join the room. ',
+},
+rename: {
+title: 'Rename room',
+desc: 'Please enter a new room name. The room name can be modified at any time. But it cannot be the same as other existing room names. ',
+placeholder: "Please enter a new room name",
+ok: 'Rename',
+cancel: 'Cancel',
+empty_name: 'Room name cannot be empty',
+success: 'Room rename successful',
+error: 'Room rename failed. Please try again later. ',
+repeat: 'Room name already exists. Please choose another name. ',
+},
+remove: {
+before: "You have been removed from: ",
+after: " room, the room has been deleted."
+}
     },
   },
   more: {
