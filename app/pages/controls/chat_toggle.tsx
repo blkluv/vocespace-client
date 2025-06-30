@@ -17,6 +17,7 @@ export function ChatToggle({
 }: ChatToggleProps) {
   const on_clicked = () => {
     onClicked(enabled);
+    setIsDot(false);
   };
   const { t } = useI18n();
   const [show, setShow] = useState(true);
@@ -29,7 +30,7 @@ export function ChatToggle({
   }, [controlWidth]);
 
   return (
-    <Badge count={count} color="#22CCEE" size="small" offset={[-4, 4]}>
+    <Badge count={count} color="#22CCEE" size="small" offset={[-4, 4]} dot={isDot}>
       {showTextOrHide ? (
         <Button
           variant="solid"
