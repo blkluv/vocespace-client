@@ -15,12 +15,12 @@ export function ChatToggle({
   count = 0,
   controlWidth,
 }: ChatToggleProps) {
+  const { t } = useI18n();
+  const [isDot, setIsDot] = useState(true);
   const on_clicked = () => {
     onClicked(enabled);
     setIsDot(false);
   };
-  const { t } = useI18n();
-  const [show, setShow] = useState(true);
   const showTextOrHide = useMemo(() => {
     if (controlWidth < 700) {
       return false;
