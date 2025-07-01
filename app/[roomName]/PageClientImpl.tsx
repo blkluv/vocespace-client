@@ -2,7 +2,7 @@
 
 import { VideoContainer, VideoContainerExports } from '@/app/pages/controls/video_container';
 import { decodePassphrase } from '@/lib/client_utils';
-import { DebugMode } from '@/lib/Debug';
+// import { DebugMode } from '@/lib/Debug';
 import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from './RecordingIndicator';
 import { ConnectionDetails } from '@/lib/types';
@@ -28,7 +28,11 @@ import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { WsTo } from '@/lib/std/device';
-import { DEFAULT_PARTICIPANT_SETTINGS, PARTICIPANT_SETTINGS_KEY, ParticipantSettings } from '@/lib/std/room';
+import {
+  DEFAULT_PARTICIPANT_SETTINGS,
+  PARTICIPANT_SETTINGS_KEY,
+  ParticipantSettings,
+} from '@/lib/std/room';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -39,7 +43,7 @@ export const socket = io();
 export const userState = atom({
   key: 'userState',
   default: {
-    ...DEFAULT_PARTICIPANT_SETTINGS
+    ...DEFAULT_PARTICIPANT_SETTINGS,
   } as ParticipantSettings,
 });
 
@@ -121,12 +125,12 @@ export function PageClientImpl(props: {
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
   // 从localStorage中获取用户设置 --------------------------------------------------------------------
-  useEffect(()=>{
+  useEffect(() => {
     const storedSettingsStr = localStorage.getItem(PARTICIPANT_SETTINGS_KEY);
     if (storedSettingsStr) {
       const storedSettings: ParticipantSettings = JSON.parse(storedSettingsStr);
       setUState(storedSettings);
-    }else {
+    } else {
       // 没有则存到localStorage中
       localStorage.setItem(PARTICIPANT_SETTINGS_KEY, JSON.stringify(uState));
     }
@@ -134,33 +138,31 @@ export function PageClientImpl(props: {
     return () => {
       // 在组件卸载时将用户设置存储到localStorage中，保证用户设置的持久化
       localStorage.setItem(PARTICIPANT_SETTINGS_KEY, JSON.stringify(uState));
-    }
+    };
   }, []);
 
   return (
-    <RecoilRoot>
-      <main data-lk-theme="default" style={{ height: '100%' }}>
-        {connectionDetails === undefined || preJoinChoices === undefined ? (
-          <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
-            <PreJoin
-              defaults={preJoinDefaults}
-              onSubmit={handlePreJoinSubmit}
-              onError={handlePreJoinError}
-              joinLabel={t('common.join_room')}
-              micLabel={t('common.device.microphone')}
-              camLabel={t('common.device.camera')}
-              userLabel={t('common.username')}
-            />
-          </div>
-        ) : (
-          <VideoConferenceComponent
-            connectionDetails={connectionDetails}
-            userChoices={preJoinChoices}
-            options={{ codec: props.codec, hq: props.hq }}
+    <main data-lk-theme="default" style={{ height: '100%' }}>
+      {connectionDetails === undefined || preJoinChoices === undefined ? (
+        <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
+          <PreJoin
+            defaults={preJoinDefaults}
+            onSubmit={handlePreJoinSubmit}
+            onError={handlePreJoinError}
+            joinLabel={t('common.join_room')}
+            micLabel={t('common.device.microphone')}
+            camLabel={t('common.device.camera')}
+            userLabel={t('common.username')}
           />
-        )}
-      </main>
-    </RecoilRoot>
+        </div>
+      ) : (
+        <VideoConferenceComponent
+          connectionDetails={connectionDetails}
+          userChoices={preJoinChoices}
+          options={{ codec: props.codec, hq: props.hq }}
+        />
+      )}
+    </main>
   );
 }
 
@@ -269,7 +271,6 @@ function VideoConferenceComponent(props: {
 
   const router = useRouter();
   const handleOnLeave = React.useCallback(async () => {
-    
     socket.emit('mouse_remove', {
       room: room.name,
       senderName: room.localParticipant.name || room.localParticipant.identity,
@@ -413,7 +414,7 @@ function VideoConferenceComponent(props: {
           noteApi={notApi}
           setPermissionDevice={setPermissionDevice}
         ></VideoContainer>
-        <DebugMode />
+        {/* <DebugMode /> */}
         <RecordingIndicator />
         <Modal
           title={t('msg.request.device.title')}

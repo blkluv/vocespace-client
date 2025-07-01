@@ -91,6 +91,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
     const promptSoundRef = React.useRef<HTMLAudioElement>(null);
     const [isFocus, setIsFocus] = useState(false);
+    const [freshPermission, setFreshPermission] = useState(false);
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
     const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
     const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
@@ -215,6 +216,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         // 获取历史聊天记录
         fetchChatMsg();
         syncSettings().then(() => {
+          console.warn('settings updated');
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
           socket.emit('update_user_status');
         });
@@ -268,7 +270,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       });
 
       // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
-      socket.on('user_status_updated', async (msg: WsBase) => {
+      socket.on('user_status_updated', async () => {
         // 调用fetchSettings
         await fetchSettings();
         console.warn('update ------', settings);
@@ -583,11 +585,26 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       // 1. 当用户在主房间时，可以订阅所有参与者的视频轨道，但不能订阅子房间用户的音频轨道
       // 2. 当用户在子房间时，可以订阅该子房间内的所有参与者的视频和音频轨道，包括主房间的参与者的视频轨道，但不能订阅主房间参与者的音频轨道
       let auth = [] as ParticipantTrackPermission[];
+      // 远程参与者不在同一房间内，只订阅视频轨道
+      let videoTrackSid = room.localParticipant.getTrackPublication(Track.Source.Camera)?.trackSid;
 
+      let shareTackSid = room.localParticipant.getTrackPublication(
+        Track.Source.ScreenShare,
+      )?.trackSid;
+
+      let allowedTrackSids = [];
+      if (videoTrackSid) {
+        allowedTrackSids.push(videoTrackSid);
+      }
+      if (shareTackSid) {
+        allowedTrackSids.push(shareTackSid);
+      }
+    console.error(room.localParticipant.identity);
       // 遍历所有的远程参与者，根据规则进行处理
       room.remoteParticipants.forEach((rp) => {
         // 由于我们已经可以从selfRoom中获取当前用户所在的房间信息，所以通过selfRoom进行判断
         if (selfRoom.participants.includes(rp.identity)) {
+          // console.warn(rp.identity);
           auth.push({
             participantIdentity: rp.identity,
             allowAll: true,
@@ -598,34 +615,23 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           }
           rp.setVolume(volume);
         } else {
-          // 远程参与者不在同一房间内，只订阅视频轨道
-          let videoTrackSid = room.localParticipant.getTrackPublication(
-            Track.Source.Camera,
-          )?.trackSid;
-
-          let shareTackSid = room.localParticipant.getTrackPublication(
-            Track.Source.ScreenShare,
-          )?.trackSid;
-
-          let allowedTrackSids = [];
-          if (videoTrackSid) {
-            allowedTrackSids.push(videoTrackSid);
-          }
-          if (shareTackSid) {
-            allowedTrackSids.push(shareTackSid);
-          }
-
+          // console.warn('other participant', rp.identity);
           auth.push({
             participantIdentity: rp.identity,
             allowAll: false,
             allowedTrackSids,
           });
         }
+       
       });
 
       // 设置房间订阅权限 ------------------------------------------------
       room.localParticipant.setTrackSubscriptionPermissions(false, auth);
-    }, [room, settings, selfRoom]);
+      if (freshPermission) {
+        setFreshPermission(false);
+        fetchSettings();
+      }
+    }, [room, settings, selfRoom, freshPermission]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected || !settings) return;
