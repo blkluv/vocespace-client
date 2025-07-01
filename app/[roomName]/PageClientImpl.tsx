@@ -28,6 +28,7 @@ import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { WsTo } from '@/lib/std/device';
+import { DEFAULT_PARTICIPANT_SETTINGS, ParticipantSettings } from '@/lib/std/room';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -38,20 +39,13 @@ export const socket = io();
 export const userState = atom({
   key: 'userState',
   default: {
-    volume: 100,
-    blur: 0.0,
-    screenBlur: 0.0,
-    virtual: {
-      enabled: false,
-      role: ModelRole.None,
-      bg: ModelBg.ClassRoom,
-    },
-    status: UserStatus.Online as string,
-    // rpc: {
-    //   wave: false,
-    // },
-    roomStatus: [] as UserDefineStatus[],
-  },
+    ...DEFAULT_PARTICIPANT_SETTINGS
+  } as ParticipantSettings,
+});
+
+export const roomStatusState = atom({
+  key: 'roomStatusState',
+  default: [] as UserDefineStatus[],
 });
 
 export const licenseState = atom({

@@ -25,7 +25,7 @@ import { Track } from 'livekit-client';
 import React, { useEffect, useMemo } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
-import { socket, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
+import { roomStatusState, socket, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
 import { SvgResource} from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
@@ -63,6 +63,7 @@ export const ParticipantItem: (
     const { localParticipant } = useLocalParticipant();
     const videoRef = React.useRef<HTMLVideoElement>(null);
     const [uState, setUState] = useRecoilState(userState);
+    const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
     const trackReference = useEnsureTrackRef(trackRef);
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const layoutContext = useMaybeLayoutContext();
@@ -414,8 +415,8 @@ export const ParticipantItem: (
 
     const status_menu: MenuProps['items'] = useMemo(() => {
       const list = statusDefaultList(t);
-      if (uState.roomStatus.length > 0) {
-        uState.roomStatus.forEach((item) => {
+      if (uRoomStatusState.length > 0) {
+        uRoomStatusState.forEach((item) => {
           list.push({
             title: item.name,
             desc: item.desc,
@@ -441,12 +442,12 @@ export const ParticipantItem: (
           </div>
         ),
       }));
-    }, [uState.roomStatus, t]);
+    }, [uRoomStatusState, t]);
     const defineStatus = useMemo(() => {
-      return uState.roomStatus.find(
+      return uRoomStatusState.find(
         (item) => item.id === settings.participants[trackReference.participant.identity]?.status,
       );
-    }, [uState.roomStatus, settings.participants, trackReference]);
+    }, [uRoomStatusState, settings.participants, trackReference]);
     const user_menu: MenuProps['items'] = useMemo(() => {
       return [
         {

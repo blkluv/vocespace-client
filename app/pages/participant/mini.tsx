@@ -23,7 +23,7 @@ import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { useVideoBlur } from '@/lib/std/device';
 import { SvgResource } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
-import { userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
+import { roomStatusState, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
@@ -36,6 +36,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
     const trackReference = useEnsureTrackRef(trackRef);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [uState, setUState] = useRecoilState(userState);
+    const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
     const layoutContext = useMaybeLayoutContext();
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
     const isEncrypted = useIsEncrypted(trackReference.participant);
@@ -58,10 +59,10 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
       }
     }, [settings.participants, trackReference]);
     const defineStatus = useMemo(() => {
-      return uState.roomStatus.find(
+      return uRoomStatusState.find(
         (item) => item.id === settings.participants[trackReference.participant.identity]?.status,
       );
-    }, [uState.roomStatus, settings.participants, trackReference]);
+    }, [uRoomStatusState, settings.participants, trackReference]);
     const videoFilter = useMemo(() => {
       return settings.participants[trackReference.participant.identity]?.virtual?.enabled ?? false
         ? `none`

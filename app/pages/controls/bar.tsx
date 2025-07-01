@@ -228,15 +228,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           messageApi.error(t('msg.error.user.username.change'));
         }
         // 更新其他设置 ------------------------------------------------
-        const { volume, screenBlur, blur, virtual } = settingsRef.current.state;
-
-        setUState((prev) => ({
-          ...prev,
-          volume,
-          screenBlur,
-          blur,
-          virtual,
-        }));
         await updateSettings(settingsRef.current.state);
         // 通知socket，进行状态的更新 -----------------------------------
         socket.emit('update_user_status');

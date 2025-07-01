@@ -270,3 +270,6 @@ lk load-test \
   - [ ] 子房间状态列表
   - [ ] 子房间拥有着同步子房间状态
   - [ ] 增加状态设置部分
+- [ ] 应用嵌入
+  - [ ] Notion
+- [x] 重构userState和ParticipantSettings之间的关系

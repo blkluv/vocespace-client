@@ -43,3 +43,17 @@ export interface RoomSettings {
   children: ChildRoom[]
 }
 
+export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
+  name: '',
+  volume: 100,
+  blur: 0.0,
+  screenBlur: 0.0,
+  status: UserStatus.Online,
+  socketId: '',
+  startAt: 0,
+  virtual: {
+    role: ModelRole.None,
+    bg: ModelBg.ClassRoom,
+    enabled: false,
+  },
+}
