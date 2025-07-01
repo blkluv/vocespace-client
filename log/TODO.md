@@ -269,9 +269,13 @@ lk load-test \
 - [x] 重构userState和ParticipantSettings之间的关系
 - [ ] 重写MicrophoneTraggle组件
 - [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
-- [ ] screen share audio 关闭 （放入设置）
+- [x] screen share audio 关闭 （放入设置）
+  - [x] 数据
+  - [x] 绑定处理ScreenShare
 - [ ] 设置持久化到localstorage
-- [ ] 设置，新用户加入时的提醒音 （默认开启）
+- [x] 设置，新用户加入时的提醒音 （默认开启）
+  - [x] 数据
+  - [x] 绑定音频
 - [ ] dashboard 参会时长排序
   - [ ] 日榜，周榜，月榜
   - [ ] 总时长计算问题

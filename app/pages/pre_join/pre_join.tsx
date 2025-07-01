@@ -168,6 +168,7 @@ export function PreJoin({
       const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
       // 获取roomId，从当前的url中
       const roomId = getRoomIdFromUrl();
+      console.warn('PreJoin: roomId', roomId);
       if (!roomId) return;
       url.searchParams.append('roomId', roomId);
       url.searchParams.append('pre', 'true');
@@ -379,12 +380,12 @@ export function PreJoin({
 const getRoomIdFromUrl = (): string | undefined => {
   // 获取当前URL
   const url = window.location.href;
-  // 要获取roomId只需找到url中rooms/后面的部分到下一个/为止
-  let end = url.indexOf('/', url.indexOf('rooms/') + 6);
+  // 要获取roomId只需找到url中最后一个'/'
+  let end = url.lastIndexOf('/');
   if (end == -1) {
     end = url.length;
   }
-  const roomId = url.substring(url.indexOf('rooms/') + 6, end);
+  const roomId = url.substring(end + 1, url.length);
 
   if (roomId === '') {
     return undefined;

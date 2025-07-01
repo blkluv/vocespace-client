@@ -42,6 +42,8 @@ export interface SettingsExports {
       role: ModelRole;
       bg: ModelBg;
     };
+    openShareAudio: boolean;
+    openPromptSound: boolean;
   };
 }
 
@@ -71,6 +73,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
     const [virtualEnabled, setVirtualEnabled] = useState(false);
     const [modelRole, setModelRole] = useState<ModelRole>(ModelRole.None);
     const [modelBg, setModelBg] = useState<ModelBg>(ModelBg.ClassRoom);
+    const [openShareAudio, setOpenShareAudio] = useState<boolean>(uState.openShareAudio);
+    const [openPromptSound, setOpenPromptSound] = useState<boolean>(uState.openPromptSound);
     const [compare, setCompare] = useState(false);
     const virtualSettingsRef = useRef<VirtualSettingsExports>(null);
 
@@ -81,6 +85,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       setVirtualEnabled(uState.virtual.enabled);
       setModelRole(uState.virtual.role);
       setModelBg(uState.virtual.bg);
+      setOpenShareAudio(uState.openShareAudio);
+      setOpenPromptSound(uState.openPromptSound);
     }, [uState]);
 
     const items: TabsProps['items'] = [
@@ -97,6 +103,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             setUserStatus={setUserStatus}
             username={username}
             setUsername={setUsername}
+            openPromptSound={openPromptSound}
+            setOpenPromptSound={setOpenPromptSound}
           ></GeneralSettings>
         ),
       },
@@ -115,6 +123,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             screenBlur={screenBlur}
             setScreenBlur={setScreenBlur}
             virtualSettingsRef={virtualSettingsRef}
+            openShareAudio={openShareAudio}
+            setOpenShareAudio={setOpenShareAudio}
             virtual={{
               close,
               blur: videoBlur,
@@ -167,6 +177,8 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
           role: modelRole,
           bg: modelBg,
         },
+        openShareAudio,
+        openPromptSound,
       },
     }));
 

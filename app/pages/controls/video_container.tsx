@@ -88,6 +88,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [uLicenseState, setULicenseState] = useRecoilState(licenseState);
     const controlsRef = React.useRef<ControlBarExport>(null);
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
+    const promptSoundRef = React.useRef<HTMLAudioElement>(null);
     const [isFocus, setIsFocus] = useState(false);
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
     const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
@@ -168,6 +169,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             role: ModelRole.None,
             bg: ModelBg.ClassRoom,
           },
+          openShareAudio: uState.openShareAudio,
+          openPromptSound: uState.openPromptSound,
         });
         const roomName = `${room.localParticipant.name}'s room`;
 
@@ -289,6 +292,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             room.disconnect(true);
           }
           return;
+        }
+        // 参与者进入之后发出提示音
+        if (uState.openPromptSound && promptSoundRef.current) {
+          promptSoundRef.current.play();
         }
       };
       const onParticipantDisConnected = async (participant: Participant) => {
@@ -881,6 +888,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             ref={waveAudioRef}
             style={{ display: 'none' }}
             src={src('/audios/vocespacewave.m4a')}
+          ></audio>
+          <audio
+            ref={promptSoundRef}
+            style={{ display: 'none' }}
+            src={src('/audios/prompt.mp3')}
           ></audio>
         </div>
       </div>

@@ -42,6 +42,7 @@ export default {
     full_user:
       'The room user has exceeded the limit and cannot join. You can join other rooms or inform the builder to upgrade your license to obtain more user slots.',
     open: 'Open',
+    close: 'Close',
   },
   channel: {
     menu: {
@@ -198,6 +199,8 @@ export default {
       title: 'General',
       username: 'Username',
       lang: 'Language',
+      share_audio: 'Share Screen Audio',
+      prompt_sound: 'Enter Prompt Sound',
       status: {
         title: 'Status',
         online: 'Online',

@@ -1,5 +1,5 @@
 import styles from '@/styles/controls.module.scss';
-import { Button, Input } from 'antd';
+import { Button, Input, Radio } from 'antd';
 import { LangSelect } from '../lang_select';
 import { StatusSelect } from '../status_select';
 import { SvgResource } from '@/app/resources/svg';
@@ -18,6 +18,8 @@ export interface GeneralSettingsProps {
   setUserStatus?: (status: UserStatus | string) => Promise<void>;
   username: string;
   setUsername: (username: string) => void;
+  openPromptSound: boolean;
+  setOpenPromptSound: (open: boolean) => void;
 }
 
 export function GeneralSettings({
@@ -29,6 +31,8 @@ export function GeneralSettings({
   setUserStatus,
   username,
   setUsername,
+  openPromptSound,
+  setOpenPromptSound,
 }: GeneralSettingsProps) {
   const { t } = useI18n();
 
@@ -69,6 +73,17 @@ export function GeneralSettings({
           localParticipant={localParticipant}
         ></BuildUserStatus>
       )}
+      <div className={styles.common_space}>{t('settings.general.prompt_sound')}:</div>
+      <Radio.Group
+        block
+        value={openPromptSound}
+        onChange={(e) => {
+          setOpenPromptSound(e.target.value);
+        }}
+      >
+        <Radio.Button value={true}>{t('common.open')}</Radio.Button>
+        <Radio.Button value={false}>{t('common.close')}</Radio.Button>
+      </Radio.Group>
     </div>
   );
 }

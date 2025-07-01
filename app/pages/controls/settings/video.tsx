@@ -1,5 +1,5 @@
 import styles from '@/styles/controls.module.scss';
-import { Slider } from 'antd';
+import { Radio, Slider } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
 import { VirtualSettings, VirtualSettingsExports, VirtualSettingsProps } from './virtual';
 import { VideoSelect } from '../video_select';
@@ -11,6 +11,8 @@ export interface VideoSettingsProps {
   setScreenBlur: (value: number) => void;
   virtual: VirtualSettingsProps;
   virtualSettingsRef: React.RefObject<VirtualSettingsExports>;
+  openShareAudio: boolean;
+  setOpenShareAudio: (value: boolean) => void;
 }
 
 export function VideoSettings({
@@ -19,7 +21,9 @@ export function VideoSettings({
   setVideoBlur,
   setScreenBlur,
   virtual,
-  virtualSettingsRef
+  virtualSettingsRef,
+  openShareAudio,
+  setOpenShareAudio,
 }: VideoSettingsProps) {
   const { t } = useI18n();
   return (
@@ -27,6 +31,19 @@ export function VideoSettings({
       <div className={styles.setting_box}>
         <div>{t('settings.video.device')}:</div>
         <VideoSelect className={styles.common_space}></VideoSelect>
+      </div>
+      <div>
+        <div className={styles.common_space}>{t('settings.general.share_audio')}:</div>
+        <Radio.Group
+          block
+          value={openShareAudio}
+          onChange={(e) => {
+            setOpenShareAudio(e.target.value);
+          }}
+        >
+          <Radio.Button value={true}>{t('common.open')}</Radio.Button>
+          <Radio.Button value={false}>{t('common.close')}</Radio.Button>
+        </Radio.Group>
       </div>
       <div className={styles.setting_box}>
         <span>{t('settings.video.video_blur')}:</span>
@@ -64,10 +81,7 @@ export function VideoSettings({
       </div>
       <div className={styles.setting_box}>
         <div style={{ marginBottom: '6px' }}>{t('settings.virtual.title')}:</div>
-        <VirtualSettings
-          ref={virtualSettingsRef}
-          {...virtual}
-        ></VirtualSettings>
+        <VirtualSettings ref={virtualSettingsRef} {...virtual}></VirtualSettings>
       </div>
     </div>
   );

@@ -17,12 +17,7 @@ import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { useRecoilState } from 'recoil';
-import {
-  chatMsgState,
-  socket,
-  userState,
-  virtualMaskState,
-} from '@/app/[roomName]/PageClientImpl';
+import { chatMsgState, socket, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
@@ -823,7 +818,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             <TrackToggle
               style={{ height: '46px' }}
               source={Track.Source.ScreenShare}
-              captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
+              captureOptions={{ audio: uState.openShareAudio, selfBrowserSurface: 'include' }}
               showIcon={showIcon}
               onChange={onScreenShareChange}
               onDeviceError={(error) => {
@@ -1012,64 +1007,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                       </>
                     )}
                   ></ParticipantList>
-                  // <List
-                  //   itemLayout="horizontal"
-                  //   dataSource={participantList}
-                  //   split={false}
-                  //   renderItem={(item, index) => (
-                  //     <List.Item>
-                  //       <div className={styles.particepant_item}>
-                  //         <div className={styles.particepant_item_left}>
-                  //           <Avatar
-                  //             size={'large'}
-                  //             style={{
-                  //               backgroundColor: randomColor(item[1].name),
-                  //             }}
-                  //           >
-                  //             {item[1].name.substring(0, 3)}
-                  //           </Avatar>
-                  //           <span>{item[1].name}</span>
-                  //           {roomSettings.ownerId !== '' && item[0] === roomSettings.ownerId && (
-                  //             <span className={styles.particepant_item_owner}>
-                  //               ( {t('more.participant.manager')} )
-                  //             </span>
-                  //           )}
-                  //         </div>
-                  //         {room.getParticipantByIdentity(item[0]) && (
-                  //           <div className={styles.particepant_item_right}>
-                  //             <TrackMutedIndicator
-                  //               trackRef={{
-                  //                 participant: room.getParticipantByIdentity(item[0])!,
-                  //                 source: Track.Source.Microphone,
-                  //               }}
-                  //               show={'always'}
-                  //             ></TrackMutedIndicator>
-                  //             <TrackMutedIndicator
-                  //               trackRef={{
-                  //                 participant: room.getParticipantByIdentity(item[0])!,
-                  //                 source: Track.Source.Camera,
-                  //               }}
-                  //               show={'always'}
-                  //             ></TrackMutedIndicator>
-                  //             {room.localParticipant.identity !== item[0] && (
-                  //               <Dropdown
-                  //                 menu={optMenu}
-                  //                 trigger={['click']}
-                  //                 onOpenChange={(open) =>
-                  //                   optOpen(open, room.getParticipantByIdentity(item[0])!)
-                  //                 }
-                  //               >
-                  //                 <Button shape="circle" type="text">
-                  //                   <SvgResource type="more2" svgSize={16}></SvgResource>
-                  //                 </Button>
-                  //               </Dropdown>
-                  //             )}
-                  //           </div>
-                  //         )}
-                  //       </div>
-                  //     </List.Item>
-                  //   )}
-                  // />
                 )}
               </div>
             )}

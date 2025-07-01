@@ -42,6 +42,7 @@ export default {
     full_user:
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
     open: '开启',
+    close: '关闭',
   },
   channel: {
     menu: {
@@ -191,6 +192,8 @@ export default {
       title: '常规',
       username: '用户名',
       lang: '语言',
+      share_audio: '共享音频',
+      prompt_sound: '进入提示音',
       status: {
         title: '状态',
         online: '在线',
