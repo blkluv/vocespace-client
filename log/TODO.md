@@ -212,17 +212,13 @@ lk load-test \
       1. 当用户在主房间时，可以订阅所有参与者的视频轨道，但不能订阅子房间用户的音频轨道
       2. 当用户在子房间时，可以订阅该子房间内的所有参与者的视频和音频轨道，包括主房间的参与者的视频轨道，但不能订阅主房间参与者的音频轨道
 
-- [ ] 重写MicrophoneTraggle组件
+
 - [x] 增加复制链接(records)
 - [x] records -> recording
-- [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
-- [ ] screen share audio 关闭 （放入设置）
-- [ ] 设置持久化到localstorage
-- [ ] 设置，新用户加入时的提醒音 （默认开启）
 - [ ] safari浏览器显示标签页概览截图丢失模糊度： 缩小化模糊度丢失 (模糊度只是用css进行处理，后续处理为GPU渲染)
-- [ ] 右键菜单
+- [x] 右键菜单
   - [x] 用户管理，用户列表
-  - [ ] 主页，用户视口
+  - [x] 主页，用户视口
   - [x] menu
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
 - [ ] 用户自定义虚拟形象: 用户提交虚拟形象图片 -> live2d cubism 自动处理 (代码尝试) -> 生成完整动画效果 + 模型数据 -> 存储 -> 返回
@@ -253,19 +249,17 @@ lk load-test \
 - [x] chat去除点击上传 （Drag部分）
 - [x] chat聊天添加时间分割 (5分钟)
 - [x] mini tile名字部分布局
-- [ ] dashboard 参会时长排序
-  - [ ] 日榜，周榜，月榜
-  - [ ] 总时长计算问题
 - [x] ui 参考tandom
 - [x] 修复bar部分resize异常
 - [x] 重写Collapse事件部分 
-- [ ] chat消息提醒，用户第一次进入不在时为dot,在房间但没有打开聊天面板为badge
+- [x] chat消息提醒，用户第一次进入不在时为dot,在房间但没有打开聊天面板为badge
 - [x] 增加子房间对于Space的屏幕分享的权限
 - [x] recording地址修改，确定按钮跳转修改
 - [x] room数据未完全清理 (和退出时的资源清理有关，需要增加livekit-server api进行房间访问，二次确认)
   - [x] 首先尝试重构DELETE API
 - [x] space, room, public room 图标调整
 - [x] 总空间的host需要对所有子房间拥有权限
+
 - [ ] 用户自己的状态与房间状态之间进行联系
   - [ ] 子房间状态列表
   - [ ] 子房间拥有着同步子房间状态
@@ -273,3 +267,20 @@ lk load-test \
 - [ ] 应用嵌入
   - [ ] Notion
 - [x] 重构userState和ParticipantSettings之间的关系
+- [ ] 重写MicrophoneTraggle组件
+- [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
+- [ ] screen share audio 关闭 （放入设置）
+- [ ] 设置持久化到localstorage
+- [ ] 设置，新用户加入时的提醒音 （默认开启）
+- [ ] dashboard 参会时长排序
+  - [ ] 日榜，周榜，月榜
+  - [ ] 总时长计算问题
+- [x] 重构settings部分，组件单独提取
+  - [x] general
+  - [x] audio
+  - [x] video
+  - [x] about_us
+  - [x] virtual
+  - [x] mask
+  - [x] license
+  - [x] tab_item

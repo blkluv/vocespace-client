@@ -7,7 +7,7 @@ import TextArea from 'antd/es/input/TextArea';
 import { MessageInstance } from 'antd/es/message/interface';
 import { useMemo, useState } from 'react';
 import { useRecoilState } from 'recoil';
-import { Calendly } from './calendly';
+import { Calendly } from '../calendly';
 import { getServerIp } from '@/lib/std';
 
 type ModelKey = 'update' | 'renew' | 'server';

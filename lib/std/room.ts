@@ -24,6 +24,8 @@ export interface ParticipantSettings {
     bg: ModelBg;
     enabled: boolean;
   };
+  openShareAudio: boolean; // 是否开启屏幕分享音频
+  openPromptSound: boolean; // 是否开启新用户加入时的提示音
 }
 
 export interface RecordSettings {
@@ -56,4 +58,6 @@ export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
     bg: ModelBg.ClassRoom,
     enabled: false,
   },
+  openPromptSound: true,
+  openShareAudio: false,
 }
