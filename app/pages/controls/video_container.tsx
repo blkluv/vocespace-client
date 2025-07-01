@@ -54,6 +54,7 @@ import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
 import { createRoom } from '@/lib/hooks/channel';
+import { PARTICIPANT_SETTINGS_KEY } from '@/lib/std/room';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -222,7 +223,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // license 检测 -----------------------------------------------------------------------------
       const checkLicense = async () => {
-        let url = `https://space.voce.chat/api/license/${IP}`;
+        let url = `https://vocespace.com/api/license/${IP}`;
         const response = await fetch(url, {
           method: 'GET',
         });
@@ -630,10 +631,15 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       if (!room || room.state !== ConnectionState.Connected || !settings) return;
       // 同步settings中当前参与者的数据到uState中 -----------------------------------------------------
       if (settings.participants[room.localParticipant.identity]) {
-        setUState((prev) => ({
-          ...prev,
-          ...settings.participants[room.localParticipant.identity],
-        }));
+        setUState((prev) => {
+          let newState = {
+            ...prev,
+            ...settings.participants[room.localParticipant.identity],
+          };
+          // 同步后还需要设置到localStorage中
+          localStorage.setItem(PARTICIPANT_SETTINGS_KEY, JSON.stringify(newState));
+          return newState;
+        });
       }
       // 同步settings中的房间的状态到uRoomStatusState中 ----------------------------------------
       if (settings.status && settings.status.length > 0) {

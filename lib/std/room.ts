@@ -61,3 +61,8 @@ export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
   openPromptSound: true,
   openShareAudio: false,
 }
+
+/**
+ * key in localStorage
+ */
+export const PARTICIPANT_SETTINGS_KEY = "vocespace_participant_settings";

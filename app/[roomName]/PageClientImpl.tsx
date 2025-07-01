@@ -20,7 +20,7 @@ import {
   Track,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
-import React, { createContext, ReactNode, useState } from 'react';
+import React, { createContext, ReactNode, useEffect, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, RecoilRoot, useRecoilState } from 'recoil';
 import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
@@ -28,7 +28,7 @@ import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { WsTo } from '@/lib/std/device';
-import { DEFAULT_PARTICIPANT_SETTINGS, ParticipantSettings } from '@/lib/std/room';
+import { DEFAULT_PARTICIPANT_SETTINGS, PARTICIPANT_SETTINGS_KEY, ParticipantSettings } from '@/lib/std/room';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -91,6 +91,7 @@ export function PageClientImpl(props: {
   codec: VideoCodec;
 }) {
   const { t } = useI18n();
+  const [uState, setUState] = useRecoilState(userState);
   const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
     undefined,
   );
@@ -118,6 +119,23 @@ export function PageClientImpl(props: {
     setConnectionDetails(connectionDetailsData);
   }, []);
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
+
+  // 从localStorage中获取用户设置 --------------------------------------------------------------------
+  useEffect(()=>{
+    const storedSettingsStr = localStorage.getItem(PARTICIPANT_SETTINGS_KEY);
+    if (storedSettingsStr) {
+      const storedSettings: ParticipantSettings = JSON.parse(storedSettingsStr);
+      setUState(storedSettings);
+    }else {
+      // 没有则存到localStorage中
+      localStorage.setItem(PARTICIPANT_SETTINGS_KEY, JSON.stringify(uState));
+    }
+
+    return () => {
+      // 在组件卸载时将用户设置存储到localStorage中，保证用户设置的持久化
+      localStorage.setItem(PARTICIPANT_SETTINGS_KEY, JSON.stringify(uState));
+    }
+  }, []);
 
   return (
     <RecoilRoot>

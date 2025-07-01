@@ -272,7 +272,7 @@ lk load-test \
 - [x] screen share audio 关闭 （放入设置）
   - [x] 数据
   - [x] 绑定处理ScreenShare
-- [ ] 设置持久化到localstorage
+- [x] 设置持久化到localstorage
 - [x] 设置，新用户加入时的提醒音 （默认开启）
   - [x] 数据
   - [x] 绑定音频
