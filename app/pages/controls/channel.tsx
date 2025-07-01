@@ -18,13 +18,12 @@ import {
   Tag,
   theme,
 } from 'antd';
-import { connect_endpoint } from '@/lib/std';
+
 import {
   LockOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PlusCircleOutlined,
-  VideoCameraOutlined,
 } from '@ant-design/icons';
 import { GridLayout, TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { MessageInstance } from 'antd/es/message/interface';
@@ -41,7 +40,7 @@ import {
   UpdateRoomParam,
   UpdateRoomType,
 } from '@/lib/hooks/channel';
-import { socket } from '@/app/rooms/[roomName]/PageClientImpl';
+import { socket } from '@/app/[roomName]/PageClientImpl';
 import { WsJoinRoom, WsRemove, WsSender, WsTo } from '@/lib/std/device';
 
 interface ChannelProps {
@@ -408,12 +407,19 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         });
       }
     };
+    const authDisabled = useMemo(() => {
+      if (participantId === settings.ownerId) {
+        return false;
+      } else {
+        return selectedRoom?.ownerId !== participantId;
+      }
+    }, [settings.ownerId, selectedRoom, participantId]);
 
     const subContextItems: MenuProps['items'] = [
       {
         key: 'rename',
         label: t('channel.menu.rename'),
-        disabled: selectedRoom?.ownerId !== participantId,
+        disabled: authDisabled,
         onClick: () => {
           console.warn('rename', selectedRoom);
           setRenameModalOpen(true);
@@ -421,15 +427,19 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       },
       {
         key: 'privacy',
-        label: t('channel.menu.switch_privacy'),
-        disabled: selectedRoom?.ownerId !== participantId,
+        label: `${t('channel.menu.switch_privacy')}${
+          !selectedRoom?.isPrivate
+            ? t('channel.modal.privacy.private.title')
+            : t('channel.modal.privacy.public.title')
+        }`,
+        disabled: authDisabled,
         onClick: async () => updateChildRoom('privacy'),
       },
       {
         key: 'delete',
         label: t('channel.menu.delete'),
         onClick: deleteChildRoom,
-        disabled: selectedRoom?.ownerId !== participantId,
+        disabled: authDisabled,
       },
       {
         key: 'leave',

@@ -8,7 +8,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { setting_drawer_header } from '@/app/pages/controls/bar';
 import { ulid } from 'ulid';
 import { Room } from 'livekit-client';
-import { chatMsgState, socket } from '@/app/rooms/[roomName]/PageClientImpl';
+import { chatMsgState, socket } from '@/app/[roomName]/PageClientImpl';
 import { MessageInstance } from 'antd/es/message/interface';
 import { LinkPreview } from './link_preview';
 import Dragger from 'antd/es/upload/Dragger';

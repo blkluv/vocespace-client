@@ -23,7 +23,7 @@ import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { useVideoBlur } from '@/lib/std/device';
 import { SvgResource } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
-import { userState, virtualMaskState } from '@/app/rooms/[roomName]/PageClientImpl';
+import { userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
