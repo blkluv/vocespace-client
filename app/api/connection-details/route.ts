@@ -29,12 +29,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate participant token
-    if (!randomParticipantPostfix) {
-      randomParticipantPostfix = randomString(4);
-    }
+    // if (!randomParticipantPostfix) {
+    //   randomParticipantPostfix = randomString(4);
+    // }
+    const identity = `${participantName}__${roomName}`;
     const participantToken = await createParticipantToken(
       {
-        identity: `${participantName}__${randomParticipantPostfix}`,
+        // identity: `${participantName}__${randomParticipantPostfix}`,
+        identity: identity,
         name: participantName,
         metadata,
       },

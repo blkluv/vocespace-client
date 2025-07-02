@@ -93,7 +93,7 @@ export default {
           title: '私有',
           desc: '私有房间，房间权限完全被拥有者控制，只有经过房间拥有者的同意才能加入，适用于需要隐私保护的讨论。',
         },
-        success: "隐私性切换成功, 当前为",
+        success: '隐私性切换成功, 当前为',
       },
       join: {
         title: '请求加入房间',
@@ -106,7 +106,7 @@ export default {
       rename: {
         title: '重命名房间',
         desc: '请输入新的房间名称，房间名称可以随时修改。但不可与现有其他房间名称重复。',
-        placeholder: "请输入新的房间名称",
+        placeholder: '请输入新的房间名称',
         ok: '重命名',
         cancel: '取消',
         empty_name: '房间名称不能为空',
@@ -115,9 +115,9 @@ export default {
         repeat: '房间名称已存在，请选择其他名称。',
       },
       remove: {
-        before: "您已被移出: ",
-        after: " 房间，该房间已被删除。"
-      }
+        before: '您已被移出: ',
+        after: ' 房间，该房间已被删除。',
+      },
     },
   },
   more: {
@@ -340,6 +340,7 @@ export default {
         username: {
           change: '用户名修改失败',
           request: '请求用户名失败',
+          exist: '用户名已存在，请选择其他名称',
         },
       },
       file: {

@@ -363,6 +363,7 @@ export default {
         username: {
           change: 'Username changed failed',
           request: 'Failed to request username',
+          exist: 'Username already exists, please choose another name',
         },
       },
       file: {

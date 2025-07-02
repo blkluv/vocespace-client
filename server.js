@@ -344,15 +344,17 @@ app.prepare().then(() => {
       });
     });
     // [socket: del user] ----------------------------------------------------------------------------------------------------
-    socket.on('disconnect', async (_msg) => {
+    socket.on('disconnect', async (_reason) => {
       console.log('Socket disconnected', socket.id);
       // 当某个用户断开连接我们需要请求http服务器删除用户在房间中的数据
-      const url = `http://${hostname}:${port}${basePath}/api/room-settings?socketId=${socket.id}`;
-      const response = await fetch(url.toString(), {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        console.error('Failed to delete user data, socketId:', socket.id);
+      if (socket.id) {
+        const url = `http://${hostname}:${port}${basePath}/api/room-settings?socketId=${socket.id}`;
+        const response = await fetch(url.toString(), {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          console.error('Failed to delete user data, socketId:', socket.id);
+        }
       }
     });
   });

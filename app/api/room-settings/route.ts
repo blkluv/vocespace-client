@@ -628,7 +628,7 @@ class RoomManager {
   ): Promise<{
     success: boolean;
     clearAll?: boolean;
-    error?: any;
+    error?: string;
   }> {
     try {
       if (!redisClient) {
@@ -639,6 +639,7 @@ class RoomManager {
       if (!roomSettings || !roomSettings.participants[participantId]) {
         return {
           success: false,
+          error: 'Room or participant does not exist, or not complete initialized.',
         }; // 房间或参与者不存在可能出现了问题
       }
       // 删除参与者前删除该参与者构建的子房间
@@ -678,7 +679,10 @@ class RoomManager {
       return {
         success: false,
         clearAll: false,
-        error,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred while removing participant.',
       };
     }
   }
@@ -879,8 +883,41 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const childRoomReq = request.nextUrl.searchParams.get('childRoom');
+    const isNameCheck = request.nextUrl.searchParams.get('nameCheck') === 'true';
     const body = await request.json();
-    const { roomId, participantId, settings, trans, record, childRoomName, isPrivate } = body;
+    const {
+      roomId,
+      participantId,
+      participantName,
+      settings,
+      trans,
+      record,
+      childRoomName,
+      isPrivate,
+    } = body;
+
+    // 处理用户唯一名
+    if (isNameCheck && roomId && participantName) {
+      // 获取房间设置
+      const roomSettings = await RoomManager.getRoomSettings(roomId);
+      if (!roomSettings) {
+        // 房间不存在说明是第一次创建
+        return NextResponse.json({ success: true, name: participantName }, { status: 200 });
+      } else {
+        const pid = `${participantName}__${roomId}`;
+        const participantSettings = roomSettings.participants[pid];
+        console.log('participantSettings', participantSettings);
+        if (participantSettings) {
+          console.warn(pid);
+          // 有参与者
+          return NextResponse.json(
+            { success: false, error: 'Participant name already exists' },
+            { status: 200 },
+          );
+        }
+      }
+    }
+
     // 如果是创建子房间
     if (
       childRoomReq == 'true' &&
@@ -896,7 +933,7 @@ export async function POST(request: NextRequest) {
         isPrivate,
       } as ChildRoom;
 
-      const {success, error} = await RoomManager.setChildRoom(roomId, childRoom);
+      const { success, error } = await RoomManager.setChildRoom(roomId, childRoom);
       if (success) {
         return NextResponse.json({ success: true }, { status: 200 });
       } else {
@@ -1071,7 +1108,7 @@ export async function DELETE(request: NextRequest) {
         { status: 500 },
       );
     }
-  } else if (isChildRoom  && isDelete) {
+  } else if (isChildRoom && isDelete) {
     // 删除子房间 ----------------------------------------------------------------------------------------------
     const { roomId, childRoom } = await request.json();
     const success = await RoomManager.deleteChildRoom(roomId, childRoom);
@@ -1088,9 +1125,11 @@ export async function DELETE(request: NextRequest) {
       // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
       // 所以这里要从redis中找到这个对应socketId的参与者
       const allRooms = await RoomManager.getAllRooms();
+      console.warn('allRooms', allRooms);
       for (const [roomId, settings] of Object.entries(allRooms)) {
         for (const [participantId, participant] of Object.entries(settings.participants)) {
           if (participant.socketId === socketId) {
+            console.warn('Found participant with socketId:', participantId);
             // 找到对应的参与者，进行删除
             const { success, clearAll, error } = await RoomManager.removeParticipant(
               roomId,
@@ -1104,13 +1143,22 @@ export async function DELETE(request: NextRequest) {
                 success: true,
                 message: 'Participant removed successfully',
               });
+            } else {
+              return NextResponse.json(
+                { success: false, message: 'Failed to remove participant', error },
+                { status: 500 },
+              );
             }
-            return NextResponse.json(
-              { success: false, message: 'Failed to remove participant', error },
-              { status: 500 },
-            );
           }
         }
+      }
+
+      // 如果循环结束后没有找到参与者
+      if (!participantFound) {
+        return NextResponse.json(
+          { success: true, message: 'Participant not found for the given socketId' },
+          { status: 200 },
+        );
       }
     }
     // 不是使用socketId断开来处理离开房间 --------------------------------------------------------------------

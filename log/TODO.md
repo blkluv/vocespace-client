@@ -298,7 +298,9 @@ lk load-test \
     - 直接关闭标签页会导致SOCKET清理异常
       - [x] SOCKET_ID未记录
       - [x] 404NOT FOUND
+      - [x] SOCKET_ID 验证
 - [ ] room中静音回到space-用户成员列表optOpen失效
-- [ ] 用户加入的ID进行调整（每次重新分配的ID会导致用户占用的情况）
-  - [ ] 处理API中random改为按照房间名字添加后缀
-  - [ ] 确保唯一ID
+- [x] 用户加入的ID进行调整（每次重新分配的ID会导致用户占用的情况）
+  - [x] 处理API中random改为按照房间名字添加后缀
+  - [x] 确保唯一ID(在进入前查询房间中是否有重复)
+  - [x] 去除Cookie

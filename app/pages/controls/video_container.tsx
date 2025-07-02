@@ -145,7 +145,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const isActive = true;
 
     useEffect(() => {
-      if (!room || !socket.connected) return;
+      if (!room) return;
       if (
         room.state === ConnectionState.Connecting ||
         room.state === ConnectionState.Reconnecting
@@ -550,7 +550,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg, socket]);
+    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg]);
 
     const selfRoom = useMemo(() => {
       if (!room || room.state !== ConnectionState.Connected) return;

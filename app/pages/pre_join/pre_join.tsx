@@ -133,7 +133,7 @@ export function PreJoin({
     return () => {
       videoTrack?.detach();
     };
-  }, [videoTrack, inputRef,loading]);
+  }, [videoTrack, inputRef, loading]);
   // audio track --------------------------------------------------------------------------------------
   const audioTrack = React.useMemo(
     () => tracks?.filter((track) => track.kind === Track.Kind.Audio)[0] as LocalAudioTrack,
@@ -161,15 +161,13 @@ export function PreJoin({
       audioEnabled,
       audioDeviceId,
     };
-
+    // 获取roomId，从当前的url中
+    const roomId = getRoomIdFromUrl();
+    if (!roomId) return;
+    const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
     if (username === '') {
       messageApi.loading(t('msg.request.user.name'), 2);
       // 向服务器请求一个唯一的用户名
-      const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
-      // 获取roomId，从当前的url中
-      const roomId = getRoomIdFromUrl();
-      console.warn('PreJoin: roomId', roomId);
-      if (!roomId) return;
       url.searchParams.append('roomId', roomId);
       url.searchParams.append('pre', 'true');
       const response = await fetch(url.toString());
@@ -179,6 +177,28 @@ export function PreJoin({
         setUsername(name);
       } else {
         messageApi.error(`${t('msg.error.user.username.request')}: ${response.statusText}`);
+      }
+    } else {
+      // 虽然用户名不为空，但依然需要验证是否唯一
+      const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
+      url.searchParams.append('nameCheck', 'true');
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId,
+          participantName: username,
+        }),
+      });
+      if (response.ok) {
+        const { success } = await response.json();
+        if (!success) {
+          messageApi.error({
+            content: t('msg.error.user.username.exist'),
+          });
+          return;
+        }
+        
       }
     }
 
