@@ -204,8 +204,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         const response = await fetch(url.toString());
         if (response.ok) {
           const { msgs }: { msgs: ChatMsgItem[] } = await response.json();
+          let othersMsgLength = msgs.filter(
+            (msg) => msg.id !== room.localParticipant.identity,
+          ).length;
           setChatMsg((prev) => ({
-            unhandled: prev.unhandled + msgs.length,
+            unhandled: prev.unhandled + othersMsgLength,
             msgs: [...prev.msgs, ...msgs],
           }));
         } else {
@@ -522,8 +525,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             // 使用函数式更新来获取最新的 messages 状态
             const existingFile = prev.msgs.find((m) => m.id === msg.id);
             if (!existingFile) {
+              let isOthers = msg.id !== room.localParticipant.identity;
               return {
-                unhandled: prev.unhandled + 1,
+                unhandled: prev.unhandled + (isOthers ? 1 : 0),
                 msgs: [...prev.msgs, msg],
               };
             }
@@ -619,7 +623,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             allowedTrackSids,
           });
         }
-       
       });
 
       // 设置房间订阅权限 ------------------------------------------------

@@ -315,7 +315,9 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
           </h4>
           {msg.type === 'text' ? (
             <div className={styles.msg_item_content_wrapper} style={flexEnd}>
-              <div className={styles.msg_item_content_msg}>{msg.message}</div>
+              <div className={styles.msg_item_content_msg} style={{
+                textAlign: textAlignPos
+              }}>{msg.message}</div>
               {LinkPreviewCmp}
             </div>
           ) : (

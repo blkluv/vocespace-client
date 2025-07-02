@@ -1125,11 +1125,11 @@ export async function DELETE(request: NextRequest) {
       // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
       // 所以这里要从redis中找到这个对应socketId的参与者
       const allRooms = await RoomManager.getAllRooms();
-      console.warn('allRooms', allRooms);
+      let participantFound = false;
       for (const [roomId, settings] of Object.entries(allRooms)) {
         for (const [participantId, participant] of Object.entries(settings.participants)) {
           if (participant.socketId === socketId) {
-            console.warn('Found participant with socketId:', participantId);
+            participantFound = true;
             // 找到对应的参与者，进行删除
             const { success, clearAll, error } = await RoomManager.removeParticipant(
               roomId,
