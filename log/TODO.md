@@ -288,3 +288,17 @@ lk load-test \
   - [x] mask
   - [x] license
   - [x] tab_item
+- [ ] 调整chat计算逻辑
+  - [ ] 调整记录结构，unhandled改为记录chatId
+  - [ ] 通过chatId确定用户未处理消息个数
+  - [ ] 排除自己发送的消息
+- [x] 离线清理
+  - [x] 确定为什么导致离线清理失败
+    - 点击离开按钮离线没有问题
+    - 直接关闭标签页会导致SOCKET清理异常
+      - [x] SOCKET_ID未记录
+      - [x] 404NOT FOUND
+- [ ] room中静音回到space-用户成员列表optOpen失效
+- [ ] 用户加入的ID进行调整（每次重新分配的ID会导致用户占用的情况）
+  - [ ] 处理API中random改为按照房间名字添加后缀
+  - [ ] 确保唯一ID

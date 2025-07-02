@@ -145,7 +145,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const isActive = true;
 
     useEffect(() => {
-      if (!room) return;
+      if (!room || !socket.connected) return;
       if (
         room.state === ConnectionState.Connecting ||
         room.state === ConnectionState.Reconnecting
@@ -157,6 +157,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       }
 
       const syncSettings = async () => {
+        console.warn(socket.id);
         // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
         await updateSettings({
           name: room.localParticipant.name || room.localParticipant.identity,
@@ -216,7 +217,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         // 获取历史聊天记录
         fetchChatMsg();
         syncSettings().then(() => {
-          console.warn('settings updated');
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
           socket.emit('update_user_status');
         });
@@ -550,7 +550,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg]);
+    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg, socket]);
 
     const selfRoom = useMemo(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
@@ -599,12 +599,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       if (shareTackSid) {
         allowedTrackSids.push(shareTackSid);
       }
-    console.error(room.localParticipant.identity);
       // 遍历所有的远程参与者，根据规则进行处理
       room.remoteParticipants.forEach((rp) => {
         // 由于我们已经可以从selfRoom中获取当前用户所在的房间信息，所以通过selfRoom进行判断
         if (selfRoom.participants.includes(rp.identity)) {
-          // console.warn(rp.identity);
           auth.push({
             participantIdentity: rp.identity,
             allowAll: true,
@@ -615,7 +613,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           }
           rp.setVolume(volume);
         } else {
-          // console.warn('other participant', rp.identity);
           auth.push({
             participantIdentity: rp.identity,
             allowAll: false,

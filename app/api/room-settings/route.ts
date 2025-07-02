@@ -1041,18 +1041,12 @@ export async function PUT(request: NextRequest) {
 
 // 清除参与者设置（当参与者离开房间时）
 export async function DELETE(request: NextRequest) {
-  // const roomId = request.nextUrl.searchParams.get('roomId');
-  // const participantId = request.nextUrl.searchParams.get('participantId');
   const socketId = request.nextUrl.searchParams.get('socketId');
-  // // ?roomId=xxx&childRoom=xxx
-  // const deleteChildRoom = request.nextUrl.searchParams.get('childRoom');
-  // // ?leaveChildRoom=true
-  // const leaveChildRoom = request.nextUrl.searchParams.get('leaveChildRoom');
-  const isChildRoom = request.nextUrl.searchParams.get('childRoom');
+  const isChildRoom = request.nextUrl.searchParams.get('childRoom') === 'true';
   const isDelete = request.nextUrl.searchParams.get('delete') === 'true';
   const isLeave = request.nextUrl.searchParams.get('leave') === 'true';
   // [离开子房间] ---------------------------------------------------------------------------------------------
-  if (isChildRoom === 'true' && isLeave) {
+  if (isChildRoom && isLeave) {
     const body = await request.json();
     const { roomId, participantId, childRoom } = body;
 
@@ -1077,7 +1071,7 @@ export async function DELETE(request: NextRequest) {
         { status: 500 },
       );
     }
-  } else if (isChildRoom === 'true' && isDelete) {
+  } else if (isChildRoom  && isDelete) {
     // 删除子房间 ----------------------------------------------------------------------------------------------
     const { roomId, childRoom } = await request.json();
     const success = await RoomManager.deleteChildRoom(roomId, childRoom);
