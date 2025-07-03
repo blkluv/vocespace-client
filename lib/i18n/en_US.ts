@@ -56,6 +56,7 @@ export default {
       leave: 'Leave room',
       rename: 'Rename',
       switch_privacy: 'Set to ',
+      active: "active"
     },
     join: {
       success: 'Join room successfully',

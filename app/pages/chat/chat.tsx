@@ -46,8 +46,16 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
           unhandled: 0,
           msgs: prev.msgs,
         }));
+
+        if (bottomRef.current) {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              scrollToBottom();
+            });
+          });
+        }
       }
-    }, [open]);
+    }, [open, bottomRef]);
 
     // [send methods] ----------------------------------------------------------------------------
     const sendMsg = async () => {
@@ -194,7 +202,7 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
           chatMsg.msgs[index - 1] &&
           chatMsg.msgs[index - 1].timestamp
         ) {
-          if (msg.timestamp - chatMsg.msgs[index - 1].timestamp > 5 * 60) {
+          if (msg.timestamp - chatMsg.msgs[index - 1].timestamp > 5 * 60 * 1000) {
             msgItemNodes.push(
               <ChatMsgTimeSplit key={`time-split-${msg.id || ulid()}`} timestamp={msg.timestamp} />,
             );
@@ -315,9 +323,14 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
           </h4>
           {msg.type === 'text' ? (
             <div className={styles.msg_item_content_wrapper} style={flexEnd}>
-              <div className={styles.msg_item_content_msg} style={{
-                textAlign: textAlignPos
-              }}>{msg.message}</div>
+              <div
+                className={styles.msg_item_content_msg}
+                style={{
+                  textAlign: textAlignPos,
+                }}
+              >
+                {msg.message}
+              </div>
               {LinkPreviewCmp}
             </div>
           ) : (

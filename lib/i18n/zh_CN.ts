@@ -56,6 +56,7 @@ export default {
       leave: '离开房间',
       rename: '重命名',
       switch_privacy: '设为',
+      active: "在线"
     },
     join: {
       success: '加入房间成功',

@@ -26,7 +26,7 @@ import { SvgResource } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
 import { roomStatusState, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
-import { WaveHand } from '../controls/wave';
+import { WaveHand, WavePin } from '../controls/wave';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
   settings: RoomSettings;
@@ -47,6 +47,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
     const autoManageSubscription = useFeatureContext()?.autoSubscription;
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
+
     const { blurValue, setVideoBlur } = useVideoBlur({
       videoRef,
       initialBlur: 0.0,
@@ -208,7 +209,16 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
           <ConnectionQualityIndicator className="lk-participant-metadata-item" />
         </div>
         {trackReference.participant.identity != localParticipant.identity && (
-          <WaveHand wsTo={wsTo} />
+          <WaveHand
+            wsTo={wsTo}
+            contextUndefined={false}
+            style={{
+              zIndex: 111,
+              left: '0.25rem',
+              top: '0.25rem',
+              width: 'fit-content',
+            }}
+          />
         )}
       </ParticipantTile>
     );

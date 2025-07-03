@@ -523,25 +523,37 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                 }
               }}
             >
-              <div
-                className={styles.room_header_wrapper_title}
-                onClick={() => {
-                  setSubActiveKey((prev) => {
-                    if (prev.includes(room.name)) {
-                      return prev.filter((r) => r !== room.name);
-                    } else {
-                      prev.push(room.name);
-                    }
-                    return prev;
-                  });
-                }}
-              >
-                {room.isPrivate ? (
-                  <LockOutlined />
-                ) : (
-                  <SvgResource type="public" svgSize={16} color="#aaa"></SvgResource>
+              <div className={styles.room_header_wrapper_title}>
+                <div
+                  className={styles.room_header_wrapper_title}
+                  onClick={() => {
+                    setSubActiveKey((prev) => {
+                      if (prev.includes(room.name)) {
+                        return prev.filter((r) => r !== room.name);
+                      } else {
+                        prev.push(room.name);
+                      }
+                      return prev;
+                    });
+                  }}
+                >
+                  {room.isPrivate ? (
+                    <LockOutlined />
+                  ) : (
+                    <SvgResource type="public" svgSize={16} color="#aaa"></SvgResource>
+                  )}
+                  {room.name}
+                </div>
+                {room.participants.length > 0&& (
+                  <Tag
+                    color="#22CCEE"
+                    style={{ fontSize: '12px', padding: '2px 4px', lineHeight: '1.2em' }}
+                    bordered={false}
+                  >
+                    {room.participants.length}&nbsp;
+                    {t('channel.menu.active')}
+                  </Tag>
                 )}
-                {room.name}
               </div>
             </Dropdown>
             <div
@@ -671,7 +683,9 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                 <span className={styles.roomName}>{roomName}</span>
               </div>
               <div className={styles.headerActions}>
-                <Tag color="#22CCEE">{Object.keys(settings.participants).length} 在线</Tag>
+                <Tag color="#22CCEE">
+                  {Object.keys(settings.participants).length} {t('channel.menu.active')}
+                </Tag>
                 <Button
                   className={styles.collapseButton}
                   onClick={toggleCollapse}

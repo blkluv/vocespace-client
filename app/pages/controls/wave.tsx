@@ -2,7 +2,7 @@ import { socket } from '@/app/[roomName]/PageClientImpl';
 import { SvgResource } from '@/app/resources/svg';
 import { src } from '@/lib/std';
 import { WsTo } from '@/lib/std/device';
-import { LayoutContext } from '@livekit/components-react';
+import { LayoutContext, LayoutContextType } from '@livekit/components-react';
 
 export interface WavePinProps {
   wavePin: () => Promise<void>;
@@ -12,9 +12,10 @@ export interface WavePinProps {
 export interface WaveHandProps {
   style?: React.CSSProperties;
   wsTo: WsTo;
+  contextUndefined?: boolean;
 }
 
-export function WaveHand({ style, wsTo }: WaveHandProps) {
+export function WaveHand({ style, wsTo, contextUndefined = true }: WaveHandProps) {
   const wavePin = async () => {
     socket.emit('wave', wsTo);
     // 创建一个虚拟的audio元素并播放音频，然后移除
@@ -30,13 +31,17 @@ export function WaveHand({ style, wsTo }: WaveHandProps) {
     });
   };
 
-  return (
-    <LayoutContext.Consumer>
-      {(layoutContext) =>
-        layoutContext !== undefined && <WavePin wavePin={wavePin} style={style} />
-      }
-    </LayoutContext.Consumer>
-  );
+  if (contextUndefined) {
+    return (
+      <LayoutContext.Consumer>
+        {(layoutContext) =>
+          layoutContext !== undefined && <WavePin wavePin={wavePin} style={style} />
+        }
+      </LayoutContext.Consumer>
+    );
+  } else {
+    return <WavePin wavePin={wavePin} style={style} />;
+  }
 }
 
 export function WavePin({
