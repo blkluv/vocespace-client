@@ -1,5 +1,5 @@
 import { isTrackReferencePlaceholder } from '@/app/pages/controls/video_container';
-import { useVideoBlur } from '@/lib/std/device';
+import { useVideoBlur, WsTo } from '@/lib/std/device';
 import {
   AudioTrack,
   ConnectionQualityIndicator,
@@ -25,15 +25,21 @@ import { Track } from 'livekit-client';
 import React, { useEffect, useMemo } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
-import { roomStatusState, socket, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
+import {
+  roomStatusState,
+  socket,
+  userState,
+  virtualMaskState,
+} from '@/app/[roomName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
-import { SvgResource} from '@/app/resources/svg';
+import { SvgResource } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, src, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
 import { RoomSettings } from '@/lib/std/room';
 import { statusDefaultList } from '@/app/pages/controls/status_select';
+import { WaveHand } from '../controls/wave';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: RoomSettings;
@@ -498,28 +504,16 @@ export const ParticipantItem: (
         },
       ];
     }, [settings.participants, userStatusDisply, status_menu, defineStatus]);
-
     // 使用ws向服务器发送消息，告诉某个人打招呼
-    const wavePin = async () => {
-      socket.emit('wave', {
+    const wsTo = useMemo(() => {
+      return {
         room,
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
         socketId: settings.participants[trackReference.participant.identity]?.socketId,
-      });
-      // 创建一个虚拟的audio元素并播放音频，然后移除
-      const audioSrc = src('/audios/vocespacewave.m4a');
-      const audio = new Audio(audioSrc);
-      audio.volume = 1.0;
-      audio.play().then(() => {
-        setTimeout(() => {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.remove();
-        }, 2000);
-      });
-    };
+      } as WsTo;
+    }, [room, localParticipant, trackReference, settings.participants]);
 
     // 处理当前用户如果是演讲者并且当前track source是screen share，那么就需要获取其他用户的鼠标位置
     useEffect(() => {
@@ -721,22 +715,7 @@ export const ParticipantItem: (
           <ConnectionQualityIndicator className="lk-participant-metadata-item" />
         </div>
         {trackReference.participant.identity != localParticipant.identity && (
-          <LayoutContext.Consumer>
-            {(layoutContext) =>
-              layoutContext !== undefined && (
-                <button
-                  className="lk-button lk-focus-toggle-button"
-                  style={{
-                    left: '0.25rem',
-                    width: 'fit-content',
-                  }}
-                  onClick={wavePin}
-                >
-                  <SvgResource svgSize={16} type="wave"></SvgResource>
-                </button>
-              )
-            }
-          </LayoutContext.Consumer>
+          <WaveHand wsTo={wsTo} />
         )}
       </ParticipantTile>
     );

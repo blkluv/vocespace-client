@@ -475,7 +475,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
       return (
         <GLayout tracks={mainTracks} style={{ height: '120px', position: 'relative' }}>
-          <ParticipantTileMini settings={settings}></ParticipantTileMini>
+          <ParticipantTileMini settings={settings} room={roomName}></ParticipantTileMini>
         </GLayout>
       );
     }, [tracks, childRooms, settings]);
@@ -494,11 +494,11 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
         return (
           <GLayout tracks={subTracks} style={{ height: '120px', position: 'relative' }}>
-            <ParticipantTileMini settings={settings}></ParticipantTileMini>
+            <ParticipantTileMini settings={settings} room={roomName}></ParticipantTileMini>
           </GLayout>
         );
       },
-      [tracks, childRooms, settings],
+      [tracks, childRooms, settings, roomName],
     );
 
     const subChildren: CollapseProps['items'] = useMemo(() => {

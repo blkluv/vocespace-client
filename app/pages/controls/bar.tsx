@@ -25,6 +25,7 @@ import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { ParticipantList } from '../participant/list';
+import { NotionApp } from '../apps/notion';
 
 const RECORD_URL = connect_endpoint('/api/record');
 
@@ -278,6 +279,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [blurScreen, setBlurScreen] = React.useState(0.0);
     const [username, setUsername] = React.useState<string>('');
     const [openNameModal, setOpenNameModal] = React.useState(false);
+    const [openNotion, setOpenNotion] = React.useState(false);
     const participantList = React.useMemo(() => {
       return Object.entries(roomSettings.participants);
     }, [roomSettings]);
@@ -764,6 +766,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setOpenRecordModal(false);
     };
 
+    const onClickApp = async () => {
+      if (!room) return;
+
+      // 打开Notion应用
+      setOpenNotion(true);
+    }
+
     return (
       <div {...htmlProps} className={styles.controls}>
         {contextHolder}
@@ -850,6 +859,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               }}
               onClickRecord={onClickRecord}
               onClickManage={fetchSettings}
+              onClickApp={onClickApp}
               isRecording={isRecording}
             ></MoreButton>
           )}
@@ -1110,6 +1120,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
           )}
         </Modal>
+        {
+          room && <NotionApp open={openNotion} onClose={() => setOpenNotion(false)} roomName={room.name}></NotionApp>
+        }
       </div>
     );
   },

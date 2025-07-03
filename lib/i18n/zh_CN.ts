@@ -123,6 +123,9 @@ export default {
   more: {
     title: '更多',
     channel: '频道',
+    app: {
+      title: "应用"
+    },
     record: {
       start: '录制',
       stop: '停止录制',

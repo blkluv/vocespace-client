@@ -11,6 +11,7 @@ export interface MoreButtonProps {
   onSettingOpen?: () => Promise<void>;
   onClickManage?: () => Promise<void>;
   onClickRecord?: () => Promise<void>;
+  onClickApp?: () => Promise<void>;
   controlWidth: number;
 }
 
@@ -21,6 +22,7 @@ export function MoreButton({
   onClickManage,
   onClickRecord,
   onSettingOpen,
+  onClickApp,
   isRecording,
   controlWidth,
 }: MoreButtonProps) {
@@ -37,6 +39,12 @@ export function MoreButton({
 
   const items: MenuProps['items'] = useMemo(() => {
     return [
+      // 应用
+      {
+        label: <div style={{ marginLeft: '8px' }}>{t('more.app.title')}</div>,
+        key: 'app',
+        icon: <SvgResource type="app" svgSize={16} />,
+      },
       // 录屏功能
       {
         label: (
@@ -82,6 +90,11 @@ export function MoreButton({
       case 'setting':
         if (onSettingOpen) {
           await onSettingOpen();
+        }
+        break;
+      case 'app':
+        if (onClickApp) {
+          await onClickApp();
         }
         break;
       default:

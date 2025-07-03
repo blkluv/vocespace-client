@@ -12,6 +12,7 @@ import {
   useEnsureTrackRef,
   useFeatureContext,
   useIsEncrypted,
+  useLocalParticipant,
   useMaybeLayoutContext,
   useTrackMutedIndicator,
   VideoTrack,
@@ -20,20 +21,25 @@ import { Track } from 'livekit-client';
 import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 import { isTrackReferencePinned } from './tile';
 import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
-import { useVideoBlur } from '@/lib/std/device';
+import { useVideoBlur, WsTo } from '@/lib/std/device';
 import { SvgResource } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
 import { roomStatusState, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
+import { WaveHand } from '../controls/wave';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
-  participants?: ParticipantSettings[];
   settings: RoomSettings;
+  /**
+   * host room name
+   */
+  room: string;
 }
 
 export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMiniProps>(
-  ({ trackRef, participants, settings }: ParticipantTileMiniProps, ref) => {
+  ({ trackRef, settings, room }: ParticipantTileMiniProps, ref) => {
     const trackReference = useEnsureTrackRef(trackRef);
+    const { localParticipant } = useLocalParticipant();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [uState, setUState] = useRecoilState(userState);
     const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
@@ -58,6 +64,17 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
         // setLoading(false);
       }
     }, [settings.participants, trackReference]);
+
+    const wsTo = useMemo(() => {
+      return {
+        room,
+        senderName: localParticipant.name,
+        senderId: localParticipant.identity,
+        receiverId: trackReference.participant.identity,
+        socketId: settings.participants[trackReference.participant.identity]?.socketId,
+      } as WsTo;
+    }, [room, localParticipant, trackReference, settings.participants]);
+
     const defineStatus = useMemo(() => {
       return uRoomStatusState.find(
         (item) => item.id === settings.participants[trackReference.participant.identity]?.status,
@@ -128,7 +145,10 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
           <ParticipantPlaceholder />
         </div>
         <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
-          <div className="lk-participant-metadata-item" style={{ maxWidth: 'calc(100% - 32px)', width: 'max-content' }}>
+          <div
+            className="lk-participant-metadata-item"
+            style={{ maxWidth: 'calc(100% - 32px)', width: 'max-content' }}
+          >
             {trackReference.source === Track.Source.Camera ? (
               <>
                 {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
@@ -187,6 +207,9 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
 
           <ConnectionQualityIndicator className="lk-participant-metadata-item" />
         </div>
+        {trackReference.participant.identity != localParticipant.identity && (
+          <WaveHand wsTo={wsTo} />
+        )}
       </ParticipantTile>
     );
   },
