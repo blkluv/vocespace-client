@@ -1,3 +1,5 @@
+// core styles shared by all of react-notion-x (required)
+import 'react-notion-x/styles.css'
 import { I18nProvider } from '@/lib/i18n/i18n';
 import '../styles/globals.css';
 import '@livekit/components-styles';

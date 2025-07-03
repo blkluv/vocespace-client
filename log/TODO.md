@@ -260,12 +260,7 @@ lk load-test \
 - [x] space, room, public room 图标调整
 - [x] 总空间的host需要对所有子房间拥有权限
 
-- [ ] 用户自己的状态与房间状态之间进行联系
-  - [ ] 子房间状态列表
-  - [ ] 子房间拥有着同步子房间状态
-  - [ ] 增加状态设置部分
-- [ ] 应用嵌入
-  - [ ] Notion
+
 - [x] 重构userState和ParticipantSettings之间的关系
 - [ ] 重写MicrophoneTraggle组件
 - [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
@@ -305,3 +300,13 @@ lk load-test \
 - [x] 默认展开子房间
 - [x] wave hand增加到mini里
 - [x] chat进入时也要拉到最后
+
+- [ ] 用户自己的状态与房间状态之间进行联系
+  - [ ] 子房间状态列表
+  - [ ] 子房间拥有着同步子房间状态
+  - [ ] 增加状态设置部分
+- [ ] 应用嵌入
+  - [ ] Notion
+    - [ ] 更多按钮添加应用
+    - [ ] 点击应用打开Modal
+    - [ ] Notion API

@@ -25,7 +25,10 @@ import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { ParticipantList } from '../participant/list';
-import { NotionApp } from '../apps/notion';
+import { AppModal } from '../apps/app_modal';
+import { NotionAppDrawer } from '../apps/notion/notion';
+import { DEFAULT_DRAWER_PROP, DrawerHeader } from './drawer_tools';
+// import { NotionApp } from '../apps/notion';
 
 const RECORD_URL = connect_endpoint('/api/record');
 
@@ -279,7 +282,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [blurScreen, setBlurScreen] = React.useState(0.0);
     const [username, setUsername] = React.useState<string>('');
     const [openNameModal, setOpenNameModal] = React.useState(false);
-    const [openNotion, setOpenNotion] = React.useState(false);
+    const [openAppModal, setOpenAppModal] = React.useState(false);
+    const [NotionOpen, setNotionOpen] = React.useState(false);
     const participantList = React.useMemo(() => {
       return Object.entries(roomSettings.participants);
     }, [roomSettings]);
@@ -770,8 +774,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       if (!room) return;
 
       // 打开Notion应用
-      setOpenNotion(true);
-    }
+      setOpenAppModal(true);
+    };
 
     return (
       <div {...htmlProps} className={styles.controls}>
@@ -918,25 +922,14 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           </div>
         </Drawer>
         <Drawer
-          style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
-          styles={{
-            body: {
-              padding: '0 24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-            },
-          }}
+          {...DEFAULT_DRAWER_PROP}
+          width={'520px'}
           title={
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <SvgResource type="user" svgSize={16}></SvgResource>
-              <span>{t('more.participant.manage')}</span>
-            </div>
+            <DrawerHeader
+              title={t('more.participant.manage')}
+              icon={<SvgResource type="user" svgSize={16}></SvgResource>}
+            ></DrawerHeader>
           }
-          placement="right"
-          closable={false}
-          width={'540px'}
           open={openMore}
           onClose={() => {
             setOpenMore(false);
@@ -1120,9 +1113,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
           )}
         </Modal>
-        {
-          room && <NotionApp open={openNotion} onClose={() => setOpenNotion(false)} roomName={room.name}></NotionApp>
-        }
+        <AppModal
+          open={openAppModal}
+          setOpen={setOpenAppModal}
+          setNotionOpen={setNotionOpen}
+        ></AppModal>
+        <NotionAppDrawer open={NotionOpen} setOpen={setNotionOpen}></NotionAppDrawer>
       </div>
     );
   },
