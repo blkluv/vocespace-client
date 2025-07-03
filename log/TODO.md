@@ -296,12 +296,12 @@ lk load-test \
       - [x] SOCKET_ID未记录
       - [x] 404NOT FOUND
       - [x] SOCKET_ID 验证
-- [ ] room中静音回到space-用户成员列表optOpen失效
+- [x] room中静音回到space-用户成员列表optOpen失效
 - [x] 用户加入的ID进行调整（每次重新分配的ID会导致用户占用的情况）
   - [x] 处理API中random改为按照房间名字添加后缀
   - [x] 确保唯一ID(在进入前查询房间中是否有重复)
   - [x] 修改Cookie
 - [x] 增加子房间用户在线计数 （2 active｜2 人在线）
-- [ ] 默认展开子房间
+- [x] 默认展开子房间
 - [x] wave hand增加到mini里
 - [x] chat进入时也要拉到最后

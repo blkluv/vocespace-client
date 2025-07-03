@@ -650,10 +650,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       // 同步settings中的房间的状态到uRoomStatusState中 ----------------------------------------
       if (settings.status && settings.status.length > 0) {
         setURoomStatusState((prev) => {
+          const newState = [...prev];
           if (prev !== settings!.status!) {
             return settings!.status!;
           }
-          return prev;
+          return newState;
         });
       }
     }, [room, settings, uRoomStatusState]);

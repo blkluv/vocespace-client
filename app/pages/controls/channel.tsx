@@ -90,14 +90,10 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       name: string;
       targetRoom: string;
     } | null>(null);
-    const [selfRoomName, setSelfRoomName] = useState<string>(() => {
-      // 需要从settings中获取当前用户所在的子房间
-      const childRoom = settings.children?.find((room) => {
-        return room.participants.includes(participantId);
-      });
-      return childRoom ? childRoom.name : roomName;
-    });
+    const [selfRoomName, setSelfRoomName] = useState<string>(roomName);
     const [subActiveKey, setSubActiveKey] = useState<string[]>([]);
+    // 用于存储子房间的名称，在其他用户创建房间后通过这个变量来控制到底那些新的子房间需要展开
+    const [subRoomsTmp, setSubRoomsTmp] = useState<string[]>([]);
     const [mainActiveKey, setMainActiveKey] = useState<string[]>(['main', 'sub']);
     const [roomPrivacy, setRoomPrivacy] = useState<RoomPrivacy>('public');
     const roomPrivacyOptions: CheckboxGroupProps<string>['options'] = [
@@ -110,6 +106,26 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         value: 'private',
       },
     ];
+
+    useEffect(() => {
+      // 设置默认展开的子房间的Collapse body基于subRoomsTmp
+      let currentRooms = settings.children.map((room) => room.name);
+      let isSameAsSubTmp = subRoomsTmp.every((room) => currentRooms.includes(room));
+      if (settings.children.length > 0 && !isSameAsSubTmp) {
+        let newRooms: string[] = [];
+        settings.children.forEach((child) => {
+          newRooms.push(child.name);
+          if (!subRoomsTmp.includes(child.name)) {
+            setSubActiveKey((prev) => [...prev, child.name]);
+          }
+          // 如果当前这个本地用户在子房间中，需要展开这个子房间
+          if (child.participants.includes(participantId)) {
+            setSubActiveKey((prev) => [...prev, child.name]);
+          }
+        });
+        setSubRoomsTmp(newRooms);
+      }
+    }, [settings.children, participantId, subRoomsTmp]);
 
     const wsSender = useMemo(() => {
       if (settings && roomName && participantId && settings.participants[participantId]) {
@@ -170,15 +186,6 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       setCollapsed(!collapsed);
     };
     const [childRoomName, setChildRoomName] = useState('');
-
-    useEffect(() => {
-      if (selfRoomName) {
-        setSubActiveKey([selfRoomName]);
-      }
-      return () => {
-        setSubActiveKey([]);
-      };
-    }, [selfRoomName]);
 
     const createChildRoom = async () => {
       if (childRoomName.trim() === '') {
@@ -296,10 +303,11 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         // 进入子房间后 subActiveKey 就是当前子房间的key
         setSelfRoomName(room.name);
         setSubActiveKey((prev) => {
+          const newSubActiveKey = [...prev];
           if (!prev.includes(room.name)) {
-            prev.push(room.name);
+            newSubActiveKey.push(room.name);
           }
-          return prev;
+          return newSubActiveKey;
         });
         // setMainActiveKey(['sub']);
         await onUpdate();
@@ -481,10 +489,14 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     }, [tracks, childRooms, settings]);
 
     const subContext = useCallback(
-      (name: string): ReactNode => {
+      (name: string, length: number): ReactNode => {
         let childRoom = childRooms.find((room) => room.name === name);
 
         if (!childRoom) {
+          return <></>;
+        }
+
+        if (length === 0) {
           return <></>;
         }
 
@@ -528,12 +540,13 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                   className={styles.room_header_wrapper_title}
                   onClick={() => {
                     setSubActiveKey((prev) => {
-                      if (prev.includes(room.name)) {
-                        return prev.filter((r) => r !== room.name);
+                      const newActiveKey = [...prev];
+                      if (newActiveKey.includes(room.name)) {
+                        return newActiveKey.filter((r) => r !== room.name);
                       } else {
-                        prev.push(room.name);
+                        newActiveKey.push(room.name);
                       }
-                      return prev;
+                      return newActiveKey;
                     });
                   }}
                 >
@@ -544,7 +557,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                   )}
                   {room.name}
                 </div>
-                {room.participants.length > 0&& (
+                {room.participants.length > 0 && (
                   <Tag
                     color="#22CCEE"
                     style={{ fontSize: '12px', padding: '2px 4px', lineHeight: '1.2em' }}
@@ -567,7 +580,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
             </div>
           </div>
         ),
-        children: subContext(room.name),
+        children: subContext(room.name, room.participants.length),
         style: subStyle,
       }));
     }, [subContext, childRooms, selectedRoom, selfRoomName, roomJoinVis]);
