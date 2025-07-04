@@ -27,34 +27,42 @@ export function AppCountdown({ messageApi }: CountdownProps) {
     dayjs().hour(0).minute(5).second(0), // 默认5分钟
   );
   const [countdownRunning, setCountdownRunning] = useState(false);
-  const [records, setRecords] = useState<string[]>([]);
+
+  const [stopTimeStamp, setStopTimeStamp] = useState<number | null>(null);
 
   // 开始倒计时
   const startCountdown = () => {
     if (!countdownDuration) {
-      messageApi.error('请先设置倒计时时间');
+      messageApi.error(t('more.app.countdown.error.set'));
       return;
     }
 
-    const hours = countdownDuration.hour();
-    const minutes = countdownDuration.minute();
-    const seconds = countdownDuration.second();
-    const totalMs = (hours * 3600 + minutes * 60 + seconds) * 1000;
+    if (stopTimeStamp && stopTimeStamp > 0) {
+      // 如果有停止时间戳，继续倒计时
+      setCountdownRunning(true);
+      setStopTimeStamp(null);
+    } else {
+      const hours = countdownDuration.hour();
+      const minutes = countdownDuration.minute();
+      const seconds = countdownDuration.second();
+      const totalMs = (hours * 3600 + minutes * 60 + seconds) * 1000;
 
-    if (totalMs <= 0) {
-      messageApi.error('请设置有效的倒计时时间');
-      return;
+      if (totalMs <= 0) {
+        messageApi.error(t('more.app.countdown.error.valid'));
+        return;
+      }
+      let start = Date.now();
+      const endTime = start + totalMs;
+      setCountdownValue(endTime);
+      setCountdownRunning(true);
     }
-
-    const endTime = Date.now() + totalMs;
-    setCountdownValue(endTime);
-    setCountdownRunning(true);
   };
 
   // 停止倒计时
   const stopCountdown = () => {
     setCountdownRunning(false);
-    setCountdownValue(null);
+    // setCountdownValue(null);
+    setStopTimeStamp(Date.now());
   };
 
   // 重置倒计时
@@ -62,11 +70,29 @@ export function AppCountdown({ messageApi }: CountdownProps) {
     setCountdownRunning(false);
     setCountdownValue(null);
     setCountdownDuration(dayjs().hour(0).minute(5).second(0));
+    setStopTimeStamp(null);
   };
   const onCountdownFinish: StatisticTimerProps['onFinish'] = () => {
     console.log('Countdown finished!');
     setCountdownRunning(false);
     setCountdownValue(null);
+  };
+
+  const timestampToSecond = (timestamp: number) => {
+    if (!timestamp) return '00:00:00';
+    const seconds = Math.floor(timestamp / 1000);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(
+      secs,
+    ).padStart(2, '0')}`;
+  };
+
+  const defaultStyle = {
+    fontSize: '48px',
+    fontWeight: 'bold',
+    color: '#999',
   };
 
   return (
@@ -75,54 +101,74 @@ export function AppCountdown({ messageApi }: CountdownProps) {
         <div style={{ textAlign: 'center' }}>
           <Title level={4}>
             <ClockCircleOutlined style={{ marginRight: 8 }} />
-            倒计时
+            {t('more.app.countdown.title')}
           </Title>
         </div>
 
         <Row align="middle">
-          <div style={{ marginBottom: 8 }}>设置时间：</div>
+          <div style={{ marginBottom: 8 }}>{t('more.app.countdown.set')}:</div>
           <TimePicker
             value={countdownDuration}
             onChange={setCountdownDuration}
             showNow={false}
             format="HH:mm:ss"
             disabled={countdownRunning}
-            placeholder="选择倒计时时间"
-            style={{ width: '100%',outline: "1px solid #22CCEE" }}
+            placeholder={t('more.app.countdown.placeholder')}
+            style={{ width: '100%', outline: '1px solid #22CCEE' }}
           />
         </Row>
         <Row align="bottom" justify="end">
-          <Space size={"large"}>
+          <Space size={'large'}>
             {!countdownRunning ? (
               <Button type="primary" icon={<PlayCircleOutlined />} onClick={startCountdown}>
-                开始
+                {stopTimeStamp && stopTimeStamp > 0
+                  ? t('more.app.countdown.continue')
+                  : t('more.app.countdown.start')}
               </Button>
             ) : (
               <Button danger icon={<PauseCircleOutlined />} onClick={stopCountdown}>
-                停止
+                {t('more.app.countdown.stop')}
               </Button>
             )}
-            <Button icon={<ReloadOutlined />} onClick={resetCountdown}>
-              重置
+
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={resetCountdown}
+              color="danger"
+              variant="solid"
+            >
+              {t('more.app.countdown.reset')}
             </Button>
           </Space>
         </Row>
 
-        {countdownValue && (
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <Timer
-              type="countdown"
-              value={countdownValue}
-              onFinish={onCountdownFinish}
-              format="HH:mm:ss"
-              style={{
-                fontSize: '48px',
-                fontWeight: 'bold',
-                color: countdownRunning ? '#1890ff' : '#999',
-              }}
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          {stopTimeStamp ? (
+            <Statistic
+              value={
+                countdownValue ? timestampToSecond(countdownValue - stopTimeStamp) : '--:--:--'
+              }
+              style={defaultStyle}
             />
-          </div>
-        )}
+          ) : (
+            <>
+              {countdownValue ? (
+                <Timer
+                  type="countdown"
+                  value={countdownValue}
+                  onFinish={onCountdownFinish}
+                  format="HH:mm:ss"
+                  style={{
+                    ...defaultStyle,
+                    color: countdownRunning ? '#1890ff' : '#999',
+                  }}
+                />
+              ) : (
+                <Statistic value={countdownDuration?.format('HH:mm:ss')} style={defaultStyle} />
+              )}
+            </>
+          )}
+        </div>
       </Space>
     </Card>
   );

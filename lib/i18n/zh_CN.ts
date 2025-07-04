@@ -143,10 +143,13 @@ export default {
         start: '开始',
         stop: '停止',
         reset: '重置',
-        records: {
-          title: '倒计时记录',
-          button: '记录',
-        },
+        placeholder: "选择倒计时时间",
+        set: "设置时间",
+        continue: '继续',
+        error: {
+          set: "请先设置倒计时时间",
+          valid: "请设置有效的倒计时时间"
+        }
       },
       todo: {
         title: '待办事项',
