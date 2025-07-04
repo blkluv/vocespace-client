@@ -89,6 +89,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             paddingBlockLG: 8,
             colorText: '#ffffff',
           },
+          Timeline: {
+            dotBg: 'transparent',
+            tailColor: "#22CCEE",
+          },
           DatePicker: {
             colorBgContainer: '#1E1E1E',
             colorTextPlaceholder: '#8c8c8c',
@@ -99,7 +103,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             colorBgElevated: '#1E1E1E',
             cellActiveWithRangeBg: '#22CCEE',
             cellHoverBg: '#333',
-            
+            cellBgDisabled: '#1E1E1E',
+            colorTextDisabled: '#8c8c8c',
           },
           Select: {
             selectorBg: '#1E1E1E',

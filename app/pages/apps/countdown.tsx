@@ -14,6 +14,7 @@ import { TimeRecords } from './time_records';
 import { MessageInstance } from 'antd/es/message/interface';
 const { Timer } = Statistic;
 import dayjs, { type Dayjs } from 'dayjs';
+import { src } from '@/lib/std';
 
 export interface CountdownProps {
   messageApi: MessageInstance;
@@ -76,6 +77,17 @@ export function AppCountdown({ messageApi }: CountdownProps) {
     console.log('Countdown finished!');
     setCountdownRunning(false);
     setCountdownValue(null);
+    setStopTimeStamp(null);
+    const audioSrc = src('/audios/alarm.mp3');
+    const audio = new Audio(audioSrc);
+    audio.volume = 1.0;
+    audio.play().then(() => {
+      setTimeout(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.remove();
+      }, 4000);
+    });
   };
 
   const timestampToSecond = (timestamp: number) => {

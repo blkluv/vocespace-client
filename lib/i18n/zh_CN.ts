@@ -155,6 +155,44 @@ export default {
         title: '待办事项',
         add: '添加待办',
         placeholder: '请输入待办事项',
+        empty: "暂无待办事项，点击上方按钮添加第一个待办",
+        create: "创建待办",
+        modal: {
+          confirm: "创建",
+          cancel: "取消",
+          title: "创建新的待办事项",
+          name: "待办事项名称",
+          name_placeholder: "请输入待办事项名称",
+          desc: "待办事项描述",
+          desc_placeholder: "请输入待办事项描述（可选）",
+          start: "开始时间 (可选)",
+          start_placeholder: "选择开始时间",
+          end: "截止时间",
+          end_placeholder: "选择截止时间",
+        },
+        count: {
+          all: "总计",
+          done: "已完成",
+          running: "进行中",
+          overdue: "已逾期",
+        },
+        create_at: "创建时间",
+        finish_at: "完成时间",
+        deadline: "截止时间",
+        start: "开始时间",
+        completed: "已完成",
+        tooltip: {
+          complete: {
+            title: "完成待办",
+
+          },
+          delete: {
+            title: "删除待办",
+            desc: "您确定要删除此待办事项吗？",
+            confirm: "确认删除",
+            cancel: "取消",
+          }
+        }
       }
     },
     record: {

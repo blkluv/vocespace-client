@@ -56,7 +56,7 @@ export default {
       leave: 'Leave room',
       rename: 'Rename',
       switch_privacy: 'Set to ',
-      active: "active"
+      active: 'active',
     },
     join: {
       success: 'Join room successfully',
@@ -126,6 +126,74 @@ export default {
   more: {
     title: 'More',
     channel: 'Channel',
+    app: {
+      title: 'Application',
+      timer: {
+        title: 'Timer',
+        start: 'Start',
+        stop: 'Stop',
+        reset: 'Reset',
+        records: {
+          title: 'Timer Record',
+          button: 'Record',
+        },
+      },
+      countdown: {
+        title: 'Countdown',
+        start: 'Start',
+        stop: 'Stop',
+        reset: 'Reset',
+        placeholder: 'Select countdown time',
+        set: 'Set time',
+        continue: 'Continue',
+        error: {
+          set: 'Please set countdown time first',
+          valid: 'Please set a valid countdown time',
+        },
+      },
+      todo: {
+        title: 'To-do',
+        add: 'Add to-do',
+        placeholder: 'Please enter to-do',
+        empty: 'No to-do, click the button above to add the first to-do',
+        create: 'Create to-do',
+        modal: {
+          confirm: 'Create',
+          cancel: 'Cancel',
+          title: 'Create a new to-do',
+          name: 'To-do name',
+          name_placeholder: 'Please enter the name of the to-do',
+          desc: 'To-do description',
+          desc_placeholder: 'Please enter the description of the to-do (optional)',
+          start: 'Start time (optional)',
+          start_placeholder: 'Select a start time',
+          end: 'Deadline',
+          end_placeholder: 'Select a deadline',
+        },
+        count: {
+          all: 'Total',
+          done: 'Completed',
+          running: 'In progress',
+          overdue: 'Overdue',
+        },
+        create_at: 'Create time',
+        finish_at: 'Finish time',
+        deadline: 'Deadline',
+        start: 'Start time',
+        completed: 'Completed',
+        tooltip: {
+          complete: {
+            title: 'Complete to-do',
+          },
+          delete: {
+            title: 'Delete to-do',
+            desc: 'Are you sure you want to delete this to-do?',
+            confirm: 'Confirm deletion',
+            cancel: 'Cancel',
+          },
+        },
+      },
+    },
     record: {
       start: 'Record',
       stop: 'Stop recording',
