@@ -30,7 +30,7 @@ export function ChatToggle({
   }, [controlWidth]);
 
   return (
-    <Badge count={count} color="#22CCEE" size="small" offset={[-4, 4]} dot={isDot}>
+    <Badge count={count} color="#22CCEE" size="small" offset={[-4, 4]} dot={isDot} style={{zIndex: 1111}}>
       {showTextOrHide ? (
         <Button
           variant="solid"

@@ -1,28 +1,22 @@
-.app_block {
-    height: fit-content;
-    display: flex;
+.flex_header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  &_title {
+    width: fit-content;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 4px;
-    border:  none;
-    border-radius: 8px;
-    background-color: #222;
-    box-shadow: 0px 0px 2px 1px #111;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    margin: 16px 0px;
-    &_icon {
-        height: 32px;
-        width: 32px;
-    }
-    &_name {
-        font-size: 14px;
-        font-weight: 700;
-        width: 100%;
-    }
-    &:hover {
-        box-shadow: 0 0 4px 2px #111;
-        background-color: #252525;
-    }
+    justify-content: flex-start;
+    gap: 8px;
+    font-size: 16px;
+  }
+}
+
+.record_item {
+  font-size: 18px;
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+  letter-spacing: 1px;
 }

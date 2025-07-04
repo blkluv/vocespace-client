@@ -32,6 +32,7 @@ export function ParticipantList({
       renderItem={(item, index) => (
         <List.Item>
           <Dropdown
+            disabled={item[0] === ownerId}
             trigger={['contextMenu']}
             menu={menu}
             onOpenChange={(open) => onOpenMenu(open, item[0])}

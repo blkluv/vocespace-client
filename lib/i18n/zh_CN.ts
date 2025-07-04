@@ -1,3 +1,5 @@
+import { title } from "process";
+
 export default {
   common: {
     confirm: '确认',
@@ -56,7 +58,7 @@ export default {
       leave: '离开房间',
       rename: '重命名',
       switch_privacy: '设为',
-      active: "在线"
+      active: '在线',
     },
     join: {
       success: '加入房间成功',
@@ -125,7 +127,32 @@ export default {
     title: '更多',
     channel: '频道',
     app: {
-      title: "应用"
+      title: '应用',
+      timer: {
+        title: '计时器',
+        start: '开始',
+        stop: '停止',
+        reset: '重置',
+        records: {
+          title: '计时记录',
+          button: '记录',
+        },
+      },
+      countdown: {
+        title: '倒计时',
+        start: '开始',
+        stop: '停止',
+        reset: '重置',
+        records: {
+          title: '倒计时记录',
+          button: '记录',
+        },
+      },
+      todo: {
+        title: '待办事项',
+        add: '添加待办',
+        placeholder: '请输入待办事项',
+      }
     },
     record: {
       start: '录制',

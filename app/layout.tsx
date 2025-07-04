@@ -1,5 +1,5 @@
 // core styles shared by all of react-notion-x (required)
-import 'react-notion-x/styles.css'
+import 'react-notion-x/styles.css';
 import { I18nProvider } from '@/lib/i18n/i18n';
 import '../styles/globals.css';
 import '@livekit/components-styles';
@@ -50,8 +50,8 @@ const neutral = {
 
 const brand = {
   primary: '#06AED4',
-  primaryHover: '#22CCEE', 
-  primaryActive: '#22CCEE', 
+  primaryHover: '#22CCEE',
+  primaryActive: '#22CCEE',
   primaryText: '#aaa',
 };
 
@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         },
         components: {
           Button: {
-            defaultColor: '#8c8c8c'
+            defaultColor: '#8c8c8c',
           },
           Dropdown: {
             colorBgElevated: '#1E1E1E',
@@ -88,6 +88,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             colorTextPlaceholder: '#8c8c8c',
             paddingBlockLG: 8,
             colorText: '#ffffff',
+          },
+          DatePicker: {
+            colorBgContainer: '#1E1E1E',
+            colorTextPlaceholder: '#8c8c8c',
+            colorText: '#ffffff',
+            colorBorder: '#1E1E1E',
+            colorBgBase: '#1E1E1E',
+            colorIcon: '#ffffff',
+            colorBgElevated: '#1E1E1E',
+            cellActiveWithRangeBg: '#22CCEE',
+            cellHoverBg: '#333',
+            
           },
           Select: {
             selectorBg: '#1E1E1E',
@@ -128,8 +140,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             colorBgContainer: '#1E1E1E',
             colorBorder: '#1E1E1E',
             colorBorderBg: '#1E1E1E',
-            colorBorderSecondary : '#1E1E1E',
-            colorText: brand.primaryText
+            colorBorderSecondary: '#1E1E1E',
+            colorText: brand.primaryText,
           },
           Statistic: {
             colorText: brand.primaryText,
@@ -148,12 +160,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             itemSelectedColor: '#fff',
           },
           Collapse: {
-            contentPadding: "4px",
-            headerPadding: "4px",
+            contentPadding: '4px',
+            headerPadding: '4px',
           },
           Badge: {
             colorBorderBg: 'transparent',
-          }
+          },
+          Empty: {
+            colorTextDescription: '#22CCEE',
+          },
         },
       }}
     >

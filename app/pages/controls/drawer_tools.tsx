@@ -1,4 +1,5 @@
-import { DrawerProps } from 'antd';
+import { SvgResource } from '@/app/resources/svg';
+import { Button, DrawerProps } from 'antd';
 
 export function DrawerHeader({ title, icon }: { title: string, icon?: React.ReactNode }) {
   return (
@@ -23,4 +24,19 @@ export const DEFAULT_DRAWER_PROP: DrawerProps = {
       flexWrap: 'wrap',
     },
   },
+};
+
+
+export const DrawerCloser = ({
+  on_clicked,
+}: {
+  on_clicked: () => void;
+}): React.ReactNode => {
+  return (
+    <div>
+      <Button type="text" shape="circle" onClick={on_clicked}>
+        <SvgResource type="close" color="#fff" svgSize={16}></SvgResource>
+      </Button>
+    </div>
+  );
 };

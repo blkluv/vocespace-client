@@ -42,6 +42,7 @@ import {
 } from '@/lib/hooks/channel';
 import { socket } from '@/app/[roomName]/PageClientImpl';
 import { WsJoinRoom, WsRemove, WsSender, WsTo } from '@/lib/std/device';
+import { PaginationInfo } from './pagination';
 
 interface ChannelProps {
   roomName: string;
@@ -559,8 +560,13 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                 </div>
                 {room.participants.length > 0 && (
                   <Tag
-                    color="#22CCEE"
-                    style={{ fontSize: '12px', padding: '2px 4px', lineHeight: '1.2em' }}
+                    color="transparent"
+                    style={{
+                      fontSize: '0.8em',
+                      padding: '2px 4px',
+                      lineHeight: '1.2em',
+                      color: '#8c8c8c',
+                    }}
                     bordered={false}
                   >
                     {room.participants.length}&nbsp;

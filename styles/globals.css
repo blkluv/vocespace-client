@@ -200,6 +200,16 @@ h2 a {
   align-items: center;
 }
 
-.ant-modal-close-x{
+.ant-modal-close-x {
   color: #8c8c8c;
+}
+.ant-picker-clear {
+  color: #8c8c8c !important;
+}
+
+.ant-picker-dropdown
+  .ant-picker-time-panel-column
+  > li.ant-picker-time-panel-cell-selected
+  .ant-picker-time-panel-cell-inner {
+  background-color: #22ccee !important;
 }

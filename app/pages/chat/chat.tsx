@@ -5,7 +5,6 @@ import type { GetProp, UploadProps } from 'antd';
 import { pictureCallback, SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/chat.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
-import { setting_drawer_header } from '@/app/pages/controls/bar';
 import { ulid } from 'ulid';
 import { Room } from 'livekit-client';
 import { chatMsgState, socket } from '@/app/[roomName]/PageClientImpl';
@@ -14,6 +13,7 @@ import { LinkPreview } from './link_preview';
 import Dragger from 'antd/es/upload/Dragger';
 import { useRecoilState } from 'recoil';
 import { ChatMsgItem } from '@/lib/std/chat';
+import { DrawerCloser } from '../controls/drawer_tools';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
@@ -230,7 +230,7 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
         open={open}
         closable={false}
         width={'440px'}
-        extra={setting_drawer_header({
+        extra={DrawerCloser({
           on_clicked: () => setOpen(false),
         })}
         style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}

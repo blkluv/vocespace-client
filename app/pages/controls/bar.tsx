@@ -25,10 +25,8 @@ import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { ParticipantList } from '../participant/list';
-import { AppModal } from '../apps/app_modal';
-import { NotionAppDrawer } from '../apps/notion/notion';
-import { DEFAULT_DRAWER_PROP, DrawerHeader } from './drawer_tools';
-// import { NotionApp } from '../apps/notion';
+import { DEFAULT_DRAWER_PROP, DrawerCloser, DrawerHeader } from './drawer_tools';
+import { AppDrawer } from '../apps/app_drawer';
 
 const RECORD_URL = connect_endpoint('/api/record');
 
@@ -283,7 +281,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [username, setUsername] = React.useState<string>('');
     const [openNameModal, setOpenNameModal] = React.useState(false);
     const [openAppModal, setOpenAppModal] = React.useState(false);
-    const [NotionOpen, setNotionOpen] = React.useState(false);
     const participantList = React.useMemo(() => {
       return Object.entries(roomSettings.participants);
     }, [roomSettings]);
@@ -888,17 +885,15 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           ></EnhancedChat>
         )}
         <Drawer
-          style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
+          {...DEFAULT_DRAWER_PROP}
           title={t('common.setting')}
-          placement="right"
-          closable={false}
           width={'640px'}
           open={settingVis}
           onClose={() => {
             setSettingVis(false);
             closeSetting();
           }}
-          extra={setting_drawer_header({
+          extra={DrawerCloser({
             on_clicked: () => {
               setSettingVis(false);
               closeSetting();
@@ -935,7 +930,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             setOpenMore(false);
             // closeSetting();
           }}
-          extra={setting_drawer_header({
+          extra={DrawerCloser({
             on_clicked: () => {
               setOpenMore(false);
               // closeSetting();
@@ -1113,12 +1108,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
           )}
         </Modal>
-        <AppModal
-          open={openAppModal}
-          setOpen={setOpenAppModal}
-          setNotionOpen={setNotionOpen}
-        ></AppModal>
-        <NotionAppDrawer open={NotionOpen} setOpen={setNotionOpen}></NotionAppDrawer>
+
+        <AppDrawer open={openAppModal} setOpen={setOpenAppModal} messageApi={messageApi}></AppDrawer>
       </div>
     );
   },
@@ -1172,17 +1163,3 @@ export function supportsScreenSharing(): boolean {
     !!navigator.mediaDevices.getDisplayMedia
   );
 }
-
-export const setting_drawer_header = ({
-  on_clicked,
-}: {
-  on_clicked: () => void;
-}): React.ReactNode => {
-  return (
-    <div>
-      <Button type="text" shape="circle" onClick={on_clicked}>
-        <SvgResource type="close" color="#fff" svgSize={16}></SvgResource>
-      </Button>
-    </div>
-  );
-};

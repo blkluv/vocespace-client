@@ -32,7 +32,14 @@ import {
   Track,
   TrackPublication,
 } from 'livekit-client';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { ControlBarExport, Controls } from './bar';
 import { useRecoilState } from 'recoil';
 import { ParticipantItem } from '../participant/tile';
@@ -145,7 +152,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const isActive = true;
 
     useEffect(() => {
-      if (!room) return;
+      if (!room || !socket.id) return;
       if (
         room.state === ConnectionState.Connecting ||
         room.state === ConnectionState.Reconnecting
@@ -157,7 +164,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       }
 
       const syncSettings = async () => {
-        console.warn(socket.id);
         // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
         await updateSettings({
           name: room.localParticipant.name || room.localParticipant.identity,
@@ -554,7 +560,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg]);
+    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg, socket]);
 
     const selfRoom = useMemo(() => {
       if (!room || room.state !== ConnectionState.Connected) return;
@@ -580,6 +586,14 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       }
       return selfRoom;
     }, [settings.children, room]);
+
+    useLayoutEffect(() => {
+      if (!settings || !room || room.state !== ConnectionState.Connected) return;
+      if (!freshPermission) return;
+      console.warn('freshPermission', freshPermission);
+      // 发送一次fetchSettings请求，确保settings是最新的
+      fetchSettings();
+    }, [settings, room, freshPermission]);
 
     useEffect(() => {
       if (!room || room.state !== ConnectionState.Connected || !selfRoom) return;
@@ -628,8 +642,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       // 设置房间订阅权限 ------------------------------------------------
       room.localParticipant.setTrackSubscriptionPermissions(false, auth);
       if (freshPermission) {
-        setFreshPermission(false);
-        fetchSettings();
+        fetchSettings().then(() => {
+          setFreshPermission(false);
+        });
+        socket.emit('update_user_status');
       }
     }, [room, settings, selfRoom, freshPermission]);
 
