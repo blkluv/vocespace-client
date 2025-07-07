@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useEffect } from 'react';
-import styles from '@/styles/home.module.css';
+import styles from '@/styles/Home.module.css';
 import { useI18n } from '@/lib/i18n/i18n';
 import { DemoMeetingTab } from './pages/pre_join/demo';
 import { LangSelect } from './pages/controls/lang_select';

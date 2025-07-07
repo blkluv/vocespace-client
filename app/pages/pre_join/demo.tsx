@@ -4,7 +4,7 @@ import { encodePassphrase, generateRoomId, randomString } from '@/lib/client_uti
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import styles from '@/styles/home.module.css';
+import styles from '@/styles/Home.module.css';
 import { Button, Input, message, Radio } from 'antd';
 import { CheckboxGroupProps } from 'antd/es/checkbox';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';

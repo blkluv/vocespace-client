@@ -3,7 +3,7 @@
 import { encodePassphrase, randomString } from '@/lib/client_utils';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useState } from 'react';
-import styles from '@/styles/home.module.css';
+import styles from '@/styles/Home.module.css';
 import { useRouter } from 'next/navigation';
 
 /**
