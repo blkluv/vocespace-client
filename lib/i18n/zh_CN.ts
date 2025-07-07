@@ -1,4 +1,4 @@
-import { title } from "process";
+import { title } from 'process';
 
 export default {
   common: {
@@ -143,57 +143,23 @@ export default {
         start: '开始',
         stop: '停止',
         reset: '重置',
-        placeholder: "选择倒计时时间",
-        set: "设置时间",
+        placeholder: '选择倒计时时间',
+        set: '设置时间',
         continue: '继续',
         error: {
-          set: "请先设置倒计时时间",
-          valid: "请设置有效的倒计时时间"
-        }
+          set: '请先设置倒计时时间',
+          valid: '请设置有效的倒计时时间',
+        },
       },
       todo: {
         title: '待办事项',
         add: '添加待办',
         placeholder: '请输入待办事项',
-        empty: "暂无待办事项，点击上方按钮添加第一个待办",
-        create: "创建待办",
-        modal: {
-          confirm: "创建",
-          cancel: "取消",
-          title: "创建新的待办事项",
-          name: "待办事项名称",
-          name_placeholder: "请输入待办事项名称",
-          desc: "待办事项描述",
-          desc_placeholder: "请输入待办事项描述（可选）",
-          start: "开始时间 (可选)",
-          start_placeholder: "选择开始时间",
-          end: "截止时间",
-          end_placeholder: "选择截止时间",
-        },
-        count: {
-          all: "总计",
-          done: "已完成",
-          running: "进行中",
-          overdue: "已逾期",
-        },
-        create_at: "创建时间",
-        finish_at: "完成时间",
-        deadline: "截止时间",
-        start: "开始时间",
-        completed: "已完成",
-        tooltip: {
-          complete: {
-            title: "完成待办",
-
-          },
-          delete: {
-            title: "删除待办",
-            desc: "您确定要删除此待办事项吗？",
-            confirm: "确认删除",
-            cancel: "取消",
-          }
-        }
-      }
+        empty: '暂无待办事项，在下方输入待办并点击添加按钮创建新的待办事项',
+        create: '创建待办',
+        empty_value: '待办事项不能为空',
+        delete: '删除待办成功',
+      },
     },
     record: {
       start: '录制',

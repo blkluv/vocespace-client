@@ -307,7 +307,7 @@ lk load-test \
   - [ ] 增加状态设置部分
 - [x] 应用
   - [x] TODO
-    - [ ] ui tandom
+    - [x] ui tandom
   - [x] Timer (xiaomi)
     - [ ] ui
   - [x] CrossDown

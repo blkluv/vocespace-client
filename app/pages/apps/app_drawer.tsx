@@ -5,8 +5,7 @@ import { AppTimer } from './timer';
 import { useI18n } from '@/lib/i18n/i18n';
 import { AppCountdown } from './countdown';
 import { MessageInstance } from 'antd/es/message/interface';
-import { AppTodoList } from './todo_list';
-
+import { AppTodo } from './todo_list';
 
 export interface AppDrawerProps {
   open: boolean;
@@ -34,7 +33,7 @@ export function AppDrawer({ open, setOpen, messageApi }: AppDrawerProps) {
     {
       key: 'todo',
       label: t('more.app.todo.title'),
-      children: <AppTodoList></AppTodoList>,
+      children: <AppTodo messageApi={messageApi}></AppTodo>,
     },
   ];
 
