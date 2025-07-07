@@ -3,29 +3,26 @@ import {
   DisconnectButton,
   LeaveIcon,
   MediaDeviceMenu,
-  TrackMutedIndicator,
   TrackToggle,
   useLocalParticipantPermissions,
   useMaybeLayoutContext,
   useMaybeRoomContext,
   usePersistentUserChoices,
 } from '@livekit/components-react';
-import { Button, Drawer, Dropdown, Input, MenuProps, message, Modal, Select, Slider } from 'antd';
+import { Drawer, Input, message, Modal } from 'antd';
 import { Participant, Track } from 'livekit-client';
 import * as React from 'react';
-import { SvgResource } from '@/app/resources/svg';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings';
 import { useRecoilState } from 'recoil';
 import { chatMsgState, socket, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
-import { connect_endpoint, randomColor, src, UserStatus } from '@/lib/std';
+import { connect_endpoint, UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './chat_toggle';
 import { MoreButton } from './more_button';
-import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
-import { ParticipantList } from '../participant/list';
-import { DEFAULT_DRAWER_PROP, DrawerCloser, DrawerHeader } from './drawer_tools';
+import { ControlType, WsControlParticipant, WsTo } from '@/lib/std/device';
+import { DEFAULT_DRAWER_PROP, DrawerCloser } from './drawer_tools';
 import { AppDrawer } from '../apps/app_drawer';
 import { ParticipantManage } from '../participant/manage';
 

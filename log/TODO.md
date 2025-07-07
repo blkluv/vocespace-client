@@ -313,9 +313,9 @@ lk load-test \
   - [x] CrossDown
   - [ ] https://medium.com/@wilskym/designing-a-minimalist-net-countdown-timer-e8a9eff9d921
 - [ ] 应用浮窗
-- [ ] 调整Drawer
-  - [ ] 宽度
-  - [ ] padding
+- [x] 调整Drawer
+  - [x] 宽度
+  - [x] padding
 - [ ] 优化代码和页面结构
-  - [ ] 用户列表Drawer
-  - [ ] 
+  - [x] 用户列表Drawer
+  - [x] 设置

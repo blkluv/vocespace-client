@@ -13,7 +13,7 @@ import { LinkPreview } from './link_preview';
 import Dragger from 'antd/es/upload/Dragger';
 import { useRecoilState } from 'recoil';
 import { ChatMsgItem } from '@/lib/std/chat';
-import { DrawerCloser } from '../controls/drawer_tools';
+import { DEFAULT_DRAWER_PROP, DrawerCloser } from '../controls/drawer_tools';
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
@@ -225,23 +225,18 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
 
     return (
       <Drawer
+        {...DEFAULT_DRAWER_PROP}
         title={t('common.chat')}
         onClose={onClose}
         open={open}
-        closable={false}
-        width={'440px'}
         extra={DrawerCloser({
           on_clicked: () => setOpen(false),
         })}
-        style={{ backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' }}
         styles={{
           body: {
-            padding: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-          },
+            ...DEFAULT_DRAWER_PROP.styles?.body,
+            padding: 0
+          }
         }}
       >
         <div className={styles.msg}>
