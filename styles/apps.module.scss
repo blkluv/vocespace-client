@@ -51,6 +51,9 @@
   background-color: #333;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   &:hover {
     background-color: #444;
   }
@@ -64,7 +67,29 @@
   background-color: #333;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   &:hover {
     background-color: #444;
+  }
+}
+
+.flot {
+  &_layout {
+    height: 60px;
+    width: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background-color: #1a1a1a90;
+  }
+  &_content {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    flex-wrap: wrap;
+    background-color: transparent;
   }
 }

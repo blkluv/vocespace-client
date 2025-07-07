@@ -62,6 +62,7 @@ import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
 import { createRoom } from '@/lib/hooks/channel';
 import { PARTICIPANT_SETTINGS_KEY } from '@/lib/std/room';
+import { FlotLayout } from '../apps/flot';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -108,6 +109,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         room?.name || '', // 房间 ID
         room?.localParticipant?.identity || '', // 参与者 ID
       );
+    const [openApp, setOpenApp] = useState<boolean>(false);
     // const [isMouseNearLeftEdge, setIsMouseNearLeftEdge] = useState(false);
     // const timeoutRef = React.useRef<NodeJS.Timeout>();
     // 判断用户的鼠标位置是否在window的左侧200px以内，如果是为用户激活左侧channel侧边栏
@@ -817,7 +819,12 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     }));
 
     return (
-      <div className="video_container_wrapper">
+      <div className="video_container_wrapper" style={{ position: 'relative' }}>
+        <FlotLayout
+          style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1111 }}
+          messageApi={messageApi}
+          openApp={openApp}
+        ></FlotLayout>
         {room && (
           <Channel
             roomName={room.name}
@@ -899,6 +906,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   setPermissionDevice={setPermissionDevice}
                   collapsed={collapsed}
                   setCollapsed={setCollapsed}
+                  openApp={openApp}
+                  setOpenApp={setOpenApp}
                 ></Controls>
               </div>
               {SettingsComponent && (

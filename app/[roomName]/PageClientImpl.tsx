@@ -33,6 +33,8 @@ import {
   PARTICIPANT_SETTINGS_KEY,
   ParticipantSettings,
 } from '@/lib/std/room';
+import { TodoItem } from '../pages/apps/todo_list';
+import dayjs, { type Dayjs } from 'dayjs';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -80,6 +82,25 @@ export const chatMsgState = atom({
   default: {
     msgs: [] as ChatMsgItem[],
     unhandled: 0,
+  },
+});
+
+export const AppsDataState = atom({
+  key: 'AppsDataState',
+  default: {
+    todo: [] as TodoItem[],
+    timer: {
+      value: null as number | null,
+      running: false,
+      stopTimeStamp: null as number | null,
+      records: [] as string[],
+    },
+    countdown: {
+      value: null as number | null,
+      duration: dayjs().hour(0).minute(5).second(0) as Dayjs | null,
+      running: false,
+      stopTimeStamp: null as number | null,
+    },
   },
 });
 

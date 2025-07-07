@@ -312,7 +312,8 @@ lk load-test \
     - [x] ui
   - [x] CrossDown (https://medium.com/@wilskym/designing-a-minimalist-net-countdown-timer-e8a9eff9d921)
     - [x] ui
-- [ ] 应用浮窗
+  - [x] 浮窗与Drawer数据统一 
+- [x] 应用浮窗
 - [x] 调整Drawer
   - [x] 宽度
   - [x] padding

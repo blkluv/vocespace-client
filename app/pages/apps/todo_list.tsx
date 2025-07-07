@@ -1,14 +1,18 @@
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { Button, Card, Checkbox, Input, List, message } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import styles from '@/styles/apps.module.scss';
 import { MessageInstance } from 'antd/es/message/interface';
+import { useRecoilState } from 'recoil';
+import { AppsDataState } from '@/app/[roomName]/PageClientImpl';
+import equal from 'fast-deep-equal';
 
 export interface AppTodoProps {
   messageApi: MessageInstance;
 }
-interface TodoItem {
+
+export interface TodoItem {
   id: string;
   title: string;
   done: boolean;
@@ -17,7 +21,17 @@ interface TodoItem {
 export function AppTodo({ messageApi }: AppTodoProps) {
   const { t } = useI18n();
   const [newTodo, setNewTodo] = useState<string>('');
-  const [todos, setTodos] = useState<TodoItem[]>([]);
+  // const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [appData, setAppData] = useRecoilState(AppsDataState);
+  const [todos, setTodos] = useState<TodoItem[]>(appData.todo);
+
+  useEffect(() => {
+    if (equal(todos, appData.todo)) return;
+    setAppData((prev) => ({
+      ...prev,
+      todo: todos,
+    }));
+  }, [todos, appData.todo]);
 
   const toggleTodo = (id: string) => {
     setTodos((prev) => prev.map((item) => (item.id === id ? { ...item, done: !item.done } : item)));
@@ -38,7 +52,7 @@ export function AppTodo({ messageApi }: AppTodoProps) {
     setNewTodo('');
   };
   return (
-    <Card>
+    <Card style={{ width: '100%' }}>
       <div className={styles.todo_list_wrapper}>
         <List
           bordered={false}
@@ -59,20 +73,23 @@ export function AppTodo({ messageApi }: AppTodoProps) {
             <List.Item>
               <div className={styles.todo_item}>
                 <Checkbox onChange={() => toggleTodo(item.id)} checked={item.done}>
-                <span
-                  style={{
-                    textDecoration: item.done ? 'line-through' : 'none',
+                  <span
+                    style={{
+                      textDecoration: item.done ? 'line-through' : 'none',
+                    }}
+                  >
+                    {item.title}
+                  </span>
+                </Checkbox>
+                <Button
+                  type="text"
+                  onClick={() => {
+                    setTodos((prev) => prev.filter((todo) => todo.id !== item.id));
+                    messageApi.success(t('more.app.todo.delete'));
                   }}
                 >
-                  {item.title}
-                </span>
-              </Checkbox>
-              <Button type='text' onClick={() => {
-                setTodos((prev) => prev.filter((todo) => todo.id !== item.id));
-                messageApi.success(t('more.app.todo.delete'));
-              }}>
-                <SvgResource type="close" svgSize={12} color='#8c8c8c'></SvgResource>
-              </Button>
+                  <SvgResource type="close" svgSize={12} color="#8c8c8c"></SvgResource>
+                </Button>
               </div>
             </List.Item>
           )}

@@ -58,6 +58,8 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   setPermissionDevice: (device: Track.Source) => void;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  openApp: boolean;
+  setOpenApp: (open: boolean) => void;
 }
 
 export interface ControlBarExport {
@@ -95,6 +97,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setPermissionDevice,
       collapsed,
       setCollapsed,
+      openApp,
+      setOpenApp,
       ...props
     }: ControlBarProps,
     ref,
@@ -272,7 +276,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [selectedParticipant, setSelectedParticipant] = React.useState<Participant | null>(null);
     const [username, setUsername] = React.useState<string>('');
     const [openNameModal, setOpenNameModal] = React.useState(false);
-    const [openAppModal, setOpenAppModal] = React.useState(false);
+    // const [openAppModal, setOpenAppModal] = React.useState(false);
     const participantList = React.useMemo(() => {
       return Object.entries(roomSettings.participants);
     }, [roomSettings]);
@@ -402,7 +406,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       if (!room) return;
 
       // 打开Notion应用
-      setOpenAppModal(true);
+      setOpenApp(true);
     };
 
     return (
@@ -659,8 +663,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         </Modal>
 
         <AppDrawer
-          open={openAppModal}
-          setOpen={setOpenAppModal}
+          open={openApp}
+          setOpen={setOpenApp}
           messageApi={messageApi}
         ></AppDrawer>
       </div>

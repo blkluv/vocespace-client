@@ -6,66 +6,101 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 import { Card, Col, Row, Space, Statistic } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { TimeRecords } from './time_records';
 import styles from '@/styles/apps.module.scss';
+import { CardSize } from 'antd/es/card/Card';
+import { useRecoilState } from 'recoil';
+import { AppsDataState } from '@/app/[roomName]/PageClientImpl';
 const { Timer } = Statistic;
 
 export interface AppTimerProps {
-  size?: 'normal' | 'small';
+  size?: CardSize;
 }
 
-export function AppTimer({ size = "normal"}: AppTimerProps) {
+export function AppTimer({ size = 'default' }: AppTimerProps) {
   // 计时相关状态
-  const [countupValue, setCountupValue] = useState<number | null>(null);
-  const [countupRunning, setCountupRunning] = useState(false);
-  const [stopTimeStamp, setStopTimeStamp] = useState<number | null>(null);
-  const [records, setRecords] = useState<string[]>([]);
+  const [appData, setAppData] = useRecoilState(AppsDataState);
+
   // 开始计时
   const startCountup = () => {
-    if (countupValue === null) {
+    if (appData.timer.value === null) {
       const startTime = Date.now();
-      setCountupValue(startTime);
-      setCountupRunning(true);
+      setAppData((prev) => ({
+        ...prev,
+        timer: {
+          ...prev.timer,
+          value: startTime,
+          running: true,
+        },
+      }));
     } else {
       // 继续计时
-      setCountupValue(countupValue + Date.now() - stopTimeStamp!);
-      setCountupRunning(true);
+      setAppData((prev) => ({
+        ...prev,
+        timer: {
+          ...prev.timer,
+          value: prev.timer.value! + Date.now() - prev.timer.stopTimeStamp!,
+          running: true,
+        },
+      }));
     }
   };
 
   // 停止计时
   const stopCountup = () => {
-    setCountupRunning(false);
-    setStopTimeStamp(Date.now());
+    setAppData((prev) => ({
+      ...prev,
+      timer: {
+        ...prev.timer,
+        running: false,
+        stopTimeStamp: Date.now(),
+      },
+    }));
   };
 
   // 重置计时
   const resetCountup = () => {
-    setCountupRunning(false);
-    setCountupValue(null);
-    setStopTimeStamp(null);
-    setRecords([]);
+    setAppData((prev) => ({
+      ...prev,
+      timer: {
+        ...prev.timer,
+        running: false,
+        value: null,
+        stopTimeStamp: null,
+        records: [],
+      },
+    }));
   };
 
   // 记录计时
   const recordCountup = () => {
-    setRecords((prev) => {
-      if (prev.length >= 5) {
-        // 如果记录超过5条，删除最早的一条
-        return [...prev.slice(1), timestampToSecond()];
+    setAppData((prev) => {
+      if (prev.timer.records.length >= 5) {
+        return {
+          ...prev,
+          timer: {
+            ...prev.timer,
+            records: [...prev.timer.records.slice(1), timestampToSecond()],
+          },
+        };
       } else {
-        // 否则直接添加
-        return [...prev, timestampToSecond()];
+        return {
+          ...prev,
+          timer: {
+            ...prev.timer,
+            records: [...prev.timer.records, timestampToSecond()],
+          },
+        };
       }
     });
   };
 
   const timestampToSecond = () => {
-    if (countupValue === null) return '00:00:00';
+    if (appData.timer.value === null) return '00:00:00';
 
-    const currentTime = countupRunning ? Date.now() : stopTimeStamp!;
-    const elapsedTime = currentTime - countupValue;
+    const currentTime = appData.timer.running ? Date.now() : appData.timer.stopTimeStamp!;
+    const elapsedTime = currentTime - appData.timer.value;
     let seconds = Math.floor(elapsedTime / 1000);
     // 处理seconds，保证不为负数，同时format为: HH:mm:ss
     if (seconds < 0) {
@@ -85,7 +120,7 @@ export function AppTimer({ size = "normal"}: AppTimerProps) {
   };
 
   const timerStyle = useMemo(() => {
-    if (size === 'normal') {
+    if (size === 'default') {
       return {
         text: {
           fontSize: '48px',
@@ -110,14 +145,14 @@ export function AppTimer({ size = "normal"}: AppTimerProps) {
           color: '#eee',
         },
         icon: {
-          fontSize: '12px',
+          fontSize: '14px',
         },
         icon_btn: {
-          height: '16px',
-          width: '16px',
+          height: '20px',
+          width: '20px',
         },
         start_btn: {
-          height: '16px',
+          height: '20px',
           width: '48px',
         },
       };
@@ -126,15 +161,19 @@ export function AppTimer({ size = "normal"}: AppTimerProps) {
 
   return (
     <>
-      <Card>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Card style={{ width: '100%' }} size={size}>
+        <Space
+          direction="vertical"
+          size={size === 'small' ? 'small' : 'large'}
+          style={{ width: '100%' }}
+        >
           <div style={{ textAlign: 'center', marginTop: 24 }}>
-            {countupRunning ? (
+            {appData.timer.running ? (
               <>
-                {countupValue && (
+                {appData.timer.value && (
                   <Timer
                     type="countup"
-                    value={countupValue}
+                    value={appData.timer.value}
                     format="HH:mm:ss"
                     valueStyle={timerStyle.text}
                   />
@@ -145,35 +184,62 @@ export function AppTimer({ size = "normal"}: AppTimerProps) {
             )}
           </div>
           <TimeRecords
-            data={records}
+            size={size}
+            data={appData.timer.records}
             clear={() => {
-              setRecords([]);
+              setAppData((prev) => ({
+                ...prev,
+                timer: {
+                  ...prev.timer,
+                  records: [],
+                },
+              }));
             }}
           ></TimeRecords>
           <Row justify="center">
             <Col>
               <Space size="large"></Space>
-              {countupRunning ? (
+              {appData.timer.running ? (
                 <Space size="large">
-                  <button className={styles.circle_btn} onClick={recordCountup} style={timerStyle.icon_btn}>
+                  <button
+                    className={styles.circle_btn}
+                    onClick={recordCountup}
+                    style={timerStyle.icon_btn}
+                  >
                     <FlagOutlined style={timerStyle.icon} />
                   </button>
-                  <button className={styles.circle_btn} onClick={stopCountup} style={timerStyle.icon_btn}>
+                  <button
+                    className={styles.circle_btn}
+                    onClick={stopCountup}
+                    style={timerStyle.icon_btn}
+                  >
                     <PauseCircleOutlined style={timerStyle.icon} />
                   </button>
                 </Space>
               ) : (
                 <Space size={'large'}>
-                  {countupValue === null ? (
-                    <button onClick={startCountup} className={styles.start_btn} style={timerStyle.start_btn}>
+                  {appData.timer.value === null ? (
+                    <button
+                      onClick={startCountup}
+                      className={styles.start_btn}
+                      style={timerStyle.start_btn}
+                    >
                       <PlayCircleOutlined style={timerStyle.icon} />
                     </button>
                   ) : (
                     <>
-                      <button className={styles.circle_btn} onClick={resetCountup} style={timerStyle.icon_btn}>
+                      <button
+                        className={styles.circle_btn}
+                        onClick={resetCountup}
+                        style={timerStyle.icon_btn}
+                      >
                         <ReloadOutlined style={timerStyle.icon} />
                       </button>
-                      <button className={styles.circle_btn} onClick={startCountup} style={timerStyle.icon_btn}>
+                      <button
+                        className={styles.circle_btn}
+                        onClick={startCountup}
+                        style={timerStyle.icon_btn}
+                      >
                         <PlayCircleOutlined style={timerStyle.icon} />
                       </button>
                     </>
