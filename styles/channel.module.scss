@@ -311,7 +311,6 @@
 .room_header_wrapper {
   height: 30px;
   width: 100%;
-  
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -327,6 +326,7 @@
     display: inline-flex;
     flex-grow: 1;
     height: 100%;
+    width: 180px;
     padding-left: 4px;
     &:hover {
       background-color: #333;

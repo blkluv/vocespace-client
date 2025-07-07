@@ -307,5 +307,15 @@ lk load-test \
   - [ ] 增加状态设置部分
 - [x] 应用
   - [x] TODO
-  - [x] Timer
+    - [ ] ui tandom
+  - [x] Timer (xiaomi)
+    - [ ] ui
   - [x] CrossDown
+  - [ ] https://medium.com/@wilskym/designing-a-minimalist-net-countdown-timer-e8a9eff9d921
+- [ ] 应用浮窗
+- [ ] 调整Drawer
+  - [ ] 宽度
+  - [ ] padding
+- [ ] 优化代码和页面结构
+  - [ ] 用户列表Drawer
+  - [ ] 

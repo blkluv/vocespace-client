@@ -14,10 +14,10 @@ export const DEFAULT_DRAWER_PROP: DrawerProps = {
   style: { backgroundColor: '#111', padding: 0, margin: 0, color: '#fff' },
   placement: 'right',
   closable: false,
-  width: '50%',
+  width: '640px',
   styles: {
     body: {
-      padding: '0 24px',
+      padding: '0 24px 0 0',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',

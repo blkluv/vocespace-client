@@ -258,6 +258,7 @@ export function AppTodoList({}: TodoListAppProps) {
         height: 'calc(100vh - 66px)',
         margin: '0 auto',
         position: 'relative',
+        overflowY: 'scroll',
       }}
     >
       <div
@@ -344,7 +345,7 @@ export function AppTodoList({}: TodoListAppProps) {
 
       {/* 统计信息 */}
       {todos.length >= 0 && (
-        <Card style={{ marginTop: 24, position: 'sticky', top: '90vh' }}>
+        <Card style={{ marginTop: 24, position: 'static',  }}>
           <Space size="large">
             <div>
               <Text strong>{t('more.app.todo.count.all')}: </Text>
