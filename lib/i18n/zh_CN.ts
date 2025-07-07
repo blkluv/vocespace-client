@@ -130,22 +130,11 @@ export default {
       title: '应用',
       timer: {
         title: '计时器',
-        start: '开始',
-        stop: '停止',
-        reset: '重置',
-        records: {
-          title: '计时记录',
-          button: '记录',
-        },
       },
       countdown: {
         title: '倒计时',
-        start: '开始',
-        stop: '停止',
-        reset: '重置',
         placeholder: '选择倒计时时间',
         set: '设置时间',
-        continue: '继续',
         error: {
           set: '请先设置倒计时时间',
           valid: '请设置有效的倒计时时间',

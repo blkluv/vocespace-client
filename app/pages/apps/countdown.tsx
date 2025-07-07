@@ -9,18 +9,20 @@ import {
 } from '@ant-design/icons';
 import { Button, Card, Col, Row, Space, Statistic, StatisticTimerProps, TimePicker } from 'antd';
 import Title from 'antd/es/typography/Title';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TimeRecords } from './time_records';
 import { MessageInstance } from 'antd/es/message/interface';
 const { Timer } = Statistic;
 import dayjs, { type Dayjs } from 'dayjs';
 import { src } from '@/lib/std';
+import styles from '@/styles/apps.module.scss';
 
 export interface CountdownProps {
   messageApi: MessageInstance;
+  size?: 'normal' | 'small';
 }
 
-export function AppCountdown({ messageApi }: CountdownProps) {
+export function AppCountdown({ messageApi, size = 'normal' }: CountdownProps) {
   const { t } = useI18n();
 
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
@@ -101,24 +103,58 @@ export function AppCountdown({ messageApi }: CountdownProps) {
     ).padStart(2, '0')}`;
   };
 
-  const defaultStyle = {
-    fontSize: '48px',
-    fontWeight: 'bold',
-    color: '#999',
-  };
+  const timerStyle = useMemo(() => {
+    if (size === 'normal') {
+      return {
+        text: {
+          fontSize: '48px',
+          color: '#eee',
+        },
+        icon: {
+          fontSize: '24px',
+        },
+        icon_btn: {
+          height: '44px',
+          width: '44px',
+        },
+        start_btn: {
+          height: '44px',
+          width: '120px',
+        },
+      };
+    } else {
+      return {
+        text: {
+          fontSize: '24px',
+          color: '#eee',
+        },
+        icon: {
+          fontSize: '12px',
+        },
+        icon_btn: {
+          height: '16px',
+          width: '16px',
+        },
+        start_btn: {
+          height: '16px',
+          width: '48px',
+        },
+      };
+    }
+  }, [size]);
 
   return (
     <Card>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <div style={{ textAlign: 'center' }}>
+        {/* <div style={{ textAlign: 'center' }}>
           <Title level={4}>
             <ClockCircleOutlined style={{ marginRight: 8 }} />
             {t('more.app.countdown.title')}
           </Title>
-        </div>
+        </div> */}
 
         <Row align="middle">
-          <div style={{ marginBottom: 8 }}>{t('more.app.countdown.set')}:</div>
+          {/* <div style={{ marginBottom: 8 }}>{t('more.app.countdown.set')}:</div> */}
           <TimePicker
             value={countdownDuration}
             onChange={setCountdownDuration}
@@ -129,30 +165,6 @@ export function AppCountdown({ messageApi }: CountdownProps) {
             style={{ width: '100%', outline: '1px solid #22CCEE' }}
           />
         </Row>
-        <Row align="bottom" justify="end">
-          <Space size={'large'}>
-            {!countdownRunning ? (
-              <Button type="primary" icon={<PlayCircleOutlined />} onClick={startCountdown}>
-                {stopTimeStamp && stopTimeStamp > 0
-                  ? t('more.app.countdown.continue')
-                  : t('more.app.countdown.start')}
-              </Button>
-            ) : (
-              <Button danger icon={<PauseCircleOutlined />} onClick={stopCountdown}>
-                {t('more.app.countdown.stop')}
-              </Button>
-            )}
-
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={resetCountdown}
-              color="danger"
-              variant="solid"
-            >
-              {t('more.app.countdown.reset')}
-            </Button>
-          </Space>
-        </Row>
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
           {stopTimeStamp ? (
@@ -160,7 +172,7 @@ export function AppCountdown({ messageApi }: CountdownProps) {
               value={
                 countdownValue ? timestampToSecond(countdownValue - stopTimeStamp) : '--:--:--'
               }
-              style={defaultStyle}
+             valueStyle={timerStyle.text}
             />
           ) : (
             <>
@@ -170,17 +182,53 @@ export function AppCountdown({ messageApi }: CountdownProps) {
                   value={countdownValue}
                   onFinish={onCountdownFinish}
                   format="HH:mm:ss"
-                  style={{
-                    ...defaultStyle,
-                    color: countdownRunning ? '#1890ff' : '#999',
-                  }}
+                  valueStyle={timerStyle.text}
                 />
               ) : (
-                <Statistic value={countdownDuration?.format('HH:mm:ss')} style={defaultStyle} />
+                <Statistic value={countdownDuration?.format('HH:mm:ss')} valueStyle={timerStyle.text} />
               )}
             </>
           )}
         </div>
+
+        <Row align="bottom" justify="center">
+          <Space size={'large'}>
+            {countdownRunning ? (
+              <button
+                className={styles.circle_btn}
+                onClick={stopCountdown}
+                style={timerStyle.icon_btn}
+              >
+                <PauseCircleOutlined style={timerStyle.icon} />
+              </button>
+            ) : stopTimeStamp && stopTimeStamp > 0 ? (
+              <>
+                <button
+                  onClick={resetCountdown}
+                  className={styles.circle_btn}
+                  style={timerStyle.icon_btn}
+                >
+                  <ReloadOutlined style={timerStyle.icon} />
+                </button>
+                <button
+                  className={styles.circle_btn}
+                  style={timerStyle.icon_btn}
+                  onClick={startCountdown}
+                >
+                  <PlayCircleOutlined style={timerStyle.icon} />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={startCountdown}
+                className={styles.start_btn}
+                style={timerStyle.start_btn}
+              >
+                <PlayCircleOutlined style={timerStyle.icon} />
+              </button>
+            )}
+          </Space>
+        </Row>
       </Space>
     </Card>
   );

@@ -1,4 +1,3 @@
-import { useI18n } from '@/lib/i18n/i18n';
 import {
   FieldTimeOutlined,
   FlagOutlined,
@@ -6,14 +5,17 @@ import {
   PlayCircleOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Col, Row, Space, Statistic } from 'antd';
-import Title from 'antd/es/typography/Title';
-import { useState } from 'react';
+import { Card, Col, Row, Space, Statistic } from 'antd';
+import { useMemo, useState } from 'react';
 import { TimeRecords } from './time_records';
+import styles from '@/styles/apps.module.scss';
 const { Timer } = Statistic;
 
-export function AppTimer() {
-  const { t } = useI18n();
+export interface AppTimerProps {
+  size?: 'normal' | 'small';
+}
+
+export function AppTimer({ size = "normal"}: AppTimerProps) {
   // 计时相关状态
   const [countupValue, setCountupValue] = useState<number | null>(null);
   const [countupRunning, setCountupRunning] = useState(false);
@@ -21,9 +23,15 @@ export function AppTimer() {
   const [records, setRecords] = useState<string[]>([]);
   // 开始计时
   const startCountup = () => {
-    const startTime = Date.now();
-    setCountupValue(startTime);
-    setCountupRunning(true);
+    if (countupValue === null) {
+      const startTime = Date.now();
+      setCountupValue(startTime);
+      setCountupRunning(true);
+    } else {
+      // 继续计时
+      setCountupValue(countupValue + Date.now() - stopTimeStamp!);
+      setCountupRunning(true);
+    }
   };
 
   // 停止计时
@@ -36,13 +44,12 @@ export function AppTimer() {
   const resetCountup = () => {
     setCountupRunning(false);
     setCountupValue(null);
+    setStopTimeStamp(null);
+    setRecords([]);
   };
 
   // 记录计时
   const recordCountup = () => {
-    if (countupValue === null) {
-      return;
-    }
     setRecords((prev) => {
       if (prev.length >= 5) {
         // 如果记录超过5条，删除最早的一条
@@ -57,7 +64,7 @@ export function AppTimer() {
   const timestampToSecond = () => {
     if (countupValue === null) return '00:00:00';
 
-    const currentTime = countupRunning ? Date.now() : stopTimeStamp || Date.now();
+    const currentTime = countupRunning ? Date.now() : stopTimeStamp!;
     const elapsedTime = currentTime - countupValue;
     let seconds = Math.floor(elapsedTime / 1000);
     // 处理seconds，保证不为负数，同时format为: HH:mm:ss
@@ -77,40 +84,50 @@ export function AppTimer() {
     ).padStart(2, '0')}`;
   };
 
+  const timerStyle = useMemo(() => {
+    if (size === 'normal') {
+      return {
+        text: {
+          fontSize: '48px',
+          color: '#eee',
+        },
+        icon: {
+          fontSize: '24px',
+        },
+        icon_btn: {
+          height: '44px',
+          width: '44px',
+        },
+        start_btn: {
+          height: '44px',
+          width: '120px',
+        },
+      };
+    } else {
+      return {
+        text: {
+          fontSize: '24px',
+          color: '#eee',
+        },
+        icon: {
+          fontSize: '12px',
+        },
+        icon_btn: {
+          height: '16px',
+          width: '16px',
+        },
+        start_btn: {
+          height: '16px',
+          width: '48px',
+        },
+      };
+    }
+  }, [size]);
+
   return (
     <>
       <Card>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div style={{ textAlign: 'center' }}>
-            <Title level={4}>
-              <FieldTimeOutlined style={{ marginRight: 8 }} />
-              {t('more.app.timer.title')}
-            </Title>
-          </div>
-
-          <Row justify="center">
-            <Col>
-              <Space size="large">
-                {!countupRunning ? (
-                  <Button type="primary" icon={<PlayCircleOutlined />} onClick={startCountup}>
-                     {t("more.app.timer.start")}
-                  </Button>
-                ) : (
-                  <Button danger icon={<PauseCircleOutlined />} onClick={stopCountup}>
-                   {t("more.app.timer.stop")}
-                  </Button>
-                )}
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={resetCountup}
-                  color="danger"
-                  variant="solid"
-                >
-                  {t("more.app.timer.reset")}
-                </Button>
-              </Space>
-            </Col>
-          </Row>
           <div style={{ textAlign: 'center', marginTop: 24 }}>
             {countupRunning ? (
               <>
@@ -119,44 +136,53 @@ export function AppTimer() {
                     type="countup"
                     value={countupValue}
                     format="HH:mm:ss"
-                    style={{
-                      fontSize: '48px',
-                      fontWeight: 'bold',
-                      color: countupRunning ? '#52c41a' : '#999',
-                    }}
+                    valueStyle={timerStyle.text}
                   />
                 )}
               </>
             ) : (
-              <Statistic
-                value={timestampToSecond()}
-                style={{
-                  fontSize: '48px',
-                  fontWeight: 'bold',
-                  color: countupRunning ? '#52c41a' : '#999',
-                }}
-              />
+              <Statistic value={timestampToSecond()} valueStyle={timerStyle.text} />
             )}
           </div>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignContent: 'center',
-              justifyContent: 'center',
-              width: '100%',
+          <TimeRecords
+            data={records}
+            clear={() => {
+              setRecords([]);
             }}
-          >
-            <Button icon={<FlagOutlined />} onClick={recordCountup}>
-              {t('more.app.timer.records.button')}
-            </Button>
-          </div>
+          ></TimeRecords>
+          <Row justify="center">
+            <Col>
+              <Space size="large"></Space>
+              {countupRunning ? (
+                <Space size="large">
+                  <button className={styles.circle_btn} onClick={recordCountup} style={timerStyle.icon_btn}>
+                    <FlagOutlined style={timerStyle.icon} />
+                  </button>
+                  <button className={styles.circle_btn} onClick={stopCountup} style={timerStyle.icon_btn}>
+                    <PauseCircleOutlined style={timerStyle.icon} />
+                  </button>
+                </Space>
+              ) : (
+                <Space size={'large'}>
+                  {countupValue === null ? (
+                    <button onClick={startCountup} className={styles.start_btn} style={timerStyle.start_btn}>
+                      <PlayCircleOutlined style={timerStyle.icon} />
+                    </button>
+                  ) : (
+                    <>
+                      <button className={styles.circle_btn} onClick={resetCountup} style={timerStyle.icon_btn}>
+                        <ReloadOutlined style={timerStyle.icon} />
+                      </button>
+                      <button className={styles.circle_btn} onClick={startCountup} style={timerStyle.icon_btn}>
+                        <PlayCircleOutlined style={timerStyle.icon} />
+                      </button>
+                    </>
+                  )}
+                </Space>
+              )}
+            </Col>
+          </Row>
         </Space>
-      </Card>
-      <hr />
-      <Card>
-        <TimeRecords data={records} clear={()=>{
-          setRecords([]);
-        }}></TimeRecords>
       </Card>
     </>
   );

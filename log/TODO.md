@@ -309,9 +309,9 @@ lk load-test \
   - [x] TODO
     - [x] ui tandom
   - [x] Timer (xiaomi)
-    - [ ] ui
-  - [x] CrossDown
-  - [ ] https://medium.com/@wilskym/designing-a-minimalist-net-countdown-timer-e8a9eff9d921
+    - [x] ui
+  - [x] CrossDown (https://medium.com/@wilskym/designing-a-minimalist-net-countdown-timer-e8a9eff9d921)
+    - [x] ui
 - [ ] 应用浮窗
 - [x] 调整Drawer
   - [x] 宽度
