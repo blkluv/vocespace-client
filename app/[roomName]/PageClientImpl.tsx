@@ -230,6 +230,14 @@ function VideoConferenceComponent(props: {
           : [VideoPresets.h1080],
         red: !e2eeEnabled,
         videoCodec,
+        // screenShareEncoding: {
+        //   maxBitrate: 160000, // 15Mbps
+        //   maxFramerate: 90, // 90fps
+        //   priority: 'high',
+        // },
+        // screenShareSimulcastLayers: [
+        //   VideoPresets.h2160
+        // ]
       },
       audioCaptureDefaults: {
         deviceId: props.userChoices.audioDeviceId ?? undefined,
