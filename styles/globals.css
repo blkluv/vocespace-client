@@ -107,9 +107,9 @@ h2 a {
   height: 100%;
 }
 
-/* .ant-collapse-header {
-  padding: 8px !important;
-} */
+.ant-collapse-content-box{
+  padding: 4px !important;
+}
 
 :where(.css-dev-only-do-not-override-fx2ox2).ant-dropdown .ant-dropdown-menu {
   background-color: #1e1e1e;
@@ -214,3 +214,4 @@ h2 a {
   .ant-picker-time-panel-cell-inner {
   background-color: #22ccee !important;
 }
+

@@ -477,9 +477,13 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         return acc.concat(room.participants);
       }, [] as string[]);
 
-      // 从tracks中将所有子房间的参与者过滤掉
+      let allParticipants = Object.keys(settings.participants);
+
+      // 从tracks中将所有子房间的参与者过滤掉, 并且这些参与着必须要在当前房间中
       let mainTracks = tracks.filter(
-        (track) => !allChildParticipants.includes(track.participant.identity),
+        (track) =>
+          !allChildParticipants.includes(track.participant.identity) &&
+          allParticipants.includes(track.participant.identity),
       );
 
       return (
@@ -501,8 +505,10 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           return <></>;
         }
 
+        let allParticipants = Object.keys(settings.participants);
+
         let subTracks = tracks.filter((track) =>
-          childRoom.participants.includes(track.participant.identity),
+          childRoom.participants.includes(track.participant.identity) && allParticipants.includes(track.participant.identity),
         );
 
         return (

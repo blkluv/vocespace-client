@@ -317,6 +317,17 @@ lk load-test \
 - [x] 调整Drawer
   - [x] 宽度
   - [x] padding
-- [ ] 优化代码和页面结构
+- [x] 优化代码和页面结构
   - [x] 用户列表Drawer
   - [x] 设置
+
+- [x] 同步文档
+  - [x] 本地快速部署
+  - [x] 服务器文件
+    - [x] README
+    - [x] index
+    - [x] bat
+    - [x] sh
+    - [x] i18n
+- [x] 微调menu collapse body padding
+- [x] 限制mini tile，分离meeting环境和vocespace环境
