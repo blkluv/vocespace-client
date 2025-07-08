@@ -196,3 +196,7 @@ export function mergeProps<
 >(...props: T) {
   return mergePropsReactAria(...props.filter(isProp));
 }
+
+export const isUndefinedString = (value: string | undefined): boolean => {
+  return value === undefined || value.trim() === '';
+};

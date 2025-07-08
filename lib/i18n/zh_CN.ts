@@ -46,6 +46,9 @@ export default {
     open: '开启',
     close: '关闭',
   },
+  recording: {
+    title: '录制记录',
+  },
   channel: {
     menu: {
       header: '',
