@@ -314,6 +314,7 @@ lk load-test \
     - [x] ui
   - [x] 浮窗与Drawer数据统一 
 - [x] 应用浮窗
+- [x] 应用可以在浮窗中折叠
 - [x] 调整Drawer
   - [x] 宽度
   - [x] padding
