@@ -128,6 +128,11 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       }
     }, [settings.children, participantId, subRoomsTmp]);
 
+    const allParticipants = useMemo(() => {
+      console.warn(Object.keys(settings.participants).length, settings.participants);
+      return Object.keys(settings.participants);
+    }, [settings]);
+
     const wsSender = useMemo(() => {
       if (settings && roomName && participantId && settings.participants[participantId]) {
         const senderName = settings.participants[participantId].name;
@@ -477,7 +482,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         return acc.concat(room.participants);
       }, [] as string[]);
 
-      let allParticipants = Object.keys(settings.participants);
+      // let allParticipants = Object.keys(settings.participants);
 
       // 从tracks中将所有子房间的参与者过滤掉, 并且这些参与着必须要在当前房间中
       let mainTracks = tracks.filter(
@@ -491,7 +496,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           <ParticipantTileMini settings={settings} room={roomName}></ParticipantTileMini>
         </GLayout>
       );
-    }, [tracks, childRooms, settings]);
+    }, [tracks, childRooms, settings, allParticipants]);
 
     const subContext = useCallback(
       (name: string, length: number): ReactNode => {
@@ -505,7 +510,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           return <></>;
         }
 
-        let allParticipants = Object.keys(settings.participants);
+        // let allParticipants = Object.keys(settings.participants);
 
         let subTracks = tracks.filter((track) =>
           childRoom.participants.includes(track.participant.identity) && allParticipants.includes(track.participant.identity),
@@ -517,7 +522,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           </GLayout>
         );
       },
-      [tracks, childRooms, settings, roomName],
+      [tracks, childRooms, settings, roomName, allParticipants],
     );
 
     const subChildren: CollapseProps['items'] = useMemo(() => {
@@ -700,7 +705,6 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     return (
       <>
         <div className={styles.container}>
-          {/* Header */}
           <div className={styles.header}>
             <div className={styles.headerContent}>
               <div className={styles.roomInfo}>
@@ -709,7 +713,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
               </div>
               <div className={styles.headerActions}>
                 <Tag color="#22CCEE">
-                  {Object.keys(settings.participants).length} {t('channel.menu.active')}
+                  {allParticipants.length} {t('channel.menu.active')}
                 </Tag>
                 <Button
                   className={styles.collapseButton}
@@ -720,8 +724,6 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
               </div>
             </div>
           </div>
-
-          {/* Main Content */}
           <div className={styles.main}>
             {/* Main Room */}
             <div>
@@ -735,20 +737,6 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
               />
             </div>
           </div>
-
-          {/* Bottom */}
-          {/* <div className={styles.bottom}>
-          <Button
-            onClick={() => {
-              setRoomCreateModalOpen(true);
-            }}
-            type="primary"
-            style={{ width: '100%' }}
-            icon={<SvgResource type="add" svgSize={16} />}
-          >
-            <span>{t('channel.menu.create')}</span>
-          </Button>
-        </div> */}
         </div>
         <Modal
           open={roomCreateModalOpen}

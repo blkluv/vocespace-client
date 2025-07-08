@@ -263,7 +263,6 @@ lk load-test \
 
 - [x] 重构userState和ParticipantSettings之间的关系
 - [ ] 重写MicrophoneTraggle组件
-- [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
 - [x] screen share audio 关闭 （放入设置）
   - [x] 数据
   - [x] 绑定处理ScreenShare
@@ -332,3 +331,5 @@ lk load-test \
     - [x] i18n
 - [x] 微调menu collapse body padding
 - [x] 限制mini tile，分离meeting环境和vocespace环境
+- [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
+- [x] 当用户刷新或直接关闭标签页，用户数据没有清除 （DELETE API成功执行，但无法刷新用户socket数据, 给足服务器清理用户的时间）

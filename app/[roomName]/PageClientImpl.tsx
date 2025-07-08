@@ -20,11 +20,10 @@ import {
   Track,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
-import React, { createContext, ReactNode, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
-import { atom, RecoilRoot, useRecoilState } from 'recoil';
-import { connect_endpoint, UserDefineStatus, UserStatus } from '@/lib/std';
-import { ModelBg, ModelRole } from '@/lib/std/virtual';
+import { atom, useRecoilState } from 'recoil';
+import { connect_endpoint, UserDefineStatus } from '@/lib/std';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { WsTo } from '@/lib/std/device';

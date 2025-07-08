@@ -354,6 +354,11 @@ app.prepare().then(() => {
         });
         if (!response.ok) {
           console.error('Failed to delete user data, socketId:', socket.id);
+        } else {
+          // 如果成功，就要让其他用户更新
+          setTimeout(() => {
+            io.emit('user_status_updated');
+          }, 3000);
         }
       }
     });
