@@ -331,5 +331,10 @@ lk load-test \
     - [x] i18n
 - [x] 微调menu collapse body padding
 - [x] 限制mini tile，分离meeting环境和vocespace环境
-- [ ] 房间（ 设置内 ）内嵌入recording页面表单部分
+- [x] 房间（ 设置内 ）内嵌入recording页面表单部分
+  - [x] 分离表单和页面
+  - [x] 单独构建hook
 - [x] 当用户刷新或直接关闭标签页，用户数据没有清除 （DELETE API成功执行，但无法刷新用户socket数据, 给足服务器清理用户的时间）
+- [ ] 应用共享
+  - [ ] 所有人可读可写
+  - [ ] 所有人可共享

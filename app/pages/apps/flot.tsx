@@ -81,21 +81,21 @@ function FlotAppItem({ messageApi }: FlotAppItemProps) {
       label: activeKey.includes('timer') ? '' : t('more.app.timer.title'),
       children: <AppTimer size="small"></AppTimer>,
       style: itemStyle,
-      onClick: () => toggleCollapse('timer'),
+
     },
     {
       key: 'countdown',
       label: activeKey.includes('countdown') ? '' : t('more.app.countdown.title'),
       children: <AppCountdown messageApi={messageApi} size="small"></AppCountdown>,
       style: itemStyle,
-      onClick: () => toggleCollapse('countdown'),
+
     },
     {
       key: 'todo',
       label: activeKey.includes('todo') ? '' : t('more.app.todo.title'),
       children: <AppTodo messageApi={messageApi}></AppTodo>,
       style: itemStyle,
-      onClick: () => toggleCollapse('todo'),
+
     },
   ];
 
@@ -103,6 +103,7 @@ function FlotAppItem({ messageApi }: FlotAppItemProps) {
     <Collapse
       bordered={false}
       activeKey={activeKey}
+      onChange={(keys) => setActiveKey(keys as string[])}
       expandIcon={({ isActive }) => (isActive ? <MinusCircleOutlined /> : <PlusCircleOutlined />)}
       expandIconPosition="end"
       items={items}
