@@ -321,7 +321,7 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
               <div
                 className={styles.msg_item_content_msg}
                 style={{
-                  textAlign: textAlignPos,
+                  textAlign: "left",
                 }}
               >
                 {msg.message}
