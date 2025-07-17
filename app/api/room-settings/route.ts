@@ -853,14 +853,14 @@ class RoomManager {
 // 获取房间所有参与者设置
 export async function GET(request: NextRequest) {
   const all = request.nextUrl.searchParams.get('all') === 'true';
-  const roomId = request.nextUrl.searchParams.get('roomId');
+  const spaceName = request.nextUrl.searchParams.get('spaceName');
   const is_pre = request.nextUrl.searchParams.get('pre') === 'true';
   const is_time_record = request.nextUrl.searchParams.get('time_record') === 'true';
   const is_chat_history = request.nextUrl.searchParams.get('chat_history') === 'true';
 
-  if (is_chat_history && roomId) {
+  if (is_chat_history && spaceName) {
     // 获取房间的聊天记录
-    const chatMessages = await RoomManager.getChatMessages(roomId);
+    const chatMessages = await RoomManager.getChatMessages(spaceName);
     return NextResponse.json(
       {
         msgs: chatMessages,
@@ -886,28 +886,31 @@ export async function GET(request: NextRequest) {
     if (detail) {
       return NextResponse.json(allRooms, { status: 200 });
     } else {
-      // 将roomSettings转为Map形式 Map<roomId, participants>
-      const roomSettingsMap = Object.entries(allRooms).reduce((acc, [roomId, { participants }]) => {
-        acc[roomId] = Object.keys(participants);
-        return acc;
-      }, {} as Record<string, string[]>);
+      // 将roomSettings转为Map形式 Map<spaceName, participants>
+      const roomSettingsMap = Object.entries(allRooms).reduce(
+        (acc, [spaceName, { participants }]) => {
+          acc[spaceName] = Object.keys(participants);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
 
       return NextResponse.json(roomSettingsMap);
     }
   }
-  if (roomId == '' || !roomId) {
-    return NextResponse.json({ error: 'Missing roomId' }, { status: 400 });
+  if (spaceName == '' || !spaceName) {
+    return NextResponse.json({ error: 'Missing spaceName' }, { status: 400 });
   }
 
   if (is_pre) {
-    const availableUserName = await RoomManager.genUserName(roomId);
+    const availableUserName = await RoomManager.genUserName(spaceName);
     return NextResponse.json({
       name: availableUserName,
     });
   } else {
     const allRooms = await RoomManager.getAllRooms();
     return NextResponse.json(
-      { settings: allRooms[roomId] || { participants: {} } },
+      { settings: allRooms[spaceName] || { participants: {} } },
       { status: 200 },
     );
   }

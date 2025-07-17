@@ -20,6 +20,7 @@ import { connect_endpoint, src } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
 import { LangSelect } from '@/app/pages/controls/lang_select';
 import { ulid } from 'ulid';
+import { api } from '@/lib/api';
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint('/api/room-settings');
 
@@ -169,16 +170,14 @@ export function PreJoin({
       audioEnabled,
       audioDeviceId,
     };
-    // 获取roomId，从当前的url中
-    const roomId = getRoomIdFromUrl();
-    if (!roomId) return;
-    const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
+    // 获取spaceName，从当前的url中
+    const spaceName = getSpaceNameFromUrl();
+    if (!spaceName) return;
+
     if (username === '') {
       messageApi.loading(t('msg.request.user.name'), 2);
       // 向服务器请求一个唯一的用户名
-      url.searchParams.append('roomId', roomId);
-      url.searchParams.append('pre', 'true');
-      const response = await fetch(url.toString());
+      const response = await api.getUniqueUsername(spaceName);
       if (response.ok) {
         const { name } = await response.json();
         finalUserChoices.username = name;
@@ -188,16 +187,7 @@ export function PreJoin({
       }
     } else {
       // 虽然用户名不为空，但依然需要验证是否唯一
-      const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
-      url.searchParams.append('nameCheck', 'true');
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomId,
-          participantName: username,
-        }),
-      });
+      const response = await api.checkUsername(spaceName, username);
       if (response.ok) {
         const { success } = await response.json();
         if (!success) {
@@ -206,7 +196,6 @@ export function PreJoin({
           });
           return;
         }
-        
       }
     }
 
@@ -404,20 +393,20 @@ export function PreJoin({
   );
 }
 
-// 从当前浏览器的URL中获取房间ID
-const getRoomIdFromUrl = (): string | undefined => {
+// 从当前浏览器的URL中获取空间名称
+const getSpaceNameFromUrl = (): string | undefined => {
   // 获取当前URL
   const url = window.location.href;
-  // 要获取roomId只需找到url中最后一个'/'
+  // 要获取spaceName只需找到url中最后一个'/'
   let end = url.lastIndexOf('/');
   if (end == -1) {
     end = url.length;
   }
-  const roomId = url.substring(end + 1, url.length);
+  const spaceName = url.substring(end + 1, url.length);
 
-  if (roomId === '') {
+  if (spaceName === '') {
     return undefined;
   } else {
-    return roomId;
+    return spaceName;
   }
 };

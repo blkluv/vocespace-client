@@ -1,7 +1,9 @@
-import { allRoomInfos, historyRoomInfos, joinSpace } from './room';
+import { allRoomInfos, checkUsername, getUniqueUsername, historyRoomInfos, joinSpace } from './room';
 
 export const api = {
   joinSpace,
   allRoomInfos,
-  historyRoomInfos
+  historyRoomInfos,
+  getUniqueUsername,
+  checkUsername
 };
