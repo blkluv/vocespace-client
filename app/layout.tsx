@@ -174,6 +174,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Empty: {
             colorTextDescription: '#22CCEE',
           },
+          Checkbox: {
+            colorBgContainer: '#1E1E1E',
+            colorBorder: '#333',
+          }
         },
       }}
     >

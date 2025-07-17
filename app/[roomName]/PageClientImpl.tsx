@@ -26,7 +26,6 @@ import { atom, useRecoilState } from 'recoil';
 import { connect_endpoint, UserDefineStatus } from '@/lib/std';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
-import { WsTo } from '@/lib/std/device';
 import {
   DEFAULT_PARTICIPANT_SETTINGS,
   PARTICIPANT_SETTINGS_KEY,

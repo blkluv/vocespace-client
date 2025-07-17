@@ -3,7 +3,7 @@
 import React, { Suspense, useEffect } from 'react';
 import styles from '@/styles/Home.module.css';
 import { useI18n } from '@/lib/i18n/i18n';
-import { DemoMeetingTab } from './pages/pre_join/demo';
+import { MeetingTab } from './pages/pre_join/tab';
 import { LangSelect } from './pages/controls/lang_select';
 import { Skeleton } from 'antd';
 import { SvgResource } from './resources/svg';
@@ -11,6 +11,7 @@ import { SvgResource } from './resources/svg';
 export default function Page() {
   const { t } = useI18n();
   const [loading, setLoading] = React.useState(true);
+  const [hq, setHq] = React.useState(false);
 
   useEffect(() => {
     setTimeout(() => {
@@ -65,7 +66,7 @@ export default function Page() {
           </div>
         ) : (
           <Suspense fallback="Loading">
-            <DemoMeetingTab />
+            <MeetingTab hq={hq} setHq={setHq} />
           </Suspense>
         )}
       </main>

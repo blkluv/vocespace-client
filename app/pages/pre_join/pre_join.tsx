@@ -22,6 +22,12 @@ import { LangSelect } from '@/app/pages/controls/lang_select';
 import { ulid } from 'ulid';
 
 const CONN_DETAILS_ENDPOINT = connect_endpoint('/api/room-settings');
+
+export interface PreJoinPropsExt extends PreJoinProps {
+  hq?: boolean;
+  setHq?: (hq: boolean) => void;
+}
+
 /**
  * # PreJoin
  * PreJoin component for the app, which use before join a room
@@ -46,7 +52,9 @@ export function PreJoin({
   camLabel,
   userLabel,
   joinLabel,
-}: PreJoinProps) {
+  hq,
+  setHq,
+}: PreJoinPropsExt) {
   const { t } = useI18n();
   // user choices -------------------------------------------------------------------------------------
   const {
