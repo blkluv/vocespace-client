@@ -17,7 +17,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { SvgResource } from '../resources/svg';
 import styles from '@/styles/dashboard.module.scss';
-import { connect_endpoint } from '@/lib/std';
+import { api } from '@/lib/api';
 
 const { Title } = Typography;
 
@@ -62,8 +62,6 @@ interface ParticipantTableData {
   during: string;
 }
 
-const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
-
 export default function Dashboard() {
   const [currentRoomsData, setCurrentRoomsData] = useState<ParticipantTableData[]>([]);
   const [historyRoomsData, setHistoryRoomsData] = useState<HistoryRoomData[]>([]);
@@ -77,10 +75,7 @@ export default function Dashboard() {
   const fetchCurrentRooms = async () => {
     setLoading(true);
     try {
-      const url = new URL(CONNECT_ENDPOINT, window.location.origin);
-      url.searchParams.append('all', 'true');
-      url.searchParams.append('detail', 'true');
-      const response = await fetch(url.toString());
+      const response = await api.allRoomInfos();
       if (response.ok) {
         const roomSettings = await response.json();
 
@@ -132,9 +127,7 @@ export default function Dashboard() {
 
   // 获取历史房间数据（模拟数据）
   const fetchHistoryRooms = async () => {
-    const url = new URL(CONNECT_ENDPOINT, window.location.origin);
-    url.searchParams.append('time_record', 'true');
-    const response = await fetch(url.toString());
+    const response = await api.historyRoomInfos();
     if (!response.ok) {
       messageApi.error('获取历史房间数据失败');
       return;

@@ -347,6 +347,11 @@ lk load-test \
 - [x] 用户创建公开房间，在子房间加入公开房间，子房间没有正常退出
 - [ ] 合并动态配置到docker和main
 - [ ] 提取前端API
+  - [ ] connect
+  - [ ] room
+  - [ ] settings
+  - [ ] channel
+  - [ ] record
 - [x] 无损传输模式
 
 ---

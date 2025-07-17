@@ -11,7 +11,7 @@ const COOKIE_KEY = 'random-participant-postfix';
 export async function GET(request: NextRequest) {
   try {
     // Parse query parameters
-    const roomName = request.nextUrl.searchParams.get('roomName');
+    const spaceName = request.nextUrl.searchParams.get('spaceName');
     const participantName = request.nextUrl.searchParams.get('participantName');
     const metadata = request.nextUrl.searchParams.get('metadata') ?? '';
     const region = request.nextUrl.searchParams.get('region');
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
       throw new Error('Invalid region');
     }
 
-    if (typeof roomName !== 'string') {
-      return new NextResponse('Missing required query parameter: roomName', { status: 400 });
+    if (typeof spaceName !== 'string') {
+      return new NextResponse('Missing required query parameter: spaceName', { status: 400 });
     }
     if (participantName === null) {
       return new NextResponse('Missing required query parameter: participantName', { status: 400 });
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // if (!randomParticipantPostfix) {
     //   randomParticipantPostfix = randomString(4);
     // }
-    const identity = `${participantName}__${roomName}`;
+    const identity = `${participantName}__${spaceName}`;
     const participantToken = await createParticipantToken(
       {
         // identity: `${participantName}__${randomParticipantPostfix}`,
@@ -40,13 +40,13 @@ export async function GET(request: NextRequest) {
         name: participantName,
         metadata,
       },
-      roomName,
+      spaceName,
     );
 
     // Return connection details
     const data: ConnectionDetails = {
       serverUrl: livekitServerUrl,
-      roomName: roomName,
+      roomName: spaceName,
       participantToken: participantToken,
       participantName: participantName,
     };
@@ -63,11 +63,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function createParticipantToken(userInfo: AccessTokenOptions, roomName: string) {
+function createParticipantToken(userInfo: AccessTokenOptions, spaceName: string) {
   const at = new AccessToken(API_KEY, API_SECRET, userInfo);
   at.ttl = '5m';
   const grant: VideoGrant = {
-    room: roomName,
+    room: spaceName,
     roomJoin: true,
     canPublish: true,
     canPublishData: true,

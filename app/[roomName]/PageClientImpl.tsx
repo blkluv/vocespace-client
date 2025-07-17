@@ -33,6 +33,7 @@ import {
 } from '@/lib/std/room';
 import { TodoItem } from '../pages/apps/todo_list';
 import dayjs, { type Dayjs } from 'dayjs';
+import { api } from '@/lib/api';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -131,13 +132,7 @@ export function PageClientImpl(props: {
 
   const handlePreJoinSubmit = React.useCallback(async (values: LocalUserChoices) => {
     setPreJoinChoices(values);
-    const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
-    url.searchParams.append('roomName', props.roomName);
-    url.searchParams.append('participantName', values.username);
-    if (props.region) {
-      url.searchParams.append('region', props.region);
-    }
-    const connectionDetailsResp = await fetch(url.toString());
+    const connectionDetailsResp = await api.joinSpace(props.roomName, values.username, props.region);
     const connectionDetailsData = await connectionDetailsResp.json();
     setConnectionDetails(connectionDetailsData);
   }, []);
