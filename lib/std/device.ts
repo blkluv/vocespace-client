@@ -12,6 +12,10 @@ export interface WsBase {
   room: string; // 房间名
 }
 
+export interface WsParticipant extends WsBase {
+  participantId: string; // 参与者ID
+}
+
 export interface WsRemove extends WsBase {
   participants: string[]; // 参与者ID列表
   childRoom: string; // 子房间名

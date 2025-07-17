@@ -1,9 +1,12 @@
 // /app/api/room-settings/route.ts
-import { UserDefineStatus } from '@/lib/std';
+import { isUndefinedString, UserDefineStatus } from '@/lib/std';
 import { NextRequest, NextResponse } from 'next/server';
 import Redis from 'ioredis';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { ChildRoom, ParticipantSettings, RoomSettings } from '@/lib/std/room';
+import { RoomServiceClient } from 'livekit-server-sdk';
+import { socket } from '@/app/[roomName]/PageClientImpl';
+import { WsBase, WsParticipant } from '@/lib/std/device';
 
 interface RoomSettingsMap {
   [roomId: string]: RoomSettings;
@@ -243,7 +246,16 @@ class RoomManager {
         throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
       }
 
-      // 检查参与者是否已经在子房间中
+      // 检查参与者是否已经在某个子房间中
+      for (const child of roomSettings.children) {
+        if (child.participants.includes(participantId)) {
+          // 如果已经在其他的房间，就需要退出
+          child.participants = child.participants.filter((p) => p !== participantId);
+          break;
+        }
+      }
+
+      // 检查参与者是否已经在要加入的子房间中
       if (childRoomData.participants.includes(participantId)) {
         return {
           success: false,
@@ -587,15 +599,22 @@ class RoomManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
       const roomKey = this.getRoomKey(room);
+      const chatKey = this.getChatKey(room);
+      const pipeline = redisClient.pipeline();
       // 删除房间设置
-      await redisClient.del(roomKey);
+      pipeline.del(roomKey);
       // 从房间列表中删除
-      await redisClient.srem(this.ROOM_LIST_KEY_PREFIX, room);
-      // 添加房间使用记录 end
-      await this.setRoomDateRecords(room, { start, end: Date.now() });
-      // 删除房间聊天记录
-      await this.deleteChatRecords(room);
-      return true;
+      pipeline.srem(this.ROOM_LIST_KEY_PREFIX, room);
+      pipeline.del(chatKey);
+      const results = await pipeline.exec();
+      const success = results?.every((result) => result[0] === null);
+
+      if (success) {
+        // 添加房间使用记录 end
+        await this.setRoomDateRecords(room, { start, end: Date.now() });
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Error deleting room:', error);
       return false;
@@ -642,12 +661,27 @@ class RoomManager {
           error: 'Room or participant does not exist, or not complete initialized.',
         }; // 房间或参与者不存在可能出现了问题
       }
-      // 删除参与者前删除该参与者构建的子房间
-      roomSettings.children
-        .filter((child) => child.ownerId === participantId)
-        .forEach(async (childRoom) => {
-          await this.deleteChildRoom(room, childRoom.name);
-        });
+      // 删除参与者前删除该参与者构建的子房间 (新需求无需清理子房间, 暂时注释)
+      // const childRoomsToDelete = roomSettings.children
+      //   .filter((child) => child.ownerId === participantId)
+      //   .map((child) => child.name);
+
+      // if (childRoomsToDelete.length > 0) {
+      //   await Promise.all(
+      //     childRoomsToDelete.map(async (roomName) => {
+      //       await this.deleteChildRoom(room, roomName);
+      //     }),
+      //   );
+
+      //   // 重新获取最新的房间设置
+      //   roomSettings = await this.getRoomSettings(room);
+      //   if (!roomSettings) {
+      //     return {
+      //       success: false,
+      //       error: 'Room settings changed during deletion process.',
+      //     };
+      //   }
+      // }
 
       // 删除参与者
       delete roomSettings.participants[participantId];
@@ -968,7 +1002,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to transfer ownership' }, { status: 500 });
       }
     }
-
+    // 更新参与者设置
     if (!roomId || !participantId || !settings) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -1184,3 +1218,65 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+
+const { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL } = process.env;
+
+// 用户心跳检测
+// 经过测试，发现当用户退出房间时可能会失败，导致用户实际已经退出，但服务端数据还存在
+// 增加心跳检测，定时检查用户是否在线，若用户已经离线，需要从房间中进行移除, 依赖livekit server api
+const userHeartbeat = async () => {
+  if (
+    isUndefinedString(LIVEKIT_API_KEY) ||
+    isUndefinedString(LIVEKIT_API_SECRET) ||
+    isUndefinedString(LIVEKIT_URL)
+  ) {
+    console.warn('LiveKit API credentials are not set, skipping user heartbeat check.');
+    return;
+  }
+
+  const roomServer = new RoomServiceClient(LIVEKIT_URL!, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
+  // 列出所有房间
+  const currentRooms = await roomServer.listRooms();
+  for (const room of currentRooms) {
+    // 列出房间中所有的参与者，然后和redis中的参与者进行对比
+    const roomParticipants = await roomServer.listParticipants(room.name);
+    const redisRoom = await RoomManager.getRoomSettings(room.name);
+    if (!redisRoom) {
+      continue; // 如果redis中没有这个房间，跳过 (本地开发环境和正式环境使用的redis不同，但服务器是相同的)
+    }
+    const redisParticipants = Object.keys(redisRoom.participants);
+    // 有两种情况: 1. redis中有参与者但livekit中没有, 2. livekit中有参与者但redis中没有
+    // 情况1: 说明参与者已经离开了房间，但redis中没有清除，需要从redis中删除
+    // 情况2: 说明参与者实际是在房间中的，但是redis中没有初始化成功，这时候就需要告知参与者进行初始化 (socket.io)
+
+    // 首先获取两种情况的参与者
+    const inRedisNotInLK = redisParticipants.filter((p) => {
+      return !roomParticipants.some((lkParticipant) => lkParticipant.identity === p);
+    });
+
+    const inLKNotInRedis = roomParticipants.filter((lkParticipant) => {
+      return !redisParticipants.includes(lkParticipant.identity);
+    });
+    // 处理情况1 --------------------------------------------------------------------------------------------
+    if (inRedisNotInLK.length > 0) {
+      for (const participantId of inRedisNotInLK) {
+        await RoomManager.removeParticipant(room.name, participantId);
+      }
+    }
+
+    // 处理情况2 --------------------------------------------------------------------------------------------
+    if (inLKNotInRedis.length > 0) {
+      for (const participant of inLKNotInRedis) {
+        socket.emit('re_init', {
+          room: room.name,
+          participantId: participant.identity,
+        } as WsParticipant);
+      }
+    }
+  }
+};
+
+// 定时任务，每隔5分钟执行一次
+setInterval(async () => {
+  await userHeartbeat();
+}, 5 * 60 * 1000); // 每5分钟执行一次

@@ -148,6 +148,7 @@ app.prepare().then(() => {
   const httpServer = createServer(server);
 
   const io = new Server(httpServer);
+  const processingSocketIds = new Set();
   // [io on] -------------------------------------------------------------------------------------------------------------
   // - [io connection] ---------------------------------------------------------------------------------------------------
   io.on('connection', (socket) => {
@@ -343,23 +344,44 @@ app.prepare().then(() => {
         socket.to(socketId).emit('removed_from_privacy_room_response', msg);
       });
     });
+    // [socket: re init participant] --------------------------------------------------------------------------------
+    // 由服务器端触发，重新初始化某个用户的状态，依靠msg中的room进行判断，无法使用socket.id
+    // - msg: WsParticipant
+    socket.on("re_init", (msg) => {
+      io.emit("re_init_response", msg);
+    });
     // [socket: del user] ----------------------------------------------------------------------------------------------------
     socket.on('disconnect', async (_reason) => {
       console.log('Socket disconnected', socket.id);
-      // 当某个用户断开连接我们需要请求http服务器删除用户在房间中的数据
-      if (socket.id) {
-        const url = `http://${hostname}:${port}${basePath}/api/room-settings?socketId=${socket.id}`;
-        const response = await fetch(url.toString(), {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          console.error('Failed to delete user data, socketId:', socket.id);
-        } else {
-          // 如果成功，就要让其他用户更新
-          setTimeout(() => {
-            io.emit('user_status_updated');
-          }, 3000);
+
+      if (processingSocketIds.has(socket.id)) {
+        return;
+      }
+
+      processingSocketIds.add(socket.id);
+
+      try {
+        // 当某个用户断开连接我们需要请求http服务器删除用户在房间中的数据
+        if (socket.id) {
+          const url = `http://${hostname}:${port}${basePath}/api/room-settings?socketId=${socket.id}`;
+          const response = await fetch(url.toString(), {
+            method: 'DELETE',
+          });
+          if (!response.ok) {
+            console.error('Failed to delete user data, socketId:', socket.id);
+          } else {
+            // 如果成功，就要让其他用户更新
+            setTimeout(() => {
+              io.emit('user_status_updated');
+            }, 3000);
+          }
         }
+      } catch (error) {
+        console.error('Error processing socket disconnect:', error);
+      } finally {
+        setTimeout(() => {
+          processingSocketIds.delete(socket.id);
+        }, 5000);
       }
     });
   });

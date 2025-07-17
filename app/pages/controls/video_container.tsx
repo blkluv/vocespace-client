@@ -56,7 +56,14 @@ import {
   userState,
 } from '@/app/[roomName]/PageClientImpl';
 import { useRouter } from 'next/navigation';
-import { ControlType, WsBase, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
+import {
+  ControlType,
+  WsBase,
+  WsControlParticipant,
+  WsInviteDevice,
+  WsParticipant,
+  WsTo,
+} from '@/lib/std/device';
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
@@ -192,6 +199,14 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         });
         setInit(false);
       }
+
+      // 重写初始化用户 -----------------------------------------------------------------------------
+      socket.on('re_init_response', async (msg: WsParticipant) => {
+        if (msg.room === room.name && msg.participantId === room.localParticipant.identity) {
+          // 只有在用户没有正常初始化时才会触发
+          setInit(true);
+        }
+      });
 
       // license 检测 -----------------------------------------------------------------------------
       const checkLicense = async () => {
@@ -445,10 +460,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 color="danger"
                 size="small"
                 onClick={async () => {
-                  await onParticipantDisConnected(room.localParticipant);
+                  // await onParticipantDisConnected(room.localParticipant);
                   room.disconnect(true);
-                  router.push('/');
-                  socket.emit('update_user_status');
+                  // router.push('/');
+                  // socket.emit('update_user_status');
                 }}
               >
                 {t('common.leave')}
