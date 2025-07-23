@@ -325,6 +325,7 @@ export default function Dashboard() {
 
   return (
     <div className={styles.container}>
+    {contextHolder}
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>VoceSpace Dashboard</Title>
         <Row gutter={16} style={{ marginBottom: 24 }}>

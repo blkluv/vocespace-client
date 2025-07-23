@@ -1,10 +1,11 @@
 import { socket } from '@/app/[roomName]/PageClientImpl';
 import { SvgResource } from '@/app/resources/svg';
-import { src } from '@/lib/std';
+import { audio } from '@/lib/audio';
 import { WsTo } from '@/lib/std/device';
-import { LayoutContext, LayoutContextType } from '@livekit/components-react';
+import { LayoutContext } from '@livekit/components-react';
 
 export interface WavePinProps {
+  /**当Wave按钮被点击时触发 */
   wavePin: () => Promise<void>;
   style?: React.CSSProperties;
 }
@@ -15,20 +16,17 @@ export interface WaveHandProps {
   contextUndefined?: boolean;
 }
 
+/**
+ * ## WaveHand 组件
+ * 具有LayoutContext的消费能力, 应该在`ParticipantTile`中进行使用。（具有LayoutContext的组件下-默认）
+ * - 用于发送Wave信号并播放音频。
+ * - 当设置`contextUndefined`为`false`时，表示不使用LayoutContext。可单独使用，但无法自定义`wavePin`函数。
+ * @param [`WavePinProps`]
+ */
 export function WaveHand({ style, wsTo, contextUndefined = true }: WaveHandProps) {
   const wavePin = async () => {
     socket.emit('wave', wsTo);
-    // 创建一个虚拟的audio元素并播放音频，然后移除
-    const audioSrc = src('/audios/vocespacewave.m4a');
-    const audio = new Audio(audioSrc);
-    audio.volume = 1.0;
-    audio.play().then(() => {
-      setTimeout(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.remove();
-      }, 2000);
-    });
+    await audio.wave();
   };
 
   if (contextUndefined) {
@@ -44,6 +42,12 @@ export function WaveHand({ style, wsTo, contextUndefined = true }: WaveHandProps
   }
 }
 
+/**
+ * ### 基础的WavePin组件
+ * - 接收`wavePin`函数作为点击事件处理器。可单独使用。
+ * @param param0
+ * @returns
+ */
 export function WavePin({
   wavePin,
   style = {

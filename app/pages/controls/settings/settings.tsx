@@ -4,17 +4,17 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { MessageInstance } from 'antd/es/message/interface';
 import { ModelBg, ModelRole } from '@/lib/std/virtual';
 import { useI18n } from '@/lib/i18n/i18n';
-import { connect_endpoint, isUndefinedString, UserStatus } from '@/lib/std';
+import { UserStatus } from '@/lib/std';
 import { useRecoilState } from 'recoil';
 import { userState } from '@/app/[roomName]/PageClientImpl';
 import { LocalParticipant } from 'livekit-client';
-import { LicenseControl } from './settings/license';
-import { AudioSettings } from './settings/audio';
-import { GeneralSettings } from './settings/general';
-import { TabItem } from './settings/tab_item';
-import { VirtualSettingsExports } from './settings/virtual';
-import { VideoSettings } from './settings/video';
-import { AboutUs } from './settings/about_us';
+import { LicenseControl } from './license';
+import { AudioSettings } from './audio';
+import { GeneralSettings } from './general';
+import { TabItem } from './tab_item';
+import { VirtualSettingsExports } from './virtual';
+import { VideoSettings } from './video';
+import { AboutUs } from './about_us';
 import { RecordingTable } from '@/app/recording/table';
 import {
   EnvData,
@@ -92,7 +92,6 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
     const [firstOpen, setFirstOpen] = useState(true);
 
     const searchRoomRecords = async () => {
-      console.warn('search -----');
       const response = await fetch(`${env?.server_host}/api/s3/${room}`);
       if (response.ok) {
         const { records, success }: RecordResponse = await response.json();
@@ -195,7 +194,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             >
               <Tag color="#22ccee">{isConnected}</Tag>
               <Tooltip title="刷新数据">
-                <Button size='small' icon={<ReloadOutlined />} onClick={searchRoomRecords}>
+                <Button size="small" icon={<ReloadOutlined />} onClick={searchRoomRecords}>
                   刷新
                 </Button>
               </Tooltip>
@@ -259,9 +258,9 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         style={{ width: '100%', height: '100%' }}
         onChange={(k: string) => {
           setKey(k as TabKey);
-          if (k === "recording" && firstOpen) {
-             searchRoomRecords();
-             setFirstOpen(false);
+          if (k === 'recording' && firstOpen) {
+            searchRoomRecords();
+            setFirstOpen(false);
           }
         }}
       />

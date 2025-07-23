@@ -42,7 +42,7 @@ import {
 } from '@/lib/hooks/channel';
 import { socket } from '@/app/[roomName]/PageClientImpl';
 import { WsJoinRoom, WsRemove, WsSender, WsTo } from '@/lib/std/device';
-import { PaginationInfo } from './pagination';
+import { PaginationInfo } from './widgets/pagination';
 
 interface ChannelProps {
   roomName: string;

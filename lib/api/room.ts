@@ -1,4 +1,4 @@
-import { connect_endpoint } from '../std';
+import { connect_endpoint, UserDefineStatus } from '../std';
 
 /**
  * 加入空间
@@ -59,5 +59,25 @@ export const checkUsername = async (spaceName: string, participantName: string) 
       spaceName,
       participantName,
     }),
+  });
+};
+
+export interface DefineUserStatusBody {
+  spaceName: string;
+  status: UserDefineStatus;
+}
+
+export const defineUserStatus = async (spaceName: string, status: UserDefineStatus) => {
+  const url = new URL(connect_endpoint('/api/room-settings'), window.location.origin);
+  url.searchParams.append('status', 'true');
+  return await fetch(url.toString(), {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      spaceName,
+      status,
+    } as DefineUserStatusBody),
   });
 };

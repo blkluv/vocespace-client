@@ -1,26 +1,31 @@
-import { socket } from "@/app/[roomName]/PageClientImpl";
-import { useI18n } from "@/lib/i18n/i18n";
-import { connect_endpoint, UserDefineStatus } from "@/lib/std";
-import { MessageInstance } from "antd/es/message/interface";
-import { LocalParticipant } from "livekit-client";
-import { useState } from "react";
+import { socket } from '@/app/[roomName]/PageClientImpl';
+import { useI18n } from '@/lib/i18n/i18n';
+import { UserDefineStatus } from '@/lib/std';
+import { MessageInstance } from 'antd/es/message/interface';
+import { LocalParticipant } from 'livekit-client';
+import { useState } from 'react';
 import { ulid } from 'ulid';
 import styles from '@/styles/controls.module.scss';
 import TextArea from 'antd/es/input/TextArea';
-import { Button, Input, Radio, Slider } from "antd";
-import { SvgResource } from "@/app/resources/svg";
+import { Button, Input, Radio, Slider } from 'antd';
+import { SvgResource } from '@/app/resources/svg';
+import { api } from '@/lib/api';
 
-const SAVE_STATUS_ENDPOINT = connect_endpoint('/api/room-settings');
-
-export function BuildUserStatus({
-  messageApi,
-  room,
-  localParticipant,
-}: {
+export interface BuildUserStatusProps {
   messageApi: MessageInstance;
   room: string;
   localParticipant: LocalParticipant;
-}) {
+}
+
+/**
+ * ## 用户状态构建组件
+ * 用于构建用户自定义状态。包含状态名称、描述、图标选择、音量、视频模糊度和屏幕模糊度的设置。
+ * - 用户状态可以在空间内共享，其他用户可以看到。每个用户都有自己的状态，默认为online状态。
+ * - 自定义状态是当用户想要特定的状态(非系统状态)时进行设置，用户自定义的状态会同步到空间中，变成空间中其他用户可选的新状态。
+ * - 用户自定义状态还可以在用户自己创建的子房间中设置为子房间的统一状态，这意味着其他加入到子房间的用户都会同步到这个状态(默认)，
+ * 除非其他用户自己更改到其他状态。
+ */
+export function BuildUserStatus({ messageApi, room, localParticipant }: BuildUserStatusProps) {
   const { t } = useI18n();
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
@@ -66,10 +71,18 @@ export function BuildUserStatus({
   const [screenBlur, setScreenBlur] = useState(0.0);
   const [volume, setVolume] = useState(100);
 
+  // 恢复默认状态
+  const restoreAll = () => {
+    setName('');
+    setDesc('');
+    setSelectedIcon(status_icons[0].key);
+    setVolume(100);
+    setVideoBlur(0.0);
+    setScreenBlur(0.0);
+  };
+
   const saveStatus = async () => {
     try {
-      const url = new URL(SAVE_STATUS_ENDPOINT, window.location.origin);
-
       const status: UserDefineStatus = {
         id: ulid(),
         creator: {
@@ -86,22 +99,11 @@ export function BuildUserStatus({
         blur: videoBlur,
         screenBlur,
       };
-
-      const response = await fetch(url.toString(), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          roomId: room,
-          status,
-        }),
-      });
-
+      // 发送到服务器保存状态
+      const response = await api.defineUserStatus(room, status);
       if (!response.ok) {
         throw new Error(`Failed to save status: ${response.status}`);
       }
-
       const data = await response.json();
       if (data.error) {
         throw new Error(data.error);
@@ -111,13 +113,7 @@ export function BuildUserStatus({
       });
       // 服务器已经保存了状态，使用socket通知所有房间里的人
       socket.emit('new_user_status', { status: data.status, room: data.roomId });
-      // 清空所有输入框
-      setName('');
-      setDesc('');
-      setSelectedIcon(status_icons[0].key);
-      setVolume(100);
-      setVideoBlur(0.0);
-      setScreenBlur(0.0);
+      restoreAll();
     } catch (e) {
       messageApi.error({
         content: `${t('settings.general.status.define.fail')}: ${e}`,

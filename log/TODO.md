@@ -356,7 +356,9 @@ lk load-test \
     - [ ] record
   - [ ] room -> space 名称处理
   - [ ] messageApi 提示
-
+  - [ ] audio模块
+  - [ ] 代码注释
+- [ ] 进入子房间，socketId丢失，似乎没初始化好，网络原因可能性较大
 ---
 
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)

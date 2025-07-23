@@ -1,9 +1,9 @@
 import styles from '@/styles/controls.module.scss';
 import { Button, Input, Radio } from 'antd';
-import { LangSelect } from '../lang_select';
-import { StatusSelect } from '../status_select';
+import { LangSelect } from '../selects/lang_select';
+import { StatusSelect } from '../selects/status_select';
 import { SvgResource } from '@/app/resources/svg';
-import { BuildUserStatus } from '../user_status';
+import { BuildUserStatus } from './user_status';
 import { useI18n } from '@/lib/i18n/i18n';
 import { LocalParticipant, Room } from 'livekit-client';
 import { MessageInstance } from 'antd/es/message/interface';

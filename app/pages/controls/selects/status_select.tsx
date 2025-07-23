@@ -17,6 +17,10 @@ export interface StatusItem extends BaseOptionType {
   color?: string;
 }
 
+/**
+ * ## 状态选择组件
+ * 用于用户需要进行状态选择时使用。
+ */
 export function StatusSelect({
   style,
   className,

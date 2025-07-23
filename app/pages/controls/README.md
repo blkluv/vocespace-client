@@ -1,0 +1,8 @@
+- selects: 各种用于进行选择的selector组件
+- widgets: 小部件，例如wavepin，pagination等
+- toggles: 用于处理开关的Toggle组件，例如聊天功能开关
+- settings: 用于设置用到组件
+- bar.tsx: Voecspace的控制栏
+- video_container.tsx: 最主要的核心视频容器
+- channel.tsx: 侧边栏用于管理空间/子房间】
+- drawer_tools.tsx: 作为Drawer组件的通用配置组件

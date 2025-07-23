@@ -1,7 +1,7 @@
 import styles from '@/styles/controls.module.scss';
 import { Slider } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
-import { AudioSelect } from '../audio_select';
+import { AudioSelect } from '../selects/audio_select';
 
 export interface AudioSettingsProps {
   volume: number;
