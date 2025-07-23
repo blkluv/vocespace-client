@@ -1,10 +1,12 @@
 import { connect_endpoint } from '../std';
 
-export const sendRecordRequest = (data: {
-  room: string;
+export interface sendRecordRequestBody{
+  spaceName: string;
   type: 'start' | 'stop';
   egressId?: string;
-}): Promise<Response> => {
+}
+
+export const sendRecordRequest = (data: sendRecordRequestBody): Promise<Response> => {
   const url = new URL(connect_endpoint('/api/record'), window.location.origin);
   return fetch(url.toString(), {
     method: 'POST',

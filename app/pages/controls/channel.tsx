@@ -27,7 +27,7 @@ import {
 } from '@ant-design/icons';
 import { GridLayout, TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { MessageInstance } from 'antd/es/message/interface';
-import { ChildRoom, RoomSettings } from '@/lib/std/room';
+import { ChildRoom, SpaceInfo } from '@/lib/std/space';
 import { ParticipantTileMini } from '../participant/mini';
 import { GLayout } from '../layout/grid';
 import { CheckboxGroupProps } from 'antd/es/checkbox';
@@ -42,7 +42,7 @@ interface ChannelProps {
   participantId: string;
   onUpdate: () => Promise<void>;
   tracks: TrackReferenceOrPlaceholder[];
-  settings: RoomSettings;
+  settings: SpaceInfo;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   isActive?: boolean;

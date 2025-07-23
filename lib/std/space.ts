@@ -34,7 +34,7 @@ export interface RecordSettings {
   active: boolean;
 }
 
-export interface RoomSettings {
+export interface SpaceInfo {
   participants: {
     [participantId: string]: ParticipantSettings;
   };

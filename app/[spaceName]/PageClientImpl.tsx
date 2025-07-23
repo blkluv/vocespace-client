@@ -30,7 +30,7 @@ import {
   DEFAULT_PARTICIPANT_SETTINGS,
   PARTICIPANT_SETTINGS_KEY,
   ParticipantSettings,
-} from '@/lib/std/room';
+} from '@/lib/std/space';
 import { TodoItem } from '../pages/apps/todo_list';
 import dayjs, { type Dayjs } from 'dayjs';
 import { api } from '@/lib/api';

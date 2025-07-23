@@ -31,7 +31,7 @@ export const allSpaceInfos = async () => {
  */
 export const historySpaceInfos = async () => {
   const url = new URL(connect_endpoint('/api/space'), window.location.origin);
-  url.searchParams.append('time_record', 'true');
+  url.searchParams.append('timeRecord', 'true');
   return await fetch(url.toString());
 };
 /**
@@ -43,6 +43,11 @@ export const getUniqueUsername = async (spaceName: string) => {
   url.searchParams.append('pre', 'true');
   return await fetch(url.toString());
 };
+
+export interface CheckNameBody {
+  spaceName: string;
+  participantName: string;
+}
 
 /**
  * 检查用户名是否可用
@@ -58,7 +63,7 @@ export const checkUsername = async (spaceName: string, participantName: string) 
     body: JSON.stringify({
       spaceName,
       participantName,
-    }),
+    } as CheckNameBody),
   });
 };
 

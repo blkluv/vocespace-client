@@ -18,19 +18,25 @@ export interface CreateRoomParam extends BasicParam {
   isPrivate: boolean;
 }
 
+export interface CreateRoomBody {
+  spaceName: string;
+  childRoomName: string;
+  participantId: string;
+  isPrivate: boolean;
+}
+
 export const createRoom = async ({ hostRoom, roomName, ownerId, isPrivate }: CreateRoomParam) => {
   const url = new URL(CONNECT_ENDPOINT, window.location.origin);
   url.searchParams.append('childRoom', 'true');
-
   return await fetch(url.toString(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      roomId: hostRoom,
+      spaceName: hostRoom,
       childRoomName: roomName,
       participantId: ownerId,
       isPrivate,
-    }),
+    } as CreateRoomBody),
   });
 };
 

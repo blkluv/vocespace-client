@@ -1,13 +1,13 @@
-// lib/hooks/useRoomSettings.ts
+// lib/hooks/useSpaceInfo.ts
 import { useState, useCallback } from 'react';
 import { connect_endpoint } from '../std';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
-import { ParticipantSettings, RecordSettings, RoomSettings } from '../std/room';
+import { ParticipantSettings, RecordSettings, SpaceInfo } from '../std/space';
 
 const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/space');
 
-export function useRoomSettings(roomId: string, participantId: string) {
-  const [settings, setSettings] = useState<RoomSettings>({
+export function useSpaceInfo(spaceName: string, participantId: string) {
+  const [settings, setSettings] = useState<SpaceInfo>({
     participants: {},
     ownerId: '',
     record: { active: false },
@@ -19,11 +19,11 @@ export function useRoomSettings(roomId: string, participantId: string) {
 
   // 获取所有参与者设置
   const fetchSettings = useCallback(async () => {
-    if (!roomId) return;
+    if (!spaceName) return;
 
     try {
       const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-      url.searchParams.append('roomId', roomId);
+      url.searchParams.append('spaceName', spaceName);
 
       setLoading(true);
       const response = await fetch(url.toString());
@@ -40,7 +40,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [spaceName]);
 
   const updateRecord = useCallback(
     async (active: boolean, egressId?: string, filePath?: string) => {
@@ -49,7 +49,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomId,
+          spaceName,
           record: {
             active,
             egressId,
@@ -69,7 +69,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
       }));
       return true;
     },
-    [participantId, roomId],
+    [participantId, spaceName],
   );
 
   const updateOwnerId = useCallback(
@@ -79,7 +79,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomId,
+          spaceName,
           participantId: replacedId || participantId,
           trans: true,
         }),
@@ -98,13 +98,13 @@ export function useRoomSettings(roomId: string, participantId: string) {
 
       return true;
     },
-    [participantId, roomId],
+    [participantId, spaceName],
   );
 
   // 更新当前参与者设置
   const updateSettings = useCallback(
     async (newSettings: Partial<ParticipantSettings>, record?: RecordSettings) => {
-      if (!roomId || !participantId) return;
+      if (!spaceName || !participantId) return;
 
       try {
         const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
@@ -112,7 +112,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            roomId,
+            spaceName,
             participantId,
             settings: newSettings,
             record,
@@ -131,13 +131,13 @@ export function useRoomSettings(roomId: string, participantId: string) {
         return false;
       }
     },
-    [roomId, participantId],
+    [spaceName, participantId],
   );
 
   // 清除参与者设置（离开时）
   const clearSettings = useCallback(
     async (id?: string) => {
-      if (!roomId || !participantId) return;
+      if (!spaceName || !participantId) return;
       let removeId = id || participantId;
       try {
         const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
@@ -145,7 +145,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            roomId,
+            spaceName,
             participantId: removeId,
           }),
         }).then(async (res) => {
@@ -160,7 +160,7 @@ export function useRoomSettings(roomId: string, participantId: string) {
         console.error('Error clearing settings:', err);
       }
     },
-    [roomId, participantId],
+    [spaceName, participantId],
   );
 
   return {

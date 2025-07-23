@@ -9,7 +9,7 @@ import {
   getUniqueUsername,
   historySpaceInfos,
   joinSpace,
-} from './room';
+} from './space';
 
 export const api = {
   // ---- space api --------

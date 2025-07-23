@@ -5,7 +5,7 @@ import { SvgResource } from '@/app/resources/svg';
 import { ParticipantList } from './list';
 import { Participant, Room, Track } from 'livekit-client';
 import styles from '@/styles/controls.module.scss';
-import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
+import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { TrackMutedIndicator } from '@livekit/components-react';
 import React from 'react';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
@@ -18,7 +18,7 @@ export interface ParticipantManageProps {
   room?: Room;
   participantList: [string, ParticipantSettings][];
   setOpenShareModal: (open: boolean) => void;
-  roomSettings: RoomSettings;
+  roomSettings: SpaceInfo;
   selectedParticipant: Participant | null;
   setSelectedParticipant: (participant: Participant | null) => void;
   setOpenNameModal: (open: boolean) => void;

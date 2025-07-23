@@ -2,7 +2,7 @@ import { Avatar, Dropdown, List, MenuProps } from 'antd';
 import styles from '@/styles/controls.module.scss';
 import { randomColor } from '@/lib/std';
 import { useI18n } from '@/lib/i18n/i18n';
-import { ParticipantSettings } from '@/lib/std/room';
+import { ParticipantSettings } from '@/lib/std/space';
 
 export type ParticipantItemType = [string, ParticipantSettings];
 

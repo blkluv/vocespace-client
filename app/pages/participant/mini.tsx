@@ -20,7 +20,7 @@ import {
 import { Track } from 'livekit-client';
 import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 import { isTrackReferencePinned } from './tile';
-import { RoomSettings } from '@/lib/std/room';
+import { SpaceInfo } from '@/lib/std/space';
 import { useVideoBlur, WsTo } from '@/lib/std/device';
 import { SvgResource } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
@@ -29,7 +29,7 @@ import { UserStatus } from '@/lib/std';
 import { WaveHand } from '../controls/widgets/wave';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
-  settings: RoomSettings;
+  settings: SpaceInfo;
   /**
    * host room name
    */

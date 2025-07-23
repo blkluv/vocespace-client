@@ -42,7 +42,7 @@ import React, {
 import { ControlBarExport, Controls } from './bar';
 import { useRecoilState } from 'recoil';
 import { ParticipantItem } from '../participant/tile';
-import { useRoomSettings } from '@/lib/hooks/space';
+import { useSpaceInfo } from '@/lib/hooks/space';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
@@ -65,7 +65,7 @@ import {
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
-import { PARTICIPANT_SETTINGS_KEY } from '@/lib/std/room';
+import { PARTICIPANT_SETTINGS_KEY } from '@/lib/std/space';
 import { FlotLayout } from '../apps/flot';
 import { api } from '@/lib/api';
 
@@ -109,7 +109,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
     const router = useRouter();
     const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId, updateRecord } =
-      useRoomSettings(
+      useSpaceInfo(
         room?.name || '', // 房间 ID
         room?.localParticipant?.identity || '', // 参与者 ID
       );

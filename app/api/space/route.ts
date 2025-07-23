@@ -3,24 +3,24 @@ import { isUndefinedString, UserDefineStatus } from '@/lib/std';
 import { NextRequest, NextResponse } from 'next/server';
 import Redis from 'ioredis';
 import { ChatMsgItem } from '@/lib/std/chat';
-import { ChildRoom, ParticipantSettings, RoomSettings } from '@/lib/std/room';
+import { ChildRoom, ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsBase, WsParticipant } from '@/lib/std/device';
-import { DefineUserStatusBody } from '@/lib/api/room';
+import { CheckNameBody, DefineUserStatusBody } from '@/lib/api/space';
 
 interface SpaceInfoMap {
-  [roomId: string]: RoomSettings;
+  [spaceId: string]: SpaceInfo;
 }
 
-interface RoomTimeRecord {
+interface SpaceTimeRecord {
   start: number; // 记录开始时间戳
   end?: number; // 记录结束时间戳
 }
 
-// 记录房间的使用情况
-interface RoomDateRecords {
-  [roomId: string]: RoomTimeRecord[];
+// 记录空间的使用情况
+interface SpaceDateRecords {
+  [spaceId: string]: SpaceTimeRecord[];
 }
 
 // [redis config env] ----------------------------------------------------------
@@ -49,28 +49,28 @@ if (REDIS_ENABLED === 'true') {
 }
 
 class SpaceManager {
-  // 房间 redis key 前缀
-  private static ROOM_KEY_PREFIX = 'room:';
+  // 空间 redis key 前缀
+  private static SPACE_KEY_PREFIX = 'space:';
   // 参与者 redis key 前缀
-  private static PARTICIPANT_KEY_PREFIX = 'room:participant:';
+  private static PARTICIPANT_KEY_PREFIX = 'space:participant:';
   // 空间列表 redis key 前缀 （房间不止一个）
-  private static SPACE_LIST_KEY_PREFIX = 'room:list:';
-  // 房间使用情况 redis key 前缀
-  private static ROOM_DATE_RECORDS_KEY_PREFIX = 'room:date:records:';
+  private static SPACE_LIST_KEY_PREFIX = 'space:list:';
+  // 空间使用情况 redis key 前缀
+  private static SPACE_DATE_RECORDS_KEY_PREFIX = 'space:date:records:';
   // 聊天记录 redis key 前缀
   private static CHAT_KEY_PREFIX = 'chat:';
 
-  private static getChatKey(room: string): string {
-    return `${this.CHAT_KEY_PREFIX}${room}`;
+  private static getChatKey(space: string): string {
+    return `${this.CHAT_KEY_PREFIX}${space}`;
   }
 
-  // room redis key, like: room:test_room
-  private static getRoomKey(room: string): string {
-    return `${this.ROOM_KEY_PREFIX}${room}`;
+  // space redis key, like: space:test_space
+  private static getSpaceKey(space: string): string {
+    return `${this.SPACE_KEY_PREFIX}${space}`;
   }
   // participant redis key
-  private static getParticipantKey(room: string, participantId: string): string {
-    return `${this.PARTICIPANT_KEY_PREFIX}${room}:${participantId}`;
+  private static getParticipantKey(space: string, participantId: string): string {
+    return `${this.PARTICIPANT_KEY_PREFIX}${space}:${participantId}`;
   }
 
   // 切换房间隐私性 ----------------------------------------------------------------------
@@ -87,13 +87,13 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
 
-      const roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings) {
+      const SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo) {
         throw new Error(`Room ${room} does not exist.`);
       }
 
       // 查找子房间
-      const childRoomData = roomSettings.children.find((c) => c.name === childRoom);
+      const childRoomData = SpaceInfo.children.find((c) => c.name === childRoom);
       if (!childRoomData) {
         throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
       }
@@ -102,7 +102,7 @@ class SpaceManager {
       childRoomData.isPrivate = isPrivate;
 
       // 设置回存储
-      await this.setRoomSettings(room, roomSettings);
+      await this.setSpaceInfo(room, SpaceInfo);
       return {
         success: true,
       };
@@ -131,19 +131,19 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
 
-      const roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings) {
+      const SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo) {
         throw new Error(`Room ${room} does not exist.`);
       }
 
       // 查找子房间
-      const childRoomData = roomSettings.children.find((c) => c.name === childRoom);
+      const childRoomData = SpaceInfo.children.find((c) => c.name === childRoom);
       if (!childRoomData) {
         throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
       }
 
       // 检查新名字是否已经存在
-      if (roomSettings.children.some((c) => c.name === newChildRoomName)) {
+      if (SpaceInfo.children.some((c) => c.name === newChildRoomName)) {
         return {
           success: false,
           error: `Child room with name ${newChildRoomName} already exists.`,
@@ -154,7 +154,7 @@ class SpaceManager {
       childRoomData.name = newChildRoomName;
 
       // 设置回存储
-      await this.setRoomSettings(room, roomSettings);
+      await this.setSpaceInfo(room, SpaceInfo);
       return {
         success: true,
       };
@@ -183,13 +183,13 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
 
-      const roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings) {
+      const SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo) {
         throw new Error(`Room ${room} does not exist.`);
       }
 
       // 查找子房间
-      const childRoomData = roomSettings.children.find((c) => c.name === childRoom);
+      const childRoomData = SpaceInfo.children.find((c) => c.name === childRoom);
       if (!childRoomData) {
         throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
       }
@@ -207,7 +207,7 @@ class SpaceManager {
       childRoomData.participants.splice(participantIndex, 1);
 
       // 设置回存储
-      await this.setRoomSettings(room, roomSettings);
+      await this.setSpaceInfo(room, SpaceInfo);
       return {
         success: true,
       };
@@ -236,19 +236,19 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
 
-      const roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings) {
+      const SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo) {
         throw new Error(`Room ${room} does not exist.`);
       }
 
       // 查找子房间
-      const childRoomData = roomSettings.children.find((c) => c.name === childRoom);
+      const childRoomData = SpaceInfo.children.find((c) => c.name === childRoom);
       if (!childRoomData) {
         throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
       }
 
       // 检查参与者是否已经在某个子房间中
-      for (const child of roomSettings.children) {
+      for (const child of SpaceInfo.children) {
         if (child.participants.includes(participantId)) {
           // 如果已经在其他的房间，就需要退出
           child.participants = child.participants.filter((p) => p !== participantId);
@@ -268,7 +268,7 @@ class SpaceManager {
       childRoomData.participants.push(participantId);
 
       // 设置回存储
-      await this.setRoomSettings(room, roomSettings);
+      await this.setSpaceInfo(room, SpaceInfo);
       return {
         success: true,
       };
@@ -289,19 +289,19 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings) {
+      const SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo) {
         throw new Error(`Room ${room} does not exist.`);
       }
       // 查找子房间
-      const childRoomIndex = roomSettings.children.findIndex((c) => c.name === childRoomName);
+      const childRoomIndex = SpaceInfo.children.findIndex((c) => c.name === childRoomName);
       if (childRoomIndex === -1) {
         throw new Error(`Child room ${childRoomName} does not exist in room ${room}.`);
       }
       // 删除子房间
-      roomSettings.children.splice(childRoomIndex, 1);
+      SpaceInfo.children.splice(childRoomIndex, 1);
       // 设置回存储
-      return await this.setRoomSettings(room, roomSettings);
+      return await this.setSpaceInfo(room, SpaceInfo);
     } catch (error) {
       console.error('Error deleting child room:', error);
       return false;
@@ -320,18 +320,18 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings) {
+      const SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo) {
         throw new Error(`Room ${room} does not exist.`);
       }
       // 如果子房间已经存在，则不添加
-      if (roomSettings.children.some((c) => c.name === childRoom.name)) {
+      if (SpaceInfo.children.some((c) => c.name === childRoom.name)) {
         return {
           success: true,
         };
       }
-      roomSettings.children.push(childRoom);
-      await this.setRoomSettings(room, roomSettings);
+      SpaceInfo.children.push(childRoom);
+      await this.setSpaceInfo(room, SpaceInfo);
       return {
         success: true,
       };
@@ -353,11 +353,11 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings || !roomSettings.children) {
+      const SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo || !SpaceInfo.children) {
         return [];
       }
-      return roomSettings.children;
+      return SpaceInfo.children;
     } catch (error) {
       console.error('Error getting child rooms:', error);
       return [];
@@ -401,9 +401,9 @@ class SpaceManager {
     }
   }
 
-  // 设置房间的使用情况 --------------------------------------------------------------------
-  static async setRoomDateRecords(
-    room: string,
+  // 设置空间的使用情况 --------------------------------------------------------------------
+  static async setSpaceDateRecords(
+    space: string,
     time: {
       start: number;
       end?: number;
@@ -413,8 +413,8 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      // 获取房间的使用情况，如果没有则创建一个新的记录，如果有则需要进行判断更新
-      let record = await this.getRoomDateRecords(room);
+      // 获取空间的使用情况，如果没有则创建一个新的记录，如果有则需要进行判断更新
+      let record = await this.getSpaceDateRecords(space);
       // 通过start时间戳判断是否已经存在记录，如果有则更新结束时间戳，没有则添加新的记录
       let startRecord = record.find((r) => r.start === time.start);
       if (startRecord) {
@@ -429,7 +429,7 @@ class SpaceManager {
       }
 
       // 设置回存储
-      const key = `${this.ROOM_DATE_RECORDS_KEY_PREFIX}${room}`;
+      const key = `${this.SPACE_DATE_RECORDS_KEY_PREFIX}${space}`;
       await redisClient.set(key, JSON.stringify(record));
       return true;
     } catch (error) {
@@ -438,16 +438,16 @@ class SpaceManager {
     }
   }
 
-  // 获取房间的使用情况 --------------------------------------------------------------------
-  static async getRoomDateRecords(room: string): Promise<RoomTimeRecord[]> {
+  // 获取空间的使用情况 --------------------------------------------------------------------
+  static async getSpaceDateRecords(space: string): Promise<SpaceTimeRecord[]> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const key = `${this.ROOM_DATE_RECORDS_KEY_PREFIX}${room}`;
+      const key = `${this.SPACE_DATE_RECORDS_KEY_PREFIX}${space}`;
       const dataStr = await redisClient.get(key);
       if (dataStr) {
-        return JSON.parse(dataStr) as RoomTimeRecord[];
+        return JSON.parse(dataStr) as SpaceTimeRecord[];
       }
       return [];
     } catch (error) {
@@ -456,20 +456,20 @@ class SpaceManager {
     }
   }
 
-  // 获取所有房间的使用情况 -----------------------------------------------------------------
-  static async getAllRoomDateRecords(): Promise<RoomDateRecords> {
+  // 获取所有空间的使用情况 -----------------------------------------------------------------
+  static async getAllSpaceDateRecords(): Promise<SpaceDateRecords> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const keys = await redisClient.keys(`${this.ROOM_DATE_RECORDS_KEY_PREFIX}*`);
-      const records: RoomDateRecords = {};
+      const keys = await redisClient.keys(`${this.SPACE_DATE_RECORDS_KEY_PREFIX}*`);
+      const records: SpaceDateRecords = {};
 
       for (const key of keys) {
-        const roomId = key.replace(this.ROOM_DATE_RECORDS_KEY_PREFIX, '');
+        const spaceId = key.replace(this.SPACE_DATE_RECORDS_KEY_PREFIX, '');
         const dataStr = await redisClient.get(key);
         if (dataStr) {
-          records[roomId] = JSON.parse(dataStr);
+          records[spaceId] = JSON.parse(dataStr);
         }
       }
 
@@ -486,8 +486,8 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomKey = this.getRoomKey(room);
-      const exists = await redisClient.exists(roomKey);
+      const spaceKey = this.getSpaceKey(room);
+      const exists = await redisClient.exists(spaceKey);
       return exists > 0;
     } catch (error) {
       console.error('Error checking room existence:', error);
@@ -496,19 +496,19 @@ class SpaceManager {
   }
 
   // 获取房间设置 --------------------------------------------------------------------------
-  static async getRoomSettings(room: string): Promise<RoomSettings | null> {
+  static async getSpaceInfo(room: string): Promise<SpaceInfo | null> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomKey = this.getRoomKey(room);
+      const roomKey = this.getSpaceKey(room);
       const roomDataStr = await redisClient.get(roomKey);
 
       if (!roomDataStr) {
         return null;
       }
 
-      return JSON.parse(roomDataStr) as RoomSettings;
+      return JSON.parse(roomDataStr) as SpaceInfo;
     } catch (error) {
       console.error('Error getting room settings:', error);
       return null;
@@ -516,12 +516,12 @@ class SpaceManager {
   }
 
   // 设置房间设置数据 -----------------------------------------------------------------------
-  static async setRoomSettings(room: string, settings: RoomSettings): Promise<boolean> {
+  static async setSpaceInfo(room: string, settings: SpaceInfo): Promise<boolean> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomKey = this.getRoomKey(room);
+      const roomKey = this.getSpaceKey(room);
       const settingsStr = JSON.stringify(settings);
       // 设置回存储
       await redisClient.set(roomKey, settingsStr);
@@ -543,9 +543,9 @@ class SpaceManager {
       const roomMap: SpaceInfoMap = {};
 
       for (const roomKey of roomKeys) {
-        const roomSettings = await this.getRoomSettings(roomKey);
-        if (roomSettings) {
-          roomMap[roomKey] = roomSettings;
+        const SpaceInfo = await this.getSpaceInfo(roomKey);
+        if (SpaceInfo) {
+          roomMap[roomKey] = SpaceInfo;
         }
       }
 
@@ -565,11 +565,11 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      let roomSettings = await this.getRoomSettings(room);
+      let SpaceInfo = await this.getSpaceInfo(room);
       // 房间不存在说明是第一次创建
-      if (!roomSettings) {
+      if (!SpaceInfo) {
         let startAt = Date.now();
-        roomSettings = {
+        SpaceInfo = {
           participants: {},
           ownerId: participantId,
           record: { active: false },
@@ -577,17 +577,17 @@ class SpaceManager {
           children: [],
         };
         // 这里还需要设置到房间的使用记录中
-        await this.setRoomDateRecords(room, { start: startAt });
+        await this.setSpaceDateRecords(room, { start: startAt });
       }
 
       // 更新参与者数据
-      roomSettings.participants[participantId] = {
-        ...roomSettings.participants[participantId],
+      SpaceInfo.participants[participantId] = {
+        ...SpaceInfo.participants[participantId],
         ...pData,
       };
 
       // 保存更新后的房间设置
-      return await this.setRoomSettings(room, roomSettings);
+      return await this.setSpaceInfo(room, SpaceInfo);
     } catch (error) {
       console.error('Error updating participant:', error);
       return false;
@@ -599,7 +599,7 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomKey = this.getRoomKey(room);
+      const roomKey = this.getSpaceKey(room);
       const chatKey = this.getChatKey(room);
       const pipeline = redisClient.pipeline();
       // 删除房间设置
@@ -612,7 +612,7 @@ class SpaceManager {
 
       if (success) {
         // 添加房间使用记录 end
-        await this.setRoomDateRecords(room, { start, end: Date.now() });
+        await this.setSpaceDateRecords(room, { start, end: Date.now() });
         return true;
       }
       return false;
@@ -628,12 +628,12 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings || !roomSettings.participants[newOwnerId]) {
+      const SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo || !SpaceInfo.participants[newOwnerId]) {
         return false; // 房间或新主持人不存在
       } else {
-        roomSettings.ownerId = newOwnerId;
-        return await this.setRoomSettings(room, roomSettings);
+        SpaceInfo.ownerId = newOwnerId;
+        return await this.setSpaceInfo(room, SpaceInfo);
       }
     } catch (error) {
       console.error('Error transferring ownership:', error);
@@ -655,15 +655,15 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
 
-      let roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings || !roomSettings.participants[participantId]) {
+      let SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo || !SpaceInfo.participants[participantId]) {
         return {
           success: false,
           error: 'Room or participant does not exist, or not complete initialized.',
         }; // 房间或参与者不存在可能出现了问题
       }
       // 删除参与者前删除该参与者构建的子房间 (新需求无需清理子房间, 暂时注释)
-      // const childRoomsToDelete = roomSettings.children
+      // const childRoomsToDelete = SpaceInfo.children
       //   .filter((child) => child.ownerId === participantId)
       //   .map((child) => child.name);
 
@@ -675,8 +675,8 @@ class SpaceManager {
       //   );
 
       //   // 重新获取最新的房间设置
-      //   roomSettings = await this.getRoomSettings(room);
-      //   if (!roomSettings) {
+      //   SpaceInfo = await this.getSpaceInfo(room);
+      //   if (!SpaceInfo) {
       //     return {
       //       success: false,
       //       error: 'Room settings changed during deletion process.',
@@ -685,20 +685,20 @@ class SpaceManager {
       // }
 
       // 删除参与者
-      delete roomSettings.participants[participantId];
+      delete SpaceInfo.participants[participantId];
       // 先设置回去, 以防transferOwnership读取脏数据
-      await this.setRoomSettings(room, roomSettings);
+      await this.setSpaceInfo(room, SpaceInfo);
       // 判断这个参与者是否是主持人，如果是则进行转让，转给第一个参与者， 如果没有参与者直接删除房间
-      if (Object.keys(roomSettings.participants).length === 0) {
-        await this.deleteRoom(room, roomSettings.startAt);
+      if (Object.keys(SpaceInfo.participants).length === 0) {
+        await this.deleteRoom(room, SpaceInfo.startAt);
         return {
           success: true,
           clearAll: true,
         };
       } else {
         // 进行转让, 一定有1个参与者
-        if (roomSettings.ownerId === participantId) {
-          const remainingParticipants = Object.keys(roomSettings.participants);
+        if (SpaceInfo.ownerId === participantId) {
+          const remainingParticipants = Object.keys(SpaceInfo.participants);
           await this.transferOwnership(
             room,
             remainingParticipants[0], // 转让给第一个剩余的参与者
@@ -734,22 +734,22 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
 
-      let roomSettings = await this.getRoomSettings(spaceName);
-      if (!roomSettings) {
+      let SpaceInfo = await this.getSpaceInfo(spaceName);
+      if (!SpaceInfo) {
         throw new Error('Room not found');
       }
       // 房间存在，需要检查是否已经存在同名状态
-      if (!roomSettings.status) {
-        roomSettings.status = [status];
+      if (!SpaceInfo.status) {
+        SpaceInfo.status = [status];
       } else {
-        const isExist = roomSettings.status.some((s) => s.name === status.name);
+        const isExist = SpaceInfo.status.some((s) => s.name === status.name);
         if (isExist) {
           throw new Error('Status already exists');
         } else {
-          roomSettings.status.push(status);
+          SpaceInfo.status.push(status);
         }
       }
-      await this.setRoomSettings(spaceName, roomSettings);
+      await this.setSpaceInfo(spaceName, SpaceInfo);
       return {
         success: true,
       };
@@ -767,10 +767,10 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      let roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings) {
+      let SpaceInfo = await this.getSpaceInfo(room);
+      if (!SpaceInfo) {
         let startAt = Date.now();
-        roomSettings = {
+        SpaceInfo = {
           participants: {},
           ownerId: '',
           record: { active: false },
@@ -778,11 +778,11 @@ class SpaceManager {
           children: [],
         };
         // 这里还需要设置到房间的使用记录中
-        await this.setRoomDateRecords(room, { start: startAt });
+        await this.setSpaceDateRecords(room, { start: startAt });
       }
 
       // 获取所有参与者的名字
-      const participants = Object.values(roomSettings.participants);
+      const participants = Object.values(SpaceInfo.participants);
       let usedUserNames: number[] = [];
       participants.forEach((participant) => {
         if (participant.name.startsWith('User')) {
@@ -817,7 +817,7 @@ class SpaceManager {
   }
   // 更新录制设置 -------------------------------------------------------
   static async updateRecordSettings(
-    room: string,
+    space: string,
     recordSettings: { egressId?: string; filePath?: string; active: boolean },
   ): Promise<{
     success: boolean;
@@ -827,17 +827,17 @@ class SpaceManager {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      let roomSettings = await this.getRoomSettings(room);
-      if (!roomSettings) {
+      let SpaceInfo = await this.getSpaceInfo(space);
+      if (!SpaceInfo) {
         throw new Error('Room not found');
       }
 
       // 更新录制设置
-      roomSettings.record = {
-        ...roomSettings.record,
+      SpaceInfo.record = {
+        ...SpaceInfo.record,
         ...recordSettings,
       };
-      await this.setRoomSettings(room, roomSettings);
+      await this.setSpaceInfo(space, SpaceInfo);
       return {
         success: true,
       };
@@ -855,12 +855,12 @@ class SpaceManager {
 export async function GET(request: NextRequest) {
   const isAll = request.nextUrl.searchParams.get('all') === 'true';
   const spaceName = request.nextUrl.searchParams.get('spaceName');
-  const is_pre = request.nextUrl.searchParams.get('pre') === 'true';
-  const is_time_record = request.nextUrl.searchParams.get('time_record') === 'true';
-  const is_chat_history = request.nextUrl.searchParams.get('chat_history') === 'true';
-
-  if (is_chat_history && spaceName) {
-    // 获取房间的聊天记录
+  const isPre = request.nextUrl.searchParams.get('pre') === 'true';
+  const isTimeRecord = request.nextUrl.searchParams.get('timeRecord') === 'true';
+  const isChat = request.nextUrl.searchParams.get('chat') === 'true';
+  const isHistory = request.nextUrl.searchParams.get('history') === 'true';
+  // 获取某个空间的聊天记录 --------------------------------------------------------------------------
+  if (isChat && isHistory && spaceName) {
     const chatMessages = await SpaceManager.getChatMessages(spaceName);
     return NextResponse.json(
       {
@@ -870,12 +870,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // 如果是时间记录，则返回所有房间的使用情况
-  if (is_time_record) {
-    const allRoomDateRecords = await SpaceManager.getAllRoomDateRecords();
+  // 如果是时间记录，则返回所有空间的使用情况 ------------------------------------------------------------
+  if (isTimeRecord) {
+    const allSpaceDateRecords = await SpaceManager.getAllSpaceDateRecords();
     return NextResponse.json(
       {
-        records: allRoomDateRecords,
+        records: allSpaceDateRecords,
       },
       { status: 200 },
     );
@@ -900,12 +900,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(roomSettingsMap);
     }
   }
-  // 
+  //
   if (spaceName == '' || !spaceName) {
     return NextResponse.json({ error: 'Missing spaceName' }, { status: 400 });
   }
-
-  if (is_pre) {
+  // 生成一个可用的用户名字 -----------------------------------------------------------------------------
+  if (isPre) {
     const availableUserName = await SpaceManager.genUserName(spaceName);
     return NextResponse.json({
       name: availableUserName,
@@ -922,7 +922,7 @@ export async function GET(request: NextRequest) {
 // 更新单个参与者设置
 export async function POST(request: NextRequest) {
   try {
-    const childRoomReq = request.nextUrl.searchParams.get('childRoom');
+    const isChildRoom = request.nextUrl.searchParams.get('childRoom') === 'true';
     const isNameCheck = request.nextUrl.searchParams.get('nameCheck') === 'true';
     const body = await request.json();
     const {
@@ -936,17 +936,17 @@ export async function POST(request: NextRequest) {
       isPrivate,
     } = body;
 
-    // 处理用户唯一名
-    if (isNameCheck && roomId && participantName) {
+    // 处理用户唯一名 -------------------------------------------------------------------------
+    if (isNameCheck) {
+      const { spaceName, participantName }: CheckNameBody = await request.json();
       // 获取房间设置
-      const roomSettings = await SpaceManager.getRoomSettings(roomId);
-      if (!roomSettings) {
+      const SpaceInfo = await SpaceManager.getSpaceInfo(spaceName);
+      if (!SpaceInfo) {
         // 房间不存在说明是第一次创建
         return NextResponse.json({ success: true, name: participantName }, { status: 200 });
       } else {
-        const pid = `${participantName}__${roomId}`;
-        const participantSettings = roomSettings.participants[pid];
-        console.log('participantSettings', participantSettings);
+        const pid = `${participantName}__${spaceName}`;
+        const participantSettings = SpaceInfo.participants[pid];
         if (participantSettings) {
           console.warn(pid);
           // 有参与者
@@ -958,14 +958,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 如果是创建子房间
-    if (
-      childRoomReq == 'true' &&
-      roomId &&
-      childRoomName &&
-      participantId &&
-      typeof isPrivate === 'boolean'
-    ) {
+    // 如果是创建子房间 -------------------------------------------------------------------------
+    if (isChildRoom) {
+      const { spaceName, childRoomName, participantId, isPrivate } = await request.json();
+
       const childRoom = {
         name: childRoomName,
         participants: [],
@@ -973,24 +969,21 @@ export async function POST(request: NextRequest) {
         isPrivate,
       } as ChildRoom;
 
-      const { success, error } = await SpaceManager.setChildRoom(roomId, childRoom);
+      const { success, error } = await SpaceManager.setChildRoom(spaceName, childRoom);
       if (success) {
         return NextResponse.json({ success: true }, { status: 200 });
       } else {
-        return NextResponse.json(
-          { error: 'Child room already exists or failed to create' },
-          { status: 500 },
-        );
+        return NextResponse.json({ error }, { status: 500 });
       }
     }
 
-    // 处理录制
+    // 处理录制 --------------------------------------------------------------------------------
     if (record && roomId) {
       const { success, error } = await SpaceManager.updateRecordSettings(roomId, record);
 
       if (success) {
-        const roomSettings = await SpaceManager.getRoomSettings(roomId);
-        return NextResponse.json({ success: true, record: roomSettings?.record }, { status: 200 });
+        const SpaceInfo = await SpaceManager.getSpaceInfo(roomId);
+        return NextResponse.json({ success: true, record: SpaceInfo?.record }, { status: 200 });
       } else {
         return NextResponse.json(
           { error: error || 'Failed to update record settings' },
@@ -1099,9 +1092,9 @@ export async function PUT(request: NextRequest) {
     }
     const { success, error } = await SpaceManager.defineStatus(spaceName, status);
     if (success) {
-      const roomSettings = await SpaceManager.getRoomSettings(spaceName);
+      const SpaceInfo = await SpaceManager.getSpaceInfo(spaceName);
       return NextResponse.json(
-        { success: true, status: roomSettings?.status, roomId },
+        { success: true, status: SpaceInfo?.status, roomId },
         { status: 200 },
       );
     } else {
@@ -1248,7 +1241,7 @@ const userHeartbeat = async () => {
   for (const room of currentRooms) {
     // 列出房间中所有的参与者，然后和redis中的参与者进行对比
     const roomParticipants = await roomServer.listParticipants(room.name);
-    const redisRoom = await SpaceManager.getRoomSettings(room.name);
+    const redisRoom = await SpaceManager.getSpaceInfo(room.name);
     if (!redisRoom) {
       continue; // 如果redis中没有这个房间，跳过 (本地开发环境和正式环境使用的redis不同，但服务器是相同的)
     }

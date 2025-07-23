@@ -348,13 +348,13 @@ lk load-test \
 - [ ] 合并动态配置到docker和main
 - [x] 无损传输模式
 - [ ] 代码重构
-  - [ ] 提取前端API
+  - [x] 提取前端API
     - [x] connect
-    - [ ] room
-    - [ ] settings
-    - [ ] channel
-    - [ ] record
-  - [ ] room -> space 名称处理
+    - [x] room
+    - [x] settings
+    - [x] channel
+    - [x] record
+  - [x] room -> space 名称处理
   - [ ] messageApi 提示
   - [ ] audio模块
   - [ ] 代码注释

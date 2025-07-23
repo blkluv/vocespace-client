@@ -16,7 +16,7 @@ import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings/settings';
 import { useRecoilState } from 'recoil';
 import { chatMsgState, socket, userState, virtualMaskState } from '@/app/[spaceName]/PageClientImpl';
-import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
+import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './toggles/chat_toggle';
@@ -51,7 +51,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   saveUserChoices?: boolean;
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
   setUserStatus: (status: UserStatus | string) => Promise<void>;
-  roomSettings: RoomSettings;
+  roomSettings: SpaceInfo;
   fetchSettings: () => Promise<void>;
   updateRecord: (active: boolean, egressId?: string, filePath?: string) => Promise<boolean>;
   setPermissionDevice: (device: Track.Source) => void;
@@ -299,7 +299,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         // 停止录制
         if (roomSettings.record.egressId && roomSettings.record.egressId !== '') {
           const response = await api.sendRecordRequest({
-            room: room!.name,
+            spaceName: room!.name,
             type: 'stop',
             egressId: roomSettings.record.egressId,
           });
@@ -323,7 +323,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       if (isOwner) {
         // host request to start recording
         const response = await api.sendRecordRequest({
-          room: room.name,
+          spaceName: room.name,
           type: 'start',
         });
         if (!response.ok) {
