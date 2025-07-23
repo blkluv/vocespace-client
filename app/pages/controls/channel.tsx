@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import styles from '@/styles/channel.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { SvgResource } from '@/app/resources/svg';
@@ -31,18 +31,10 @@ import { ChildRoom, RoomSettings } from '@/lib/std/room';
 import { ParticipantTileMini } from '../participant/mini';
 import { GLayout } from '../layout/grid';
 import { CheckboxGroupProps } from 'antd/es/checkbox';
-import {
-  createRoom,
-  deleteRoom,
-  joinRoom,
-  leaveRoom,
-  updateRoom,
-  UpdateRoomParam,
-  UpdateRoomType,
-} from '@/lib/hooks/channel';
-import { socket } from '@/app/[roomName]/PageClientImpl';
-import { WsJoinRoom, WsRemove, WsSender, WsTo } from '@/lib/std/device';
-import { PaginationInfo } from './widgets/pagination';
+import { socket } from '@/app/[spaceName]/PageClientImpl';
+import { WsJoinRoom, WsRemove, WsSender } from '@/lib/std/device';
+import { api } from '@/lib/api';
+import { UpdateRoomParam, UpdateRoomType } from '@/lib/api/channel';
 
 interface ChannelProps {
   roomName: string;
@@ -202,7 +194,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         return;
       }
 
-      const response = await createRoom({
+      const response = await api.createRoom({
         hostRoom: roomName,
         roomName: childRoomName,
         ownerId: participantId,
@@ -242,7 +234,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         } as WsRemove);
       }
 
-      const response = await deleteRoom({
+      const response = await api.deleteRoom({
         hostRoom: roomName,
         roomName: selectedRoom.name,
       });
@@ -266,7 +258,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     const leaveChildRoom = async (room?: string) => {
       if (!selectedRoom && !room) return;
 
-      const response = await leaveRoom({
+      const response = await api.leaveRoom({
         hostRoom: roomName,
         roomName: room || selectedRoom!.name,
         participantId,
@@ -292,7 +284,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     };
 
     const joinChildRoom = async (room: ChildRoom, participantId: string) => {
-      const response = await joinRoom({
+      const response = await api.joinRoom({
         hostRoom: roomName,
         roomName: room.name,
         participantId,
@@ -406,7 +398,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         param.isPrivate = !selectedRoom.isPrivate;
       }
 
-      const response = await updateRoom(param);
+      const response = await api.updateRoom(param);
 
       if (response.ok) {
         await onUpdate();
@@ -512,8 +504,10 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
         // let allParticipants = Object.keys(settings.participants);
 
-        let subTracks = tracks.filter((track) =>
-          childRoom.participants.includes(track.participant.identity) && allParticipants.includes(track.participant.identity),
+        let subTracks = tracks.filter(
+          (track) =>
+            childRoom.participants.includes(track.participant.identity) &&
+            allParticipants.includes(track.participant.identity),
         );
 
         return (

@@ -1,4 +1,4 @@
-import { socket } from '@/app/[roomName]/PageClientImpl';
+import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { SvgResource } from '@/app/resources/svg';
 import { audio } from '@/lib/audio';
 import { WsTo } from '@/lib/std/device';

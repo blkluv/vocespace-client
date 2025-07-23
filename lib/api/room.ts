@@ -17,20 +17,20 @@ export const joinSpace = async (spaceName: string, username: string, region?: st
 };
 
 /**
- * 获取所有房间信息
+ * 获取所有空间的信息
  */
-export const allRoomInfos = async () => {
-  const url = new URL(connect_endpoint('/api/room-settings'), window.location.origin);
+export const allSpaceInfos = async () => {
+  const url = new URL(connect_endpoint('/api/space'), window.location.origin);
   url.searchParams.append('all', 'true');
   url.searchParams.append('detail', 'true');
   return await fetch(url.toString());
 };
 
 /**
- * 获取历史房间信息
+ * 获取历史空间信息
  */
-export const historyRoomInfos = async () => {
-  const url = new URL(connect_endpoint('/api/room-settings'), window.location.origin);
+export const historySpaceInfos = async () => {
+  const url = new URL(connect_endpoint('/api/space'), window.location.origin);
   url.searchParams.append('time_record', 'true');
   return await fetch(url.toString());
 };
@@ -38,7 +38,7 @@ export const historyRoomInfos = async () => {
  *  向服务器请求一个唯一的用户名
  */
 export const getUniqueUsername = async (spaceName: string) => {
-  const url = new URL(connect_endpoint('/api/room-settings'), window.location.origin);
+  const url = new URL(connect_endpoint('/api/space'), window.location.origin);
   url.searchParams.append('spaceName', spaceName);
   url.searchParams.append('pre', 'true');
   return await fetch(url.toString());
@@ -50,7 +50,7 @@ export const getUniqueUsername = async (spaceName: string) => {
  * @param participantName 用户名称
  */
 export const checkUsername = async (spaceName: string, participantName: string) => {
-  const url = new URL(connect_endpoint('/api/room-settings'), window.location.origin);
+  const url = new URL(connect_endpoint('/api/space'), window.location.origin);
   url.searchParams.append('nameCheck', 'true');
   return await fetch(url.toString(), {
     method: 'POST',
@@ -68,7 +68,7 @@ export interface DefineUserStatusBody {
 }
 
 export const defineUserStatus = async (spaceName: string, status: UserDefineStatus) => {
-  const url = new URL(connect_endpoint('/api/room-settings'), window.location.origin);
+  const url = new URL(connect_endpoint('/api/space'), window.location.origin);
   url.searchParams.append('status', 'true');
   return await fetch(url.toString(), {
     method: 'PUT',

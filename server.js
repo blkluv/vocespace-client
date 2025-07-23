@@ -363,7 +363,7 @@ app.prepare().then(() => {
       try {
         // 当某个用户断开连接我们需要请求http服务器删除用户在房间中的数据
         if (socket.id) {
-          const url = `http://${hostname}:${port}${basePath}/api/room-settings?socketId=${socket.id}`;
+          const url = `http://${hostname}:${port}${basePath}/api/space?socketId=${socket.id}`;
           const response = await fetch(url.toString(), {
             method: 'DELETE',
           });

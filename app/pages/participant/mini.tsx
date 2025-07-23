@@ -20,13 +20,13 @@ import {
 import { Track } from 'livekit-client';
 import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 import { isTrackReferencePinned } from './tile';
-import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
+import { RoomSettings } from '@/lib/std/room';
 import { useVideoBlur, WsTo } from '@/lib/std/device';
 import { SvgResource } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
-import { roomStatusState, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
+import { roomStatusState, userState, virtualMaskState } from '@/app/[spaceName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
-import { WaveHand, WavePin } from '../controls/wave';
+import { WaveHand } from '../controls/widgets/wave';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
   settings: RoomSettings;

@@ -7,10 +7,9 @@ import { Participant, Room, Track } from 'livekit-client';
 import styles from '@/styles/controls.module.scss';
 import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { TrackMutedIndicator } from '@livekit/components-react';
-import { ItemType } from 'antd/es/menu/interface';
 import React from 'react';
 import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
-import { socket } from '@/app/[roomName]/PageClientImpl';
+import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { src } from '@/lib/std';
 
 export interface ParticipantManageProps {

@@ -4,7 +4,7 @@ import React, { Suspense, useEffect } from 'react';
 import styles from '@/styles/Home.module.css';
 import { useI18n } from '@/lib/i18n/i18n';
 import { MeetingTab } from './pages/pre_join/tab';
-import { LangSelect } from './pages/controls/lang_select';
+import { LangSelect } from './pages/controls/selects/lang_select';
 import { Skeleton } from 'antd';
 import { SvgResource } from './resources/svg';
 

@@ -15,9 +15,9 @@ import * as React from 'react';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings/settings';
 import { useRecoilState } from 'recoil';
-import { chatMsgState, socket, userState, virtualMaskState } from '@/app/[roomName]/PageClientImpl';
+import { chatMsgState, socket, userState, virtualMaskState } from '@/app/[spaceName]/PageClientImpl';
 import { ParticipantSettings, RoomSettings } from '@/lib/std/room';
-import { connect_endpoint, UserStatus } from '@/lib/std';
+import { UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './toggles/chat_toggle';
 import { MoreButton } from './toggles/more_button';
@@ -25,8 +25,7 @@ import { ControlType, WsControlParticipant, WsTo } from '@/lib/std/device';
 import { DEFAULT_DRAWER_PROP, DrawerCloser } from './drawer_tools';
 import { AppDrawer } from '../apps/app_drawer';
 import { ParticipantManage } from '../participant/manage';
-
-const RECORD_URL = connect_endpoint('/api/record');
+import { api } from '@/lib/api';
 
 /** @public */
 export type ControlBarControls = {
@@ -135,7 +134,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         setIsChatOpen(layoutContext?.widget.state?.showChat);
       }
     }, [layoutContext?.widget.state?.showChat]);
-    const isTooLittleSpace = useMediaQuery(`(max-width: ${isChatOpen ? 1000 : 760}px)`);
+    const isTooLittleSpace = useMediaQuery(`(max-width: ${isChatOpen ? 1000 : 720}px)`);
 
     const defaultVariation = isTooLittleSpace ? 'minimal' : 'verbose';
     variation ??= defaultVariation;
@@ -161,7 +160,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       [variation],
     );
     const showText = React.useMemo(() => {
-      if (controlWidth < 700) {
+      if (controlWidth < 720) {
         return false;
       } else {
         return variation === 'textOnly' || variation === 'verbose';
@@ -291,21 +290,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       return roomSettings.record.active;
     }, [roomSettings.record]);
 
-    const sendRecordRequest = (data: {
-      room: string;
-      type: 'start' | 'stop';
-      egressId?: string;
-    }): Promise<Response> => {
-      const url = new URL(RECORD_URL, window.location.origin);
-      return fetch(url.toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-    };
-
     const onClickRecord = async () => {
       if (!room && isOwner) return;
 
@@ -314,7 +298,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       } else {
         // 停止录制
         if (roomSettings.record.egressId && roomSettings.record.egressId !== '') {
-          const response = await sendRecordRequest({
+          const response = await api.sendRecordRequest({
             room: room!.name,
             type: 'stop',
             egressId: roomSettings.record.egressId,
@@ -338,7 +322,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
 
       if (isOwner) {
         // host request to start recording
-        const response = await sendRecordRequest({
+        const response = await api.sendRecordRequest({
           room: room.name,
           type: 'start',
         });
@@ -661,12 +645,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             <div>{isOwner ? t('more.record.desc') : t('more.record.request')}</div>
           )}
         </Modal>
-
-        <AppDrawer
-          open={openApp}
-          setOpen={setOpenApp}
-          messageApi={messageApi}
-        ></AppDrawer>
+        {/* ---------------- app drawer ------------------------------------------------------- */}
+        <AppDrawer open={openApp} setOpen={setOpenApp} messageApi={messageApi}></AppDrawer>
       </div>
     );
   },

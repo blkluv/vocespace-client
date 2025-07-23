@@ -1,5 +1,4 @@
 import {
-  connect_endpoint,
   getServerIp,
   is_web,
   src,
@@ -43,7 +42,7 @@ import React, {
 import { ControlBarExport, Controls } from './bar';
 import { useRecoilState } from 'recoil';
 import { ParticipantItem } from '../participant/tile';
-import { useRoomSettings } from '@/lib/hooks/room_settings';
+import { useRoomSettings } from '@/lib/hooks/space';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useI18n } from '@/lib/i18n/i18n';
@@ -54,11 +53,10 @@ import {
   roomStatusState,
   socket,
   userState,
-} from '@/app/[roomName]/PageClientImpl';
+} from '@/app/[spaceName]/PageClientImpl';
 import { useRouter } from 'next/navigation';
 import {
   ControlType,
-  WsBase,
   WsControlParticipant,
   WsInviteDevice,
   WsParticipant,
@@ -67,9 +65,9 @@ import {
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel } from './channel';
-import { createRoom } from '@/lib/hooks/channel';
 import { PARTICIPANT_SETTINGS_KEY } from '@/lib/std/room';
 import { FlotLayout } from '../apps/flot';
+import { api } from '@/lib/api';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -80,7 +78,6 @@ export interface VideoContainerProps extends VideoConferenceProps {
 export interface VideoContainerExports {
   removeLocalSettings: () => Promise<void>;
 }
-const CONNECT_ENDPOINT = connect_endpoint('/api/room-settings');
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
   (
@@ -153,7 +150,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
         // 为新加入的参与者创建一个自己的私人房间
         if (!settings.children.some((child) => child.name === roomName)) {
-          const response = await createRoom({
+          const response = await api.createRoom({
             hostRoom: room.name,
             roomName,
             ownerId: room.localParticipant.identity,
@@ -172,10 +169,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 获取历史聊天记录 ---------------------------------------------------------------------------
       const fetchChatMsg = async () => {
-        const url = new URL(CONNECT_ENDPOINT, window.location.origin);
-        url.searchParams.append('roomId', room.name);
-        url.searchParams.append('chat_history', 'true');
-        const response = await fetch(url.toString());
+        const response = await api.getChatMsg(room.name);
         if (response.ok) {
           const { msgs }: { msgs: ChatMsgItem[] } = await response.json();
           let othersMsgLength = msgs.filter(
@@ -210,10 +204,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // license 检测 -----------------------------------------------------------------------------
       const checkLicense = async () => {
-        let url = `https://vocespace.com/api/license/${IP}`;
-        const response = await fetch(url, {
-          method: 'GET',
-        });
+        const response = await api.checkLicenseByIP(IP);
         if (response.ok) {
           const { id, email, domains, created_at, expires_at, ilimit, value } =
             await response.json();

@@ -1,8 +1,7 @@
 import { Card, Skeleton } from 'antd';
 import { useEffect, useState } from 'react';
-import { getLinkPreview } from 'link-preview-js';
 import styles from '@/styles/chat.module.scss';
-import { connect_endpoint } from '@/lib/std';
+import { api } from '@/lib/api';
 
 interface LinkPreviewProps {
   text: string;
@@ -26,25 +25,18 @@ interface PreviewData {
   }[];
   favicons: string[];
 }
-const CONN_DETAILS_ENDPOINT = connect_endpoint('/api/chat');
+
 export function LinkPreview({ text }: LinkPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Fetch link preview data from the API
     const fetchLinkPreview = async () => {
       try {
         setLoading(true);
-
-        const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
-        const response = await fetch(url.toString(), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ url: text}),
-        });
+        const response = await api.fetchLinkPreview(text);
         if (!response.ok) {
           throw new Error('Failed to fetch link preview');
         }
@@ -57,7 +49,7 @@ export function LinkPreview({ text }: LinkPreviewProps) {
         setLoading(false);
       }
     };
-
+    
     fetchLinkPreview();
   }, [text]);
 
@@ -70,7 +62,12 @@ export function LinkPreview({ text }: LinkPreviewProps) {
   }
 
   return (
-    <a href={previewData.url} target="_blank" rel="noopener noreferrer" className={styles.link_preview}>
+    <a
+      href={previewData.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={styles.link_preview}
+    >
       <Card size="small" className={styles.link_preview_card}>
         {previewData?.images && previewData.images.length > 0 && (
           <div className={styles.link_preview_image}>

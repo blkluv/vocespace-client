@@ -1,4 +1,4 @@
-import { licenseState } from '@/app/[roomName]/PageClientImpl';
+import { licenseState } from '@/app/[spaceName]/PageClientImpl';
 import { useI18n } from '@/lib/i18n/i18n';
 import styles from '@/styles/controls.module.scss';
 import { Button, Input, Modal, Radio, RadioChangeEvent } from 'antd';
@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { Calendly } from '../widgets/calendly';
 import { getServerIp } from '@/lib/std';
+import { api } from '@/lib/api';
 
 type ModelKey = 'update' | 'renew' | 'server';
 type OptionValue = 'renew' | 'custom';
@@ -53,10 +54,7 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
     } else {
       // 请求 在space.voce.chat/api/webhook?session_ip=IP, 让官方服务器通过stripe的api获取用户的session
       // 然后用户侧获取到session.url进行跳转
-      const url = `https://space.voce.chat/api/webhook?session_ip=${IP}`;
-      const response = await fetch(url, {
-        method: 'GET',
-      });
+      const response = await api.getLicenseByIP(IP);
       if (response.ok) {
         const { url } = await response.json();
         if (url) {
@@ -314,10 +312,4 @@ export function LicenseControl({ messageApi }: { messageApi: MessageInstance }) 
       </div>
     </div>
   );
-}
-
-enum Limit {
-  No = 'No',
-  Admin = 'Admin',
-  Guest = 'Guest',
 }

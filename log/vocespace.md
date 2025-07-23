@@ -1,15 +1,15 @@
 # vocespace
 
-Base URLs: `vocespace.com/chat/api/room-settings`
+Base URLs: `vocespace.com/chat/api/space`
 
 ## GET 获取房间用户信息
 
-GET /chat/api/room-settings
+GET /chat/api/space
 
 ## 说明
 
-请求前缀: vocespace.com/chat/api/room-settings
-1. 获取简单信息，只需要附带all参数，为true （vocespace.com/chat/api/room-settings?all="true"）
+请求前缀: vocespace.com/chat/api/space
+1. 获取简单信息，只需要附带all参数，为true （vocespace.com/chat/api/space?all="true"）
 2. 获取完整信息，需要增加detail参数，且为true
 
 ### 请求参数

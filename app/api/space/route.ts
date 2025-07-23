@@ -1,11 +1,11 @@
-// /app/api/room-settings/route.ts
+// /app/api/space/route.ts
 import { isUndefinedString, UserDefineStatus } from '@/lib/std';
 import { NextRequest, NextResponse } from 'next/server';
 import Redis from 'ioredis';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { ChildRoom, ParticipantSettings, RoomSettings } from '@/lib/std/room';
 import { RoomServiceClient } from 'livekit-server-sdk';
-import { socket } from '@/app/[roomName]/PageClientImpl';
+import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsBase, WsParticipant } from '@/lib/std/device';
 import { DefineUserStatusBody } from '@/lib/api/room';
 

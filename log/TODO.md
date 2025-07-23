@@ -37,7 +37,7 @@
 - [x] 本地模糊 (webGL)
 - [x] css虚化
 - [x] 虚拟形象暂停追踪(该用动画)
-- [x] 服务器room数据接口 http://localhost:3000/chat/api/room-settings?all="true"
+- [x] 服务器room数据接口 http://localhost:3000/chat/api/space?all="true"
 - [x] 搜索时www.会加上 (在DNS设置中，添加一个CNAME记录，将www.vocespace.com指向vocespace.com)
 - [x] 客户端性能检测
 - [x] 服务端性能检测

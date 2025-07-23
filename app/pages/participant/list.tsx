@@ -15,6 +15,12 @@ export interface ParticipantListProps {
   onOpenMenu: (open: boolean, pid: string) => void;
 }
 
+/**
+ * 参与者列表组件
+ * 一个用于展示参与者信息的列表，包括参与者头像，名字，是否为主持人和一个后置插槽进行扩展
+ * - 允许鼠标右键打开菜单(自定义)
+ * @param [`ParticipantListProps`]
+ */
 export function ParticipantList({
   participants,
   ownerId,

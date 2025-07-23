@@ -7,7 +7,7 @@ import {
   useSwipe,
 } from '@livekit/components-react';
 import React from 'react';
-import { PaginationCtl, PaginationInfo } from '../controls/pagination';
+import { PaginationCtl, PaginationInfo } from '../controls/widgets/pagination';
 
 /**
  *  ## GLayout
@@ -40,11 +40,6 @@ export function GLayout({ tracks, ...props }: GridLayoutProps) {
               totalPageCount={pagination.totalPageCount}
               currentPage={pagination.currentPage}
             ></PaginationInfo>
-            {/* <PaginationIndicator
-            totalPageCount={pagination.totalPageCount}
-            currentPage={pagination.currentPage}
-          />
-          <PaginationControl pagesContainer={gridEl} {...pagination} /> */}
           </div>
         )}
       </div>

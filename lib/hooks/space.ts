@@ -1,10 +1,10 @@
 // lib/hooks/useRoomSettings.ts
 import { useState, useCallback } from 'react';
 import { connect_endpoint } from '../std';
-import { socket } from '@/app/[roomName]/PageClientImpl';
+import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { ParticipantSettings, RecordSettings, RoomSettings } from '../std/room';
 
-const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/room-settings');
+const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/space');
 
 export function useRoomSettings(roomId: string, participantId: string) {
   const [settings, setSettings] = useState<RoomSettings>({

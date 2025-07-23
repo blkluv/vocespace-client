@@ -15,14 +15,12 @@ import { Input, InputRef, message, Skeleton, Slider, Space } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
-import { userState } from '@/app/[roomName]/PageClientImpl';
-import { connect_endpoint, src } from '@/lib/std';
+import { userState } from '@/app/[spaceName]/PageClientImpl';
+import { src } from '@/lib/std';
 import { useVideoBlur } from '@/lib/std/device';
-import { LangSelect } from '@/app/pages/controls/lang_select';
+import { LangSelect } from '@/app/pages/controls/selects/lang_select';
 import { ulid } from 'ulid';
 import { api } from '@/lib/api';
-
-const CONN_DETAILS_ENDPOINT = connect_endpoint('/api/room-settings');
 
 export interface PreJoinPropsExt extends PreJoinProps {
   hq?: boolean;

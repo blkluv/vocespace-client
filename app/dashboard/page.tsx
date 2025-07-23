@@ -30,17 +30,17 @@ const countDuring = (startAt: number): string => {
   return `${hours}h ${minutes}m`;
 };
 
-interface RoomTimeRecord {
+interface SpaceTimeRecord {
   start: number; // 记录开始时间戳
   end?: number; // 记录结束时间戳
 }
 
 // 记录房间的使用情况
-interface RoomDateRecords {
-  [roomId: string]: RoomTimeRecord[];
+interface SpaceDateRecords {
+  [spaceId: string]: SpaceTimeRecord[];
 }
 
-interface HistoryRoomData {
+interface HistorySpaceData {
   key: string;
   room: string;
   during: string; // 总使用时长
@@ -49,7 +49,7 @@ interface HistoryRoomData {
 
 interface ParticipantTableData {
   key: string;
-  roomId: string;
+  spaceId: string;
   participantId: string;
   name: string;
   volume: number;
@@ -63,19 +63,19 @@ interface ParticipantTableData {
 }
 
 export default function Dashboard() {
-  const [currentRoomsData, setCurrentRoomsData] = useState<ParticipantTableData[]>([]);
-  const [historyRoomsData, setHistoryRoomsData] = useState<HistoryRoomData[]>([]);
+  const [currentSpacesData, setCurrentSpacesData] = useState<ParticipantTableData[]>([]);
+  const [historySpacesData, setHistorySpacesData] = useState<HistorySpaceData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [totalRooms, setTotalRooms] = useState(0);
+  const [totalSpaces, setTotalSpaces] = useState(0);
   const [totalParticipants, setTotalParticipants] = useState(0);
   const [activeRecordings, setActiveRecordings] = useState(0);
   const [messageApi, contextHolder] = message.useMessage();
 
-  // 获取当前房间数据
-  const fetchCurrentRooms = async () => {
+  // 获取当前空间信息
+  const fetchCurrentSpaces = async () => {
     setLoading(true);
     try {
-      const response = await api.allRoomInfos();
+      const response = await api.allSpaceInfos();
       if (response.ok) {
         const roomSettings = await response.json();
 
@@ -84,7 +84,7 @@ export default function Dashboard() {
         let participantCount = 0;
         let recordingCount = 0;
 
-        Object.entries(roomSettings).forEach(([roomId, roomData]: [string, any]) => {
+        Object.entries(roomSettings).forEach(([spaceId, roomData]: [string, any]) => {
           if (roomData.participants && Object.keys(roomData.participants).length > 0) {
             roomCount++;
             if (roomData.record?.active) {
@@ -95,8 +95,8 @@ export default function Dashboard() {
               ([participantId, participant]: [string, any]) => {
                 participantCount++;
                 participantsData.push({
-                  key: `${roomId}-${participantId}`,
-                  roomId,
+                  key: `${spaceId}-${participantId}`,
+                  spaceId,
                   participantId,
                   name: participant.name,
                   volume: participant.volume,
@@ -113,8 +113,8 @@ export default function Dashboard() {
           }
         });
 
-        setCurrentRoomsData(participantsData);
-        setTotalRooms(roomCount);
+        setCurrentSpacesData(participantsData);
+        setTotalSpaces(roomCount);
         setTotalParticipants(participantCount);
         setActiveRecordings(recordingCount);
       }
@@ -126,20 +126,20 @@ export default function Dashboard() {
   };
 
   // 获取历史房间数据（模拟数据）
-  const fetchHistoryRooms = async () => {
-    const response = await api.historyRoomInfos();
+  const fetchHistorySpaces = async () => {
+    const response = await api.historySpaceInfos();
     if (!response.ok) {
       messageApi.error('获取历史房间数据失败');
       return;
     } else {
-      const { records }: { records: RoomDateRecords } = await response.json();
-      // 转为 HistoryRoomData 格式
-      const historyData: HistoryRoomData[] = [];
+      const { records }: { records: SpaceDateRecords } = await response.json();
+      // 转为 HistorySpaceData 格式
+      const historyData: HistorySpaceData[] = [];
       const todayStart = new Date().setHours(0, 0, 0, 0);
       const todayEnd = new Date().setHours(23, 59, 59, 999);
       // 遍历records中的记录，只要是todayStart < start < todayEnd的记录就是当天的记录
       // 但也需要处理end > todayEnd的情况，这时候就累加todayEnd - start, 否则就是end - start
-      for (const [roomId, timeRecords] of Object.entries(records)) {
+      for (const [spaceId, timeRecords] of Object.entries(records)) {
         let total = 0;
         let today = 0;
         timeRecords.forEach((record) => {
@@ -158,39 +158,39 @@ export default function Dashboard() {
           }
         });
         historyData.push({
-          key: roomId,
-          room: roomId,
+          key: spaceId,
+          room: spaceId,
           during: `${Math.floor(total / 3600000)}h ${Math.floor((total % 3600000) / 60000)}m`,
           today: `${Math.floor(today / 3600000)}h ${Math.floor((today % 3600000) / 60000)}m`,
         });
       }
-      setHistoryRoomsData(historyData);
+      setHistorySpacesData(historyData);
     }
   };
 
   useEffect(() => {
-    fetchCurrentRooms();
-    fetchHistoryRooms();
+    fetchCurrentSpaces();
+    fetchHistorySpaces();
 
     // 每60秒刷新一次数据
     const interval = setInterval(() => {
-      fetchCurrentRooms();
-      fetchHistoryRooms();
+      fetchCurrentSpaces();
+      fetchHistorySpaces();
     }, 60000);
 
     return () => clearInterval(interval);
   }, []);
 
   // 当前房间参与者表格列定义
-  const currentRoomsColumns: ColumnsType<ParticipantTableData> = [
+  const currentSpacesColumns: ColumnsType<ParticipantTableData> = [
     {
       title: '房间',
-      dataIndex: 'roomId',
-      key: 'roomId',
+      dataIndex: 'spaceId',
+      key: 'spaceId',
       width: 120,
-      render: (roomId: string, record) => (
+      render: (spaceId: string, record) => (
         <Space>
-          <span>{roomId}</span>
+          <span>{spaceId}</span>
           {record.isRecording && (
             <SvgResource type="record" svgSize={16} color="#ffffff"></SvgResource>
           )}
@@ -281,7 +281,7 @@ export default function Dashboard() {
   ];
 
   // 历史房间表格列定义
-  const historyRoomsColumns: ColumnsType<HistoryRoomData> = [
+  const historySpacesColumns: ColumnsType<HistorySpaceData> = [
     {
       title: '房间名',
       dataIndex: 'room',
@@ -331,7 +331,7 @@ export default function Dashboard() {
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col span={6}>
             <Card>
-              <Statistic title="活跃房间数" value={totalRooms} />
+              <Statistic title="活跃房间数" value={totalSpaces} />
             </Card>
           </Col>
           <Col span={6}>
@@ -356,7 +356,7 @@ export default function Dashboard() {
           <Col span={6}>
             <Card>
               <div style={{ marginBottom: '9px' }}>操作</div>
-              <Button type="primary" onClick={fetchCurrentRooms} loading={loading}>
+              <Button type="primary" onClick={fetchCurrentSpaces} loading={loading}>
                 刷新数据
               </Button>
             </Card>
@@ -375,8 +375,8 @@ export default function Dashboard() {
         }
       >
         <Table
-          columns={currentRoomsColumns}
-          dataSource={currentRoomsData}
+          columns={currentSpacesColumns}
+          dataSource={currentSpacesData}
           loading={loading}
           pagination={{
             pageSize: 10,
@@ -391,8 +391,8 @@ export default function Dashboard() {
       {/* 历史房间数据 */}
       <Card title="历史房间使用统计">
         <Table
-          columns={historyRoomsColumns}
-          dataSource={historyRoomsData}
+          columns={historySpacesColumns}
+          dataSource={historySpacesData}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
