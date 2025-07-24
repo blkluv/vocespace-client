@@ -7,7 +7,14 @@ import { ChildRoom, ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsBase, WsParticipant } from '@/lib/std/device';
-import { CheckNameBody, DefineUserStatusBody } from '@/lib/api/space';
+import {
+  CheckNameBody,
+  DefineUserStatusBody,
+  DeleteSpaceParticipantBody,
+  UpdateOwnerIdBody,
+  UpdateSpaceParticipantBody,
+} from '@/lib/api/space';
+import { UpdateRecordBody } from '@/lib/api/record';
 
 interface SpaceInfoMap {
   [spaceId: string]: SpaceInfo;
@@ -496,37 +503,37 @@ class SpaceManager {
   }
 
   // 获取房间设置 --------------------------------------------------------------------------
-  static async getSpaceInfo(room: string): Promise<SpaceInfo | null> {
+  static async getSpaceInfo(space: string): Promise<SpaceInfo | null> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomKey = this.getSpaceKey(room);
-      const roomDataStr = await redisClient.get(roomKey);
+      const spaceKey = this.getSpaceKey(space);
+      const spaceDataStr = await redisClient.get(spaceKey);
 
-      if (!roomDataStr) {
+      if (!spaceDataStr) {
         return null;
       }
 
-      return JSON.parse(roomDataStr) as SpaceInfo;
+      return JSON.parse(spaceDataStr) as SpaceInfo;
     } catch (error) {
-      console.error('Error getting room settings:', error);
+      console.error('Error getting space settings:', error);
       return null;
     }
   }
 
   // 设置房间设置数据 -----------------------------------------------------------------------
-  static async setSpaceInfo(room: string, settings: SpaceInfo): Promise<boolean> {
+  static async setSpaceInfo(spaceName: string, settings: SpaceInfo): Promise<boolean> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const roomKey = this.getSpaceKey(room);
+      const spaceKey = this.getSpaceKey(spaceName);
       const settingsStr = JSON.stringify(settings);
       // 设置回存储
-      await redisClient.set(roomKey, settingsStr);
+      await redisClient.set(spaceKey, settingsStr);
       // 设置到房间列表中
-      await redisClient.sadd(this.SPACE_LIST_KEY_PREFIX, room);
+      await redisClient.sadd(this.SPACE_LIST_KEY_PREFIX, spaceName);
       return true;
     } catch (error) {
       console.error('Error setting room settings:', error);
@@ -623,17 +630,17 @@ class SpaceManager {
   }
 
   // 转让房间主持人 -----------------------------------------------------------------------
-  static async transferOwnership(room: string, newOwnerId: string): Promise<boolean> {
+  static async transferOwner(spaceName: string, newOwnerId: string): Promise<boolean> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
       }
-      const SpaceInfo = await this.getSpaceInfo(room);
+      const SpaceInfo = await this.getSpaceInfo(spaceName);
       if (!SpaceInfo || !SpaceInfo.participants[newOwnerId]) {
         return false; // 房间或新主持人不存在
       } else {
         SpaceInfo.ownerId = newOwnerId;
-        return await this.setSpaceInfo(room, SpaceInfo);
+        return await this.setSpaceInfo(spaceName, SpaceInfo);
       }
     } catch (error) {
       console.error('Error transferring ownership:', error);
@@ -686,7 +693,7 @@ class SpaceManager {
 
       // 删除参与者
       delete SpaceInfo.participants[participantId];
-      // 先设置回去, 以防transferOwnership读取脏数据
+      // 先设置回去, 以防transferOwner读取脏数据
       await this.setSpaceInfo(room, SpaceInfo);
       // 判断这个参与者是否是主持人，如果是则进行转让，转给第一个参与者， 如果没有参与者直接删除房间
       if (Object.keys(SpaceInfo.participants).length === 0) {
@@ -699,7 +706,7 @@ class SpaceManager {
         // 进行转让, 一定有1个参与者
         if (SpaceInfo.ownerId === participantId) {
           const remainingParticipants = Object.keys(SpaceInfo.participants);
-          await this.transferOwnership(
+          await this.transferOwner(
             room,
             remainingParticipants[0], // 转让给第一个剩余的参与者
           );
@@ -900,23 +907,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(roomSettingsMap);
     }
   }
-  //
-  if (spaceName == '' || !spaceName) {
-    return NextResponse.json({ error: 'Missing spaceName' }, { status: 400 });
-  }
   // 生成一个可用的用户名字 -----------------------------------------------------------------------------
-  if (isPre) {
+  if (isPre && spaceName) {
     const availableUserName = await SpaceManager.genUserName(spaceName);
     return NextResponse.json({
       name: availableUserName,
     });
-  } else {
-    const allRooms = await SpaceManager.getAllSpaces();
-    return NextResponse.json(
-      { settings: allRooms[spaceName] || { participants: {} } },
-      { status: 200 },
-    );
   }
+  // 获取某个房间的数据 ---------------------------------------------------------------------------------
+  if (spaceName) {
+    const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
+    return NextResponse.json({ settings: spaceInfo || { participants: {} } }, { status: 200 });
+  }
+
+  return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
 }
 
 // 更新单个参与者设置
@@ -924,17 +928,10 @@ export async function POST(request: NextRequest) {
   try {
     const isChildRoom = request.nextUrl.searchParams.get('childRoom') === 'true';
     const isNameCheck = request.nextUrl.searchParams.get('nameCheck') === 'true';
-    const body = await request.json();
-    const {
-      roomId,
-      participantId,
-      participantName,
-      settings,
-      trans,
-      record,
-      childRoomName,
-      isPrivate,
-    } = body;
+    const isUpdateRecord = request.nextUrl.searchParams.get('record') === 'update';
+    const isUpdateOwnerId = request.nextUrl.searchParams.get('ownerId') === 'update';
+    const isUpdateParticipant = request.nextUrl.searchParams.get('participant') === 'update';
+    const isSpace = request.nextUrl.searchParams.get('space') === 'true';
 
     // 处理用户唯一名 -------------------------------------------------------------------------
     if (isNameCheck) {
@@ -978,11 +975,12 @@ export async function POST(request: NextRequest) {
     }
 
     // 处理录制 --------------------------------------------------------------------------------
-    if (record && roomId) {
-      const { success, error } = await SpaceManager.updateRecordSettings(roomId, record);
+    if (isUpdateRecord) {
+      const { spaceName, record }: UpdateRecordBody = await request.json();
+      const { success, error } = await SpaceManager.updateRecordSettings(spaceName, record);
 
       if (success) {
-        const SpaceInfo = await SpaceManager.getSpaceInfo(roomId);
+        const SpaceInfo = await SpaceManager.getSpaceInfo(spaceName);
         return NextResponse.json({ success: true, record: SpaceInfo?.record }, { status: 200 });
       } else {
         return NextResponse.json(
@@ -992,21 +990,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 转让房间主持人
-    if (trans && roomId && participantId) {
-      const success = await SpaceManager.transferOwnership(roomId, participantId);
+    // 转让房间主持人 ---------------------------------------------------------------------------
+    if (isUpdateOwnerId) {
+      const { spaceName, participantId }: UpdateOwnerIdBody = await request.json();
+      const success = await SpaceManager.transferOwner(spaceName, participantId);
       if (success) {
         return NextResponse.json({ success: true, ownerId: participantId }, { status: 200 });
       } else {
         return NextResponse.json({ error: 'Failed to transfer ownership' }, { status: 500 });
       }
     }
-    // 更新参与者设置
-    if (!roomId || !participantId || !settings) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    // 更新参与者设置 ---------------------------------------------------------------------------
+    if (isUpdateParticipant && isSpace) {
+      const { spaceName, settings, participantId }: UpdateSpaceParticipantBody =
+        await request.json();
+      const success = await SpaceManager.updateParticipant(spaceName, participantId, settings);
+      return NextResponse.json({ success }, { status: 200 });
     }
-    const success = await SpaceManager.updateParticipant(roomId, participantId, settings);
-    return NextResponse.json({ success }, { status: 200 });
+
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   } catch (error) {
     console.error('Error updating room settings:', error);
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
@@ -1117,6 +1119,8 @@ export async function DELETE(request: NextRequest) {
   const isChildRoom = request.nextUrl.searchParams.get('childRoom') === 'true';
   const isDelete = request.nextUrl.searchParams.get('delete') === 'true';
   const isLeave = request.nextUrl.searchParams.get('leave') === 'true';
+  const isDeleteParticipant = request.nextUrl.searchParams.get('participant') === 'delete';
+  const isSpace = request.nextUrl.searchParams.get('space') === 'true';
   // [离开子房间] ---------------------------------------------------------------------------------------------
   if (isChildRoom && isLeave) {
     const body = await request.json();
@@ -1155,60 +1159,58 @@ export async function DELETE(request: NextRequest) {
         { status: 500 },
       );
     }
-  } else {
-    if (socketId) {
-      // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
-      // 所以这里要从redis中找到这个对应socketId的参与者
-      const allRooms = await SpaceManager.getAllSpaces();
-      let participantFound = false;
-      for (const [roomId, settings] of Object.entries(allRooms)) {
-        for (const [participantId, participant] of Object.entries(settings.participants)) {
-          if (participant.socketId === socketId) {
-            participantFound = true;
-            // 找到对应的参与者，进行删除
-            const { success, clearAll, error } = await SpaceManager.removeParticipant(
-              roomId,
-              participantId,
-            );
-            if (success) {
-              if (clearAll) {
-                return NextResponse.json({ success: true, clearRoom: roomId });
-              }
-              return NextResponse.json({
-                success: true,
-                message: 'Participant removed successfully',
-              });
-            } else {
-              return NextResponse.json(
-                { success: false, message: 'Failed to remove participant', error },
-                { status: 500 },
-              );
+  }
+
+  if (socketId) {
+    // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
+    // 所以这里要从redis中找到这个对应socketId的参与者
+    const allRooms = await SpaceManager.getAllSpaces();
+    let participantFound = false;
+    for (const [roomId, settings] of Object.entries(allRooms)) {
+      for (const [participantId, participant] of Object.entries(settings.participants)) {
+        if (participant.socketId === socketId) {
+          participantFound = true;
+          // 找到对应的参与者，进行删除
+          const { success, clearAll, error } = await SpaceManager.removeParticipant(
+            roomId,
+            participantId,
+          );
+          if (success) {
+            if (clearAll) {
+              return NextResponse.json({ success: true, clearRoom: roomId });
             }
+            return NextResponse.json({
+              success: true,
+              message: 'Participant removed successfully',
+            });
+          } else {
+            return NextResponse.json(
+              { success: false, message: 'Failed to remove participant', error },
+              { status: 500 },
+            );
           }
         }
       }
-
-      // 如果循环结束后没有找到参与者
-      if (!participantFound) {
-        return NextResponse.json(
-          { success: true, message: 'Participant not found for the given socketId' },
-          { status: 200 },
-        );
-      }
     }
-    // 不是使用socketId断开来处理离开房间 --------------------------------------------------------------------
-    const { roomId, participantId } = await request.json();
-    if (!roomId || !participantId) {
+
+    // 如果循环结束后没有找到参与者
+    if (!participantFound) {
       return NextResponse.json(
-        { error: 'Room ID and Participant ID are required' },
-        { status: 400 },
+        { success: true, message: 'Participant not found for the given socketId' },
+        { status: 200 },
       );
     }
-
-    let { success, clearAll, error } = await SpaceManager.removeParticipant(roomId, participantId);
+  }
+  // 不是使用socketId断开来处理离开房间 --------------------------------------------------------------------
+  if (isSpace && isDeleteParticipant) {
+    const { spaceName, participantId }: DeleteSpaceParticipantBody = await request.json();
+    let { success, clearAll, error } = await SpaceManager.removeParticipant(
+      spaceName,
+      participantId,
+    );
     if (success) {
       if (clearAll) {
-        return NextResponse.json({ success: true, clearRoom: roomId });
+        return NextResponse.json({ success: true, clearSpace: spaceName });
       }
       return NextResponse.json({ success: true, message: 'Participant removed successfully' });
     }

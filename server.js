@@ -317,16 +317,16 @@ app.prepare().then(() => {
     socket.on('reload_virtual', (msg) => {
       socket.broadcast.emit('reload_virtual_response', msg);
     });
-    // [socket: clear room resources] -----------------------------------------------------------------------------------------
-    socket.on('clear_room_resources', async (msg) => {
-      const { roomName } = msg;
-      // 删除uploads下的对应roomName的文件夹
-      const roomDir = path.join(uploadDir, roomName);
-      if (fs.existsSync(roomDir)) {
-        fs.rmdirSync(roomDir, { recursive: true });
+    // [socket: clear space resources] -----------------------------------------------------------------------------------------
+    socket.on('clear_space_resources', async (msg) => {
+      const { spaceName } = msg;
+      // 删除uploads下的对应spaceName的文件夹
+      const spaceDir = path.join(uploadDir, spaceName);
+      if (fs.existsSync(spaceDir)) {
+        fs.rmdirSync(spaceDir, { recursive: true });
       }
       // delete chat messages from redis
-      await ChatManager.deleteChatMessages(roomName);
+      await ChatManager.deleteChatMessages(spaceName);
     });
     // [socket: create a new user status] ------------------------------------------------------------------------------------
     socket.on('new_user_status', (msg) => {

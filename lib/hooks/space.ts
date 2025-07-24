@@ -1,10 +1,8 @@
 // lib/hooks/useSpaceInfo.ts
 import { useState, useCallback } from 'react';
-import { connect_endpoint } from '../std';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { ParticipantSettings, RecordSettings, SpaceInfo } from '../std/space';
-
-const ROOM_SETTINGS_ENDPOINT = connect_endpoint('/api/space');
+import { api } from '../api';
 
 export function useSpaceInfo(spaceName: string, participantId: string) {
   const [settings, setSettings] = useState<SpaceInfo>({
@@ -17,21 +15,16 @@ export function useSpaceInfo(spaceName: string, participantId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // 获取所有参与者设置
+  // 获取空间的设置数据
   const fetchSettings = useCallback(async () => {
     if (!spaceName) return;
 
     try {
-      const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-      url.searchParams.append('spaceName', spaceName);
-
       setLoading(true);
-      const response = await fetch(url.toString());
-
+      const response = await api.getSpaceInfo(spaceName);
       if (!response.ok) {
         throw new Error(`Failed to fetch settings: ${response.status}`);
       }
-
       const data = await response.json();
       setSettings(data.settings || {});
       return data.settings || {};
@@ -44,18 +37,10 @@ export function useSpaceInfo(spaceName: string, participantId: string) {
 
   const updateRecord = useCallback(
     async (active: boolean, egressId?: string, filePath?: string) => {
-      const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          spaceName,
-          record: {
-            active,
-            egressId,
-            filePath,
-          },
-        }),
+      const response = await api.updateRecord(spaceName, {
+        active,
+        egressId,
+        filePath,
       });
 
       if (!response.ok) {
@@ -71,26 +56,15 @@ export function useSpaceInfo(spaceName: string, participantId: string) {
     },
     [participantId, spaceName],
   );
-
+  // 转让或设置房间的主持人
   const updateOwnerId = useCallback(
     async (replacedId?: string) => {
-      const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          spaceName,
-          participantId: replacedId || participantId,
-          trans: true,
-        }),
-      });
-
+      const response = await api.updateOwnerId(spaceName, replacedId || participantId);
       if (!response.ok) {
         return false;
       }
 
       const { ownerId } = await response.json();
-
       setSettings((prevSettings) => ({
         ...prevSettings,
         ownerId: ownerId || prevSettings.ownerId,
@@ -105,20 +79,13 @@ export function useSpaceInfo(spaceName: string, participantId: string) {
   const updateSettings = useCallback(
     async (newSettings: Partial<ParticipantSettings>, record?: RecordSettings) => {
       if (!spaceName || !participantId) return;
-
       try {
-        const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-        const response = await fetch(url.toString(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            spaceName,
-            participantId,
-            settings: newSettings,
-            record,
-          }),
-        });
-
+        const response = await api.updateSpaceParticipant(
+          spaceName,
+          participantId,
+          newSettings,
+          record,
+        );
         if (!response.ok) {
           throw new Error(`Failed to update settings: ${response.status}`);
         }
@@ -140,22 +107,13 @@ export function useSpaceInfo(spaceName: string, participantId: string) {
       if (!spaceName || !participantId) return;
       let removeId = id || participantId;
       try {
-        const url = new URL(ROOM_SETTINGS_ENDPOINT, window.location.origin);
-        await fetch(url.toString(), {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            spaceName,
-            participantId: removeId,
-          }),
-        }).then(async (res) => {
-          if (res.ok) {
-            const data: { success: boolean; clearRoom?: string } = await res.json();
-            if (data.clearRoom && data.clearRoom !== '') {
-              socket.emit('clear_room_resources', { roomName: data.clearRoom });
-            }
+        const response = await api.deleteSpaceParticipant(spaceName, removeId);
+        if (response.ok) {
+          const data: { success: boolean; clearSpace?: string } = await response.json();
+          if (data.clearSpace && data.clearSpace !== '') {
+            socket.emit('clear_space_resources', { spaceName: data.clearSpace });
           }
-        });
+        }
       } catch (err) {
         console.error('Error clearing settings:', err);
       }
