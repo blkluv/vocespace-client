@@ -357,7 +357,7 @@ lk load-test \
   - [x] room -> space 名称处理
   - [x] audio模块
   - [x] 代码注释
-  - [ ] Server端API
+  - [x] Server端API
   - [ ] 测试
 - [ ] 进入子房间，socketId丢失，似乎没初始化好，网络原因可能性较大
 ---

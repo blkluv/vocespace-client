@@ -151,7 +151,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         // 为新加入的参与者创建一个自己的私人房间
         if (!settings.children.some((child) => child.name === roomName)) {
           const response = await api.createRoom({
-            hostRoom: room.name,
+            spaceName: room.name,
             roomName,
             ownerId: room.localParticipant.identity,
             isPrivate: true,

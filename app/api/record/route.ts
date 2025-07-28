@@ -1,3 +1,4 @@
+import { SendRecordRequestBody } from '@/lib/api/record';
 import { EgressClient, EncodedFileOutput, S3Upload } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -11,12 +12,6 @@ const {
   S3_REGION,
 } = process.env;
 
-interface EgressBody {
-  room: string | null;
-  type: 'start' | 'stop';
-  egressId?: string;
-}
-
 const isUndefinedString = (value: string | undefined): boolean => {
   return value === undefined || value.trim() === '';
 };
@@ -26,9 +21,10 @@ export async function GET(req: NextRequest) {
   const env = req.nextUrl.searchParams.get('env');
   if (env === 'true') {
     let server_host = process.env.SERVER_HOST;
-    server_host = (server_host?.includes('localhost') || server_host?.includes('127.0.0.1'))
-      ? `http://${server_host}`
-      : `https://${server_host}`;
+    server_host =
+      server_host?.includes('localhost') || server_host?.includes('127.0.0.1')
+        ? `http://${server_host}`
+        : `https://${server_host}`;
 
     return NextResponse.json(
       {
@@ -67,9 +63,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { room, type, egressId }: EgressBody = await req.json();
-    if (room === null) {
-      return new NextResponse('Missing roomName parameter', { status: 403 });
+    const { spaceName, type, egressId }: SendRecordRequestBody = await req.json();
+    if (spaceName === null) {
+      return new NextResponse('Missing spaceName parameter', { status: 403 });
     }
 
     if (!LIVEKIT_URL) {
@@ -82,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     if (type === 'start' && !egressId) {
       // check if the room egresses are already running
-      const existingEgresses = await egressClient.listEgress({ roomName: room });
+      const existingEgresses = await egressClient.listEgress({ roomName: spaceName });
       console.warn(existingEgresses);
       if (existingEgresses.length > 0 && existingEgresses.some((e) => e.status < 2)) {
         return NextResponse.json(
@@ -93,7 +89,7 @@ export async function POST(req: NextRequest) {
       let timestamp = new Date().getTime();
       timestamp = Math.floor(timestamp / 1000); // Convert to seconds
       const fileOutput = new EncodedFileOutput({
-        filepath: `${room}/${timestamp}.mp4`,
+        filepath: `${spaceName}/${timestamp}.mp4`,
         output: {
           case: 's3',
           value: new S3Upload({
@@ -108,7 +104,7 @@ export async function POST(req: NextRequest) {
       });
 
       const egressInfo = await egressClient.startRoomCompositeEgress(
-        room,
+        spaceName,
         {
           file: fileOutput,
         },
@@ -126,7 +122,7 @@ export async function POST(req: NextRequest) {
       );
     } else if (type === 'stop' && egressId) {
       const existingEgresses = await egressClient.listEgress({
-        roomName: room,
+        roomName: spaceName,
         active: true,
         egressId,
       });

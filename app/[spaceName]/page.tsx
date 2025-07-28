@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import * as React from 'react';
 import { PageClientImpl } from './PageClientImpl';
@@ -9,7 +9,7 @@ export default function Page({
   params,
   searchParams,
 }: {
-  params: { roomName: string };
+  params: { spaceName: string };
   searchParams: {
     region?: string;
     hq?: string;
@@ -21,11 +21,10 @@ export default function Page({
       ? searchParams.codec
       : 'vp9';
   const hq = searchParams.hq === 'true' ? true : false;
-  console.warn(hq);
   return (
     <RecoilRoot>
       <PageClientImpl
-        roomName={params.roomName}
+        spaceName={params.spaceName}
         region={searchParams.region}
         hq={hq}
         codec={codec}

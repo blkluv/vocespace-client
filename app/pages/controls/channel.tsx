@@ -195,7 +195,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       }
 
       const response = await api.createRoom({
-        hostRoom: roomName,
+        spaceName: roomName,
         roomName: childRoomName,
         ownerId: participantId,
         isPrivate: roomPrivacy === 'private',
@@ -235,7 +235,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       }
 
       const response = await api.deleteRoom({
-        hostRoom: roomName,
+        spaceName: roomName,
         roomName: selectedRoom.name,
       });
 
@@ -259,7 +259,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       if (!selectedRoom && !room) return;
 
       const response = await api.leaveRoom({
-        hostRoom: roomName,
+        spaceName: roomName,
         roomName: room || selectedRoom!.name,
         participantId,
       });
@@ -285,7 +285,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
     const joinChildRoom = async (room: ChildRoom, participantId: string) => {
       const response = await api.joinRoom({
-        hostRoom: roomName,
+        spaceName: roomName,
         roomName: room.name,
         participantId,
       });
@@ -373,7 +373,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       let isRename = ty === 'name';
       let param = {
         ty,
-        hostRoom: roomName,
+        spaceName: roomName,
         roomName: selectedRoom.name,
       } as UpdateRoomParam;
       if (isRename) {

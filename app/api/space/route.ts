@@ -10,11 +10,20 @@ import { WsBase, WsParticipant } from '@/lib/std/device';
 import {
   CheckNameBody,
   DefineUserStatusBody,
+  DefineUserStatusResponse,
   DeleteSpaceParticipantBody,
   UpdateOwnerIdBody,
   UpdateSpaceParticipantBody,
 } from '@/lib/api/space';
 import { UpdateRecordBody } from '@/lib/api/record';
+import {
+  ChildRoomMethods,
+  CreateRoomBody,
+  DeleteRoomBody,
+  JoinRoomBody,
+  LeaveRoomBody,
+  UpdateRoomBody,
+} from '@/lib/api/channel';
 
 interface SpaceInfoMap {
   [spaceId: string]: SpaceInfo;
@@ -82,7 +91,7 @@ class SpaceManager {
 
   // 切换房间隐私性 ----------------------------------------------------------------------
   static async switchChildRoomPrivacy(
-    room: string,
+    spaceName: string,
     childRoom: string,
     isPrivate: boolean,
   ): Promise<{
@@ -94,22 +103,22 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
 
-      const SpaceInfo = await this.getSpaceInfo(room);
+      const SpaceInfo = await this.getSpaceInfo(spaceName);
       if (!SpaceInfo) {
-        throw new Error(`Room ${room} does not exist.`);
+        throw new Error(`Space ${spaceName} does not exist.`);
       }
 
       // 查找子房间
       const childRoomData = SpaceInfo.children.find((c) => c.name === childRoom);
       if (!childRoomData) {
-        throw new Error(`Child room ${childRoom} does not exist in room ${room}.`);
+        throw new Error(`Child room ${childRoom} does not exist in space ${spaceName}.`);
       }
 
       // 修改子房间的隐私性
       childRoomData.isPrivate = isPrivate;
 
       // 设置回存储
-      await this.setSpaceInfo(room, SpaceInfo);
+      await this.setSpaceInfo(spaceName, SpaceInfo);
       return {
         success: true,
       };
@@ -957,10 +966,11 @@ export async function POST(request: NextRequest) {
 
     // 如果是创建子房间 -------------------------------------------------------------------------
     if (isChildRoom) {
-      const { spaceName, childRoomName, participantId, isPrivate } = await request.json();
+      const { spaceName, roomName, participantId, isPrivate }: CreateRoomBody =
+        await request.json();
 
       const childRoom = {
-        name: childRoomName,
+        name: roomName,
         participants: [],
         ownerId: participantId,
         isPrivate,
@@ -1016,30 +1026,18 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const isUpdateChildRoom = request.nextUrl.searchParams.get('updateChildRoom') === 'true';
+  const childRoom = request.nextUrl.searchParams.get('childRoom') as ChildRoomMethods | null;
   const isDefineStatus = request.nextUrl.searchParams.get('status') === 'true';
-
-  const {
-    roomId,
-    status,
-    participantId,
-    childRoom,
-    ty,
-    isPrivate,
-    newRoomName,
-  }: {
-    roomId?: string;
-    status?: UserDefineStatus;
-    childRoom?: string;
-    participantId?: string;
-    ty: 'name' | 'privacy';
-    isPrivate?: boolean;
-    newRoomName?: string;
-  } = await request.json();
-
-  if (isUpdateChildRoom && ty && roomId && childRoom) {
+  // 更新子房间的名字或隐私设置 -------------------------------------------------------------------
+  if (childRoom === ChildRoomMethods.UPDATE) {
+    const { ty, spaceName, roomName, isPrivate, newRoomName }: UpdateRoomBody =
+      await request.json();
     if (ty === 'name' && newRoomName) {
-      const { success, error } = await SpaceManager.renameChildRoom(roomId, childRoom, newRoomName);
+      const { success, error } = await SpaceManager.renameChildRoom(
+        spaceName,
+        roomName,
+        newRoomName,
+      );
       if (success) {
         return NextResponse.json(
           { success: true, message: 'Child room renamed successfully' },
@@ -1053,8 +1051,8 @@ export async function PUT(request: NextRequest) {
       }
     } else if (ty === 'privacy' && isPrivate !== undefined) {
       const { success, error } = await SpaceManager.switchChildRoomPrivacy(
-        roomId,
-        childRoom,
+        spaceName,
+        roomName,
         isPrivate,
       );
       if (success) {
@@ -1071,11 +1069,12 @@ export async function PUT(request: NextRequest) {
     }
   }
 
-  // 向子房间中添加参与者
-  if (roomId && participantId && childRoom) {
+  // 向子房间中添加参与者 -------------------------------------------------------------------
+  if (childRoom === ChildRoomMethods.JOIN) {
+    const { spaceName, roomName, participantId }: JoinRoomBody = await request.json();
     const { success, error } = await SpaceManager.addParticipantToChildRoom(
-      roomId,
-      childRoom,
+      spaceName,
+      roomName,
       participantId,
     );
     if (success) {
@@ -1096,15 +1095,15 @@ export async function PUT(request: NextRequest) {
     if (success) {
       const SpaceInfo = await SpaceManager.getSpaceInfo(spaceName);
       return NextResponse.json(
-        { success: true, status: SpaceInfo?.status, roomId },
+        { success: true, status: SpaceInfo?.status, spaceName } as DefineUserStatusResponse,
         { status: 200 },
       );
     } else {
       return NextResponse.json(
         {
           error,
-          status,
-        },
+          status: [status],
+        } as DefineUserStatusResponse,
         {
           status: 500,
         },
@@ -1116,27 +1115,17 @@ export async function PUT(request: NextRequest) {
 // 清除参与者设置（当参与者离开房间时）
 export async function DELETE(request: NextRequest) {
   const socketId = request.nextUrl.searchParams.get('socketId');
-  const isChildRoom = request.nextUrl.searchParams.get('childRoom') === 'true';
-  const isDelete = request.nextUrl.searchParams.get('delete') === 'true';
-  const isLeave = request.nextUrl.searchParams.get('leave') === 'true';
+  const childRoom = request.nextUrl.searchParams.get('childRoom') as ChildRoomMethods | null;
   const isDeleteParticipant = request.nextUrl.searchParams.get('participant') === 'delete';
   const isSpace = request.nextUrl.searchParams.get('space') === 'true';
   // [离开子房间] ---------------------------------------------------------------------------------------------
-  if (isChildRoom && isLeave) {
+  if (childRoom === ChildRoomMethods.LEAVE) {
     const body = await request.json();
-    const { roomId, participantId, childRoom } = body;
-
-    if (!roomId || !participantId || !childRoom) {
-      return NextResponse.json(
-        { error: 'Room ID, Participant ID and Child Room are required' },
-        { status: 400 },
-      );
-    }
-
+    const { spaceName, participantId, roomName }: LeaveRoomBody = body;
     // 从子房间中移除参与者
     const { success, error } = await SpaceManager.removeParticipantFromChildRoom(
-      roomId,
-      childRoom,
+      spaceName,
+      roomName,
       participantId,
     );
     if (success) {
@@ -1147,10 +1136,10 @@ export async function DELETE(request: NextRequest) {
         { status: 500 },
       );
     }
-  } else if (isChildRoom && isDelete) {
+  } else if (childRoom === ChildRoomMethods.DELETE) {
     // 删除子房间 ----------------------------------------------------------------------------------------------
-    const { roomId, childRoom } = await request.json();
-    const success = await SpaceManager.deleteChildRoom(roomId, childRoom);
+    const { spaceName, roomName }: DeleteRoomBody = await request.json();
+    const success = await SpaceManager.deleteChildRoom(spaceName, roomName);
     if (success) {
       return NextResponse.json({ success: true, message: 'Child room deleted successfully' });
     } else {
@@ -1166,18 +1155,18 @@ export async function DELETE(request: NextRequest) {
     // 所以这里要从redis中找到这个对应socketId的参与者
     const allRooms = await SpaceManager.getAllSpaces();
     let participantFound = false;
-    for (const [roomId, settings] of Object.entries(allRooms)) {
+    for (const [spaceId, settings] of Object.entries(allRooms)) {
       for (const [participantId, participant] of Object.entries(settings.participants)) {
         if (participant.socketId === socketId) {
           participantFound = true;
           // 找到对应的参与者，进行删除
           const { success, clearAll, error } = await SpaceManager.removeParticipant(
-            roomId,
+            spaceId,
             participantId,
           );
           if (success) {
             if (clearAll) {
-              return NextResponse.json({ success: true, clearRoom: roomId });
+              return NextResponse.json({ success: true, clearRoom: spaceId });
             }
             return NextResponse.json({
               success: true,

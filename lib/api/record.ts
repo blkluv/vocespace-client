@@ -1,13 +1,13 @@
 import { connect_endpoint } from '../std';
 import { RecordSettings } from '../std/space';
 
-export interface sendRecordRequestBody {
+export interface SendRecordRequestBody {
   spaceName: string;
   type: 'start' | 'stop';
   egressId?: string;
 }
 
-export const sendRecordRequest = (data: sendRecordRequestBody): Promise<Response> => {
+export const sendRecordRequest = (data: SendRecordRequestBody): Promise<Response> => {
   const url = new URL(connect_endpoint('/api/record'), window.location.origin);
   return fetch(url.toString(), {
     method: 'POST',

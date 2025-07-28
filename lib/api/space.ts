@@ -75,6 +75,13 @@ export interface DefineUserStatusBody {
   status: UserDefineStatus;
 }
 
+export interface DefineUserStatusResponse {
+  success: boolean;
+  status?: UserDefineStatus[];
+  spaceName?: string;
+  error?: any;
+}
+
 export const defineUserStatus = async (spaceName: string, status: UserDefineStatus) => {
   const url = new URL(SPACE_API, window.location.origin);
   url.searchParams.append('status', 'true');

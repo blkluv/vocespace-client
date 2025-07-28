@@ -104,7 +104,7 @@ export const AppsDataState = atom({
 });
 
 export function PageClientImpl(props: {
-  roomName: string;
+  spaceName: string;
   region?: string;
   hq: boolean;
   codec: VideoCodec;
@@ -127,7 +127,7 @@ export function PageClientImpl(props: {
 
   const handlePreJoinSubmit = React.useCallback(async (values: LocalUserChoices) => {
     setPreJoinChoices(values);
-    const connectionDetailsResp = await api.joinSpace(props.roomName, values.username, props.region);
+    const connectionDetailsResp = await api.joinSpace(props.spaceName, values.username, props.region);
     const connectionDetailsData = await connectionDetailsResp.json();
     setConnectionDetails(connectionDetailsData);
   }, []);

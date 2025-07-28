@@ -3,6 +3,9 @@
  * @param width
  */
 export const isAdjustWindowWhen = (width: number = 720, view?: number) => {
+  if (typeof window === 'undefined') {
+    return view === undefined ? false : view <= width;
+  }
   return (view ?? window.innerWidth) <= width;
 };
 

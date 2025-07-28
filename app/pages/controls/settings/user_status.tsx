@@ -10,6 +10,7 @@ import TextArea from 'antd/es/input/TextArea';
 import { Button, Input, Radio, Slider } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { api } from '@/lib/api';
+import { DefineUserStatusResponse } from '@/lib/api/space';
 
 export interface BuildUserStatusProps {
   messageApi: MessageInstance;
@@ -104,7 +105,7 @@ export function BuildUserStatus({ messageApi, room, localParticipant }: BuildUse
       if (!response.ok) {
         throw new Error(`Failed to save status: ${response.status}`);
       }
-      const data = await response.json();
+      const data: DefineUserStatusResponse = await response.json();
       if (data.error) {
         throw new Error(data.error);
       }
@@ -112,7 +113,7 @@ export function BuildUserStatus({ messageApi, room, localParticipant }: BuildUse
         content: t('settings.general.status.define.success'),
       });
       // 服务器已经保存了状态，使用socket通知所有房间里的人
-      socket.emit('new_user_status', { status: data.status, room: data.roomId });
+      socket.emit('new_user_status', { status: data.status, room: data.spaceName });
       restoreAll();
     } catch (e) {
       messageApi.error({
