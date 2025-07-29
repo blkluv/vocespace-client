@@ -1,5 +1,5 @@
-import { UserDefineStatus, UserStatus } from ".";
-import { ModelBg, ModelRole } from "./virtual";
+import { UserDefineStatus, UserStatus } from '.';
+import { ModelBg, ModelRole } from './virtual';
 
 export interface ChildRoom {
   // room name
@@ -34,6 +34,8 @@ export interface RecordSettings {
   active: boolean;
 }
 
+export type AppKey = 'timer' | 'countdown' | 'todo';
+
 export interface SpaceInfo {
   participants: {
     [participantId: string]: ParticipantSettings;
@@ -42,8 +44,19 @@ export interface SpaceInfo {
   ownerId: string;
   record: RecordSettings;
   startAt: number;
-  children: ChildRoom[]
+  children: ChildRoom[];
+  // 应用列表，由主持人设置参与者可以使用的应用
+  apps: AppKey[];
 }
+
+export const DEFAULT_SPACE_INFO = (startAt: number): SpaceInfo => ({
+  participants: {},
+  ownerId: '',
+  record: { active: false },
+  startAt,
+  children: [],
+  apps: ['todo'],
+});
 
 export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
   name: '',
@@ -60,9 +73,9 @@ export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
   },
   openPromptSound: true,
   openShareAudio: false,
-}
+};
 
 /**
  * key in localStorage
  */
-export const PARTICIPANT_SETTINGS_KEY = "vocespace_participant_settings";
+export const PARTICIPANT_SETTINGS_KEY = 'vocespace_participant_settings';

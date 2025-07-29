@@ -15,13 +15,18 @@ import * as React from 'react';
 import styles from '@/styles/controls.module.scss';
 import { Settings, SettingsExports, TabKey } from './settings/settings';
 import { useRecoilState } from 'recoil';
-import { chatMsgState, socket, userState, virtualMaskState } from '@/app/[spaceName]/PageClientImpl';
+import {
+  chatMsgState,
+  socket,
+  userState,
+  virtualMaskState,
+} from '@/app/[spaceName]/PageClientImpl';
 import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './toggles/chat_toggle';
 import { MoreButton } from './toggles/more_button';
-import { ControlType, WsControlParticipant, WsTo } from '@/lib/std/device';
+import { ControlType, WsBase, WsControlParticipant, WsTo } from '@/lib/std/device';
 import { DEFAULT_DRAWER_PROP, DrawerCloser } from './drawer_tools';
 import { AppDrawer } from '../apps/app_drawer';
 import { ParticipantManage } from '../participant/manage';
@@ -51,7 +56,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   saveUserChoices?: boolean;
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
   setUserStatus: (status: UserStatus | string) => Promise<void>;
-  roomSettings: SpaceInfo;
+  spaceInfo: SpaceInfo;
   fetchSettings: () => Promise<void>;
   updateRecord: (active: boolean, egressId?: string, filePath?: string) => Promise<boolean>;
   setPermissionDevice: (device: Track.Source) => void;
@@ -90,7 +95,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       onDeviceError,
       updateSettings,
       setUserStatus,
-      roomSettings,
+      spaceInfo,
       fetchSettings,
       updateRecord,
       setPermissionDevice,
@@ -228,7 +233,9 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         // 更新其他设置 ------------------------------------------------
         await updateSettings(settingsRef.current.state);
         // 通知socket，进行状态的更新 -----------------------------------
-        socket.emit('update_user_status');
+        socket.emit('update_user_status', {
+          room: room.name,
+        } as WsBase);
         socket.emit('reload_virtual', {
           identity: room.localParticipant.identity,
           roomId: room.name,
@@ -277,18 +284,18 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [openNameModal, setOpenNameModal] = React.useState(false);
     // const [openAppModal, setOpenAppModal] = React.useState(false);
     const participantList = React.useMemo(() => {
-      return Object.entries(roomSettings.participants);
-    }, [roomSettings]);
+      return Object.entries(spaceInfo.participants);
+    }, [spaceInfo]);
     const isOwner = React.useMemo(() => {
-      return roomSettings.ownerId === room?.localParticipant.identity;
-    }, [roomSettings.ownerId, room?.localParticipant.identity]);
+      return spaceInfo.ownerId === room?.localParticipant.identity;
+    }, [spaceInfo.ownerId, room?.localParticipant.identity]);
 
     // [record] -----------------------------------------------------------------------------------------------------
     const [openRecordModal, setOpenRecordModal] = React.useState(false);
     const [isDownload, setIsDownload] = React.useState(false);
     const isRecording = React.useMemo(() => {
-      return roomSettings.record.active;
-    }, [roomSettings.record]);
+      return spaceInfo.record.active;
+    }, [spaceInfo.record]);
 
     const onClickRecord = async () => {
       if (!room && isOwner) return;
@@ -297,11 +304,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         setOpenRecordModal(true);
       } else {
         // 停止录制
-        if (roomSettings.record.egressId && roomSettings.record.egressId !== '') {
+        if (spaceInfo.record.egressId && spaceInfo.record.egressId !== '') {
           const response = await api.sendRecordRequest({
             spaceName: room!.name,
             type: 'stop',
-            egressId: roomSettings.record.egressId,
+            egressId: spaceInfo.record.egressId,
           });
 
           if (!response.ok) {
@@ -349,15 +356,15 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             room: room.name,
           });
         }
-        console.warn(roomSettings);
+        console.warn(spaceInfo);
       } else {
         // participant request to start recording
         socket.emit('req_record', {
           room: room.name,
           senderName: room.localParticipant.name,
           senderId: room.localParticipant.identity,
-          receiverId: roomSettings.ownerId,
-          socketId: roomSettings.participants[roomSettings.ownerId].socketId,
+          receiverId: spaceInfo.ownerId,
+          socketId: spaceInfo.participants[spaceInfo.ownerId].socketId,
         } as WsTo);
       }
     };
@@ -469,7 +476,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               count={chatMsg.unhandled}
             ></ChatToggle>
           )}
-          {room && roomSettings.participants && visibleControls.microphone && (
+          {room && spaceInfo.participants && visibleControls.microphone && (
             <MoreButton
               controlWidth={controlWidth}
               setOpenMore={setOpenMore}
@@ -531,6 +538,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 // saveChanges={saveChanges}
                 setUserStatus={setUserStatus}
                 localParticipant={room.localParticipant}
+                spaceInfo={spaceInfo}
               ></Settings>
             )}
           </div>
@@ -541,7 +549,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           room={room}
           participantList={participantList}
           setOpenShareModal={setOpenShareModal}
-          roomSettings={roomSettings}
+          spaceInfo={spaceInfo}
           selectedParticipant={selectedParticipant}
           setSelectedParticipant={setSelectedParticipant}
           setOpenNameModal={setOpenNameModal}
@@ -605,7 +613,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 senderName: room.localParticipant.name,
                 senderId: room.localParticipant.identity,
                 receiverId: selectedParticipant.identity,
-                socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+                socketId: spaceInfo.participants[selectedParticipant.identity].socketId,
                 type: ControlType.ChangeName,
                 username,
               } as WsControlParticipant);

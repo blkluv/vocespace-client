@@ -121,7 +121,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     }, [settings.children, participantId, subRoomsTmp]);
 
     const allParticipants = useMemo(() => {
-      console.warn(Object.keys(settings.participants).length, settings.participants);
+      // console.warn(Object.keys(settings.participants).length, settings.participants);
       return Object.keys(settings.participants);
     }, [settings]);
 

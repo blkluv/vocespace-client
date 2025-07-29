@@ -34,6 +34,7 @@ import {
 import { TodoItem } from '../pages/apps/todo_list';
 import dayjs, { type Dayjs } from 'dayjs';
 import { api } from '@/lib/api';
+import { WsBase } from '@/lib/std/device';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -127,7 +128,11 @@ export function PageClientImpl(props: {
 
   const handlePreJoinSubmit = React.useCallback(async (values: LocalUserChoices) => {
     setPreJoinChoices(values);
-    const connectionDetailsResp = await api.joinSpace(props.spaceName, values.username, props.region);
+    const connectionDetailsResp = await api.joinSpace(
+      props.spaceName,
+      values.username,
+      props.region,
+    );
     const connectionDetailsData = await connectionDetailsResp.json();
     setConnectionDetails(connectionDetailsData);
   }, []);
@@ -296,7 +301,9 @@ function VideoConferenceComponent(props: {
       receSocketId: '',
     });
     router.push('/');
-    socket.emit('update_user_status');
+    socket.emit('update_user_status', {
+      room: room.name,
+    } as WsBase);
     await videoContainerRef.current?.removeLocalSettings();
     socket.disconnect();
   }, [router, room.localParticipant]);

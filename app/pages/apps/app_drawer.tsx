@@ -6,14 +6,13 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { AppCountdown } from './countdown';
 import { MessageInstance } from 'antd/es/message/interface';
 import { AppTodo } from './todo_list';
+import { AppKey } from '@/lib/std/space';
 
 export interface AppDrawerProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   messageApi: MessageInstance;
 }
-
-type AppKey = 'timer' | 'countdown' | 'todo';
 
 export function AppDrawer({ open, setOpen, messageApi }: AppDrawerProps) {
   const [key, setKey] = useState<AppKey>('timer');

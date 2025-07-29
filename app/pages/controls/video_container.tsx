@@ -1,10 +1,4 @@
-import {
-  getServerIp,
-  is_web,
-  src,
-  UserDefineStatus,
-  UserStatus,
-} from '@/lib/std';
+import { getServerIp, is_web, src, UserDefineStatus, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   ConnectionStateToast,
@@ -57,6 +51,7 @@ import {
 import { useRouter } from 'next/navigation';
 import {
   ControlType,
+  WsBase,
   WsControlParticipant,
   WsInviteDevice,
   WsParticipant,
@@ -189,7 +184,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         fetchChatMsg();
         syncSettings().then(() => {
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
-          socket.emit('update_user_status');
+          socket.emit('update_user_status', {
+            room: room.name,
+          } as WsBase);
         });
         setInit(false);
       }
@@ -246,10 +243,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       });
 
       // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
-      socket.on('user_status_updated', async () => {
+      socket.on('user_status_updated', async (msg: WsBase) => {
         // 调用fetchSettings
-        await fetchSettings();
-        console.warn('update ------', settings);
+        if (msg.room === room.name) {
+          await fetchSettings();
+        }
       });
 
       // 房间事件监听器 --------------------------------------------------------------------------------
@@ -305,7 +303,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 enabled: false,
               },
             }).then(() => {
-              socket.emit('update_user_status');
+              socket.emit('update_user_status', {
+                room: room.name,
+              } as WsBase);
             });
           }
         }
@@ -373,7 +373,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           });
           room.disconnect(true);
           router.push('/');
-          socket.emit('update_user_status');
+          socket.emit('update_user_status', {
+            room: room.name,
+          } as WsBase);
         }
       });
       // [用户控制事件] -------------------------------------------------------------------
@@ -387,7 +389,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 name: msg.username!,
               });
               messageApi.success(t('msg.success.user.username.change'));
-              socket.emit('update_user_status');
+              socket.emit('update_user_status', {
+                room: room.name,
+              } as WsBase);
               break;
             }
             case ControlType.MuteAudio: {
@@ -405,28 +409,36 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
               if (success) {
                 messageApi.success(t('msg.success.user.transfer'));
               }
-              socket.emit('update_user_status');
+              socket.emit('update_user_status', {
+                room: room.name,
+              } as WsBase);
               break;
             }
             case ControlType.Volume: {
               await updateSettings({
                 volume: msg.volume!,
               });
-              socket.emit('update_user_status');
+              socket.emit('update_user_status', {
+                room: room.name,
+              } as WsBase);
               break;
             }
             case ControlType.BlurVideo: {
               await updateSettings({
                 blur: msg.blur!,
               });
-              socket.emit('update_user_status');
+              socket.emit('update_user_status', {
+                room: room.name,
+              } as WsBase);
               break;
             }
             case ControlType.BlurScreen: {
               await updateSettings({
                 screenBlur: msg.blur!,
               });
-              socket.emit('update_user_status');
+              socket.emit('update_user_status', {
+                room: room.name,
+              } as WsBase);
               break;
             }
           }
@@ -476,7 +488,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }) => {
           if (msg.room === room.name) {
             await updateSettings(settings.participants[room.localParticipant.identity], msg.reocrd);
-            socket.emit('update_user_status');
+            socket.emit('update_user_status', {
+              room: room.name,
+            } as WsBase);
           }
         },
       );
@@ -612,7 +626,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         fetchSettings().then(() => {
           setFreshPermission(false);
         });
-        socket.emit('update_user_status');
+        socket.emit('update_user_status', {
+          room: room.name,
+        } as WsBase);
       }
     }, [room, settings, selfRoom, freshPermission]);
 
@@ -776,7 +792,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
       }
       await updateSettings(newStatus);
-      socket.emit('update_user_status');
+      if (room) {
+        socket.emit('update_user_status', {
+          room: room.name,
+        } as WsBase);
+      }
     };
 
     useImperativeHandle(ref, () => ({
@@ -797,7 +817,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             settings={settings}
             onUpdate={async () => {
               await fetchSettings();
-              socket.emit('update_user_status');
+              socket.emit('update_user_status', {
+                room: room.name,
+              } as WsBase);
             }}
             tracks={originTracks}
             collapsed={collapsed}
@@ -865,7 +887,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   setUserStatus={setUserStatus}
                   controls={{ chat: true, settings: !!SettingsComponent }}
                   updateSettings={updateSettings}
-                  roomSettings={settings}
+                  spaceInfo={settings}
                   fetchSettings={fetchSettings}
                   updateRecord={updateRecord}
                   setPermissionDevice={setPermissionDevice}

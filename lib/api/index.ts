@@ -12,6 +12,7 @@ import {
   historySpaceInfos,
   joinSpace,
   updateOwnerId,
+  updateSpaceApps,
   updateSpaceParticipant,
 } from './space';
 
@@ -27,6 +28,7 @@ export const api = {
   updateOwnerId,
   deleteSpaceParticipant,
   updateSpaceParticipant,
+  updateSpaceApps,
   // ---- chat api --------
   fetchLinkPreview,
   getChatMsg,

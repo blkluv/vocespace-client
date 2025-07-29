@@ -204,9 +204,10 @@ app.prepare().then(() => {
     // [socket: update user status event] --------------------------------------------------------------------------------
     // - on: "update_user_status"
     // - emit: "user_status_updated"
-    // - msg: _
-    socket.on('update_user_status', () => {
-      socket.broadcast.emit('user_status_updated');
+    // - msg: see [`std::WsBase`]
+    socket.on('update_user_status', (msg) => {
+      // socket.broadcast.emit('user_status_updated', msg);
+      io.emit('user_status_updated', msg);
     });
     // [socket: refetch room] --------------------------------------------------------------------------------------------
     // - on: "refetch_room"
