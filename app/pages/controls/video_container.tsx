@@ -809,6 +809,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1111 }}
           messageApi={messageApi}
           openApp={openApp}
+          spaceInfo={settings}
         ></FlotLayout>
         {room && (
           <Channel

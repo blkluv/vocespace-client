@@ -128,6 +128,15 @@ export default {
     channel: 'Channel',
     app: {
       title: 'Application',
+      settings: {
+        filter: 'Filter required apps',
+        desc: 'VoceSpace provides a variety of apps. As the host, you can select the apps that participants can use here.',
+        no_permission: 'You do not have permission to manage apps. Please contact the host.',
+        update: {
+          success: 'App settings updated successfully',
+          error: 'App settings update failed. Please try again later.',
+        },
+      },
       timer: {
         title: 'Timer',
       },

@@ -8,14 +8,16 @@ import { AppTodo } from './todo_list';
 import { MessageInstance } from 'antd/es/message/interface';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { useI18n } from '@/lib/i18n/i18n';
+import { AppKey, SpaceInfo } from '@/lib/std/space';
 
 export interface FlotLayoutProps {
   style?: React.CSSProperties;
   messageApi: MessageInstance;
   openApp: boolean;
+  spaceInfo: SpaceInfo;
 }
 
-export function FlotLayout({ style, messageApi, openApp }: FlotLayoutProps) {
+export function FlotLayout({ style, messageApi, openApp, spaceInfo }: FlotLayoutProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export function FlotLayout({ style, messageApi, openApp }: FlotLayoutProps) {
       <Popover
         open={open}
         placement="leftTop"
-        content={<FlotAppItem messageApi={messageApi} />}
+        content={<FlotAppItem messageApi={messageApi} apps={spaceInfo.apps} />}
         styles={{
           body: {
             background: '#1a1a1a90',
@@ -53,9 +55,10 @@ export function FlotLayout({ style, messageApi, openApp }: FlotLayoutProps) {
 
 interface FlotAppItemProps {
   messageApi: MessageInstance;
+  apps: AppKey[];
 }
 
-function FlotAppItem({ messageApi }: FlotAppItemProps) {
+function FlotAppItem({ messageApi , apps}: FlotAppItemProps) {
   const [activeKey, setActiveKey] = useState<string[]>(['timer', 'countdown', 'todo']);
   const { t } = useI18n();
   const { token } = theme.useToken();
@@ -81,7 +84,6 @@ function FlotAppItem({ messageApi }: FlotAppItemProps) {
       label: activeKey.includes('timer') ? '' : t('more.app.timer.title'),
       children: <AppTimer size="small"></AppTimer>,
       style: itemStyle,
-
     },
     {
       key: 'countdown',
@@ -95,7 +97,6 @@ function FlotAppItem({ messageApi }: FlotAppItemProps) {
       label: activeKey.includes('todo') ? '' : t('more.app.todo.title'),
       children: <AppTodo messageApi={messageApi}></AppTodo>,
       style: itemStyle,
-
     },
   ];
 
@@ -106,7 +107,7 @@ function FlotAppItem({ messageApi }: FlotAppItemProps) {
       onChange={(keys) => setActiveKey(keys as string[])}
       expandIcon={({ isActive }) => (isActive ? <MinusCircleOutlined /> : <PlusCircleOutlined />)}
       expandIconPosition="end"
-      items={items}
+      items={items.filter((item)=> apps.includes(item.key as AppKey))}
     />
   );
 }

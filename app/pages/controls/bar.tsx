@@ -654,7 +654,14 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
         </Modal>
         {/* ---------------- app drawer ------------------------------------------------------- */}
-        <AppDrawer open={openApp} setOpen={setOpenApp} messageApi={messageApi}></AppDrawer>
+        {spaceInfo && (
+          <AppDrawer
+            open={openApp}
+            setOpen={setOpenApp}
+            messageApi={messageApi}
+            spaceInfo={spaceInfo}
+          ></AppDrawer>
+        )}
       </div>
     );
   },

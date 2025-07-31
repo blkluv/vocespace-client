@@ -55,7 +55,7 @@ export const DEFAULT_SPACE_INFO = (startAt: number): SpaceInfo => ({
   record: { active: false },
   startAt,
   children: [],
-  apps: ['todo'],
+  apps: ['todo', "countdown"],
 });
 
 export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
