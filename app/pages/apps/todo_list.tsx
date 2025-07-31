@@ -55,6 +55,13 @@ export function AppTodo({ messageApi }: AppTodoProps) {
     <Card style={{ width: '100%' }}>
       <div className={styles.todo_list_wrapper}>
         <List
+          pagination={{
+            position: 'bottom',
+            align: 'end',
+            pageSize: 5,
+            size: 'small',
+            simple: { readOnly: true },
+          }}
           bordered={false}
           split={false}
           locale={{

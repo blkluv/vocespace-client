@@ -380,3 +380,16 @@
   justify-content: space-between;
   gap: 8px;
 }
+
+.checkbox_item{
+  height: 32px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.checkbox_icon {
+  font-size: 18px;
+}

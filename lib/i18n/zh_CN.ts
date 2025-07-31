@@ -1,5 +1,3 @@
-import { title } from 'process';
-
 export default {
   common: {
     confirm: '确认',
@@ -45,9 +43,9 @@ export default {
       '房间用户已经超出限制，无法加入，您可以加入其他房间或告知构建者升级证书获取更多用户名额。',
     open: '开启',
     close: '关闭',
-    high_quality: "无损传输模式",
-    high_quality_desc: '开启后，视频，音频和屏幕分享将以固定的分辨率以及更高的质量传输，但可能会增加带宽使用和延迟。',
-   
+    high_quality: '无损传输模式',
+    high_quality_desc:
+      '开启后，视频，音频和屏幕分享将以固定的分辨率以及更高的质量传输，但可能会增加带宽使用和延迟。',
   },
   recording: {
     title: '录制记录',
@@ -134,6 +132,15 @@ export default {
     channel: '频道',
     app: {
       title: '应用',
+      settings: {
+        filter: '筛选需要的应用',
+        desc: 'VoceSpace 提供了多种应用，作为主持人，您可以在此处选择参与者们可以使用的应用。',
+        no_permission: '您没有权限管理应用，请联系主持人。',
+        update: {
+          success: '应用设置更新成功',
+          error: '应用设置更新失败，请稍后再试。',
+        },
+      },
       timer: {
         title: '计时器',
       },

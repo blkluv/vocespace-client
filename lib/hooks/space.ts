@@ -1,17 +1,11 @@
 // lib/hooks/useSpaceInfo.ts
 import { useState, useCallback } from 'react';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
-import { ParticipantSettings, RecordSettings, SpaceInfo } from '../std/space';
+import { DEFAULT_SPACE_INFO, ParticipantSettings, RecordSettings, SpaceInfo } from '../std/space';
 import { api } from '../api';
 
 export function useSpaceInfo(spaceName: string, participantId: string) {
-  const [settings, setSettings] = useState<SpaceInfo>({
-    participants: {},
-    ownerId: '',
-    record: { active: false },
-    startAt: Date.now(),
-    children: [],
-  });
+  const [settings, setSettings] = useState<SpaceInfo>(DEFAULT_SPACE_INFO(Date.now()));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

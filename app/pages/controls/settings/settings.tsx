@@ -18,6 +18,8 @@ import { RecordingTable } from '@/app/recording/table';
 import { RecordData, RecordResponse, useRecordingEnv } from '@/lib/std/recording';
 import { ulid } from 'ulid';
 import { ReloadOutlined } from '@ant-design/icons';
+import { AppSettings } from './app';
+import { SpaceInfo } from '@/lib/std/space';
 
 export interface SettingsProps {
   username: string;
@@ -30,6 +32,7 @@ export interface SettingsProps {
   setUserStatus?: (status: UserStatus | string) => Promise<void>;
   room: string;
   localParticipant: LocalParticipant;
+  spaceInfo: SpaceInfo;
 }
 
 export interface SettingsExports {
@@ -50,7 +53,15 @@ export interface SettingsExports {
   };
 }
 
-export type TabKey = 'general' | 'audio' | 'video' | 'screen' | 'about_us';
+export type TabKey =
+  | 'general'
+  | 'audio'
+  | 'video'
+  | 'screen'
+  | 'about_us'
+  | 'app'
+  | 'recording'
+  | 'license';
 
 export const Settings = forwardRef<SettingsExports, SettingsProps>(
   (
@@ -63,6 +74,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       setUserStatus,
       room,
       localParticipant,
+      spaceInfo,
     }: SettingsProps,
     ref,
   ) => {
@@ -169,6 +181,18 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               localParticipant,
             }}
           ></VideoSettings>
+        ),
+      },
+      {
+        key: 'app',
+        label: <TabItem type="app" label={t('more.app.title')}></TabItem>,
+        children: (
+          <AppSettings
+            spaceInfo={spaceInfo}
+            localParticipant={localParticipant}
+            spaceName={room}
+            messageApi={messageApi}
+          ></AppSettings>
         ),
       },
       {

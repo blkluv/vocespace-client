@@ -1,5 +1,5 @@
 import { connect_endpoint, UserDefineStatus } from '../std';
-import { ParticipantSettings, RecordSettings } from '../std/space';
+import { AppKey, ParticipantSettings, RecordSettings } from '../std/space';
 
 const SPACE_API = connect_endpoint('/api/space');
 
@@ -179,5 +179,25 @@ export const updateSpaceParticipant = async (
       settings,
       record,
     } as UpdateSpaceParticipantBody),
+  });
+};
+
+export interface UpdateSpaceAppsBody {
+  spaceName: string;
+  appKey: AppKey;
+  enabled: boolean;
+}
+
+export const updateSpaceApps = async (spaceName: string, appKey: AppKey, enabled: boolean) => {
+  const url = new URL(SPACE_API, window.location.origin);
+  url.searchParams.append('apps', 'update');
+  return await fetch(url.toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      spaceName,
+      appKey,
+      enabled,
+    } as UpdateSpaceAppsBody),
   });
 };

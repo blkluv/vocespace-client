@@ -18,7 +18,7 @@ export interface ParticipantManageProps {
   room?: Room;
   participantList: [string, ParticipantSettings][];
   setOpenShareModal: (open: boolean) => void;
-  roomSettings: SpaceInfo;
+  spaceInfo: SpaceInfo;
   selectedParticipant: Participant | null;
   setSelectedParticipant: (participant: Participant | null) => void;
   setOpenNameModal: (open: boolean) => void;
@@ -31,7 +31,7 @@ export function ParticipantManage({
   room,
   participantList,
   setOpenShareModal,
-  roomSettings,
+  spaceInfo,
   setSelectedParticipant,
   selectedParticipant,
   setOpenNameModal,
@@ -46,8 +46,8 @@ export function ParticipantManage({
   const [blurVideo, setBlurVideo] = React.useState(0.0);
   const [blurScreen, setBlurScreen] = React.useState(0.0);
   const isOwner = React.useMemo(() => {
-    return roomSettings.ownerId === room?.localParticipant.identity;
-  }, [roomSettings.ownerId, room?.localParticipant.identity]);
+    return spaceInfo.ownerId === room?.localParticipant.identity;
+  }, [spaceInfo.ownerId, room?.localParticipant.identity]);
 
   const handleAdjustment = (
     key: 'control.volume' | 'control.blur_video' | 'control.blur_screen',
@@ -58,7 +58,7 @@ export function ParticipantManage({
         senderName: room.localParticipant.name,
         senderId: room.localParticipant.identity,
         receiverId: selectedParticipant.identity,
-        socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+        socketId: spaceInfo.participants[selectedParticipant.identity].socketId,
       } as WsTo;
       if (key === 'control.volume') {
         socket.emit('control_participant', {
@@ -299,7 +299,7 @@ export function ParticipantManage({
         senderName: room.localParticipant.name,
         senderId: room.localParticipant.identity,
         receiverId: selectedParticipant.identity,
-        socketId: roomSettings.participants[selectedParticipant.identity].socketId,
+        socketId: spaceInfo.participants[selectedParticipant.identity].socketId,
       } as WsTo;
 
       const inviteDevice = () => {
@@ -392,9 +392,9 @@ export function ParticipantManage({
     setIsScreenShareDisabled(participant.isScreenShareEnabled);
     setSelectedParticipant(participant);
     setUsername(participant.name || participant.identity);
-    setBlurVideo(roomSettings.participants[participant.identity]?.blur || 0.0);
-    setBlurScreen(roomSettings.participants[participant.identity]?.screenBlur || 0.0);
-    setVolume(roomSettings.participants[participant.identity]?.volume || 0.0);
+    setBlurVideo(spaceInfo.participants[participant.identity]?.blur || 0.0);
+    setBlurScreen(spaceInfo.participants[participant.identity]?.screenBlur || 0.0);
+    setVolume(spaceInfo.participants[participant.identity]?.volume || 0.0);
   };
 
   const optMenu = {
@@ -455,7 +455,7 @@ export function ParticipantManage({
           {room && (
             <ParticipantList
               participants={participantList}
-              ownerId={roomSettings.ownerId}
+              ownerId={spaceInfo.ownerId}
               menu={optMenu}
               onOpenMenu={(open, pid) => {
                 optOpen(open, room.getParticipantByIdentity(pid)!);

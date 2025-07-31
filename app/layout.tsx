@@ -63,6 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           colorPrimary: '#22CCEE',
           borderRadius: 4,
           colorText: brand.primaryText,
+          colorTextDisabled: '#333',
         },
         components: {
           Button: {
@@ -177,7 +178,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Checkbox: {
             colorBgContainer: '#1E1E1E',
             colorBorder: '#333',
-          }
+          },
         },
       }}
     >
