@@ -38,7 +38,7 @@ export interface UseControlRKeyMenuProps {
   spaceInfo: SpaceInfo;
   selectedParticipant: Participant | null;
   setSelectedParticipant: (participant: Participant | null) => void;
-  setOpenNameModal: (open: boolean) => void;
+  setOpenNameModal?: (open: boolean) => void;
   setUsername: (username: string) => void;
 }
 
@@ -368,7 +368,7 @@ export function useControlRKeyMenu({
           }
           break;
         case 'control.change_name': {
-          setOpenNameModal(true);
+          setOpenNameModal && setOpenNameModal(true);
           break;
         }
         case 'control.mute_audio': {

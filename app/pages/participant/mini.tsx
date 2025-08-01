@@ -17,8 +17,8 @@ import {
   useTrackMutedIndicator,
   VideoTrack,
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
-import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Participant, Room, Track } from 'livekit-client';
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isTrackReferencePinned } from './tile';
 import { SpaceInfo } from '@/lib/std/space';
 import { useVideoBlur, WsTo } from '@/lib/std/device';
@@ -27,13 +27,14 @@ import { useRecoilState } from 'recoil';
 import { roomStatusState, userState, virtualMaskState } from '@/app/[spaceName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
 import { WaveHand } from '../controls/widgets/wave';
+import { ControlRKeyMenu, useControlRKeyMenu, UseControlRKeyMenuProps } from './menu';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
   settings: SpaceInfo;
   /**
    * host room name
    */
-  room: string;
+  room: Room;
 }
 
 export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMiniProps>(
@@ -68,7 +69,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
 
     const wsTo = useMemo(() => {
       return {
-        room,
+        room: room.name,
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
@@ -116,111 +117,149 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
           return 'online_dot';
       }
     }, [settings.participants, trackReference.participant.identity]);
+    // 右键菜单 --------------------------------------------------------------------------------
+    const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+    const [username, setUsername] = useState<string>('');
+    const { optItems, handleOptClick, optOpen } = useControlRKeyMenu({
+      room,
+      spaceInfo: settings,
+      selectedParticipant,
+      setSelectedParticipant,
+      setUsername,
+    } as UseControlRKeyMenuProps);
+
+    // 右键菜单可以使用：当不是自己的时候且source不是屏幕分享
+    const showControlMenu = useMemo(() => {
+      return (
+        trackReference.participant.identity === localParticipant.identity ||
+        trackReference.source === Track.Source.ScreenShare
+      );
+    }, [trackReference, localParticipant.identity]);
 
     return (
-      <ParticipantTile ref={ref} trackRef={trackReference}>
-        {isTrackReference(trackReference) &&
-        (trackReference.source === Track.Source.Camera ||
-          trackReference.source === Track.Source.ScreenShare) ? (
-          <VideoTrack
-            ref={videoRef}
-            style={{
-              WebkitFilter: videoFilter,
-              filter: videoFilter,
-              transition: 'filter 0.2s ease-in-out',
-              zIndex: '11',
-            }}
-            trackRef={trackReference}
-            onSubscriptionStatusChanged={handleSubscribe}
-            manageSubscription={autoManageSubscription}
-          />
-        ) : (
-          isTrackReference(trackReference) && (
-            <AudioTrack trackRef={trackReference} onSubscriptionStatusChanged={handleSubscribe} />
-          )
-        )}
-        <div
-          className="lk-participant-placeholder"
-          style={{ border: '1px solid #111', zIndex: 110 }}
-        >
-          <ParticipantPlaceholder />
-        </div>
-        <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
-          <div
-            className="lk-participant-metadata-item"
-            style={{ maxWidth: 'calc(100% - 32px)', width: 'max-content' }}
-          >
-            {trackReference.source === Track.Source.Camera ? (
-              <>
-                {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
-                <TrackMutedIndicator
-                  trackRef={{
-                    participant: trackReference.participant,
-                    source: Track.Source.Microphone,
-                  }}
-                  show={'muted'}
-                ></TrackMutedIndicator>
-                <ParticipantName
-                  style={{
-                    maxWidth: `calc(100% - ${
-                      useTrackMutedIndicator({
+      <ControlRKeyMenu
+        disabled={showControlMenu}
+        menu={{
+          items: optItems,
+          onClick: handleOptClick,
+        }}
+        onOpenChange={(open) => {
+          optOpen(open, room.getParticipantByIdentity(trackReference.participant.identity)!);
+        }}
+        isRKey={true}
+        children={
+          <ParticipantTile ref={ref} trackRef={trackReference}>
+            {isTrackReference(trackReference) &&
+            (trackReference.source === Track.Source.Camera ||
+              trackReference.source === Track.Source.ScreenShare) ? (
+              <VideoTrack
+                ref={videoRef}
+                style={{
+                  WebkitFilter: videoFilter,
+                  filter: videoFilter,
+                  transition: 'filter 0.2s ease-in-out',
+                  zIndex: '11',
+                }}
+                trackRef={trackReference}
+                onSubscriptionStatusChanged={handleSubscribe}
+                manageSubscription={autoManageSubscription}
+              />
+            ) : (
+              isTrackReference(trackReference) && (
+                <AudioTrack
+                  trackRef={trackReference}
+                  onSubscriptionStatusChanged={handleSubscribe}
+                />
+              )
+            )}
+            <div
+              className="lk-participant-placeholder"
+              style={{ border: '1px solid #111', zIndex: 110 }}
+            >
+              <ParticipantPlaceholder />
+            </div>
+            <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
+              <div
+                className="lk-participant-metadata-item"
+                style={{ maxWidth: 'calc(100% - 32px)', width: 'max-content' }}
+              >
+                {trackReference.source === Track.Source.Camera ? (
+                  <>
+                    {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
+                    <TrackMutedIndicator
+                      trackRef={{
                         participant: trackReference.participant,
                         source: Track.Source.Microphone,
-                      }).isMuted
-                        ? 2.5
-                        : 1.25
-                    }rem)`,
-                    overflow: 'clip',
-                    textWrap: 'nowrap',
-                    width: '100%',
-                  }}
-                />
-                <div
-                  style={{ marginLeft: '0.25rem', display: 'inline-flex', alignItems: 'center' }}
-                >
-                  {defineStatus ? (
-                    <SvgResource
-                      type="dot"
-                      svgSize={16}
-                      color={defineStatus.icon.color}
-                    ></SvgResource>
-                  ) : (
-                    <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
-                <ParticipantName
-                  style={{
-                    maxWidth: 'calc(100% - 1.5rem)',
-                    overflow: 'clip',
-                    textWrap: 'nowrap',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  &apos;s screen
-                </ParticipantName>
-              </>
-            )}
-          </div>
+                      }}
+                      show={'muted'}
+                    ></TrackMutedIndicator>
+                    <ParticipantName
+                      style={{
+                        maxWidth: `calc(100% - ${
+                          useTrackMutedIndicator({
+                            participant: trackReference.participant,
+                            source: Track.Source.Microphone,
+                          }).isMuted
+                            ? 2.5
+                            : 1.25
+                        }rem)`,
+                        overflow: 'clip',
+                        textWrap: 'nowrap',
+                        width: '100%',
+                      }}
+                    />
+                    <div
+                      style={{
+                        marginLeft: '0.25rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      {defineStatus ? (
+                        <SvgResource
+                          type="dot"
+                          svgSize={16}
+                          color={defineStatus.icon.color}
+                        ></SvgResource>
+                      ) : (
+                        <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
+                    <ParticipantName
+                      style={{
+                        maxWidth: 'calc(100% - 1.5rem)',
+                        overflow: 'clip',
+                        textWrap: 'nowrap',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      &apos;s screen
+                    </ParticipantName>
+                  </>
+                )}
+              </div>
 
-          <ConnectionQualityIndicator className="lk-participant-metadata-item" />
-        </div>
-        {trackReference.participant.identity != localParticipant.identity && (
-          <WaveHand
-            wsTo={wsTo}
-            contextUndefined={false}
-            style={{
-              zIndex: 111,
-              left: '0.25rem',
-              top: '0.25rem',
-              width: 'fit-content',
-            }}
-          />
-        )}
-      </ParticipantTile>
+              <ConnectionQualityIndicator className="lk-participant-metadata-item" />
+            </div>
+            {trackReference.participant.identity != localParticipant.identity && (
+              <WaveHand
+                wsTo={wsTo}
+                contextUndefined={false}
+                style={{
+                  zIndex: 111,
+                  left: '0.25rem',
+                  top: '0.25rem',
+                  width: 'fit-content',
+                }}
+              />
+            )}
+          </ParticipantTile>
+        }
+      />
     );
   },
 );
