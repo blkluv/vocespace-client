@@ -21,13 +21,14 @@ import { Participant, Room, Track } from 'livekit-client';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isTrackReferencePinned } from './tile';
 import { SpaceInfo } from '@/lib/std/space';
-import { useVideoBlur, WsTo } from '@/lib/std/device';
+import { useVideoBlur, WsBase, WsTo } from '@/lib/std/device';
 import { SvgResource } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
 import { roomStatusState, userState, virtualMaskState } from '@/app/[spaceName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
 import { WaveHand } from '../controls/widgets/wave';
 import { ControlRKeyMenu, useControlRKeyMenu, UseControlRKeyMenuProps } from './menu';
+import { RaiseHand } from '../controls/widgets/raise';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
   settings: SpaceInfo;
@@ -76,6 +77,14 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
         socketId: settings.participants[trackReference.participant.identity]?.socketId,
       } as WsTo;
     }, [room, localParticipant, trackReference, settings.participants]);
+
+    const wsBase = useMemo(() => {
+      return {
+        room: room.name,
+        senderName: localParticipant.name,
+        senderId: localParticipant.identity,
+      } as WsBase;
+    }, [room, localParticipant]);
 
     const defineStatus = useMemo(() => {
       return uRoomStatusState.find(
@@ -246,6 +255,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
               <ConnectionQualityIndicator className="lk-participant-metadata-item" />
             </div>
             {trackReference.participant.identity != localParticipant.identity && (
+              <>
               <WaveHand
                 wsTo={wsTo}
                 contextUndefined={false}
@@ -256,6 +266,8 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
                   width: 'fit-content',
                 }}
               />
+              <RaiseHand wsBase={wsBase}></RaiseHand>
+              </>
             )}
           </ParticipantTile>
         }
