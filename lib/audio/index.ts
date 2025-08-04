@@ -2,6 +2,7 @@ import { src } from '../std';
 
 export enum AudioType {
   Wave = 'vocespacewave.m4a',
+  Raise = 'vocespaceraise.mp3',
 }
 
 /**
@@ -26,6 +27,8 @@ const audioShow = async (audio_type: AudioType, during: number = 2000) => {
  */
 const wave = () => audioShow(AudioType.Wave);
 
+const raise = () => audioShow(AudioType.Raise);
+
 /**
  * ## 音频模块
  * 1. `audioShow` - 播放指定类型的音频，需要注意的是，音频文件需要放在 `public/audios/` 目录下。
@@ -35,4 +38,5 @@ const wave = () => audioShow(AudioType.Wave);
 export const audio = {
   audioShow,
   wave,
+  raise,
 };

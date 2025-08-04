@@ -813,7 +813,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         ></FlotLayout>
         {room && (
           <Channel
-            roomName={room.name}
+            space={room}
             participantId={room.localParticipant.identity}
             settings={settings}
             onUpdate={async () => {

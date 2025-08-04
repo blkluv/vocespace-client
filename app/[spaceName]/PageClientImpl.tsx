@@ -300,7 +300,7 @@ function VideoConferenceComponent(props: {
       receiverId: '',
       receSocketId: '',
     });
-    router.push('/');
+    router.push('/new_space');
     socket.emit('update_user_status', {
       room: room.name,
     } as WsBase);

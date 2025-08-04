@@ -35,9 +35,11 @@ import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsJoinRoom, WsRemove, WsSender } from '@/lib/std/device';
 import { api } from '@/lib/api';
 import { UpdateRoomParam, UpdateRoomType } from '@/lib/api/channel';
+import { Room } from 'livekit-client';
 
 interface ChannelProps {
-  roomName: string;
+  // roomName: string;
+  space: Room;
   messageApi: MessageInstance;
   participantId: string;
   onUpdate: () => Promise<void>;
@@ -55,7 +57,7 @@ type RoomPrivacy = 'public' | 'private';
 export const Channel = forwardRef<ChannelExports, ChannelProps>(
   (
     {
-      roomName,
+      space,
       settings,
       messageApi,
       participantId,
@@ -83,7 +85,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       name: string;
       targetRoom: string;
     } | null>(null);
-    const [selfRoomName, setSelfRoomName] = useState<string>(roomName);
+    const [selfRoomName, setSelfRoomName] = useState<string>(space.name);
     const [subActiveKey, setSubActiveKey] = useState<string[]>([]);
     // 用于存储子房间的名称，在其他用户创建房间后通过这个变量来控制到底那些新的子房间需要展开
     const [subRoomsTmp, setSubRoomsTmp] = useState<string[]>([]);
@@ -126,22 +128,22 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     }, [settings]);
 
     const wsSender = useMemo(() => {
-      if (settings && roomName && participantId && settings.participants[participantId]) {
+      if (settings && space.name && participantId && settings.participants[participantId]) {
         const senderName = settings.participants[participantId].name;
         return {
-          room: roomName,
+          room: space.name,
           senderName,
           senderId: participantId,
         } as WsSender;
       } else {
         return null;
       }
-    }, [roomName, participantId, settings]);
+    }, [space.name, participantId, settings]);
 
     useEffect(() => {
       // 监听加入私密房间的socket事件 --------------------------------------------------------------------------
       socket.on('join_privacy_room_response', (msg: WsJoinRoom) => {
-        if (msg.room === roomName && msg.receiverId === participantId) {
+        if (msg.room === space.name && msg.receiverId === participantId) {
           if (!joinModalOpen) {
             if (msg.confirm === false) {
               // 说明对方拒绝了加入请求
@@ -162,7 +164,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       });
       // 监听从私密房间移除的socket事件 -----------------------------------------------------------------------
       socket.on('removed_from_privacy_room_response', (msg: WsRemove) => {
-        if (msg.room === roomName && msg.participants.includes(participantId)) {
+        if (msg.room === space.name && msg.participants.includes(participantId)) {
           messageApi.info({
             content: `${t('channel.modal.remove.before')}${msg.childRoom}${t(
               'channel.modal.remove.after',
@@ -175,7 +177,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         socket.off('join_privacy_room_response');
         socket.off('removed_from_privacy_room_response');
       };
-    }, [socket, roomName, participantId, joinModalOpen]);
+    }, [socket, space.name, participantId, joinModalOpen]);
 
     const childRooms = useMemo(() => {
       return settings.children || [];
@@ -195,7 +197,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       }
 
       const response = await api.createRoom({
-        spaceName: roomName,
+        spaceName: space.name,
         roomName: childRoomName,
         ownerId: participantId,
         isPrivate: roomPrivacy === 'private',
@@ -227,7 +229,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
         // socket通知用户移除
         socket.emit('removed_from_privacy_room', {
-          room: roomName,
+          room: space.name,
           participants: selectedRoom.participants,
           socketIds,
           childRoom: selectedRoom.name,
@@ -235,7 +237,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       }
 
       const response = await api.deleteRoom({
-        spaceName: roomName,
+        spaceName: space.name,
         roomName: selectedRoom.name,
       });
 
@@ -259,7 +261,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       if (!selectedRoom && !room) return;
 
       const response = await api.leaveRoom({
-        spaceName: roomName,
+        spaceName: space.name,
         roomName: room || selectedRoom!.name,
         participantId,
       });
@@ -271,7 +273,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           duration: 2,
         });
       } else {
-        setSelfRoomName(roomName);
+        setSelfRoomName(space.name);
         // setMainActiveKey(['main', 'sub']);
         setSubActiveKey([]);
         setSelectedRoom(null);
@@ -285,7 +287,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
     const joinChildRoom = async (room: ChildRoom, participantId: string) => {
       const response = await api.joinRoom({
-        spaceName: roomName,
+        spaceName: space.name,
         roomName: room.name,
         participantId,
       });
@@ -373,7 +375,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       let isRename = ty === 'name';
       let param = {
         ty,
-        spaceName: roomName,
+        spaceName: space.name,
         roomName: selectedRoom.name,
       } as UpdateRoomParam;
       if (isRename) {
@@ -485,7 +487,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
       return (
         <GLayout tracks={mainTracks} style={{ height: '120px', position: 'relative' }}>
-          <ParticipantTileMini settings={settings} room={roomName}></ParticipantTileMini>
+          <ParticipantTileMini settings={settings} room={space}></ParticipantTileMini>
         </GLayout>
       );
     }, [tracks, childRooms, settings, allParticipants]);
@@ -512,11 +514,11 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
         return (
           <GLayout tracks={subTracks} style={{ height: '120px', position: 'relative' }}>
-            <ParticipantTileMini settings={settings} room={roomName}></ParticipantTileMini>
+            <ParticipantTileMini settings={settings} room={space}></ParticipantTileMini>
           </GLayout>
         );
       },
-      [tracks, childRooms, settings, roomName, allParticipants],
+      [tracks, childRooms, settings, space, allParticipants],
     );
 
     const subChildren: CollapseProps['items'] = useMemo(() => {
@@ -703,7 +705,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
             <div className={styles.headerContent}>
               <div className={styles.roomInfo}>
                 {/* <SvgResource.Hash className={styles.roomIcon} /> */}
-                <span className={styles.roomName}>{roomName}</span>
+                <span className={styles.roomName}>{space.name}</span>
               </div>
               <div className={styles.headerActions}>
                 <Tag color="#22CCEE">
