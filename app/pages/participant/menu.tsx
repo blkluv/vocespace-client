@@ -1,11 +1,11 @@
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
-import { SpaceInfo } from '@/lib/std/space';
+import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { Dropdown, MenuProps, Modal, Slider } from 'antd';
 import { Participant, Room, Track } from 'livekit-client';
 import { useMemo, useState } from 'react';
 import styles from '@/styles/controls.module.scss';
-import { ControlType, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
+import { ControlType, WsBase, WsControlParticipant, WsInviteDevice, WsTo } from '@/lib/std/device';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { src } from '@/lib/std';
 
@@ -40,6 +40,8 @@ export interface UseControlRKeyMenuProps {
   setSelectedParticipant: (participant: Participant | null) => void;
   setOpenNameModal?: (open: boolean) => void;
   setUsername: (username: string) => void;
+  updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
+  toRenameSettings: () => void;
 }
 
 export function useControlRKeyMenu({
@@ -49,6 +51,8 @@ export function useControlRKeyMenu({
   setSelectedParticipant,
   setOpenNameModal,
   setUsername,
+  updateSettings,
+  toRenameSettings,
 }: UseControlRKeyMenuProps) {
   const { t } = useI18n();
   // 必要的状态和Owner的确定 -------------------------------------------------------------------
@@ -63,40 +67,398 @@ export function useControlRKeyMenu({
   }, [spaceInfo.ownerId, room?.localParticipant.identity]);
 
   // 处理音量、模糊视频和模糊屏幕的调整------------------------------------------------------------
-  const handleAdjustment = (
+  const handleAdjustment = async (
     key: 'control.volume' | 'control.blur_video' | 'control.blur_screen',
+    isSelf = false,
   ) => {
-    if (room?.localParticipant && selectedParticipant && isOwner) {
-      let wsTo = {
-        room: room.name,
-        senderName: room.localParticipant.name,
-        senderId: room.localParticipant.identity,
-        receiverId: selectedParticipant.identity,
-        socketId: spaceInfo.participants[selectedParticipant.identity].socketId,
-      } as WsTo;
-      if (key === 'control.volume') {
-        socket.emit('control_participant', {
-          ...wsTo,
-          type: ControlType.Volume,
-          volume,
-        } as WsControlParticipant);
-      } else if (key === 'control.blur_video') {
-        socket.emit('control_participant', {
-          ...wsTo,
-          type: ControlType.BlurVideo,
-          blur: blurVideo,
-        } as WsControlParticipant);
-      } else if (key === 'control.blur_screen') {
-        socket.emit('control_participant', {
-          ...wsTo,
-          type: ControlType.BlurScreen,
-          blur: blurScreen,
-        } as WsControlParticipant);
+    if (isSelf) {
+      if (room?.localParticipant) {
+        if (key === 'control.volume') {
+          await updateSettings({
+            volume,
+          });
+        } else if (key === 'control.blur_video') {
+          await updateSettings({
+            blur: blurVideo,
+          });
+        } else if (key === 'control.blur_screen') {
+          await updateSettings({
+            screenBlur: blurScreen,
+          });
+        }
+        socket.emit('update_user_status', {
+          room: room.name,
+        } as WsBase);
+      }
+    } else {
+      if (room?.localParticipant && selectedParticipant && isOwner) {
+        let wsTo = {
+          room: room.name,
+          senderName: room.localParticipant.name,
+          senderId: room.localParticipant.identity,
+          receiverId: selectedParticipant.identity,
+          socketId: spaceInfo.participants[selectedParticipant.identity].socketId,
+        } as WsTo;
+        if (key === 'control.volume') {
+          socket.emit('control_participant', {
+            ...wsTo,
+            type: ControlType.Volume,
+            volume,
+          } as WsControlParticipant);
+        } else if (key === 'control.blur_video') {
+          socket.emit('control_participant', {
+            ...wsTo,
+            type: ControlType.BlurVideo,
+            blur: blurVideo,
+          } as WsControlParticipant);
+        } else if (key === 'control.blur_screen') {
+          socket.emit('control_participant', {
+            ...wsTo,
+            type: ControlType.BlurScreen,
+            blur: blurScreen,
+          } as WsControlParticipant);
+        }
       }
     }
   };
+  // 右键自己的菜单选项 -------------------------------------------------------------
+  const optSelfItems: MenuProps['items'] = useMemo(() => {
+    return [
+      {
+        label: t('more.participant.set.control.title'),
+        key: 'control',
+        type: 'group',
+        children: [
+          {
+            key: 'control.change_name',
+            label: (
+              <span style={{ marginLeft: '8px' }}>
+                {t('more.participant.set.control.change_name')}
+              </span>
+            ),
+            icon: <SvgResource type="user" svgSize={16} />,
+          },
+          {
+            key: 'control.mute_audio',
+            label: (
+              <span style={{ marginLeft: '8px' }}>
+                {t('more.participant.set.control.mute.audio')}
+              </span>
+            ),
+            icon: <SvgResource type="audio_close" svgSize={16} />,
+            disabled: !isMicDisabled,
+          },
+          {
+            key: 'control.mute_video',
+            label: (
+              <span style={{ marginLeft: '8px' }}>
+                {t('more.participant.set.control.mute.video')}
+              </span>
+            ),
+            icon: <SvgResource type="video_close" svgSize={16} />,
+            disabled: !isCamDisabled,
+          },
+          {
+            key: 'control.volume',
+            label: (
+              <div>
+                <div className={styles.inline_flex}>
+                  <SvgResource type="volume" svgSize={16} />
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.control.volume')}
+                  </span>
+                </div>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                >
+                  <Slider
+                    disabled={!isOwner}
+                    min={0.0}
+                    max={100.0}
+                    step={1.0}
+                    value={volume}
+                    onChange={(e) => {
+                      setVolume(e);
+                    }}
+                    onChangeComplete={(e) => {
+                      setVolume(e);
+                      handleAdjustment('control.volume');
+                    }}
+                  ></Slider>
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: 'control.blur_video',
+            label: (
+              <div>
+                <div className={styles.inline_flex}>
+                  <SvgResource type="blur" svgSize={16} />
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.control.blur.video')}
+                  </span>
+                </div>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                >
+                  <Slider
+                    disabled={!isOwner}
+                    min={0.0}
+                    max={1.0}
+                    step={0.05}
+                    value={blurVideo}
+                    onChange={(e) => {
+                      setBlurVideo(e);
+                    }}
+                    onChangeComplete={(e) => {
+                      setBlurVideo(e);
+                      handleAdjustment('control.blur_video');
+                    }}
+                  ></Slider>
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: 'control.blur_screen',
+            label: (
+              <div>
+                <div className={styles.inline_flex}>
+                  <SvgResource type="blur" svgSize={16} />
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.control.blur.screen')}
+                  </span>
+                </div>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                >
+                  <Slider
+                    disabled={!isOwner}
+                    min={0.0}
+                    max={1.0}
+                    step={0.05}
+                    value={blurScreen}
+                    onChange={(e) => {
+                      setBlurScreen(e);
+                    }}
+                    onChangeComplete={(e) => {
+                      setBlurScreen(e);
+                      handleAdjustment('control.blur_screen');
+                    }}
+                  ></Slider>
+                </div>
+              </div>
+            ),
+          },
+        ],
+      },
 
+      {
+        label: t('more.participant.set.safe.title'),
+        key: 'safe',
+        type: 'group',
+        children: [
+          {
+            key: 'safe.remove',
+            label: (
+              <span style={{ marginLeft: '8px' }}>
+                {t('more.participant.set.safe.leave.title')}
+              </span>
+            ),
+            icon: <SvgResource type="leave" svgSize={16} />,
+          },
+        ],
+      },
+    ];
+  }, [isCamDisabled, isMicDisabled, isOwner, isScreenShareDisabled, volume, blurVideo, blurScreen]);
+  // 右键他人的菜单选项 -------------------------------------------------------------
   const optItems: MenuProps['items'] = useMemo(() => {
+    const controlItems: MenuProps['items'] = [
+      {
+        key: 'control.volume',
+        label: (
+          <div>
+            <div className={styles.inline_flex}>
+              <SvgResource type="volume" svgSize={16} />
+              <span style={{ marginLeft: '8px' }}>{t('more.participant.set.control.volume')}</span>
+            </div>
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
+              <Slider
+                disabled={!isOwner}
+                min={0.0}
+                max={100.0}
+                step={1.0}
+                value={volume}
+                onChange={(e) => {
+                  setVolume(e);
+                }}
+                onChangeComplete={(e) => {
+                  setVolume(e);
+                  handleAdjustment('control.volume');
+                }}
+              ></Slider>
+            </div>
+          </div>
+        ),
+        disabled: !isOwner,
+      },
+      {
+        key: 'control.blur_video',
+        label: (
+          <div>
+            <div className={styles.inline_flex}>
+              <SvgResource type="blur" svgSize={16} />
+              <span style={{ marginLeft: '8px' }}>
+                {t('more.participant.set.control.blur.video')}
+              </span>
+            </div>
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
+              <Slider
+                disabled={!isOwner}
+                min={0.0}
+                max={1.0}
+                step={0.05}
+                value={blurVideo}
+                onChange={(e) => {
+                  setBlurVideo(e);
+                }}
+                onChangeComplete={(e) => {
+                  setBlurVideo(e);
+                  handleAdjustment('control.blur_video');
+                }}
+              ></Slider>
+            </div>
+          </div>
+        ),
+        disabled: !isOwner,
+      },
+      {
+        key: 'control.blur_screen',
+        label: (
+          <div>
+            <div className={styles.inline_flex}>
+              <SvgResource type="blur" svgSize={16} />
+              <span style={{ marginLeft: '8px' }}>
+                {t('more.participant.set.control.blur.screen')}
+              </span>
+            </div>
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
+              <Slider
+                disabled={!isOwner}
+                min={0.0}
+                max={1.0}
+                step={0.05}
+                value={blurScreen}
+                onChange={(e) => {
+                  setBlurScreen(e);
+                }}
+                onChangeComplete={(e) => {
+                  setBlurScreen(e);
+                  handleAdjustment('control.blur_screen');
+                }}
+              ></Slider>
+            </div>
+          </div>
+        ),
+        disabled: !isOwner,
+      },
+    ];
+
+    const otherItems: MenuProps['items'] = isOwner
+      ? [
+          {
+            label: t('more.participant.set.control.title'),
+            key: 'control',
+            type: 'group',
+            children: [
+              {
+                key: 'control.trans',
+                label: (
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.control.trans')}
+                  </span>
+                ),
+                icon: <SvgResource type="switch" svgSize={16} />,
+                disabled: !isOwner,
+              },
+              {
+                key: 'control.change_name',
+                label: (
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.control.change_name')}
+                  </span>
+                ),
+                icon: <SvgResource type="user" svgSize={16} />,
+                disabled: !isOwner,
+              },
+              {
+                key: 'control.mute_audio',
+                label: (
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.control.mute.audio')}
+                  </span>
+                ),
+                icon: <SvgResource type="audio_close" svgSize={16} />,
+                disabled: !isOwner ? true : !isMicDisabled,
+              },
+              {
+                key: 'control.mute_video',
+                label: (
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.control.mute.video')}
+                  </span>
+                ),
+                icon: <SvgResource type="video_close" svgSize={16} />,
+                disabled: !isOwner ? true : !isCamDisabled,
+              },
+              ...controlItems,
+            ],
+          },
+          {
+            label: t('more.participant.set.safe.title'),
+            key: 'safe',
+            type: 'group',
+            children: [
+              {
+                key: 'safe.remove',
+                label: (
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.safe.remove.title')}
+                  </span>
+                ),
+                icon: <SvgResource type="leave" svgSize={16} />,
+                disabled: !isOwner,
+              },
+            ],
+          },
+        ]
+      : [];
+
     return [
       {
         label: t('more.participant.set.invite.title'),
@@ -136,176 +498,44 @@ export function useControlRKeyMenu({
           },
         ],
       },
-      {
-        label: t('more.participant.set.control.title'),
-        key: 'control',
-        type: 'group',
-        children: [
-          {
-            key: 'control.trans',
-            label: (
-              <span style={{ marginLeft: '8px' }}>{t('more.participant.set.control.trans')}</span>
-            ),
-            icon: <SvgResource type="switch" svgSize={16} />,
-            disabled: !isOwner,
-          },
-          {
-            key: 'control.change_name',
-            label: (
-              <span style={{ marginLeft: '8px' }}>
-                {t('more.participant.set.control.change_name')}
-              </span>
-            ),
-            icon: <SvgResource type="user" svgSize={16} />,
-            disabled: !isOwner,
-          },
-          {
-            key: 'control.mute_audio',
-            label: (
-              <span style={{ marginLeft: '8px' }}>
-                {t('more.participant.set.control.mute.audio')}
-              </span>
-            ),
-            icon: <SvgResource type="audio_close" svgSize={16} />,
-            disabled: !isOwner ? true : !isMicDisabled,
-          },
-          {
-            key: 'control.mute_video',
-            label: (
-              <span style={{ marginLeft: '8px' }}>
-                {t('more.participant.set.control.mute.video')}
-              </span>
-            ),
-            icon: <SvgResource type="video_close" svgSize={16} />,
-            disabled: !isOwner ? true : !isCamDisabled,
-          },
-          {
-            key: 'control.volume',
-            label: (
-              <div>
-                <div className={styles.inline_flex}>
-                  <SvgResource type="volume" svgSize={16} />
-                  <span style={{ marginLeft: '8px' }}>
-                    {t('more.participant.set.control.volume')}
-                  </span>
-                </div>
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                >
-                  <Slider
-                    disabled={!isOwner}
-                    min={0.0}
-                    max={100.0}
-                    step={1.0}
-                    value={volume}
-                    onChange={(e) => {
-                      setVolume(e);
-                    }}
-                    onChangeComplete={(e) => {
-                      setVolume(e);
-                      handleAdjustment('control.volume');
-                    }}
-                  ></Slider>
-                </div>
-              </div>
-            ),
-            disabled: !isOwner,
-          },
-          {
-            key: 'control.blur_video',
-            label: (
-              <div>
-                <div className={styles.inline_flex}>
-                  <SvgResource type="blur" svgSize={16} />
-                  <span style={{ marginLeft: '8px' }}>
-                    {t('more.participant.set.control.blur.video')}
-                  </span>
-                </div>
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                >
-                  <Slider
-                    disabled={!isOwner}
-                    min={0.0}
-                    max={1.0}
-                    step={0.05}
-                    value={blurVideo}
-                    onChange={(e) => {
-                      setBlurVideo(e);
-                    }}
-                    onChangeComplete={(e) => {
-                      setBlurVideo(e);
-                      handleAdjustment('control.blur_video');
-                    }}
-                  ></Slider>
-                </div>
-              </div>
-            ),
-            disabled: !isOwner,
-          },
-          {
-            key: 'control.blur_screen',
-            label: (
-              <div>
-                <div className={styles.inline_flex}>
-                  <SvgResource type="blur" svgSize={16} />
-                  <span style={{ marginLeft: '8px' }}>
-                    {t('more.participant.set.control.blur.screen')}
-                  </span>
-                </div>
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                >
-                  <Slider
-                    disabled={!isOwner}
-                    min={0.0}
-                    max={1.0}
-                    step={0.05}
-                    value={blurScreen}
-                    onChange={(e) => {
-                      setBlurScreen(e);
-                    }}
-                    onChangeComplete={(e) => {
-                      setBlurScreen(e);
-                      handleAdjustment('control.blur_screen');
-                    }}
-                  ></Slider>
-                </div>
-              </div>
-            ),
-            disabled: !isOwner,
-          },
-        ],
-      },
-      {
-        label: t('more.participant.set.safe.title'),
-        key: 'safe',
-        type: 'group',
-        children: [
-          {
-            key: 'safe.remove',
-            label: (
-              <span style={{ marginLeft: '8px' }}>
-                {t('more.participant.set.safe.remove.title')}
-              </span>
-            ),
-            icon: <SvgResource type="leave" svgSize={16} />,
-            disabled: !isOwner,
-          },
-        ],
-      },
+      ...otherItems,
     ];
   }, [isCamDisabled, isMicDisabled, isOwner, isScreenShareDisabled, volume, blurVideo, blurScreen]);
+  // 处理自己的菜单点击事件 -------------------------------------------------------------
+  const handleSelfOptClick: MenuProps['onClick'] = (e) => {
+    if (room?.localParticipant) {
+      switch (e.key) {
+        case 'safe.remove': {
+          Modal.confirm({
+            title: t('more.participant.set.safe.leave.title'),
+            content: t('more.participant.set.safe.leave.desc'),
+            okText: t('more.participant.set.safe.leave.confirm'),
+            cancelText: t('more.participant.set.safe.leave.cancel'),
+            onOk: () => {
+              room.disconnect(true);
+            },
+          });
+          break;
+        }
+        case 'control.change_name': {
+          toRenameSettings();
+          break;
+        }
+        case 'control.mute_audio': {
+          room.localParticipant.setMicrophoneEnabled(false);
+          break;
+        }
+        case 'control.mute_video': {
+          room.localParticipant.setCameraEnabled(false);
+          break;
+        }
+        default:
+          break;
+      }
+    }
+  };
 
+  // 处理菜单点击事件 -------------------------------------------------------------
   const handleOptClick: MenuProps['onClick'] = (e) => {
     if (room?.localParticipant && selectedParticipant) {
       let device = Track.Source.Unknown;
@@ -413,7 +643,9 @@ export function useControlRKeyMenu({
   };
 
   return {
+    optSelfItems,
     optItems,
+    handleSelfOptClick,
     handleOptClick,
     optOpen,
     isOwner,

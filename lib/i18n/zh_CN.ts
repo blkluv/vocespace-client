@@ -222,6 +222,12 @@ export default {
             confirm: '确定移除',
             cancel: '取消',
           },
+          leave : {
+            title: "离开VoceSpace",
+            desc: "您确定要离开VoceSpace吗？",
+            confirm: "确定离开",
+            cancel: "取消",
+          }
         },
       },
     },
@@ -346,6 +352,7 @@ export default {
       recording: "房间在10s后将开启录制，若您不希望被录制，可点击'离开房间'按钮退出。",
     },
     error: {
+      conf_load: '配置加载失败，请检查vocespace.conf.json文件是否存在',
       record: {
         copy: '录制链接复制失败',
         email: {
@@ -418,6 +425,11 @@ export default {
             '选择`网站`选项卡',
             '在`摄像头`和`麦克风`下拉菜单中选择`允许`',
             '刷新页面',
+          ],
+          wechat: [
+            '微信浏览器可能不支持直接访问摄像头，麦克风和屏幕分享，请使用其他浏览器访问。',
+            '您可以在微信浏览器中打开链接，然后选择其他浏览器进行访问。',
+            '请注意，微信浏览器可能会限制某些功能，请使用 Chrome、Firefox 等主流浏览器访问。',
           ],
           other: '请查看浏览器帮助文档以获取更多信息。',
         },
