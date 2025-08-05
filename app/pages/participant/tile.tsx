@@ -32,7 +32,7 @@ import {
   virtualMaskState,
 } from '@/app/[spaceName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
-import { SvgResource } from '@/app/resources/svg';
+import { SvgResource, SvgType } from '@/app/resources/svg';
 import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, src, UserStatus } from '@/lib/std';
@@ -40,6 +40,7 @@ import { MessageInstance } from 'antd/es/message/interface';
 import { SpaceInfo } from '@/lib/std/space';
 import { statusDefaultList } from '@/app/pages/controls/selects/status_select';
 import { WaveHand } from '../controls/widgets/wave';
+import { StatusInfo, useStatusInfo } from './status_info';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: SpaceInfo;
@@ -389,121 +390,14 @@ export const ParticipantItem: (
     ]);
 
     // [status] ------------------------------------------------------------
-    const userStatusDisply = React.useMemo(() => {
-      switch (settings.participants[trackReference.participant.identity]?.status) {
-        case UserStatus.Online:
-          return 'online_dot';
-        case UserStatus.Offline:
-          return 'offline_dot';
-        case UserStatus.Busy:
-          return 'busy_dot';
-        case UserStatus.Leisure:
-          return 'leisure_dot';
-        default:
-          return 'online_dot';
-      }
-    }, [settings.participants, trackReference.participant.identity]);
-
-    const setStatusLabel = (name?: string): String => {
-      switch (uState.status) {
-        case UserStatus.Online:
-          return t('settings.general.status.online');
-        case UserStatus.Offline:
-          return t('settings.general.status.offline');
-        case UserStatus.Busy:
-          return t('settings.general.status.busy');
-        case UserStatus.Leisure:
-          return t('settings.general.status.leisure');
-        default:
-          return name || '';
-      }
-    };
-
-    const status_menu: MenuProps['items'] = useMemo(() => {
-      const list = statusDefaultList(t);
-      if (uRoomStatusState.length > 0) {
-        uRoomStatusState.forEach((item) => {
-          list.push({
-            title: item.name,
-            desc: item.desc,
-            icon: 'dot',
-            value: item.id,
-            isDefine: true,
-            color: item.icon.color,
-          });
-        });
-      }
-
-      return list.map((item) => ({
-        key: item.value,
-        label: (
-          <div className={styles.status_item}>
-            {item.isDefine ? (
-              <SvgResource type={item.icon} svgSize={14} color={item.color}></SvgResource>
-            ) : (
-              <SvgResource type={item.icon} svgSize={14}></SvgResource>
-            )}
-            <span>{item.title}</span>
-            <div>{item.desc}</div>
-          </div>
-        ),
-      }));
-    }, [uRoomStatusState, t]);
-    const defineStatus = useMemo(() => {
-      return uRoomStatusState.find(
-        (item) => item.id === settings.participants[trackReference.participant.identity]?.status,
-      );
-    }, [uRoomStatusState, settings.participants, trackReference]);
-    const user_menu: MenuProps['items'] = useMemo(() => {
-      return [
-        {
-          key: 'user_info',
-          label: (
-            <div className={styles.user_info_wrap} onClick={toSettings}>
-              <SvgResource type="modify" svgSize={16} color="#fff"></SvgResource>
-              <div className={styles.user_info_wrap_name}>
-                {settings.participants[trackReference.participant.identity]?.name ||
-                  localParticipant.name}
-              </div>
-            </div>
-          ),
-        },
-        {
-          key: 'user_status',
-          label: (
-            <div onClick={(e) => e.stopPropagation()}>
-              <Dropdown
-                trigger={['hover', 'click']}
-                placement="topLeft"
-                menu={{
-                  items: status_menu,
-                  onClick: async (e) => {
-                    e.domEvent.stopPropagation();
-                    await setUserStatus(e.key);
-                  },
-                }}
-              >
-                <div className={styles.status_item_inline} style={{ width: '100%' }}>
-                  <div className={styles.status_item_inline}>
-                    {defineStatus ? (
-                      <SvgResource
-                        type="dot"
-                        svgSize={16}
-                        color={defineStatus.icon.color}
-                      ></SvgResource>
-                    ) : (
-                      <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
-                    )}
-                    <div>{setStatusLabel(defineStatus?.name)}</div>
-                  </div>
-                  <SvgResource type="right" svgSize={14} color="#fff"></SvgResource>
-                </div>
-              </Dropdown>
-            </div>
-          ),
-        },
-      ];
-    }, [settings.participants, userStatusDisply, status_menu, defineStatus]);
+    const { items, setStatusLabel, userStatusDisply, defineStatus } = useStatusInfo({
+      username: localParticipant.name || '',
+      trackReference,
+      settings,
+      toRenameSettings: toSettings,
+      t,
+      setUserStatus,
+    });
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wsTo = useMemo(() => {
       return {
@@ -669,48 +563,49 @@ export const ParticipantItem: (
           <ParticipantPlaceholder />
         </div>
         <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
-          <Dropdown
-            placement="topLeft"
-            trigger={['click']}
-            menu={{
-              items: user_menu,
-            }}
+          <StatusInfo
             disabled={trackReference.participant.identity != localParticipant.identity}
-          >
-            <div className="lk-participant-metadata-item">
-              {trackReference.source === Track.Source.Camera ? (
-                <>
-                  {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
-                  <TrackMutedIndicator
-                    trackRef={{
-                      participant: trackReference.participant,
-                      source: Track.Source.Microphone,
-                    }}
-                    show={'muted'}
-                  ></TrackMutedIndicator>
-                  <ParticipantName />
-                  <div
-                    style={{ marginLeft: '0.25rem', display: 'inline-flex', alignItems: 'center' }}
-                  >
-                    {defineStatus ? (
-                      <SvgResource
-                        type="dot"
-                        svgSize={16}
-                        color={defineStatus.icon.color}
-                      ></SvgResource>
-                    ) : (
-                      <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
-                  <ParticipantName>&apos;s screen</ParticipantName>
-                </>
-              )}
-            </div>
-          </Dropdown>
+            items={items}
+            children={
+              <div className="lk-participant-metadata-item">
+                {trackReference.source === Track.Source.Camera ? (
+                  <>
+                    {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
+                    <TrackMutedIndicator
+                      trackRef={{
+                        participant: trackReference.participant,
+                        source: Track.Source.Microphone,
+                      }}
+                      show={'muted'}
+                    ></TrackMutedIndicator>
+                    <ParticipantName />
+                    <div
+                      style={{
+                        marginLeft: '0.25rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      {defineStatus ? (
+                        <SvgResource
+                          type="dot"
+                          svgSize={16}
+                          color={defineStatus.icon.color}
+                        ></SvgResource>
+                      ) : (
+                        <SvgResource type={userStatusDisply as SvgType} svgSize={16}></SvgResource>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
+                    <ParticipantName>&apos;s screen</ParticipantName>
+                  </>
+                )}
+              </div>
+            }
+          ></StatusInfo>
 
           <ConnectionQualityIndicator className="lk-participant-metadata-item" />
         </div>

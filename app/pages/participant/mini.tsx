@@ -22,7 +22,7 @@ import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'r
 import { isTrackReferencePinned } from './tile';
 import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { useVideoBlur, WsBase, WsTo } from '@/lib/std/device';
-import { SvgResource } from '@/app/resources/svg';
+import { SvgResource, SvgType } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
 import { roomStatusState, userState, virtualMaskState } from '@/app/[spaceName]/PageClientImpl';
 import { UserStatus } from '@/lib/std';
@@ -30,6 +30,8 @@ import { WaveHand } from '../controls/widgets/wave';
 import { ControlRKeyMenu, useControlRKeyMenu, UseControlRKeyMenuProps } from './menu';
 import { RaiseHand } from '../controls/widgets/raise';
 import { Dropdown, MenuProps } from 'antd';
+import { StatusInfo, useStatusInfo } from './status_info';
+import { useI18n } from '@/lib/i18n/i18n';
 
 export interface ParticipantTileMiniProps extends ParticipantTileProps {
   settings: SpaceInfo;
@@ -39,13 +41,22 @@ export interface ParticipantTileMiniProps extends ParticipantTileProps {
   room: Room;
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
   toRenameSettings: () => void;
+  setUserStatus: (status: UserStatus | string) => Promise<void>;
 }
 
 export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMiniProps>(
   (
-    { trackRef, settings, room, updateSettings, toRenameSettings }: ParticipantTileMiniProps,
+    {
+      trackRef,
+      settings,
+      room,
+      updateSettings,
+      toRenameSettings,
+      setUserStatus,
+    }: ParticipantTileMiniProps,
     ref,
   ) => {
+    const { t } = useI18n();
     const trackReference = useEnsureTrackRef(trackRef);
     const { localParticipant } = useLocalParticipant();
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -92,11 +103,6 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
       } as WsBase;
     }, [room, localParticipant]);
 
-    const defineStatus = useMemo(() => {
-      return uRoomStatusState.find(
-        (item) => item.id === settings.participants[trackReference.participant.identity]?.status,
-      );
-    }, [uRoomStatusState, settings.participants, trackReference]);
     const videoFilter = useMemo(() => {
       return settings.participants[trackReference.participant.identity]?.virtual?.enabled ?? false
         ? `none`
@@ -118,20 +124,6 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
       [trackReference, layoutContext],
     );
 
-    const userStatusDisply = useMemo(() => {
-      switch (settings.participants[trackReference.participant.identity]?.status) {
-        case UserStatus.Online:
-          return 'online_dot';
-        case UserStatus.Offline:
-          return 'offline_dot';
-        case UserStatus.Busy:
-          return 'busy_dot';
-        case UserStatus.Leisure:
-          return 'leisure_dot';
-        default:
-          return 'online_dot';
-      }
-    }, [settings.participants, trackReference.participant.identity]);
     // 右键菜单 --------------------------------------------------------------------------------
     const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
     const [username, setUsername] = useState<string>('');
@@ -153,7 +145,15 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
         trackReference.source === Track.Source.ScreenShare
       );
     }, [trackReference, localParticipant.identity]);
-    
+    // status标签渲染 -------------------------------------------------------------
+    const { items, userStatusDisply, defineStatus } = useStatusInfo({
+      username: localParticipant.name || '',
+      trackReference,
+      t,
+      toRenameSettings,
+      setUserStatus,
+      settings,
+    });
 
     return (
       <ControlRKeyMenu
@@ -204,16 +204,12 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
               <ParticipantPlaceholder />
             </div>
             <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
-              <Dropdown
+              <StatusInfo
                 disabled={
                   trackReference.participant.identity != localParticipant.identity ||
                   trackReference.source !== Track.Source.Camera
                 }
-                placement="topLeft"
-                trigger={['click']}
-                // menu={{
-                //   items: userMenu,
-                // }}
+                items={items}
               >
                 <div
                   className="lk-participant-metadata-item"
@@ -258,7 +254,10 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
                             color={defineStatus.icon.color}
                           ></SvgResource>
                         ) : (
-                          <SvgResource type={userStatusDisply} svgSize={16}></SvgResource>
+                          <SvgResource
+                            type={userStatusDisply as SvgType}
+                            svgSize={16}
+                          ></SvgResource>
                         )}
                       </div>
                     </>
@@ -278,7 +277,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
                     </>
                   )}
                 </div>
-              </Dropdown>
+              </StatusInfo>
               <ConnectionQualityIndicator className="lk-participant-metadata-item" />
             </div>
             {trackReference.participant.identity != localParticipant.identity && (

@@ -36,6 +36,7 @@ import { WsJoinRoom, WsRemove, WsSender } from '@/lib/std/device';
 import { api } from '@/lib/api';
 import { UpdateRoomParam, UpdateRoomType } from '@/lib/api/channel';
 import { Room } from 'livekit-client';
+import { UserStatus } from '@/lib/std';
 
 interface ChannelProps {
   // roomName: string;
@@ -50,6 +51,7 @@ interface ChannelProps {
   isActive?: boolean;
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
   toRenameSettings: () => void;
+  setUserStatus: (status: UserStatus | string) => Promise<void>;
 }
 
 export interface ChannelExports {}
@@ -70,6 +72,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       isActive = false,
       updateSettings,
       toRenameSettings,
+      setUserStatus,
     }: ChannelProps,
     ref,
   ) => {
@@ -505,6 +508,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
             room={space}
             updateSettings={updateSettings}
             toRenameSettings={toRenameSettings}
+            setUserStatus={setUserStatus}
           ></ParticipantTileMini>
         </GLayout>
       );
@@ -537,6 +541,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
               room={space}
               updateSettings={updateSettings}
               toRenameSettings={toRenameSettings}
+              setUserStatus={setUserStatus}
             ></ParticipantTileMini>
           </GLayout>
         );

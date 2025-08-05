@@ -830,6 +830,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             isActive={isActive}
             updateSettings={updateSettings}
             toRenameSettings={toSettingGeneral}
+            setUserStatus={setUserStatus}
           ></Channel>
         )}
         <div
