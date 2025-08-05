@@ -64,6 +64,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   setCollapsed: (collapsed: boolean) => void;
   openApp: boolean;
   setOpenApp: (open: boolean) => void;
+  toRenameSettings: () => void;
 }
 
 export interface ControlBarExport {
@@ -103,6 +104,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setCollapsed,
       openApp,
       setOpenApp,
+      toRenameSettings,
       ...props
     }: ControlBarProps,
     ref,
@@ -554,6 +556,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           setSelectedParticipant={setSelectedParticipant}
           setOpenNameModal={setOpenNameModal}
           setUsername={setUsername}
+          updateSettings={updateSettings}
+          toRenameSettings={toRenameSettings}
         ></ParticipantManage>
         {/* ------------- share room modal -------------------------------------------------------- */}
         <Modal

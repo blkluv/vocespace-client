@@ -27,7 +27,7 @@ import {
 } from '@ant-design/icons';
 import { GridLayout, TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { MessageInstance } from 'antd/es/message/interface';
-import { ChildRoom, SpaceInfo } from '@/lib/std/space';
+import { ChildRoom, ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { ParticipantTileMini } from '../participant/mini';
 import { GLayout } from '../layout/grid';
 import { CheckboxGroupProps } from 'antd/es/checkbox';
@@ -48,6 +48,8 @@ interface ChannelProps {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
   isActive?: boolean;
+  updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
+  toRenameSettings: () => void;
 }
 
 export interface ChannelExports {}
@@ -66,6 +68,8 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       collapsed,
       setCollapsed,
       isActive = false,
+      updateSettings,
+      toRenameSettings,
     }: ChannelProps,
     ref,
   ) => {
@@ -496,7 +500,12 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
       return (
         <GLayout tracks={mainTracks} style={{ height: '120px', position: 'relative' }}>
-          <ParticipantTileMini settings={settings} room={space}></ParticipantTileMini>
+          <ParticipantTileMini
+            settings={settings}
+            room={space}
+            updateSettings={updateSettings}
+            toRenameSettings={toRenameSettings}
+          ></ParticipantTileMini>
         </GLayout>
       );
     }, [tracks, childRooms, settings, allParticipants]);
@@ -523,7 +532,12 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
         return (
           <GLayout tracks={subTracks} style={{ height: '120px', position: 'relative' }}>
-            <ParticipantTileMini settings={settings} room={space}></ParticipantTileMini>
+            <ParticipantTileMini
+              settings={settings}
+              room={space}
+              updateSettings={updateSettings}
+              toRenameSettings={toRenameSettings}
+            ></ParticipantTileMini>
           </GLayout>
         );
       },

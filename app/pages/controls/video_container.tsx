@@ -828,6 +828,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             setCollapsed={setCollapsed}
             messageApi={messageApi}
             isActive={isActive}
+            updateSettings={updateSettings}
+            toRenameSettings={toSettingGeneral}
           ></Channel>
         )}
         <div
@@ -896,6 +898,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   collapsed={collapsed}
                   setCollapsed={setCollapsed}
                   openApp={openApp}
+                  toRenameSettings={toSettingGeneral}
                   setOpenApp={setOpenApp}
                 ></Controls>
               </div>

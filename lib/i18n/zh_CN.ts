@@ -222,6 +222,12 @@ export default {
             confirm: '确定移除',
             cancel: '取消',
           },
+          leave : {
+            title: "离开VoceSpace",
+            desc: "您确定要离开VoceSpace吗？",
+            confirm: "确定离开",
+            cancel: "取消",
+          }
         },
       },
     },

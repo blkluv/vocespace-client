@@ -4,7 +4,6 @@ import { randomColor } from '@/lib/std';
 import { useI18n } from '@/lib/i18n/i18n';
 import { ParticipantSettings } from '@/lib/std/space';
 import { ControlRKeyMenu } from './menu';
-import { useLocalParticipant } from '@livekit/components-react';
 import { Room } from 'livekit-client';
 
 export type ParticipantItemType = [string, ParticipantSettings];
@@ -15,6 +14,7 @@ export interface ParticipantListProps {
   size?: 'small' | 'large' | 'default';
   suffix?: (item: ParticipantItemType, index: number) => React.ReactNode;
   menu: MenuProps;
+  selfMenu: MenuProps;
   onOpenMenu: (open: boolean, pid: string) => void;
   room: Room;
 }
@@ -32,6 +32,7 @@ export function ParticipantList({
   menu,
   onOpenMenu,
   size = 'large',
+  selfMenu,
   room,
 }: ParticipantListProps) {
   const { t } = useI18n();
@@ -44,8 +45,7 @@ export function ParticipantList({
       renderItem={(item, index) => (
         <List.Item>
           <ControlRKeyMenu
-            disabled={item[0] === room.localParticipant.identity}
-            menu={menu}
+            menu={item[0] === room.localParticipant.identity ? selfMenu : menu}
             onOpenChange={(open) => onOpenMenu(open, item[0])}
             isRKey={true}
             children={

@@ -21,6 +21,8 @@ export interface ParticipantManageProps {
   setSelectedParticipant: (participant: Participant | null) => void;
   setOpenNameModal: (open: boolean) => void;
   setUsername: (username: string) => void;
+  updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
+  toRenameSettings: () => void;
 }
 
 export function ParticipantManage({
@@ -34,17 +36,22 @@ export function ParticipantManage({
   selectedParticipant,
   setOpenNameModal,
   setUsername,
+  updateSettings,
+  toRenameSettings
 }: ParticipantManageProps) {
   const { t } = useI18n();
 
-  const { optItems, handleOptClick, optOpen } = useControlRKeyMenu({
-    room,
-    spaceInfo,
-    selectedParticipant,
-    setSelectedParticipant,
-    setOpenNameModal,
-    setUsername,
-  } as UseControlRKeyMenuProps);
+  const { optItems, handleOptClick, optOpen, optSelfItems, handleSelfOptClick } =
+    useControlRKeyMenu({
+      room,
+      spaceInfo,
+      selectedParticipant,
+      setSelectedParticipant,
+      setOpenNameModal,
+      setUsername,
+      updateSettings,
+      toRenameSettings
+    } as UseControlRKeyMenuProps);
 
   return (
     <Drawer
@@ -104,6 +111,10 @@ export function ParticipantManage({
               menu={{
                 items: optItems,
                 onClick: handleOptClick,
+              }}
+              selfMenu={{
+                items: optSelfItems,
+                onClick: handleSelfOptClick,
               }}
               onOpenMenu={(open, pid) => {
                 optOpen(open, room.getParticipantByIdentity(pid)!);
