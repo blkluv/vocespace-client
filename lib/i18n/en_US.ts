@@ -43,6 +43,12 @@ export default {
       'The room user has exceeded the limit and cannot join. You can join other rooms or inform the builder to upgrade your license to obtain more user slots.',
     open: 'Open',
     close: 'Close',
+    high_quality: 'Lossless mode',
+    high_quality_desc:
+      'When enabled, video, audio, and screen sharing will be transmitted at a fixed resolution and higher quality, but may increase bandwidth usage and latency.',
+  },
+  recording: {
+    title: 'Recording',
   },
   channel: {
     menu: {
@@ -223,6 +229,12 @@ export default {
             confirm: 'Confirm removal',
             cancel: 'Cancel',
           },
+          leave: {
+            title: 'Leave VoceSpace',
+            desc: 'Are you sure you want to leave VoceSpace?',
+            confirm: 'Confirm to leave',
+            cancel: 'Cancel',
+          },
         },
       },
     },
@@ -359,6 +371,8 @@ export default {
       req_record: 'Request to start recording',
     },
     error: {
+      conf_load:
+        'Configuration loading failed, please check whether the vocespace.conf.json file exists',
       record: {
         copy: 'Failed to copy the recording link',
         email: {
@@ -437,6 +451,11 @@ export default {
             'Select the `Websites` tab',
             'Choose `Allow` in the `Camera` and `Microphone` dropdown menus',
             'Refresh the page',
+          ],
+          wechat: [
+            'WeChat Browser may not support direct access to the camera, microphone, and screen sharing. Please use another browser.',
+            'You can open the link in WeChat Browser and then choose another browser to access it.',
+            'Please note that WeChat Browser may limit certain features. Please use a mainstream browser such as Chrome or Firefox.',
           ],
           other: "Please refer to your browser's help documentation for more information.",
         },
