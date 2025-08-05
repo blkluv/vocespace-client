@@ -815,7 +815,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         {room && (
           <Channel
             space={room}
-            participantId={room.localParticipant.identity}
+            localParticipantId={room.localParticipant.identity}
             settings={settings}
             onUpdate={async () => {
               await fetchSettings();

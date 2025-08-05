@@ -41,7 +41,7 @@ interface ChannelProps {
   // roomName: string;
   space: Room;
   messageApi: MessageInstance;
-  participantId: string;
+  localParticipantId: string;
   onUpdate: () => Promise<void>;
   tracks: TrackReferenceOrPlaceholder[];
   settings: SpaceInfo;
@@ -60,7 +60,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       space,
       settings,
       messageApi,
-      participantId,
+      localParticipantId,
       onUpdate,
       tracks,
       collapsed,
@@ -114,13 +114,13 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
             setSubActiveKey((prev) => [...prev, child.name]);
           }
           // 如果当前这个本地用户在子房间中，需要展开这个子房间
-          if (child.participants.includes(participantId)) {
+          if (child.participants.includes(localParticipantId)) {
             setSubActiveKey((prev) => [...prev, child.name]);
           }
         });
         setSubRoomsTmp(newRooms);
       }
-    }, [settings.children, participantId, subRoomsTmp]);
+    }, [settings.children, localParticipantId, subRoomsTmp]);
 
     const allParticipants = useMemo(() => {
       // console.warn(Object.keys(settings.participants).length, settings.participants);
@@ -128,22 +128,44 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     }, [settings]);
 
     const wsSender = useMemo(() => {
-      if (settings && space.name && participantId && settings.participants[participantId]) {
-        const senderName = settings.participants[participantId].name;
+      if (
+        settings &&
+        space.name &&
+        localParticipantId &&
+        settings.participants[localParticipantId]
+      ) {
+        const senderName = settings.participants[localParticipantId].name;
         return {
           room: space.name,
           senderName,
-          senderId: participantId,
+          senderId: localParticipantId,
         } as WsSender;
       } else {
         return null;
       }
-    }, [space.name, participantId, settings]);
+    }, [space.name, localParticipantId, settings]);
+
+    const agreeJoinRoom = async (room: string) => {
+      setSelfRoomName(room);
+      setSubActiveKey((prev) => {
+        const newSubActiveKey = [...prev];
+        if (!prev.includes(room)) {
+          newSubActiveKey.push(room);
+        }
+        return newSubActiveKey;
+      });
+      // setMainActiveKey(['sub']);
+      await onUpdate();
+      messageApi.success({
+        content: t('channel.join.success'),
+        duration: 2,
+      });
+    };
 
     useEffect(() => {
       // 监听加入私密房间的socket事件 --------------------------------------------------------------------------
       socket.on('join_privacy_room_response', (msg: WsJoinRoom) => {
-        if (msg.room === space.name && msg.receiverId === participantId) {
+        if (msg.room === space.name && msg.receiverId === localParticipantId) {
           if (!joinModalOpen) {
             if (msg.confirm === false) {
               // 说明对方拒绝了加入请求
@@ -151,6 +173,9 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                 content: t('channel.modal.join.reject'),
               });
               setJoinModalOpen(false);
+            } else if (msg.confirm) {
+              //同意加入
+              agreeJoinRoom(msg.childRoom);
             } else {
               setJoinParticipant({
                 id: msg.senderId,
@@ -164,7 +189,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       });
       // 监听从私密房间移除的socket事件 -----------------------------------------------------------------------
       socket.on('removed_from_privacy_room_response', (msg: WsRemove) => {
-        if (msg.room === space.name && msg.participants.includes(participantId)) {
+        if (msg.room === space.name && msg.participants.includes(localParticipantId)) {
           messageApi.info({
             content: `${t('channel.modal.remove.before')}${msg.childRoom}${t(
               'channel.modal.remove.after',
@@ -177,7 +202,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         socket.off('join_privacy_room_response');
         socket.off('removed_from_privacy_room_response');
       };
-    }, [socket, space.name, participantId, joinModalOpen]);
+    }, [socket, space.name, localParticipantId, joinModalOpen]);
 
     const childRooms = useMemo(() => {
       return settings.children || [];
@@ -199,7 +224,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       const response = await api.createRoom({
         spaceName: space.name,
         roomName: childRoomName,
-        ownerId: participantId,
+        ownerId: localParticipantId,
         isPrivate: roomPrivacy === 'private',
       });
 
@@ -263,7 +288,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       const response = await api.leaveRoom({
         spaceName: space.name,
         roomName: room || selectedRoom!.name,
-        participantId,
+        participantId: localParticipantId,
       });
 
       if (!response.ok) {
@@ -301,26 +326,13 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         return;
       } else {
         // 进入子房间后 subActiveKey 就是当前子房间的key
-        setSelfRoomName(room.name);
-        setSubActiveKey((prev) => {
-          const newSubActiveKey = [...prev];
-          if (!prev.includes(room.name)) {
-            newSubActiveKey.push(room.name);
-          }
-          return newSubActiveKey;
-        });
-        // setMainActiveKey(['sub']);
-        await onUpdate();
-        messageApi.success({
-          content: t('channel.join.success'),
-          duration: 2,
-        });
+        await agreeJoinRoom(room.name);
       }
     };
 
     const addIntoRoom = async (room: ChildRoom) => {
       // 判断是否为私密房间，如果是则需要使用socket通知拥有者
-      if (room.isPrivate && room.ownerId !== participantId) {
+      if (room.isPrivate && room.ownerId !== localParticipantId) {
         socket.emit('join_privacy_room', {
           receiverId: room.ownerId,
           socketId: settings.participants[room.ownerId].socketId,
@@ -329,7 +341,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         } as WsJoinRoom);
         return;
       }
-      await joinChildRoom(room, participantId);
+      await joinChildRoom(room, localParticipantId);
     };
 
     const confirmJoinRoom = async (confirm: boolean) => {
@@ -339,7 +351,6 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         });
         return;
       }
-
       if (confirm) {
         // 同意加入
         const childRoom = settings.children.find((c) => c.name === joinParticipant?.targetRoom);
@@ -350,23 +361,21 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
             content: t('channel.modal.join.missing_data'),
           });
         }
-      } else {
-        // 拒绝加入，使用socket回复发起者
-        socket.emit('join_privacy_room', {
-          receiverId: joinParticipant.id,
-          socketId: settings.participants[joinParticipant.id].socketId,
-          childRoom: joinParticipant.targetRoom,
-          confirm: false,
-          ...wsSender,
-        } as WsJoinRoom);
       }
-
+      socket.emit('join_privacy_room', {
+        receiverId: joinParticipant.id,
+        socketId: settings.participants[joinParticipant.id].socketId,
+        childRoom: joinParticipant.targetRoom,
+        confirm,
+        ...wsSender,
+      } as WsJoinRoom);
       setJoinParticipant(null);
       setJoinModalOpen(false);
     };
 
     const joinMainRoom = async () => {
       // 设置为当前自己所在的房间
+      console.warn('selfRoomName', selfRoomName);
       await leaveChildRoom(selfRoomName);
     };
 
@@ -416,12 +425,12 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       }
     };
     const authDisabled = useMemo(() => {
-      if (participantId === settings.ownerId) {
+      if (localParticipantId === settings.ownerId) {
         return false;
       } else {
-        return selectedRoom?.ownerId !== participantId;
+        return selectedRoom?.ownerId !== localParticipantId;
       }
-    }, [settings.ownerId, selectedRoom, participantId]);
+    }, [settings.ownerId, selectedRoom, localParticipantId]);
 
     const subContextItems: MenuProps['items'] = [
       {
