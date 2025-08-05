@@ -25,23 +25,49 @@ envFiles.forEach((file) => {
   }
 });
 
+export const getRedisConfig = () => {
+  try{
+    const configPath = path.join(__cfg, 'vocespace.conf.json');
+    const configContent = fs.readFileSync(configPath, 'utf-8');
+    const config = JSON.parse(configContent);
+    console.log('Redis config loaded -----------------');
+    return {
+      REDIS_ENABLED: config.redis.enabled || 'false',
+      REDIS_HOST: config.redis.host || 'localhost',
+      REDIS_PORT: config.redis.port || '6379',
+      REDIS_PASSWORD: config.redis.password || 'vocespace',
+      REDIS_DB: config.redis.db || '0',
+    }
+  }catch (error) {
+    return {
+      REDIS_ENABLED: 'false',
+      REDIS_HOST: 'localhost',
+      REDIS_PORT: '6379',
+      REDIS_PASSWORD: 'vocespace',
+      REDIS_DB: '0',
+    };
+  }
+}
+
 // [args] ---------------------------------------------------------------------------------------------------------------
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOST || 'localhost';
 const port = process.env.PORT || 3000;
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 const {
-  REDIS_ENABLED = 'false',
-  REDIS_HOST = 'localhost',
-  REDIS_PORT = '6379',
+  REDIS_ENABLED,
+  REDIS_HOST,
+  REDIS_PORT,
   REDIS_PASSWORD,
-  REDIS_DB = '0',
-} = process.env;
+  REDIS_DB,
+} = getRedisConfig();
 
 console.log(`env: {
     REDIS_ENABLED: ${REDIS_ENABLED}
     REDIS_HOST: ${REDIS_HOST}
     REDIS_PORT: ${REDIS_PORT}
+    REDIS_PASSWORD: ${REDIS_PASSWORD || 'not set'}
+    REDIS_DB: ${REDIS_DB}
 }`);
 
 let redisClient = null;
@@ -158,6 +184,10 @@ app.prepare().then(() => {
     // - msg: { room: string, senderId: string, senderName: string, receiverId: string, socketId: string } see [`std::WsTo`]
     socket.on('wave', (msg) => {
       socket.to(msg.socketId).emit('wave_response', msg);
+    });
+    socket.on('raise_hand', (msg) => {
+      // 广播给处了自己外所有人
+      socket.broadcast.emit('raise_hand_response', msg);
     });
     // [socket: remove participant event] -------------------------------------------------------------------------------
     // - on: "remove_participant"

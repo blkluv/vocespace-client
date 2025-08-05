@@ -245,7 +245,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       // 监听服务器的用户状态更新事件 -------------------------------------------------------------------
       socket.on('user_status_updated', async (msg: WsBase) => {
         // 调用fetchSettings
-        if (msg.room === room.name) {
+        // 另一个环境是没有参数的，可能导致错误，所以这里强制判断msg
+        if (msg && msg.room && msg.room === room.name) {
           await fetchSettings();
         }
       });

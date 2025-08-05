@@ -25,6 +25,7 @@ import {
   LeaveRoomBody,
   UpdateRoomBody,
 } from '@/lib/api/channel';
+import { getConfig } from '../conf/conf';
 
 interface SpaceInfoMap {
   [spaceId: string]: SpaceInfo;
@@ -42,25 +43,17 @@ interface SpaceDateRecords {
 
 // [redis config env] ----------------------------------------------------------
 const {
-  REDIS_ENABLED = 'false',
-  REDIS_HOST = 'localhost',
-  REDIS_PORT = '6379',
-  REDIS_PASSWORD,
-  REDIS_DB = '0',
-} = process.env;
+  redis: { enabled, host, port, password, db },
+} = getConfig();
 
 let redisClient: Redis | null = null;
 
 // [build redis client] --------------------------------------------------------
-if (REDIS_ENABLED === 'true') {
-  let host = REDIS_HOST;
-  let port = parseInt(REDIS_PORT, 10);
-  let db = parseInt(REDIS_DB, 10);
-
+if (enabled) {
   redisClient = new Redis({
     host,
     port,
-    password: REDIS_PASSWORD,
+    password,
     db,
   });
 }

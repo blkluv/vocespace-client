@@ -35,6 +35,7 @@ import { TodoItem } from '../pages/apps/todo_list';
 import dayjs, { type Dayjs } from 'dayjs';
 import { api } from '@/lib/api';
 import { WsBase } from '@/lib/std/device';
+import { createResolution, DEFAULT_VOCESPACE_CONFIG, VocespaceConfig } from '@/lib/std/conf';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -155,6 +156,27 @@ export function PageClientImpl(props: {
     };
   }, []);
 
+  // 配置数据 ----------------------------------------------------------------------------------------
+  const [config, setConfig] = useState(DEFAULT_VOCESPACE_CONFIG);
+  const [loadConfig, setLoadConfig] = useState(false);
+
+  const getConfig = async () => {
+    const response = await api.getConf();
+    if (response.ok) {
+      const configData: VocespaceConfig = await response.json();
+      setConfig(configData);
+      setLoadConfig(true);
+    } else {
+      console.error(t('msg.error.conf_load'));
+    }
+  };
+
+  useEffect(() => {
+    if (!loadConfig) {
+      getConfig();
+    }
+  }, [loadConfig]);
+
   return (
     <main data-lk-theme="default" style={{ height: '100%' }}>
       {connectionDetails === undefined || preJoinChoices === undefined ? (
@@ -174,6 +196,7 @@ export function PageClientImpl(props: {
           connectionDetails={connectionDetails}
           userChoices={preJoinChoices}
           options={{ codec: props.codec, hq: props.hq }}
+          config={config}
         />
       )}
     </main>
@@ -187,6 +210,7 @@ function VideoConferenceComponent(props: {
     hq: boolean;
     codec: VideoCodec;
   };
+  config: VocespaceConfig;
 }) {
   const { t } = useI18n();
   const e2eePassphrase =
@@ -207,31 +231,36 @@ function VideoConferenceComponent(props: {
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [permissionDevice, setPermissionDevice] = useState<Track.Source | null>(null);
   const videoContainerRef = React.useRef<VideoContainerExports>(null);
+
+  const resolutions = createResolution({
+    resolution: props.config.resolution,
+    maxBitrate: props.config.maxBitrate,
+    maxFramerate: props.config.maxFramerate,
+    priority: props.config.priority,
+  });
+
   const roomOptions = React.useMemo((): RoomOptions => {
-    let videoCodec: VideoCodec | undefined = props.options.codec ? props.options.codec : 'vp9';
+    console.warn(props.config);
+    let videoCodec: VideoCodec | undefined = props.config.codec ?? 'vp9';
     if (e2eeEnabled && (videoCodec === 'av1' || videoCodec === 'vp9')) {
       videoCodec = undefined;
     }
     return {
       videoCaptureDefaults: {
         deviceId: props.userChoices.videoDeviceId ?? undefined,
-        resolution: props.options.hq ? VideoPresets.h2160 : VideoPresets.h1080,
+        resolution: props.options.hq ? resolutions.h : resolutions.l,
       },
       publishDefaults: {
         dtx: false,
-        videoSimulcastLayers: props.options.hq
-          ? [VideoPresets.h1440, VideoPresets.h1080]
-          : [VideoPresets.h1080],
+        videoSimulcastLayers: props.options.hq ? [resolutions.h, resolutions.l] : [resolutions.l],
         red: !e2eeEnabled,
         videoCodec,
-        // screenShareEncoding: {
-        //   maxBitrate: 160000, // 15Mbps
-        //   maxFramerate: 90, // 90fps
-        //   priority: 'high',
-        // },
-        // screenShareSimulcastLayers: [
-        //   VideoPresets.h2160
-        // ]
+        screenShareEncoding: {
+          maxBitrate: props.config.maxBitrate ?? 3000000, // 3Mbps
+          maxFramerate: props.config.maxFramerate ?? 30, // 30fps
+          priority: 'medium',
+        },
+        screenShareSimulcastLayers: [props.options.hq ? resolutions.h : resolutions.l],
       },
       audioCaptureDefaults: {
         deviceId: props.userChoices.audioDeviceId ?? undefined,
@@ -245,7 +274,7 @@ function VideoConferenceComponent(props: {
           }
         : undefined,
     };
-  }, [props.userChoices, props.options.hq, props.options.codec]);
+  }, [props.userChoices, props.options.hq, props.options.codec, props.config]);
 
   const room = React.useMemo(() => new Room(roomOptions), []);
   React.useEffect(() => {
@@ -512,6 +541,7 @@ const renderBrowserSpecificInstructions = () => {
   const isSafari =
     navigator.userAgent.indexOf('Safari') > -1 && navigator.userAgent.indexOf('Chrome') === -1;
   const isEdge = navigator.userAgent.indexOf('Edg') > -1;
+  const isWeChat = navigator.userAgent.indexOf('MicroMessenger') > -1;
 
   if (isChrome || isEdge) {
     return (
@@ -539,6 +569,14 @@ const renderBrowserSpecificInstructions = () => {
         <li>{t('msg.request.device.permission.safari.1')}</li>
         <li>{t('msg.request.device.permission.safari.2')}</li>
         <li>{t('msg.request.device.permission.safari.3')}</li>
+      </ol>
+    );
+  } else if (isWeChat) {
+    return (
+      <ol>
+        <li>{t('msg.request.device.permission.wechat.0')}</li>
+        <li>{t('msg.request.device.permission.wechat.1')}</li>
+        <li>{t('msg.request.device.permission.wechat.2')}</li>
       </ol>
     );
   } else {
