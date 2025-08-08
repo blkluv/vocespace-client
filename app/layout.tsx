@@ -90,6 +90,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             paddingBlockLG: 8,
             colorText: '#ffffff',
           },
+          InputNumber: {
+            colorBgBase: '#1E1E1E',
+            activeBg: '#1E1E1E',
+            colorBgContainer: '#1E1E1E',
+            colorBorder: '#1E1E1E',
+            colorTextPlaceholder: '#8c8c8c',
+            paddingBlockLG: 8,
+            colorText: '#ffffff',
+          },
           Timeline: {
             dotBg: 'transparent',
             tailColor: "#22CCEE",

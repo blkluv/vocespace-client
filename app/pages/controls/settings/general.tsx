@@ -1,5 +1,5 @@
 import styles from '@/styles/controls.module.scss';
-import { Button, Input, Radio } from 'antd';
+import { Button, Input, InputNumber, Radio, Select } from 'antd';
 import { LangSelect } from '../selects/lang_select';
 import { StatusSelect } from '../selects/status_select';
 import { SvgResource } from '@/app/resources/svg';
@@ -7,8 +7,13 @@ import { BuildUserStatus } from './user_status';
 import { useI18n } from '@/lib/i18n/i18n';
 import { LocalParticipant, Room } from 'livekit-client';
 import { MessageInstance } from 'antd/es/message/interface';
-import { UserStatus } from '@/lib/std';
-
+import { isUndefinedNumber, isUndefinedString, UserStatus } from '@/lib/std';
+import { useEffect, useRef, useState } from 'react';
+import equal from 'fast-deep-equal';
+import { api } from '@/lib/api';
+import { RTCConf, VocespaceConfig } from '@/lib/std/conf';
+import { socket } from '@/app/[spaceName]/PageClientImpl';
+import { WsBase } from '@/lib/std/device';
 export interface GeneralSettingsProps {
   room: string;
   localParticipant: LocalParticipant;
@@ -35,6 +40,79 @@ export function GeneralSettings({
   setOpenPromptSound,
 }: GeneralSettingsProps) {
   const { t } = useI18n();
+
+  const [reload, setReload] = useState(false);
+  const [conf, setConf] = useState<RTCConf | null>(null);
+  const originConf = useRef<RTCConf | null>(null);
+  const getConf = async () => {
+    const response = await api.getConf();
+
+    if (response.ok) {
+      const { resolution, maxBitrate, maxFramerate, priority, codec }: VocespaceConfig =
+        await response.json();
+      if (
+        isUndefinedString(resolution) ||
+        isUndefinedNumber(maxBitrate) ||
+        isUndefinedNumber(maxFramerate) ||
+        isUndefinedString(priority) ||
+        isUndefinedString(codec)
+      ) {
+        messageApi.error(t('settings.general.conf.load_error'));
+      } else {
+        const data = {
+          codec: codec!,
+          resolution: resolution!,
+          maxBitrate: maxBitrate!,
+          maxFramerate: maxFramerate!,
+          priority: priority!,
+        } as RTCConf;
+        setConf(data);
+        originConf.current = data;
+      }
+    }
+  };
+
+  useEffect(() => {
+    getConf();
+  }, []);
+
+  useEffect(() => {
+    if (equal(conf, originConf.current)) {
+      setReload(false);
+    } else {
+      setReload(true);
+    }
+  }, [conf, originConf]);
+
+  const resolutionOptions = [
+    { label: '540p', value: '540p' },
+    { label: '720p', value: '720p' },
+    { label: '1080p', value: '1080p' },
+    { label: '2k', value: '2k' },
+    { label: '4K', value: '4K' },
+  ];
+
+  const codecOptions = [
+    { label: 'VP9', value: 'vp9' },
+    { label: 'VP8', value: 'vp8' },
+    { label: 'H264', value: 'h264' },
+    { label: 'AV1', value: 'av1' },
+  ];
+
+  const reloadConf = async () => {
+    if (conf) {
+      const response = await api.reloadConf(conf);
+      if (response.ok) {
+        // socket 通知所有其他设备需要重新加载(包括自己)
+        socket.emit('reload_env', {
+          room,
+        } as WsBase);
+      } else {
+        const { error } = await response.json();
+        messageApi.error(`${t('settings.general.conf.reload_env_error')}: ${error}`);
+      }
+    }
+  };
 
   return (
     <div className={styles.setting_box}>
@@ -84,6 +162,71 @@ export function GeneralSettings({
         <Radio.Button value={true}>{t('common.open')}</Radio.Button>
         <Radio.Button value={false}>{t('common.close')}</Radio.Button>
       </Radio.Group>
+      {conf ? (
+        <>
+          <div className={styles.common_space}>{t('settings.general.conf.codec')}:</div>
+          <Select
+            size="large"
+            options={codecOptions}
+            style={{ width: '100%' }}
+            value={conf.codec}
+            onChange={(value) => {
+              setConf({ ...conf, codec: value });
+            }}
+          ></Select>
+          <div className={styles.common_space}>{t('settings.general.conf.resolution')}:</div>
+          <Select
+            size="large"
+            options={resolutionOptions}
+            style={{ width: '100%' }}
+            value={conf.resolution}
+            onChange={(value) => {
+              setConf({ ...conf, resolution: value });
+            }}
+          ></Select>
+          <div className={styles.common_space}>{t('settings.general.conf.maxBitrate')}:</div>
+          <InputNumber
+            style={{ width: '100%' }}
+            size="large"
+            className={styles.common_space}
+            value={conf.maxBitrate}
+            min={100000}
+            step={100000}
+            max={20000000}
+            formatter={(value) => `${value} bps`}
+            onChange={(value) => {
+              setConf({ ...conf, maxBitrate: value ?? 100000 });
+            }}
+          ></InputNumber>
+          <div className={styles.common_space}>{t('settings.general.conf.maxFramerate')}:</div>
+          <InputNumber
+            style={{ width: '100%' }}
+            size="large"
+            min={10}
+            max={90}
+            step={1}
+            formatter={(value) => `${value} fps`}
+            className={styles.common_space}
+            value={conf.maxFramerate}
+            onChange={(value) => {
+              setConf({ ...conf, maxFramerate: Number(value ?? 10) });
+            }}
+          ></InputNumber>
+          {reload && (
+            <Button
+              type="primary"
+              block
+              onClick={reloadConf}
+              className={styles.common_space}
+              size="large"
+            >
+              {t('settings.general.conf.reload')}
+            </Button>
+          )}
+        </>
+      ) : (
+        <span></span>
+      )}
     </div>
   );
 }
