@@ -1,5 +1,5 @@
 import styles from '@/styles/controls.module.scss';
-import { Button, Input, InputNumber, Radio, Select } from 'antd';
+import { Button, Input, InputNumber, Radio, Select, Slider, SliderSingleProps } from 'antd';
 import { LangSelect } from '../selects/lang_select';
 import { StatusSelect } from '../selects/status_select';
 import { SvgResource } from '@/app/resources/svg';
@@ -44,6 +44,19 @@ export function GeneralSettings({
   const [reload, setReload] = useState(false);
   const [conf, setConf] = useState<RTCConf | null>(null);
   const originConf = useRef<RTCConf | null>(null);
+
+  const marks: SliderSingleProps['marks'] = {
+    0: '流畅',
+    33: '清晰',
+    66: '高清',
+    100: {
+      style: {
+        color: '#f50',
+      },
+      label: <strong>极致</strong>,
+    },
+  };
+
   const getConf = async () => {
     const response = await api.getConf();
 
@@ -164,6 +177,9 @@ export function GeneralSettings({
       </Radio.Group>
       {conf ? (
         <>
+
+          {/* <Slider marks={marks} defaultValue={37} />
+          <Button>自定义</Button>
           <div className={styles.common_space}>{t('settings.general.conf.codec')}:</div>
           <Select
             size="large"
@@ -222,7 +238,7 @@ export function GeneralSettings({
             >
               {t('settings.general.conf.reload')}
             </Button>
-          )}
+          )} */}
         </>
       ) : (
         <span></span>
