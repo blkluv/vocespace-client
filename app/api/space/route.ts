@@ -690,6 +690,19 @@ class SpaceManager {
       //     };
       //   }
       // }
+      // 检查当前这个参与者是否在子房间中，如果在子房间需要移除
+      const childRooms = spaceInfo.children.filter((child) =>
+        child.participants.includes(participantId),
+      );
+      if (childRooms.length > 0) {
+        await Promise.all(
+          // 遍历所有子房间进行删除，虽然某个人只可能在一个子房间中，单可能出现bug导致一个人同时在多个子房间中
+          // 这里正常去除即可，等到后面删除了参与者一起设置回去
+          childRooms.map(async (child) => {
+            child.participants = child.participants.filter((id) => id !== participantId);
+          }),
+        );
+      }
 
       // 删除参与者
       delete spaceInfo.participants[participantId];
