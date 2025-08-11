@@ -41,7 +41,14 @@ const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
 const TURN_URL = process.env.TURN_URL ?? '';
 
-export const socket = io();
+export const socket = io({
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 5,
+  timeout: 30000,
+  forceNew: true,
+  transports: ['websocket', 'polling'],
+});
 
 export const userState = atom({
   key: 'userState',
@@ -329,11 +336,11 @@ function VideoConferenceComponent(props: {
       receiverId: '',
       receSocketId: '',
     });
+    await api.leaveSpace(room.name, room.localParticipant.identity, socket);
     router.push('/new_space');
     socket.emit('update_user_status', {
       room: room.name,
     } as WsBase);
-    await videoContainerRef.current?.removeLocalSettings();
     socket.disconnect();
   }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {

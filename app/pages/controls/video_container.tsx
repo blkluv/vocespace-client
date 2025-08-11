@@ -123,6 +123,12 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         return;
       }
 
+      // 当socket需要重连时 ------------------------------------------------------------------------
+      socket.on('connect', () => {
+        console.warn('Socket connect/reconnected:', socket.id);
+        setInit(true);
+      });
+
       const syncSettings = async () => {
         // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
         await updateSettings({
@@ -367,16 +373,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       // [用户被移除出房间] ----------------------------------------------------------------
       socket.on('remove_participant_response', async (msg: WsTo) => {
         if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
-          await onParticipantDisConnected(room.localParticipant);
+          let participant = room.localParticipant;
           messageApi.error({
             content: t('msg.info.remove_participant'),
             duration: 3,
           });
           room.disconnect(true);
-          router.push('/');
-          socket.emit('update_user_status', {
-            room: room.name,
-          } as WsBase);
+          await onParticipantDisConnected(participant);
         }
       });
       // [用户控制事件] -------------------------------------------------------------------
@@ -464,10 +467,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 color="danger"
                 size="small"
                 onClick={async () => {
-                  // await onParticipantDisConnected(room.localParticipant);
                   room.disconnect(true);
-                  // router.push('/');
-                  // socket.emit('update_user_status');
                 }}
               >
                 {t('common.leave')}
@@ -538,6 +538,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('refetch_room_response');
         socket.off('chat_msg_response');
         socket.off('chat_file_response');
+        socket.off('re_init_response');
+        socket.off('connect');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);

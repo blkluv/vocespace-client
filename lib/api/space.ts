@@ -1,3 +1,4 @@
+import { Socket } from 'socket.io-client';
 import { connect_endpoint, UserDefineStatus } from '../std';
 import { AppKey, ParticipantSettings, RecordSettings } from '../std/space';
 
@@ -200,4 +201,17 @@ export const updateSpaceApps = async (spaceName: string, appKey: AppKey, enabled
       enabled,
     } as UpdateSpaceAppsBody),
   });
+};
+
+export const leaveSpace = async (spaceName: string, removeId: string, socket: Socket) => {
+  const response = await deleteSpaceParticipant(spaceName, removeId);
+  if (!response.ok) {
+    // console.error('Failed to leave space:', spaceName, 'with ID:', removeId);
+  } else {
+    const data: { success: boolean; clearSpace?: string } = await response.json();
+    if (data.clearSpace && data.clearSpace === spaceName) {
+      // 说明是最后一个人离开了，清理空间所有资源
+      socket.emit('clear_space_resources', { spaceName: data.clearSpace });
+    }
+  }
 };

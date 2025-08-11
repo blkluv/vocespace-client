@@ -101,13 +101,7 @@ export function useSpaceInfo(spaceName: string, participantId: string) {
       if (!spaceName || !participantId) return;
       let removeId = id || participantId;
       try {
-        const response = await api.deleteSpaceParticipant(spaceName, removeId);
-        if (response.ok) {
-          const data: { success: boolean; clearSpace?: string } = await response.json();
-          if (data.clearSpace && data.clearSpace !== '') {
-            socket.emit('clear_space_resources', { spaceName: data.clearSpace });
-          }
-        }
+        await api.leaveSpace(spaceName, removeId, socket);
       } catch (err) {
         console.error('Error clearing settings:', err);
       }

@@ -111,6 +111,7 @@ export default {
         missing_data:
           'Joining data is not available. If you see this error, please contact the development team. ',
         reject: 'Sorry! You are rejected to join the room. ',
+        missing_owner: 'The room owner is currently offline and cannot process your request.',
       },
       rename: {
         title: 'Rename room',

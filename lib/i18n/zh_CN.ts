@@ -109,6 +109,7 @@ export default {
         cancel: '拒绝',
         missing_data: '加入数据不可用，如果您看到此错误，请联系开发团队。',
         reject: '很遗憾!您被拒绝加入房间。',
+        missing_owner: '房间拥有者当前不在线，无法处理您的请求。',
       },
       rename: {
         title: '重命名房间',

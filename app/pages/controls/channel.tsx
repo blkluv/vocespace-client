@@ -340,12 +340,18 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     const addIntoRoom = async (room: ChildRoom) => {
       // 判断是否为私密房间，如果是则需要使用socket通知拥有者
       if (room.isPrivate && room.ownerId !== localParticipantId) {
-        socket.emit('join_privacy_room', {
-          receiverId: room.ownerId,
-          socketId: settings.participants[room.ownerId].socketId,
-          childRoom: room.name,
-          ...wsSender,
-        } as WsJoinRoom);
+        // 只有当前房间的拥有者在Space中才能发送这个请求
+        if (settings.participants[room.ownerId]) {
+          socket.emit('join_privacy_room', {
+            receiverId: room.ownerId,
+            socketId: settings.participants[room.ownerId].socketId,
+            childRoom: room.name,
+            ...wsSender,
+          } as WsJoinRoom);
+        } else {
+          messageApi.warning(t('channel.modal.join.missing_owner'));
+        }
+
         return;
       }
       await joinChildRoom(room, localParticipantId);

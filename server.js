@@ -392,6 +392,14 @@ app.prepare().then(() => {
       processingSocketIds.add(socket.id);
 
       try {
+        // 增加一个延迟，避免在socket重连时立即删除数据 (5s, 因为一次重连1s，设置了5次重连)
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        const isReconnected = io.sockets.sockets.has(socket.id);
+        if (isReconnected) {
+          // 重连成功
+          return;
+        }
+
         // 当某个用户断开连接我们需要请求http服务器删除用户在房间中的数据
         if (socket.id) {
           const url = `http://${hostname}:${port}${basePath}/api/space?socketId=${socket.id}`;
