@@ -107,7 +107,7 @@ h2 a {
   height: 100%;
 }
 
-.ant-collapse-content-box{
+.ant-collapse-content-box {
   padding: 4px !important;
 }
 
@@ -215,3 +215,6 @@ h2 a {
   background-color: #22ccee !important;
 }
 
+.ant-upload-drag-container {
+  vertical-align: top !important;
+}

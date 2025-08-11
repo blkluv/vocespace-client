@@ -41,6 +41,8 @@ interface SpaceDateRecords {
   [spaceId: string]: SpaceTimeRecord[];
 }
 
+const { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL } = process.env;
+
 // [redis config env] ----------------------------------------------------------
 const {
   redis: { enabled, host, port, password, db },
@@ -690,6 +692,19 @@ class SpaceManager {
       //     };
       //   }
       // }
+      // 检查当前这个参与者是否在子房间中，如果在子房间需要移除
+      const childRooms = spaceInfo.children.filter((child) =>
+        child.participants.includes(participantId),
+      );
+      if (childRooms.length > 0) {
+        await Promise.all(
+          // 遍历所有子房间进行删除，虽然某个人只可能在一个子房间中，单可能出现bug导致一个人同时在多个子房间中
+          // 这里正常去除即可，等到后面删除了参与者一起设置回去
+          childRooms.map(async (child) => {
+            child.participants = child.participants.filter((id) => id !== participantId);
+          }),
+        );
+      }
 
       // 删除参与者
       delete spaceInfo.participants[participantId];
@@ -1131,100 +1146,124 @@ export async function DELETE(request: NextRequest) {
   const childRoom = request.nextUrl.searchParams.get('childRoom') as ChildRoomMethods | null;
   const isDeleteParticipant = request.nextUrl.searchParams.get('participant') === 'delete';
   const isSpace = request.nextUrl.searchParams.get('space') === 'true';
-  // [离开子房间] ---------------------------------------------------------------------------------------------
-  if (childRoom === ChildRoomMethods.LEAVE) {
-    const body = await request.json();
-    const { spaceName, participantId, roomName }: LeaveRoomBody = body;
-    // 从子房间中移除参与者
-    const { success, error } = await SpaceManager.removeParticipantFromChildRoom(
-      spaceName,
-      roomName,
-      participantId,
-    );
-    if (success) {
-      return NextResponse.json({ success: true, message: 'Participant removed from child room' });
-    } else {
-      return NextResponse.json(
-        { success: false, message: 'Failed to remove participant from child room', error },
-        { status: 500 },
+  try {
+    // [离开子房间] ---------------------------------------------------------------------------------------------
+    if (childRoom === ChildRoomMethods.LEAVE) {
+      const body = await request.json();
+      const { spaceName, participantId, roomName }: LeaveRoomBody = body;
+      // 从子房间中移除参与者
+      const { success, error } = await SpaceManager.removeParticipantFromChildRoom(
+        spaceName,
+        roomName,
+        participantId,
       );
+      if (success) {
+        return NextResponse.json({ success: true, message: 'Participant removed from child room' });
+      } else {
+        return NextResponse.json(
+          { success: false, message: 'Failed to remove participant from child room', error },
+          { status: 500 },
+        );
+      }
+    } else if (childRoom === ChildRoomMethods.DELETE) {
+      // 删除子房间 ----------------------------------------------------------------------------------------------
+      const { spaceName, roomName }: DeleteRoomBody = await request.json();
+      const success = await SpaceManager.deleteChildRoom(spaceName, roomName);
+      if (success) {
+        return NextResponse.json({ success: true, message: 'Child room deleted successfully' });
+      } else {
+        return NextResponse.json(
+          { success: false, message: 'Failed to delete child room' },
+          { status: 500 },
+        );
+      }
     }
-  } else if (childRoom === ChildRoomMethods.DELETE) {
-    // 删除子房间 ----------------------------------------------------------------------------------------------
-    const { spaceName, roomName }: DeleteRoomBody = await request.json();
-    const success = await SpaceManager.deleteChildRoom(spaceName, roomName);
-    if (success) {
-      return NextResponse.json({ success: true, message: 'Child room deleted successfully' });
-    } else {
-      return NextResponse.json(
-        { success: false, message: 'Failed to delete child room' },
-        { status: 500 },
-      );
-    }
-  }
 
-  if (socketId) {
-    // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
-    // 所以这里要从redis中找到这个对应socketId的参与者
-    const allRooms = await SpaceManager.getAllSpaces();
-    let participantFound = false;
-    for (const [spaceId, settings] of Object.entries(allRooms)) {
-      for (const [participantId, participant] of Object.entries(settings.participants)) {
-        if (participant.socketId === socketId) {
-          participantFound = true;
-          // 找到对应的参与者，进行删除
-          const { success, clearAll, error } = await SpaceManager.removeParticipant(
-            spaceId,
-            participantId,
-          );
-          if (success) {
-            if (clearAll) {
-              return NextResponse.json({ success: true, clearRoom: spaceId });
-            }
-            return NextResponse.json({
-              success: true,
-              message: 'Participant removed successfully',
-            });
-          } else {
-            return NextResponse.json(
-              { success: false, message: 'Failed to remove participant', error },
-              { status: 500 },
+    if (socketId) {
+      // 如果有socketId，说明是通过socket连接的参与者离开, 因为有些使用者不会点击离开按钮，而是直接关闭浏览器或标签页
+      // 所以这里要从redis中找到这个对应socketId的参与者
+      const allRooms = await SpaceManager.getAllSpaces();
+      let participantFound = false;
+      for (const [spaceId, settings] of Object.entries(allRooms)) {
+        for (const [participantId, participant] of Object.entries(settings.participants)) {
+          if (participant.socketId === socketId) {
+            participantFound = true;
+            // 找到对应的参与者，进行删除
+            const { success, clearAll, error } = await SpaceManager.removeParticipant(
+              spaceId,
+              participantId,
             );
+            if (success) {
+              if (clearAll) {
+                return NextResponse.json({ success: true, clearRoom: spaceId });
+              }
+              return NextResponse.json({
+                success: true,
+                message: 'Participant removed successfully',
+              });
+            } else {
+              return NextResponse.json(
+                { success: false, message: 'Failed to remove participant', error },
+                { status: 500 },
+              );
+            }
           }
         }
       }
-    }
 
-    // 如果循环结束后没有找到参与者
-    if (!participantFound) {
+      // 如果循环结束后没有找到参与者
+      if (!participantFound) {
+        return NextResponse.json(
+          { success: true, message: 'Participant not found for the given socketId' },
+          { status: 200 },
+        );
+      }
+    }
+    // 不是使用socketId断开来处理离开房间 --------------------------------------------------------------------
+    if (isSpace && isDeleteParticipant) {
+      const { spaceName, participantId }: DeleteSpaceParticipantBody = await request.json();
+      // 在清理数据前先向服务端确认该用户是否真的离开了房间
+      let isReallyLeave = await reallyLeaveSpace(spaceName, participantId);
+      if (!isReallyLeave) {
+        return NextResponse.json(
+          { success: false, message: 'Participant is still in the room, cannot remove.' },
+          { status: 400 },
+        );
+      }
+
+      let { success, clearAll, error } = await SpaceManager.removeParticipant(
+        spaceName,
+        participantId,
+      );
+      if (success) {
+        if (clearAll) {
+          return NextResponse.json({ success: true, clearSpace: spaceName });
+        }
+        return NextResponse.json({ success: true, message: 'Participant removed successfully' });
+      }
+
       return NextResponse.json(
-        { success: true, message: 'Participant not found for the given socketId' },
-        { status: 200 },
+        { success: false, message: 'Failed to remove participant', error },
+        { status: 500 },
       );
     }
-  }
-  // 不是使用socketId断开来处理离开房间 --------------------------------------------------------------------
-  if (isSpace && isDeleteParticipant) {
-    const { spaceName, participantId }: DeleteSpaceParticipantBody = await request.json();
-    let { success, clearAll, error } = await SpaceManager.removeParticipant(
-      spaceName,
-      participantId,
-    );
-    if (success) {
-      if (clearAll) {
-        return NextResponse.json({ success: true, clearSpace: spaceName });
-      }
-      return NextResponse.json({ success: true, message: 'Participant removed successfully' });
-    }
-
-    return NextResponse.json(
-      { success: false, message: 'Failed to remove participant', error },
-      { status: 500 },
-    );
+  } catch (error) {
+    console.error('DELETE Error:', error);
   }
 }
 
-const { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL } = process.env;
+/// 通过livekit服务端API确定用户是否真的离开了房间
+const reallyLeaveSpace = async (spaceName: string, participantId: string): Promise<boolean> => {
+  const roomServer = new RoomServiceClient(LIVEKIT_URL!, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
+  // 列出所有房间
+  // const targetParticipant = await roomServer.getParticipant(spaceName, participantId);
+  const participants = await roomServer.listParticipants(spaceName);
+  if (participants.length === 0 || !participants.some((p) => p.identity === participantId)) {
+    console.warn(`Participant ${participantId} not found in room ${spaceName}.`);
+    return true; // 如果没有找到参与者，说明用户已经离开了房间
+  }
+  return false;
+};
 
 // 用户心跳检测
 // 经过测试，发现当用户退出房间时可能会失败，导致用户实际已经退出，但服务端数据还存在

@@ -109,6 +109,7 @@ export default {
         cancel: '拒绝',
         missing_data: '加入数据不可用，如果您看到此错误，请联系开发团队。',
         reject: '很遗憾!您被拒绝加入房间。',
+        missing_owner: '房间拥有者当前不在线，无法处理您的请求。',
       },
       rename: {
         title: '重命名房间',
@@ -240,6 +241,16 @@ export default {
       lang: '语言',
       share_audio: '共享音频',
       prompt_sound: '进入提示音',
+      conf: {
+        load_error: '配置加载失败，请检查vocespace.conf.json文件是否存在',
+        reload_env_error: '重新加载配置失败',
+        reload: '重新加载配置',
+        maxFramerate: '最大帧率',
+        maxBitrate: '最大码率',
+        resolution: '分辨率',
+        codec: '编解码器',
+        priority: '优先级',
+      },
       status: {
         title: '状态',
         online: '在线',

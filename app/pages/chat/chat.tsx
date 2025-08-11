@@ -235,24 +235,24 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
         styles={{
           body: {
             ...DEFAULT_DRAWER_PROP.styles?.body,
-            padding: 0
-          }
+            padding: 0,
+          },
         }}
       >
-        <div className={styles.msg}>
-          <Dragger
-            style={{ position: 'absolute', top: 0, border: 'none' }}
-            multiple={false}
-            name="file"
-            beforeUpload={handleBeforeUpload}
-            showUploadList={false}
-            openFileDialogOnClick={false}
-          ></Dragger>
+        <Dragger
+          className={styles.msg}
+          style={{ border: 'none' }}
+          multiple={false}
+          name="file"
+          beforeUpload={handleBeforeUpload}
+          showUploadList={false}
+          openFileDialogOnClick={false}
+        >
           <ul ref={ulRef} className={styles.msg_list}>
             {msgList}
             <div ref={bottomRef} style={{ height: '1px', visibility: 'hidden' }} />
           </ul>
-        </div>
+        </Dragger>
 
         <div className={styles.tool}>
           <Upload beforeUpload={handleBeforeUpload} showUploadList={false}>
@@ -321,7 +321,7 @@ function ChatMsgItemCmp({ isLocal, msg, downloadFile, isImg }: ChatMsgItemProps)
               <div
                 className={styles.msg_item_content_msg}
                 style={{
-                  textAlign: "left",
+                  textAlign: 'left',
                 }}
               >
                 {msg.message}
