@@ -651,7 +651,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                 onClick={() => {
                   setMainActiveKey((prev) => {
                     if (prev.includes('main')) {
-                      return [];
+                      return ['sub'];
                     }
                     return ['main', 'sub'];
                   });
