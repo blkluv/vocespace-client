@@ -9,9 +9,9 @@ import {
   usePreviewTracks,
 } from '@livekit/components-react';
 import styles from '@/styles/pre_join.module.scss';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { facingModeFromLocalTrack, LocalAudioTrack, LocalVideoTrack, Track } from 'livekit-client';
-import { Input, InputRef, message, Skeleton, Slider, Space } from 'antd';
+import { Input, InputRef, message, Skeleton, Slider, Space, Spin } from 'antd';
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRecoilState } from 'recoil';
@@ -160,6 +160,23 @@ export function PreJoin({
     }
   }, [username, videoEnabled, videoDeviceId, audioEnabled, audioDeviceId]);
   // handle submit --------------------------------------------------------------------------------
+  const [spinning, setSpinning] = useState(false);
+  const [percent, setPercent] = useState(0);
+  const showLoader = () => {
+    setSpinning(true);
+    let ptg = 0;
+
+    const interval = setInterval(() => {
+      ptg += 5;
+      setPercent(ptg);
+
+      if (ptg > 100) {
+        clearInterval(interval);
+        setSpinning(false);
+        setPercent(0);
+      }
+    }, 200);
+  };
   const handleSubmit = async () => {
     const finalUserChoices = {
       username,
@@ -198,6 +215,7 @@ export function PreJoin({
     }
 
     if (typeof onSubmit === 'function') {
+      showLoader();
       onSubmit(finalUserChoices);
     }
   };
@@ -229,6 +247,7 @@ export function PreJoin({
   return (
     <div className={styles.view}>
       {contextHolder}
+      <Spin spinning={spinning} percent={percent} fullscreen />
       <span className={styles.view__lang_select}>
         {loading ? (
           <Skeleton.Node
