@@ -529,6 +529,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
       });
 
+      // [重载/更新配置] -----------------------------------------------------------------------
+      socket.on('reload_env_response', (_msg: WsBase) => {
+        console.warn(_msg);
+        messageApi.success(t('settings.general.conf.reload_env'));
+        // 重新获取配置
+      });
+
       return () => {
         socket.off('wave_response');
         socket.off('user_status_updated');

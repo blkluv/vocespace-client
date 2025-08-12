@@ -245,13 +245,14 @@ export default {
       conf: {
         load_error: '配置加载失败，请检查vocespace.conf.json文件是否存在',
         reload_env_error: '重新加载配置失败',
+        reload_env: "VoceSpace空间配置更新，当前空间正在自动更新",
         reload: '重新加载配置',
         maxFramerate: '最大帧率',
         maxBitrate: '最大码率',
         resolution: '分辨率',
         codec: '编解码器',
         priority: '优先级',
-        quilty: {
+        quality: {
           define: '自定义画质',
           title: '画质',
           smooth: '流畅',

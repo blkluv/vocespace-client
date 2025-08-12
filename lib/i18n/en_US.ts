@@ -215,6 +215,7 @@ export default {
           mute: {
             audio: 'Mute Microphone',
             video: 'Turn Off Video',
+            screen: 'Stop Screen Sharing',
           },
           volume: 'Volume Adjustment',
           blur: {
@@ -248,6 +249,26 @@ export default {
       lang: 'Language',
       share_audio: 'Share Screen Audio',
       prompt_sound: 'Enter Prompt Sound',
+      conf: {
+        load_error:
+          'Configuration loading failed, please check if the vocespace.conf.json file exists',
+        reload_env_error: 'Configuration reload failed',
+        reload: 'Reload configuration',
+        maxFramerate: 'Maximum frame rate',
+        maxBitrate: 'Maximum bitrate',
+        resolution: 'Resolution',
+        codec: 'Codec',
+        priority: 'Priority',
+        quality: {
+          define: 'Custom image quality',
+          title: 'Image quality',
+          smooth: 'Smooth',
+          standard: 'Standard',
+          high: 'High',
+          hd: 'HD',
+          ultra: 'Ultra',
+        },
+      },
       status: {
         title: 'Status',
         online: 'Online',
@@ -476,6 +497,7 @@ export default {
         mute: {
           audio: 'Audio-Microphone device muted',
           video: 'Video-Camera device is turned off',
+          screen: 'Screen sharing stopped',
         },
       },
       user: {

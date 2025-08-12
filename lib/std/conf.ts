@@ -279,17 +279,13 @@ export const numberToRTCLevel = (num: number): RTCLevel => {
  *  - 30fps: 16
  *  - 60fps: 34
  * 总分100，最后通过分数计算出对应的等级
- * @param conf 
+ * @param conf
  */
 export const countLevelByConf = (conf: RTCConf): RTCLevel => {
-  const {
-    resolution,
-    maxBitrate,
-    maxFramerate
-  } = conf;
+  const { resolution, maxBitrate, maxFramerate } = conf;
 
   let score = 0;
-  
+
   // 计算分辨率得分
   score += resolutionToNumber(resolution);
   // 计算码率得分
@@ -298,7 +294,7 @@ export const countLevelByConf = (conf: RTCConf): RTCLevel => {
   score += framerateToNumber(maxFramerate);
   // 根据总分计算等级
   return numberToRTCLevel(score);
-}
+};
 
 export const resolutionToNumber = (resolution: Resolution): number => {
   switch (resolution) {
@@ -343,3 +339,60 @@ export const framerateToNumber = (framerate: number): number => {
   }
 };
 
+export const rtcLevelToConf = (level: RTCLevel): RTCConf => {
+  switch (level) {
+    case RTCLevel.Smooth:
+      return {
+        codec: 'vp9',
+        resolution: '540p',
+        maxBitrate: 800_000,
+        maxFramerate: 25,
+        priority: 'medium',
+      };
+    case RTCLevel.Standard:
+      return {
+        codec: 'vp9',
+        resolution: '720p',
+        maxBitrate: 1_700_000,
+        maxFramerate: 30,
+        priority: 'medium',
+      };
+    case RTCLevel.High:
+      return {
+        codec: 'vp9',
+        resolution: '1080p',
+        maxBitrate: 3_000_000,
+        maxFramerate: 30,
+        priority: 'medium',
+      };
+    case RTCLevel.HD:
+      return {
+        codec: 'vp9',
+        resolution: '2k',
+        maxBitrate: 5_000_000,
+        maxFramerate: 30,
+        priority: 'medium',
+      };
+    case RTCLevel.Ultra:
+      return {
+        codec: 'vp9',
+        resolution: '4k',
+        maxBitrate: 10_000_000,
+        maxFramerate: 60,
+        priority: 'medium',
+      };
+    default:
+      return {
+        codec: 'vp9',
+        resolution: '1080p',
+        maxBitrate: 3_000_000,
+        maxFramerate: 30,
+        priority: 'medium',
+      };
+  }
+};
+
+export const rtcNumberToConf = (num: number): RTCConf => {
+  const level = numberToRTCLevel(num);
+  return rtcLevelToConf(level);
+};

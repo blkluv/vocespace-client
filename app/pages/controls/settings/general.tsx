@@ -11,7 +11,14 @@ import { isUndefinedNumber, isUndefinedString, UserStatus } from '@/lib/std';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import equal from 'fast-deep-equal';
 import { api } from '@/lib/api';
-import { countLevelByConf, RTCConf, rtcLevelToNumber, VocespaceConfig } from '@/lib/std/conf';
+import {
+  countLevelByConf,
+  numberToRTCLevel,
+  RTCConf,
+  rtcLevelToNumber,
+  rtcNumberToConf,
+  VocespaceConfig,
+} from '@/lib/std/conf';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsBase } from '@/lib/std/device';
 export interface GeneralSettingsProps {
@@ -45,7 +52,9 @@ export function GeneralSettings({
   const [conf, setConf] = useState<RTCConf | null>(null);
   const originConf = useRef<RTCConf | null>(null);
   const [rtcLevel, setRtcLevel] = useState(50);
+  const originRtcLevel = useRef(rtcLevel);
   const [define, setDefine] = useState(false);
+  const [update, setUpdate] = useState(true);
 
   const unifiedSliderText = (label: string) => ({
     style: {
@@ -55,14 +64,15 @@ export function GeneralSettings({
   });
 
   const marks: SliderSingleProps['marks'] = {
-    0: unifiedSliderText(t('settings.general.conf.quilty.smooth')),
-    25: unifiedSliderText(t('settings.general.conf.quilty.standard')),
-    50: unifiedSliderText(t('settings.general.conf.quilty.high')),
-    75: unifiedSliderText(t('settings.general.conf.quilty.hd')),
-    100: unifiedSliderText(t('settings.general.conf.quilty.ultra')),
+    0: unifiedSliderText(t('settings.general.conf.quality.smooth')),
+    25: unifiedSliderText(t('settings.general.conf.quality.standard')),
+    50: unifiedSliderText(t('settings.general.conf.quality.high')),
+    75: unifiedSliderText(t('settings.general.conf.quality.hd')),
+    100: unifiedSliderText(t('settings.general.conf.quality.ultra')),
   };
 
   const getConf = async () => {
+    console.warn('getConf');
     const response = await api.getConf();
 
     if (response.ok) {
@@ -86,15 +96,19 @@ export function GeneralSettings({
         } as RTCConf;
         setConf(data);
         originConf.current = data;
-        setRtcLevel(rtcLevelToNumber(countLevelByConf(data)));
-        console.warn('rtcLevel', rtcLevel);
+        let rtcLevel = rtcLevelToNumber(countLevelByConf(data));
+        setRtcLevel(rtcLevel);
+        originRtcLevel.current = rtcLevel;
       }
     }
   };
 
   useEffect(() => {
-    getConf();
-  }, []);
+    if (update) {
+      getConf();
+      setUpdate(false);
+    }
+  }, [update]);
 
   useEffect(() => {
     if (equal(conf, originConf.current)) {
@@ -121,8 +135,15 @@ export function GeneralSettings({
 
   const reloadConf = async () => {
     if (conf) {
-      const response = await api.reloadConf(conf);
+      let reloadConf = conf;
+      if (!define) {
+        // 用户没有自定义，而是使用了滑动条来快速设置
+        reloadConf = rtcNumberToConf(rtcLevel);
+      }
+
+      const response = await api.reloadConf(reloadConf);
       if (response.ok) {
+        setUpdate(true);
         // socket 通知所有其他设备需要重新加载(包括自己)
         socket.emit('reload_env', {
           room,
@@ -184,7 +205,7 @@ export function GeneralSettings({
       </Radio.Group>
       {conf ? (
         <>
-          <div className={styles.common_space}>{t('settings.general.conf.quilty.title')}:</div>
+          <div className={styles.common_space}>{t('settings.general.conf.quality.title')}:</div>
           <div className={styles.setting_box_line}>
             <Slider
               marks={marks}
@@ -194,14 +215,18 @@ export function GeneralSettings({
               value={rtcLevel}
               dots
               range={false}
-              style={{ width: '100%', marginLeft: "8px", marginRight: '16px' }}
+              style={{ width: '100%', marginLeft: '8px', marginRight: '16px' }}
+              onChange={(value) => {
+                setRtcLevel(value);
+                setReload(value !== originRtcLevel.current);
+              }}
             />
             <Button
               onClick={() => setDefine(!define)}
               className={styles.common_space}
               type="primary"
             >
-              {t('settings.general.conf.quilty.define')}
+              {t('settings.general.conf.quality.define')}
             </Button>
           </div>
           {define && (
@@ -254,18 +279,18 @@ export function GeneralSettings({
                   setConf({ ...conf, maxFramerate: Number(value ?? 10) });
                 }}
               ></InputNumber>
-              {reload && (
-                <Button
-                  type="primary"
-                  block
-                  onClick={reloadConf}
-                  className={styles.common_space}
-                  size="large"
-                >
-                  {t('settings.general.conf.reload')}
-                </Button>
-              )}
             </>
+          )}
+          {reload && (
+            <Button
+              type="primary"
+              block
+              onClick={reloadConf}
+              className={styles.common_space}
+              size="large"
+            >
+              {t('settings.general.conf.reload')}
+            </Button>
           )}
         </>
       ) : (
