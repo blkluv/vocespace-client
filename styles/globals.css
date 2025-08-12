@@ -218,3 +218,8 @@ h2 a {
 .ant-upload-drag-container {
   vertical-align: top !important;
 }
+
+.ant-tabs-content-holder {
+  overflow-y: scroll;
+  scrollbar-width: none;
+}

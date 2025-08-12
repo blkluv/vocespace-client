@@ -5,7 +5,7 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import styles from '@/styles/Home.module.css';
-import { Button, Input, message, Radio, Tooltip } from 'antd';
+import { Button, Input, message, Radio, Spin, Tooltip } from 'antd';
 import Checkbox, { CheckboxGroupProps } from 'antd/es/checkbox';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { MessageInstance } from 'antd/es/message/interface';
@@ -40,14 +40,32 @@ export function MeetingTab({ hq, setHq }: MeetingTabProps) {
   const [e2ee, setE2ee] = useState(false);
   const [roomUrl, setRoomUrl] = useState('');
   const [sharedPassphrase, setSharedPassphrase] = useState(randomString(64));
+  const [spinning, setSpinning] = useState(false);
+  const [percent, setPercent] = useState(0);
   // tab options -----------------------------------------------------------------------------
   const options: CheckboxGroupProps<string>['options'] = [
     { label: t('common.demo'), value: 'demo' },
     { label: t('common.custom'), value: 'custom' },
   ];
   const [optionVal, setOptionVal] = useState('demo');
+  const showLoader = () => {
+    setSpinning(true);
+    let ptg = 0;
+
+    const interval = setInterval(() => {
+      ptg += 5;
+      setPercent(ptg);
+
+      if (ptg > 100) {
+        clearInterval(interval);
+        setSpinning(false);
+        setPercent(0);
+      }
+    }, 200); // 设置为200ms * (100 / 5) = 4s 第一次加载时间
+  };
   // start meeting if valid ------------------------------------------------------------------
   const startMeeting = () => {
+    showLoader();
     if (e2ee) {
       router.push(
         `/${generateRoomId()}#${encodePassphrase(sharedPassphrase)}${hq ? '?hq=true' : ''}`,
@@ -64,6 +82,7 @@ export function MeetingTab({ hq, setHq }: MeetingTabProps) {
   return (
     <div className={styles.tabContent}>
       {contextHolder}
+      <Spin spinning={spinning} percent={percent} fullscreen />
       <Radio.Group
         block
         options={options}
@@ -127,7 +146,7 @@ export function MeetingTab({ hq, setHq }: MeetingTabProps) {
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '1rem' }}>
           <Checkbox id="use-hq" checked={hq} onChange={(ev) => setHq(ev.target.checked)}></Checkbox>
 
-          <Tooltip title={t('common.high_quality_desc')} placement='right'>
+          <Tooltip title={t('common.high_quality_desc')} placement="right">
             <label htmlFor="use-hq">{t('common.high_quality')}</label>
           </Tooltip>
         </div>

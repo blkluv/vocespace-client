@@ -1,6 +1,7 @@
 // 用来读取vocespace.conf.json这个配置文件
 // 这个配置文件的位置在项目根目录下
 // 只会在服务器端使用
+import { SliderMarks } from 'antd/es/slider';
 import { VideoCodec, VideoPreset } from 'livekit-client';
 
 export interface TurnConf {
@@ -197,3 +198,148 @@ export const createResolution = (options: {
       };
   }
 };
+
+export enum RTCLevel {
+  /**
+   * 流畅
+   */
+  Smooth,
+  /**
+   * 清晰
+   */
+  Standard,
+  /**
+   * 高清
+   */
+  High,
+  /**
+   * 超清
+   */
+  HD,
+  /**
+   * 极致
+   */
+  Ultra,
+}
+
+export const rtcLevelToNumber = (level: RTCLevel): number => {
+  switch (level) {
+    case RTCLevel.Smooth:
+      return 0;
+    case RTCLevel.Standard:
+      return 25;
+    case RTCLevel.High:
+      return 50;
+    case RTCLevel.HD:
+      return 75;
+    case RTCLevel.Ultra:
+      return 100;
+    default:
+      return 50;
+  }
+};
+
+export const numberToRTCLevel = (num: number): RTCLevel => {
+  if (num < 25) {
+    return RTCLevel.Smooth;
+  } else if (num < 50) {
+    return RTCLevel.Standard;
+  } else if (num < 75) {
+    return RTCLevel.High;
+  } else if (num < 100) {
+    return RTCLevel.HD;
+  } else {
+    return RTCLevel.Ultra;
+  }
+};
+
+/**
+ * ## 通过配置计算出对应的等级
+ * - 流畅: 540p, 800kbps, 25fps
+ * - 清晰: 720p, 1700kbps, 30fps
+ * - 高清: 1080p, 3000kbps, 30fps
+ * - 超清: 2k, 5000kbps, 30fps
+ * - 极致: 4k, 10000kbps, 60fps
+ * 我们不会直接去判断，而是通过数值加法得到分数然后转为等级
+ * 分数计算方式:
+ * - 分辨率: 满分33
+ *   - 540p: 0
+ *   - 720p: 8
+ *   - 1080p: 16
+ *   - 2k: 24
+ *   - 4k: 33
+ * - 码率: 满分33
+ *  - 800kbps: 0
+ *  - 1700kbps: 8
+ *  - 3000kbps: 16
+ *  - 5000kbps: 24
+ *  - 10000kbps: 33
+ * - 帧率: 满分34
+ *  - 25fps: 8
+ *  - 30fps: 16
+ *  - 60fps: 34
+ * 总分100，最后通过分数计算出对应的等级
+ * @param conf 
+ */
+export const countLevelByConf = (conf: RTCConf): RTCLevel => {
+  const {
+    resolution,
+    maxBitrate,
+    maxFramerate
+  } = conf;
+
+  let score = 0;
+  
+  // 计算分辨率得分
+  score += resolutionToNumber(resolution);
+  // 计算码率得分
+  score += bitrateToNumber(maxBitrate);
+  // 计算帧率得分
+  score += framerateToNumber(maxFramerate);
+  // 根据总分计算等级
+  return numberToRTCLevel(score);
+}
+
+export const resolutionToNumber = (resolution: Resolution): number => {
+  switch (resolution) {
+    case '540p':
+      return 0;
+    case '720p':
+      return 8;
+    case '1080p':
+      return 16;
+    case '2k':
+      return 24;
+    case '4k':
+      return 33;
+    default:
+      return 16;
+  }
+};
+
+export const bitrateToNumber = (bitrate: number): number => {
+  if (bitrate < 800_000) {
+    return 0;
+  } else if (bitrate < 1_700_000) {
+    return 8;
+  } else if (bitrate < 3_000_000) {
+    return 16;
+  } else if (bitrate < 5_000_000) {
+    return 24;
+  } else {
+    return 33;
+  }
+};
+
+export const framerateToNumber = (framerate: number): number => {
+  if (framerate < 25) {
+    return 0;
+  } else if (framerate < 30) {
+    return 8;
+  } else if (framerate < 60) {
+    return 16;
+  } else {
+    return 34;
+  }
+};
+

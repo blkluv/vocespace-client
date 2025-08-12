@@ -208,6 +208,7 @@ export default {
           mute: {
             audio: '静音音频',
             video: '关闭视频',
+            screen: '停止屏幕共享',
           },
           volume: '音量调节',
           blur: {
@@ -223,12 +224,12 @@ export default {
             confirm: '确定移除',
             cancel: '取消',
           },
-          leave : {
-            title: "离开VoceSpace",
-            desc: "您确定要离开VoceSpace吗？",
-            confirm: "确定离开",
-            cancel: "取消",
-          }
+          leave: {
+            title: '离开VoceSpace',
+            desc: '您确定要离开VoceSpace吗？',
+            confirm: '确定离开',
+            cancel: '取消',
+          },
         },
       },
     },
@@ -250,6 +251,15 @@ export default {
         resolution: '分辨率',
         codec: '编解码器',
         priority: '优先级',
+        quilty: {
+          define: '自定义画质',
+          title: '画质',
+          smooth: '流畅',
+          standard: '标准',
+          high: '高清',
+          hd: '超清',
+          ultra: '极致',
+        },
       },
       status: {
         title: '状态',
@@ -460,6 +470,7 @@ export default {
         mute: {
           audio: '音频-麦克风设备已静音',
           video: '视频-摄像头设备已关闭',
+          screen: '屏幕共享已停止',
         },
       },
       user: {

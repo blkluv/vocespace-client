@@ -45,6 +45,7 @@ export enum ControlType {
   ChangeName = 'change_name',
   MuteAudio = 'mute_audio',
   MuteVideo = 'mute_video',
+  MuteScreen = 'mute_screen',
   Volume = 'volume',
   BlurVideo = 'blur_video',
   BlurScreen = 'blur_screen',

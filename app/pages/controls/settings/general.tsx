@@ -8,10 +8,10 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { LocalParticipant, Room } from 'livekit-client';
 import { MessageInstance } from 'antd/es/message/interface';
 import { isUndefinedNumber, isUndefinedString, UserStatus } from '@/lib/std';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import equal from 'fast-deep-equal';
 import { api } from '@/lib/api';
-import { RTCConf, VocespaceConfig } from '@/lib/std/conf';
+import { countLevelByConf, RTCConf, rtcLevelToNumber, VocespaceConfig } from '@/lib/std/conf';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsBase } from '@/lib/std/device';
 export interface GeneralSettingsProps {
@@ -44,17 +44,22 @@ export function GeneralSettings({
   const [reload, setReload] = useState(false);
   const [conf, setConf] = useState<RTCConf | null>(null);
   const originConf = useRef<RTCConf | null>(null);
+  const [rtcLevel, setRtcLevel] = useState(50);
+  const [define, setDefine] = useState(false);
+
+  const unifiedSliderText = (label: string) => ({
+    style: {
+      color: '#fff',
+    },
+    label: <span>{label}</span>,
+  });
 
   const marks: SliderSingleProps['marks'] = {
-    0: '流畅',
-    33: '清晰',
-    66: '高清',
-    100: {
-      style: {
-        color: '#f50',
-      },
-      label: <strong>极致</strong>,
-    },
+    0: unifiedSliderText(t('settings.general.conf.quilty.smooth')),
+    25: unifiedSliderText(t('settings.general.conf.quilty.standard')),
+    50: unifiedSliderText(t('settings.general.conf.quilty.high')),
+    75: unifiedSliderText(t('settings.general.conf.quilty.hd')),
+    100: unifiedSliderText(t('settings.general.conf.quilty.ultra')),
   };
 
   const getConf = async () => {
@@ -81,6 +86,8 @@ export function GeneralSettings({
         } as RTCConf;
         setConf(data);
         originConf.current = data;
+        setRtcLevel(rtcLevelToNumber(countLevelByConf(data)));
+        console.warn('rtcLevel', rtcLevel);
       }
     }
   };
@@ -128,7 +135,7 @@ export function GeneralSettings({
   };
 
   return (
-    <div className={styles.setting_box}>
+    <div className={`${styles.setting_box} ${styles.scroll_box}`}>
       <div>{t('settings.general.username')}:</div>
       <Input
         size="large"
@@ -177,68 +184,89 @@ export function GeneralSettings({
       </Radio.Group>
       {conf ? (
         <>
-
-          {/* <Slider marks={marks} defaultValue={37} />
-          <Button>自定义</Button>
-          <div className={styles.common_space}>{t('settings.general.conf.codec')}:</div>
-          <Select
-            size="large"
-            options={codecOptions}
-            style={{ width: '100%' }}
-            value={conf.codec}
-            onChange={(value) => {
-              setConf({ ...conf, codec: value });
-            }}
-          ></Select>
-          <div className={styles.common_space}>{t('settings.general.conf.resolution')}:</div>
-          <Select
-            size="large"
-            options={resolutionOptions}
-            style={{ width: '100%' }}
-            value={conf.resolution}
-            onChange={(value) => {
-              setConf({ ...conf, resolution: value });
-            }}
-          ></Select>
-          <div className={styles.common_space}>{t('settings.general.conf.maxBitrate')}:</div>
-          <InputNumber
-            style={{ width: '100%' }}
-            size="large"
-            className={styles.common_space}
-            value={conf.maxBitrate}
-            min={100000}
-            step={100000}
-            max={20000000}
-            formatter={(value) => `${value} bps`}
-            onChange={(value) => {
-              setConf({ ...conf, maxBitrate: value ?? 100000 });
-            }}
-          ></InputNumber>
-          <div className={styles.common_space}>{t('settings.general.conf.maxFramerate')}:</div>
-          <InputNumber
-            style={{ width: '100%' }}
-            size="large"
-            min={10}
-            max={90}
-            step={1}
-            formatter={(value) => `${value} fps`}
-            className={styles.common_space}
-            value={conf.maxFramerate}
-            onChange={(value) => {
-              setConf({ ...conf, maxFramerate: Number(value ?? 10) });
-            }}
-          ></InputNumber>
-          {reload && (
+          <div className={styles.common_space}>{t('settings.general.conf.quilty.title')}:</div>
+          <div className={styles.setting_box_line}>
+            <Slider
+              marks={marks}
+              step={25}
+              min={0}
+              max={100}
+              value={rtcLevel}
+              dots
+              range={false}
+              style={{ width: '100%', marginLeft: "8px", marginRight: '16px' }}
+            />
             <Button
-              type="primary"
-              block
-              onClick={reloadConf}
+              onClick={() => setDefine(!define)}
               className={styles.common_space}
-              size="large"
+              type="primary"
             >
-              {t('settings.general.conf.reload')}
+              {t('settings.general.conf.quilty.define')}
             </Button>
-          )} */}
+          </div>
+          {define && (
+            <>
+              <div className={styles.common_space}>{t('settings.general.conf.codec')}:</div>
+              <Select
+                size="large"
+                options={codecOptions}
+                style={{ width: '100%' }}
+                value={conf.codec}
+                onChange={(value) => {
+                  setConf({ ...conf, codec: value });
+                }}
+              ></Select>
+              <div className={styles.common_space}>{t('settings.general.conf.resolution')}:</div>
+              <Select
+                size="large"
+                options={resolutionOptions}
+                style={{ width: '100%' }}
+                value={conf.resolution}
+                onChange={(value) => {
+                  setConf({ ...conf, resolution: value });
+                }}
+              ></Select>
+              <div className={styles.common_space}>{t('settings.general.conf.maxBitrate')}:</div>
+              <InputNumber
+                style={{ width: '100%' }}
+                size="large"
+                className={styles.common_space}
+                value={conf.maxBitrate}
+                min={100000}
+                step={100000}
+                max={20000000}
+                formatter={(value) => `${value} bps`}
+                onChange={(value) => {
+                  setConf({ ...conf, maxBitrate: value ?? 100000 });
+                }}
+              ></InputNumber>
+              <div className={styles.common_space}>{t('settings.general.conf.maxFramerate')}:</div>
+              <InputNumber
+                style={{ width: '100%' }}
+                size="large"
+                min={10}
+                max={90}
+                step={1}
+                formatter={(value) => `${value} fps`}
+                className={styles.common_space}
+                value={conf.maxFramerate}
+                onChange={(value) => {
+                  setConf({ ...conf, maxFramerate: Number(value ?? 10) });
+                }}
+              ></InputNumber>
+              {reload && (
+                <Button
+                  type="primary"
+                  block
+                  onClick={reloadConf}
+                  className={styles.common_space}
+                  size="large"
+                >
+                  {t('settings.general.conf.reload')}
+                </Button>
+              )}
+            </>
+          )}
         </>
       ) : (
         <span></span>

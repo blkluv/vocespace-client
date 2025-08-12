@@ -408,6 +408,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
               messageApi.success(t('msg.success.device.mute.video'));
               break;
             }
+            case ControlType.MuteScreen: {
+              await room.localParticipant.setScreenShareEnabled(false);
+              messageApi.success(t('msg.success.device.mute.screen'));
+              break;
+            }
             case ControlType.Transfer: {
               const success = await updateOwnerId(room.localParticipant.identity);
               if (success) {
