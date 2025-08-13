@@ -66,6 +66,7 @@ export default {
       active: '在线',
     },
     join: {
+      title: '加入房间',
       success: '加入房间成功',
     },
     delete: {

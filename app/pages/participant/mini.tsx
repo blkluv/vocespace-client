@@ -20,8 +20,8 @@ import {
 import { Participant, Room, Track } from 'livekit-client';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isTrackReferencePinned } from './tile';
-import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
-import { useVideoBlur, WsBase, WsTo } from '@/lib/std/device';
+import { ChildRoom, ParticipantSettings, SpaceInfo } from '@/lib/std/space';
+import { useVideoBlur, WsBase, WsTo, WsWave } from '@/lib/std/device';
 import { SvgResource, SvgType } from '@/app/resources/svg';
 import { useRecoilState } from 'recoil';
 import { roomStatusState, userState, virtualMaskState } from '@/app/[spaceName]/PageClientImpl';
@@ -154,6 +154,33 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
       setUserStatus,
       settings,
     });
+    // 构建WaveHand消息 --------------------------------------------------------------
+    const buildWsWave = (): WsWave => {
+      // 需要判断本地用户和发送的远程用户是否在同一个子房间中，如果不是则需要构建发送本地用户的childRoom/inSpace
+      let remoteRoom = settings.children.find((child) => {
+        child.participants.includes(trackReference.participant.identity);
+      });
+      let selfRoom = settings.children.find((child) => {
+        child.participants.includes(localParticipant.identity);
+      });
+      console.warn('buildWsWave', remoteRoom, selfRoom);
+      let inSpace = false;
+      let childRoom: ChildRoom | undefined = undefined;
+      if (selfRoom && !remoteRoom) {
+        // 本地用户在子房间中，远程用户在主空间中
+
+        childRoom = selfRoom;
+      } else if (!selfRoom && remoteRoom) {
+        // 本地用户在主空间中，远程用户在子房间中
+        inSpace = true;
+      }
+
+      return {
+        ...wsTo,
+        inSpace,
+        childRoom,
+      };
+    };
 
     return (
       <ControlRKeyMenu
@@ -283,7 +310,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
             {trackReference.participant.identity != localParticipant.identity && (
               <>
                 <WaveHand
-                  wsTo={wsTo}
+                  wsWave={buildWsWave}
                   contextUndefined={false}
                   style={{
                     zIndex: 111,

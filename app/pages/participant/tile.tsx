@@ -610,7 +610,7 @@ export const ParticipantItem: (
           <ConnectionQualityIndicator className="lk-participant-metadata-item" />
         </div>
         {trackReference.participant.identity != localParticipant.identity && (
-          <WaveHand wsTo={wsTo} />
+          <WaveHand wsWave={{ ...wsTo }} />
         )}
       </ParticipantTile>
     );

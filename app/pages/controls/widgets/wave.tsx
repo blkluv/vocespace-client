@@ -1,7 +1,7 @@
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { SvgResource } from '@/app/resources/svg';
 import { audio } from '@/lib/audio';
-import { WsTo } from '@/lib/std/device';
+import { WsWave } from '@/lib/std/device';
 import { LayoutContext } from '@livekit/components-react';
 
 export interface WavePinProps {
@@ -12,7 +12,7 @@ export interface WavePinProps {
 
 export interface WaveHandProps {
   style?: React.CSSProperties;
-  wsTo: WsTo;
+  wsWave: WsWave | (() => WsWave);
   contextUndefined?: boolean;
 }
 
@@ -23,9 +23,16 @@ export interface WaveHandProps {
  * - 当设置`contextUndefined`为`false`时，表示不使用LayoutContext。可单独使用，但无法自定义`wavePin`函数。
  * @param [`WavePinProps`]
  */
-export function WaveHand({ style, wsTo, contextUndefined = true }: WaveHandProps) {
+export function WaveHand({ style, wsWave, contextUndefined = true }: WaveHandProps) {
   const wavePin = async () => {
-    socket.emit('wave', wsTo);
+    let emitWave: WsWave;
+    if (typeof wsWave === 'function') {
+      emitWave = wsWave();
+    } else {
+      emitWave = wsWave;
+    }
+
+    socket.emit('wave', emitWave);
     await audio.wave();
   };
 

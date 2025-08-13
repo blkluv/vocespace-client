@@ -66,6 +66,7 @@ export default {
       active: 'active',
     },
     join: {
+      title: 'Join Room',
       success: 'Join room successfully',
     },
     delete: {

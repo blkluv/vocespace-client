@@ -56,10 +56,11 @@ import {
   WsInviteDevice,
   WsParticipant,
   WsTo,
+  WsWave,
 } from '@/lib/std/device';
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
-import { Channel } from './channel';
+import { Channel, ChannelExports } from './channel';
 import { PARTICIPANT_SETTINGS_KEY } from '@/lib/std/space';
 import { FlotLayout } from '../apps/flot';
 import { api } from '@/lib/api';
@@ -102,6 +103,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
     const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
     const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
+    const channelRef = React.useRef<ChannelExports>(null);
     const router = useRouter();
     const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId, updateRecord } =
       useSpaceInfo(
@@ -244,11 +246,35 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       }
 
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
-      socket.on('wave_response', (msg: WsTo) => {
+      socket.on('wave_response', (msg: WsWave) => {
         if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          console.warn(msg);
           waveAudioRef.current?.play();
+          let btn = undefined;
+          if (msg.childRoom) {
+            btn = (
+              <Button
+                type="primary"
+                size="small"
+                onClick={async () => {
+                  if (msg.inSpace) {
+                    // 加入主房间
+                    await channelRef.current?.joinMain();
+                  } else {
+                    // 加入子房间
+                    await channelRef.current?.join(msg.childRoom!, room.localParticipant.identity);
+                  }
+                  noteApi.destroy();
+                }}
+              >
+                {t('channel.join.title')}
+              </Button>
+            );
+          }
+
           noteApi.info({
             message: `${msg.senderName} ${t('common.wave_msg')}`,
+            btn,
           });
         }
       });
@@ -842,6 +868,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         ></FlotLayout>
         {room && (
           <Channel
+            ref={channelRef}
             space={room}
             localParticipantId={room.localParticipant.identity}
             settings={settings}

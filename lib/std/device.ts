@@ -3,6 +3,7 @@ import { SizeNum } from '.';
 import { TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDebounce, useThrottle } from './debounce';
+import { ChildRoom } from './space';
 export interface Device {
   value: string;
   label: string;
@@ -30,6 +31,14 @@ export interface WsSender extends WsBase {
 export interface WsTo extends WsSender {
   receiverId: string;
   socketId: string;
+}
+
+export interface WsWave extends WsTo {
+  childRoom?: ChildRoom;
+  /**
+   * 发送的用户在主空间中
+   */
+  inSpace?: boolean;
 }
 
 export interface WsJoinRoom extends WsTo {

@@ -399,8 +399,9 @@ lk load-test \
 - [x] 空间点击后不收回子房间的Collapse
 - [x] 增加停止屏幕共享到右键菜单
 - [x] 优化设置部分布局
-- [ ] wave hand 增加邀请加入请求按钮
+- [x] wave hand 增加邀请加入请求按钮
 - [ ] socket重连重新回到房间
+- [ ] 主tile中增加右键menu菜单
 - [x] socket前端断开强制重连
 ---
 
