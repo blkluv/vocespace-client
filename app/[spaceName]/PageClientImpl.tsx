@@ -6,7 +6,12 @@ import { decodePassphrase } from '@/lib/client_utils';
 import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from './RecordingIndicator';
 import { ConnectionDetails } from '@/lib/types';
-import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
+import {
+  formatChatMessageLinks,
+  LiveKitRoom,
+  LocalUserChoices,
+  usePersistentUserChoices,
+} from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
 import {
   ExternalE2EEKeyProvider,
@@ -125,9 +130,19 @@ export function PageClientImpl(props: {
   const [uState, setUState] = useRecoilState(userState);
   const [messageApi, contextHolder] = message.useMessage();
   const [notApi, notHolder] = notification.useNotification();
+  const [isReload, setIsReload] = useState(false);
+  const router = useRouter();
   const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
     undefined,
   );
+  const { userChoices } = usePersistentUserChoices({
+    defaults: {
+      videoEnabled: false,
+      audioEnabled: false,
+    },
+    preventSave: false,
+    preventLoad: false,
+  });
   const preJoinDefaults = React.useMemo(() => {
     return {
       username: '',
@@ -188,6 +203,29 @@ export function PageClientImpl(props: {
       getConfig();
     }
   }, [loadConfig]);
+
+  // 当localStorage中有reload这个标志时，需要重登陆
+  useEffect(() => {
+    const reloadRoom = localStorage.getItem('reload');
+    if (reloadRoom) {
+      setIsReload(true);
+      messageApi.loading(t('settings.general.conf.reloading'));
+      localStorage.removeItem('reload');
+      // 等待5s进行重登陆
+      setTimeout(async () => {
+        const finalUserChoices = {
+          username: userChoices.username,
+          videoEnabled: false,
+          audioEnabled: false,
+          videoDeviceId: '',
+          audioDeviceId: '',
+        } as LocalUserChoices;
+        await handlePreJoinSubmit(finalUserChoices);
+        setIsReload(false);
+        // router.push(`/${reloadRoom}`);
+      }, 5000);
+    }
+  }, []);
 
   return (
     <main data-lk-theme="default" style={{ height: '100%' }}>
@@ -294,7 +332,6 @@ function VideoConferenceComponent(props: {
 
   const room = React.useMemo(() => new Room(roomOptions), []);
   React.useEffect(() => {
-    console.warn('room created', room.options);
     if (e2eeEnabled) {
       keyProvider
         .setKey(decodePassphrase(e2eePassphrase))
@@ -347,11 +384,12 @@ function VideoConferenceComponent(props: {
       receSocketId: '',
     });
     await api.leaveSpace(room.name, room.localParticipant.identity, socket);
-    router.push('/new_space');
+    await videoContainerRef.current?.clearRoom();
     socket.emit('update_user_status', {
       room: room.name,
     } as WsBase);
     socket.disconnect();
+    router.push('/new_space');
   }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {
     console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
@@ -473,6 +511,9 @@ function VideoConferenceComponent(props: {
         onEncryptionError={handleEncryptionError}
         onError={handleError}
         onMediaDeviceFailure={handleMediaDeviceFailure}
+        onConnected={() => {
+          videoContainerRef.current?.clearRoom();
+        }}
       >
         <VideoContainer
           ref={videoContainerRef}

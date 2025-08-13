@@ -71,7 +71,7 @@ export interface VideoContainerProps extends VideoConferenceProps {
 }
 
 export interface VideoContainerExports {
-  removeLocalSettings: () => Promise<void>;
+  clearRoom: () => Promise<void>;
 }
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
@@ -112,7 +112,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const isActive = true;
 
     useEffect(() => {
-      if (!room || !socket.id) return;
+      if (!room) return;
+      if (!socket.id) {
+        messageApi.warning(t('common.socket_reconnect'));
+        setTimeout(() => {
+          socket.connect();
+        }, 200);
+      }
       if (
         room.state === ConnectionState.Connecting ||
         room.state === ConnectionState.Reconnecting
@@ -122,7 +128,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       } else if (room.state !== ConnectionState.Connected) {
         return;
       }
-
       // 当socket需要重连时 ------------------------------------------------------------------------
       socket.on('connect', () => {
         console.warn('Socket connect/reconnected:', socket.id);
@@ -530,10 +535,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       });
 
       // [重载/更新配置] -----------------------------------------------------------------------
-      socket.on('reload_env_response', (_msg: WsBase) => {
-        console.warn(_msg);
-        messageApi.success(t('settings.general.conf.reload_env'));
-        // 重新获取配置
+      socket.on('reload_env_response', (msg: WsBase) => {
+        if (msg.room === room.name) {
+          messageApi.success(t('settings.general.conf.reload_env'));
+          // 在localstorage中添加一个reload标记，这样退出之后如果有这个标记就可以自动重载
+          localStorage.setItem('reload', room.name);
+          room.disconnect(true);
+        }
       });
 
       return () => {
@@ -552,6 +560,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('chat_file_response');
         socket.off('re_init_response');
         socket.off('connect');
+        socket.off('reload_env_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
@@ -814,8 +823,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       }
     };
 
+    const clearRoom = async () => {
+      // 退出是设置init为true
+      setInit(true);
+    };
+
     useImperativeHandle(ref, () => ({
-      removeLocalSettings: () => clearSettings(),
+      clearRoom: () => clearRoom(),
     }));
 
     return (

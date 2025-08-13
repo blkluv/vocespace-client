@@ -46,6 +46,7 @@ export default {
     high_quality: '无损传输模式',
     high_quality_desc:
       '开启后，视频，音频和屏幕分享将以固定的分辨率以及更高的质量传输，但可能会增加带宽使用和延迟。',
+    socket_reconnect: '正在重新连接...',
   },
   recording: {
     title: '录制记录',
@@ -245,7 +246,8 @@ export default {
       conf: {
         load_error: '配置加载失败，请检查vocespace.conf.json文件是否存在',
         reload_env_error: '重新加载配置失败',
-        reload_env: "VoceSpace空间配置更新，当前空间正在自动更新",
+        reload_env: 'VoceSpace空间配置更新，当前空间正在自动更新',
+        reloading: '正在重新加载，请稍等...',
         reload: '重新加载配置',
         maxFramerate: '最大帧率',
         maxBitrate: '最大码率',

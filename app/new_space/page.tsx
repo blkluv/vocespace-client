@@ -45,12 +45,14 @@ export default function Page() {
           </div>
         ) : (
           <div className="header">
-            <div style={{
+            <div
+              style={{
                 marginBottom: '12px',
                 width: '100%',
                 display: 'inline-flex',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <SvgResource type="logo2" svgSize={45}></SvgResource>
             </div>
             <h2>{t('msg.info.title')}</h2>

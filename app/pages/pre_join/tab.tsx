@@ -3,7 +3,7 @@
 import { encodePassphrase, generateRoomId, randomString } from '@/lib/client_utils';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from '@/styles/Home.module.css';
 import { Button, Input, message, Radio, Spin, Tooltip } from 'antd';
 import Checkbox, { CheckboxGroupProps } from 'antd/es/checkbox';
@@ -79,6 +79,13 @@ export function MeetingTab({ hq, setHq }: MeetingTabProps) {
       }
     }
   };
+
+  useEffect(() => {
+    let reloadRoom = localStorage.getItem('reload');
+    if (reloadRoom) {
+      router.push(`/${reloadRoom}`);
+    }
+  }, []);
   return (
     <div className={styles.tabContent}>
       {contextHolder}

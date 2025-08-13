@@ -72,7 +72,6 @@ export function GeneralSettings({
   };
 
   const getConf = async () => {
-    console.warn('getConf');
     const response = await api.getConf();
 
     if (response.ok) {

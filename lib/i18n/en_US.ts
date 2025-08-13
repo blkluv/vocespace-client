@@ -46,6 +46,7 @@ export default {
     high_quality: 'Lossless mode',
     high_quality_desc:
       'When enabled, video, audio, and screen sharing will be transmitted at a fixed resolution and higher quality, but may increase bandwidth usage and latency.',
+    socket_reconnect: 'Reconnecting...',
   },
   recording: {
     title: 'Recording',
@@ -253,6 +254,9 @@ export default {
         load_error:
           'Configuration loading failed, please check if the vocespace.conf.json file exists',
         reload_env_error: 'Configuration reload failed',
+        reload_env:
+          'VoceSpace space configuration is updated, the current space is being automatically updated',
+        reloading: 'VoceSpace is reloading, please wait...',
         reload: 'Reload configuration',
         maxFramerate: 'Maximum frame rate',
         maxBitrate: 'Maximum bitrate',
