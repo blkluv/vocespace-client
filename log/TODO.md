@@ -400,7 +400,7 @@ lk load-test \
 - [x] 增加停止屏幕共享到右键菜单
 - [x] 优化设置部分布局
 - [x] wave hand 增加邀请加入请求按钮
-- [ ] socket重连重新回到房间
+- [x] socket重连重新回到房间
 - [ ] 主tile中增加右键menu菜单
 - [x] socket前端断开强制重连
 ---

@@ -4,7 +4,6 @@ import {
   AudioTrack,
   ConnectionQualityIndicator,
   isTrackReference,
-  LayoutContext,
   LockLockedIcon,
   ParticipantName,
   ParticipantPlaceholder,
@@ -21,8 +20,8 @@ import {
   useMaybeLayoutContext,
   VideoTrack,
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
-import React, { useEffect, useMemo } from 'react';
+import { Participant, Room, Track } from 'livekit-client';
+import React, { useEffect, useMemo, useState } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
 import {
@@ -33,14 +32,13 @@ import {
 } from '@/app/[spaceName]/PageClientImpl';
 import styles from '@/styles/controls.module.scss';
 import { SvgResource, SvgType } from '@/app/resources/svg';
-import { Dropdown, MenuProps } from 'antd';
 import { useI18n } from '@/lib/i18n/i18n';
-import { randomColor, src, UserStatus } from '@/lib/std';
+import { randomColor, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
-import { SpaceInfo } from '@/lib/std/space';
-import { statusDefaultList } from '@/app/pages/controls/selects/status_select';
+import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { WaveHand } from '../controls/widgets/wave';
 import { StatusInfo, useStatusInfo } from './status_info';
+import { ControlRKeyMenu, useControlRKeyMenu, UseControlRKeyMenuProps } from './menu';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: SpaceInfo;
@@ -48,7 +46,9 @@ export interface ParticipantItemProps extends ParticipantTileProps {
   toSettings?: () => void;
   messageApi: MessageInstance;
   isFocus?: boolean;
-  room?: string;
+  room: Room ;
+  updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
+  toRenameSettings: () => void;
 }
 
 export const ParticipantItem: (
@@ -63,6 +63,8 @@ export const ParticipantItem: (
       setUserStatus,
       isFocus,
       room,
+      updateSettings,
+      toRenameSettings,
     }: ParticipantItemProps,
     ref,
   ) {
@@ -89,7 +91,7 @@ export const ParticipantItem: (
         'reload_virtual_response',
         (msg: { identity: string; reloading: boolean; roomId: string }) => {
           console.log('reload_virtual_response', msg);
-          if (room == msg.roomId) {
+          if (room.name == msg.roomId) {
             if (msg.identity != localParticipant.identity) {
               setRemoteMask(msg.reloading);
             }
@@ -401,7 +403,7 @@ export const ParticipantItem: (
     // 使用ws向服务器发送消息，告诉某个人打招呼
     const wsTo = useMemo(() => {
       return {
-        room,
+        room: room.name,
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
@@ -465,7 +467,7 @@ export const ParticipantItem: (
               setLastMousePos({ x, y });
             }
             let data = {
-              room,
+              room: room.name,
               x,
               y,
               color: randomColor(localParticipant.identity),
@@ -555,64 +557,104 @@ export const ParticipantItem: (
       //   socket.off('mouse_remove_response');
       // };
     }, [trackReference.source, localParticipant.isSpeaking, isFocus]);
-
+    const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
+    const [username, setUsername] = useState<string>('');
+    const { optItems, handleOptClick, optOpen, optSelfItems, handleSelfOptClick } =
+      useControlRKeyMenu({
+        room,
+        spaceInfo: settings,
+        selectedParticipant,
+        setSelectedParticipant,
+        setUsername,
+        updateSettings,
+        toRenameSettings,
+      } as UseControlRKeyMenuProps);
+    // 右键菜单可以使用：当不是自己的时候且source不是屏幕分享
+    const showSelfControlMenu = useMemo(() => {
+      return (
+        trackReference.participant.identity === localParticipant.identity ||
+        trackReference.source === Track.Source.ScreenShare
+      );
+    }, [trackReference, localParticipant.identity]);
     return (
-      <ParticipantTile ref={ref} trackRef={trackReference}>
-        {deviceTrack}
-        <div className="lk-participant-placeholder">
-          <ParticipantPlaceholder />
-        </div>
-        <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
-          <StatusInfo
-            disabled={trackReference.participant.identity != localParticipant.identity}
-            items={items}
-            children={
-              <div className="lk-participant-metadata-item">
-                {trackReference.source === Track.Source.Camera ? (
-                  <>
-                    {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
-                    <TrackMutedIndicator
-                      trackRef={{
-                        participant: trackReference.participant,
-                        source: Track.Source.Microphone,
-                      }}
-                      show={'muted'}
-                    ></TrackMutedIndicator>
-                    <ParticipantName />
-                    <div
-                      style={{
-                        marginLeft: '0.25rem',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      {defineStatus ? (
-                        <SvgResource
-                          type="dot"
-                          svgSize={16}
-                          color={defineStatus.icon.color}
-                        ></SvgResource>
-                      ) : (
-                        <SvgResource type={userStatusDisply as SvgType} svgSize={16}></SvgResource>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
-                    <ParticipantName>&apos;s screen</ParticipantName>
-                  </>
-                )}
-              </div>
-            }
-          ></StatusInfo>
+      <ControlRKeyMenu
+        menu={
+          showSelfControlMenu
+            ? {
+                items: optSelfItems,
+                onClick: handleSelfOptClick,
+              }
+            : {
+                items: optItems,
+                onClick: handleOptClick,
+              }
+        }
+        isRKey={true}
+        onOpenChange={(open) => {
+          optOpen(open, room.getParticipantByIdentity(trackReference.participant.identity)!);
+        }}
+        children={
+          <ParticipantTile ref={ref} trackRef={trackReference}>
+            {deviceTrack}
+            <div className="lk-participant-placeholder">
+              <ParticipantPlaceholder />
+            </div>
+            <div className="lk-participant-metadata" style={{ zIndex: 1000 }}>
+              <StatusInfo
+                disabled={trackReference.participant.identity != localParticipant.identity}
+                items={items}
+                children={
+                  <div className="lk-participant-metadata-item">
+                    {trackReference.source === Track.Source.Camera ? (
+                      <>
+                        {isEncrypted && <LockLockedIcon style={{ marginRight: '0.25rem' }} />}
+                        <TrackMutedIndicator
+                          trackRef={{
+                            participant: trackReference.participant,
+                            source: Track.Source.Microphone,
+                          }}
+                          show={'muted'}
+                        ></TrackMutedIndicator>
+                        <ParticipantName />
+                        <div
+                          style={{
+                            marginLeft: '0.25rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {defineStatus ? (
+                            <SvgResource
+                              type="dot"
+                              svgSize={16}
+                              color={defineStatus.icon.color}
+                            ></SvgResource>
+                          ) : (
+                            <SvgResource
+                              type={userStatusDisply as SvgType}
+                              svgSize={16}
+                            ></SvgResource>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <ScreenShareIcon style={{ marginRight: '0.25rem' }} />
+                        <ParticipantName>&apos;s screen</ParticipantName>
+                      </>
+                    )}
+                  </div>
+                }
+              ></StatusInfo>
 
-          <ConnectionQualityIndicator className="lk-participant-metadata-item" />
-        </div>
-        {trackReference.participant.identity != localParticipant.identity && (
-          <WaveHand wsWave={{ ...wsTo }} />
-        )}
-      </ParticipantTile>
+              <ConnectionQualityIndicator className="lk-participant-metadata-item" />
+            </div>
+            {trackReference.participant.identity != localParticipant.identity && (
+              <WaveHand wsWave={{ ...wsTo }} />
+            )}
+          </ParticipantTile>
+        }
+      ></ControlRKeyMenu>
     );
   },
 );

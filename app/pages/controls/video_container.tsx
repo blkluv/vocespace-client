@@ -250,9 +250,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
           console.warn(msg);
           waveAudioRef.current?.play();
-          let btn = undefined;
-          if (msg.childRoom) {
-            btn = (
+          let actions = undefined;
+          if (msg.childRoom || msg.inSpace) {
+            actions = (
               <Button
                 type="primary"
                 size="small"
@@ -274,7 +274,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
           noteApi.info({
             message: `${msg.senderName} ${t('common.wave_msg')}`,
-            btn,
+            actions,
           });
         }
       });
@@ -381,7 +381,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
               return;
           }
 
-          const btn = (
+          const actions = (
             <Button
               type="primary"
               size="small"
@@ -397,7 +397,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           noteApi.info({
             message: `${msg.senderName} ${t('msg.info.invite_device')} ${device_str}`,
             duration: 5,
-            btn,
+            actions,
           });
         }
       });
@@ -498,7 +498,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         if (msg.room === room.name) {
           noteApi.warning({
             message: t('msg.info.recording'),
-            btn: (
+            actions: (
               <Button
                 color="danger"
                 size="small"
@@ -897,7 +897,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             width: collapsed ? (isActive ? 'calc(100vw - 28px)' : '100vw') : 'calc(100vw - 280px)',
           }}
         >
-          {is_web() && (
+          {is_web() && room && (
             <LayoutContextProvider
               value={layoutContext}
               // onPinChange={handleFocusStateChange}
@@ -908,11 +908,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   <div className="lk-grid-layout-wrapper">
                     <GridLayout tracks={tracks}>
                       <ParticipantItem
-                        room={room?.name}
+                        room={room}
                         settings={settings}
                         toSettings={toSettingGeneral}
                         messageApi={messageApi}
                         setUserStatus={setUserStatus}
+                        updateSettings={updateSettings}
+                        toRenameSettings={toSettingGeneral}
                       ></ParticipantItem>
                     </GridLayout>
                   </div>
@@ -921,22 +923,26 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                     <FocusLayoutContainer>
                       <CarouselLayout tracks={carouselTracks}>
                         <ParticipantItem
-                          room={room?.name}
+                          room={room}
                           settings={settings}
                           toSettings={toSettingGeneral}
                           messageApi={messageApi}
                           setUserStatus={setUserStatus}
+                          updateSettings={updateSettings}
+                          toRenameSettings={toSettingGeneral}
                         ></ParticipantItem>
                       </CarouselLayout>
                       {focusTrack && (
                         <ParticipantItem
-                          room={room?.name}
+                          room={room}
                           setUserStatus={setUserStatus}
                           settings={settings}
                           toSettings={toSettingGeneral}
                           trackRef={focusTrack}
                           messageApi={messageApi}
                           isFocus={isFocus}
+                          updateSettings={updateSettings}
+                          toRenameSettings={toSettingGeneral}
                         ></ParticipantItem>
                       )}
                     </FocusLayoutContainer>

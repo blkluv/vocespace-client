@@ -17,19 +17,17 @@ import {
   ExternalE2EEKeyProvider,
   RoomOptions,
   VideoCodec,
-  VideoPresets,
   Room,
   DeviceUnsupportedError,
   RoomConnectOptions,
   MediaDeviceFailure,
   Track,
-  ConnectionState,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, useRecoilState } from 'recoil';
-import { connect_endpoint, UserDefineStatus } from '@/lib/std';
+import { UserDefineStatus } from '@/lib/std';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
 import {

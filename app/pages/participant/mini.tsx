@@ -158,17 +158,15 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
     const buildWsWave = (): WsWave => {
       // 需要判断本地用户和发送的远程用户是否在同一个子房间中，如果不是则需要构建发送本地用户的childRoom/inSpace
       let remoteRoom = settings.children.find((child) => {
-        child.participants.includes(trackReference.participant.identity);
+        return child.participants.includes(trackReference.participant.identity);
       });
       let selfRoom = settings.children.find((child) => {
-        child.participants.includes(localParticipant.identity);
+        return child.participants.includes(localParticipant.identity);
       });
-      console.warn('buildWsWave', remoteRoom, selfRoom);
       let inSpace = false;
       let childRoom: ChildRoom | undefined = undefined;
       if (selfRoom && !remoteRoom) {
         // 本地用户在子房间中，远程用户在主空间中
-
         childRoom = selfRoom;
       } else if (!selfRoom && remoteRoom) {
         // 本地用户在主空间中，远程用户在子房间中

@@ -1188,6 +1188,13 @@ export async function DELETE(request: NextRequest) {
         for (const [participantId, participant] of Object.entries(settings.participants)) {
           if (participant.socketId === socketId) {
             participantFound = true;
+            let isReallyLeave = await reallyLeaveSpace(spaceId, participantId);
+            if (!isReallyLeave) {
+              return NextResponse.json(
+                { success: false, message: 'Participant is still in the room, cannot remove.' },
+                { status: 400 },
+              );
+            }
             // 找到对应的参与者，进行删除
             const { success, clearAll, error } = await SpaceManager.removeParticipant(
               spaceId,
