@@ -76,6 +76,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             colorTextDescription: '#8c8c8c',
             colorText: '#fff',
           },
+          Spin: {
+            dotSize: 32,
+          },
           Radio: {
             buttonBg: '#1E1E1E',
             colorBorder: '#1E1E1E',

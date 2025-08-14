@@ -46,6 +46,7 @@ export default {
     high_quality: 'Lossless mode',
     high_quality_desc:
       'When enabled, video, audio, and screen sharing will be transmitted at a fixed resolution and higher quality, but may increase bandwidth usage and latency.',
+    socket_reconnect: 'Reconnecting...',
   },
   recording: {
     title: 'Recording',
@@ -65,6 +66,7 @@ export default {
       active: 'active',
     },
     join: {
+      title: 'Join Room',
       success: 'Join room successfully',
     },
     delete: {
@@ -215,6 +217,7 @@ export default {
           mute: {
             audio: 'Mute Microphone',
             video: 'Turn Off Video',
+            screen: 'Stop Screen Sharing',
           },
           volume: 'Volume Adjustment',
           blur: {
@@ -248,6 +251,29 @@ export default {
       lang: 'Language',
       share_audio: 'Share Screen Audio',
       prompt_sound: 'Enter Prompt Sound',
+      conf: {
+        load_error:
+          'Configuration loading failed, please check if the vocespace.conf.json file exists',
+        reload_env_error: 'Configuration reload failed',
+        reload_env:
+          'VoceSpace space configuration is updated, the current space is being automatically updated',
+        reloading: 'VoceSpace is reloading, please wait...',
+        reload: 'Reload configuration',
+        maxFramerate: 'Maximum frame rate',
+        maxBitrate: 'Maximum bitrate',
+        resolution: 'Resolution',
+        codec: 'Codec',
+        priority: 'Priority',
+        quality: {
+          define: 'Custom image quality',
+          title: 'Image quality',
+          smooth: 'Smooth',
+          standard: 'Standard',
+          high: 'High',
+          hd: 'HD',
+          ultra: 'Ultra',
+        },
+      },
       status: {
         title: 'Status',
         online: 'Online',
@@ -476,6 +502,7 @@ export default {
         mute: {
           audio: 'Audio-Microphone device muted',
           video: 'Video-Camera device is turned off',
+          screen: 'Screen sharing stopped',
         },
       },
       user: {

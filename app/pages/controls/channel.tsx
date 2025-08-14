@@ -1,6 +1,14 @@
 'use client';
 
-import { forwardRef, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  forwardRef,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from 'react';
 import styles from '@/styles/channel.module.scss';
 import { useI18n } from '@/lib/i18n/i18n';
 import { SvgResource } from '@/app/resources/svg';
@@ -54,7 +62,10 @@ interface ChannelProps {
   setUserStatus: (status: UserStatus | string) => Promise<void>;
 }
 
-export interface ChannelExports {}
+export interface ChannelExports {
+  join: (room: ChildRoom, participantId: string) => Promise<void>;
+  joinMain: () => Promise<void>;
+}
 
 type RoomPrivacy = 'public' | 'private';
 
@@ -651,7 +662,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
                 onClick={() => {
                   setMainActiveKey((prev) => {
                     if (prev.includes('main')) {
-                      return [];
+                      return ['sub'];
                     }
                     return ['main', 'sub'];
                   });
@@ -731,6 +742,11 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         </div>
       );
     }
+
+    useImperativeHandle(ref, () => ({
+      join: joinChildRoom,
+      joinMain: joinMainRoom
+    }));
 
     return (
       <>

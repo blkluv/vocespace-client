@@ -27,7 +27,7 @@ export function VideoSettings({
 }: VideoSettingsProps) {
   const { t } = useI18n();
   return (
-    <div>
+    <div className={styles.scroll_box}>
       <div className={styles.setting_box}>
         <div>{t('settings.video.device')}:</div>
         <VideoSelect className={styles.common_space}></VideoSelect>

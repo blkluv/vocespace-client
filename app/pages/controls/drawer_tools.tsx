@@ -22,6 +22,7 @@ export const DEFAULT_DRAWER_PROP: DrawerProps = {
       alignItems: 'center',
       justifyContent: 'space-between',
       flexWrap: 'wrap',
+      overflow: "hidden"
     },
   },
 };

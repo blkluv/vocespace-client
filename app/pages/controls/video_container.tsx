@@ -56,10 +56,11 @@ import {
   WsInviteDevice,
   WsParticipant,
   WsTo,
+  WsWave,
 } from '@/lib/std/device';
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
-import { Channel } from './channel';
+import { Channel, ChannelExports } from './channel';
 import { PARTICIPANT_SETTINGS_KEY } from '@/lib/std/space';
 import { FlotLayout } from '../apps/flot';
 import { api } from '@/lib/api';
@@ -71,7 +72,7 @@ export interface VideoContainerProps extends VideoConferenceProps {
 }
 
 export interface VideoContainerExports {
-  removeLocalSettings: () => Promise<void>;
+  clearRoom: () => Promise<void>;
 }
 const IP = process.env.SERVER_NAME ?? getServerIp() ?? 'localhost';
 export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerProps>(
@@ -102,6 +103,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [cacheWidgetState, setCacheWidgetState] = useState<WidgetState>();
     const [chatMsg, setChatMsg] = useRecoilState(chatMsgState);
     const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
+    const channelRef = React.useRef<ChannelExports>(null);
     const router = useRouter();
     const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId, updateRecord } =
       useSpaceInfo(
@@ -112,7 +114,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const isActive = true;
 
     useEffect(() => {
-      if (!room || !socket.id) return;
+      if (!room) return;
+      if (!socket.id) {
+        messageApi.warning(t('common.socket_reconnect'));
+        setTimeout(() => {
+          socket.connect();
+        }, 200);
+      }
       if (
         room.state === ConnectionState.Connecting ||
         room.state === ConnectionState.Reconnecting
@@ -122,7 +130,6 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       } else if (room.state !== ConnectionState.Connected) {
         return;
       }
-
       // 当socket需要重连时 ------------------------------------------------------------------------
       socket.on('connect', () => {
         console.warn('Socket connect/reconnected:', socket.id);
@@ -239,11 +246,35 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       }
 
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
-      socket.on('wave_response', (msg: WsTo) => {
+      socket.on('wave_response', (msg: WsWave) => {
         if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+          console.warn(msg);
           waveAudioRef.current?.play();
+          let actions = undefined;
+          if (msg.childRoom || msg.inSpace) {
+            actions = (
+              <Button
+                type="primary"
+                size="small"
+                onClick={async () => {
+                  if (msg.inSpace) {
+                    // 加入主房间
+                    await channelRef.current?.joinMain();
+                  } else {
+                    // 加入子房间
+                    await channelRef.current?.join(msg.childRoom!, room.localParticipant.identity);
+                  }
+                  noteApi.destroy();
+                }}
+              >
+                {t('channel.join.title')}
+              </Button>
+            );
+          }
+
           noteApi.info({
             message: `${msg.senderName} ${t('common.wave_msg')}`,
+            actions,
           });
         }
       });
@@ -350,7 +381,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
               return;
           }
 
-          const btn = (
+          const actions = (
             <Button
               type="primary"
               size="small"
@@ -366,7 +397,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           noteApi.info({
             message: `${msg.senderName} ${t('msg.info.invite_device')} ${device_str}`,
             duration: 5,
-            btn,
+            actions,
           });
         }
       });
@@ -406,6 +437,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             case ControlType.MuteVideo: {
               await room.localParticipant.setCameraEnabled(false);
               messageApi.success(t('msg.success.device.mute.video'));
+              break;
+            }
+            case ControlType.MuteScreen: {
+              await room.localParticipant.setScreenShareEnabled(false);
+              messageApi.success(t('msg.success.device.mute.screen'));
               break;
             }
             case ControlType.Transfer: {
@@ -462,7 +498,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         if (msg.room === room.name) {
           noteApi.warning({
             message: t('msg.info.recording'),
-            btn: (
+            actions: (
               <Button
                 color="danger"
                 size="small"
@@ -524,6 +560,16 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
       });
 
+      // [重载/更新配置] -----------------------------------------------------------------------
+      socket.on('reload_env_response', (msg: WsBase) => {
+        if (msg.room === room.name) {
+          messageApi.success(t('settings.general.conf.reload_env'));
+          // 在localstorage中添加一个reload标记，这样退出之后如果有这个标记就可以自动重载
+          localStorage.setItem('reload', room.name);
+          room.disconnect(true);
+        }
+      });
+
       return () => {
         socket.off('wave_response');
         socket.off('user_status_updated');
@@ -540,6 +586,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('chat_file_response');
         socket.off('re_init_response');
         socket.off('connect');
+        socket.off('reload_env_response');
         room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
         room.off(ParticipantEvent.TrackMuted, onTrackHandler);
         room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
@@ -802,8 +849,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       }
     };
 
+    const clearRoom = async () => {
+      // 退出是设置init为true
+      setInit(true);
+    };
+
     useImperativeHandle(ref, () => ({
-      removeLocalSettings: () => clearSettings(),
+      clearRoom: () => clearRoom(),
     }));
 
     return (
@@ -816,6 +868,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         ></FlotLayout>
         {room && (
           <Channel
+            ref={channelRef}
             space={room}
             localParticipantId={room.localParticipant.identity}
             settings={settings}
@@ -844,7 +897,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             width: collapsed ? (isActive ? 'calc(100vw - 28px)' : '100vw') : 'calc(100vw - 280px)',
           }}
         >
-          {is_web() && (
+          {is_web() && room && (
             <LayoutContextProvider
               value={layoutContext}
               // onPinChange={handleFocusStateChange}
@@ -855,11 +908,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   <div className="lk-grid-layout-wrapper">
                     <GridLayout tracks={tracks}>
                       <ParticipantItem
-                        room={room?.name}
+                        room={room}
                         settings={settings}
                         toSettings={toSettingGeneral}
                         messageApi={messageApi}
                         setUserStatus={setUserStatus}
+                        updateSettings={updateSettings}
+                        toRenameSettings={toSettingGeneral}
                       ></ParticipantItem>
                     </GridLayout>
                   </div>
@@ -868,22 +923,26 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                     <FocusLayoutContainer>
                       <CarouselLayout tracks={carouselTracks}>
                         <ParticipantItem
-                          room={room?.name}
+                          room={room}
                           settings={settings}
                           toSettings={toSettingGeneral}
                           messageApi={messageApi}
                           setUserStatus={setUserStatus}
+                          updateSettings={updateSettings}
+                          toRenameSettings={toSettingGeneral}
                         ></ParticipantItem>
                       </CarouselLayout>
                       {focusTrack && (
                         <ParticipantItem
-                          room={room?.name}
+                          room={room}
                           setUserStatus={setUserStatus}
                           settings={settings}
                           toSettings={toSettingGeneral}
                           trackRef={focusTrack}
                           messageApi={messageApi}
                           isFocus={isFocus}
+                          updateSettings={updateSettings}
+                          toRenameSettings={toSettingGeneral}
                         ></ParticipantItem>
                       )}
                     </FocusLayoutContainer>

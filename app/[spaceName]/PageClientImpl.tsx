@@ -6,13 +6,17 @@ import { decodePassphrase } from '@/lib/client_utils';
 import { useI18n } from '@/lib/i18n/i18n';
 import { RecordingIndicator } from './RecordingIndicator';
 import { ConnectionDetails } from '@/lib/types';
-import { formatChatMessageLinks, LiveKitRoom, LocalUserChoices } from '@livekit/components-react';
+import {
+  formatChatMessageLinks,
+  LiveKitRoom,
+  LocalUserChoices,
+  usePersistentUserChoices,
+} from '@livekit/components-react';
 import { Button, message, Modal, notification, Space } from 'antd';
 import {
   ExternalE2EEKeyProvider,
   RoomOptions,
   VideoCodec,
-  VideoPresets,
   Room,
   DeviceUnsupportedError,
   RoomConnectOptions,
@@ -23,7 +27,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { PreJoin } from '@/app/pages/pre_join/pre_join';
 import { atom, useRecoilState } from 'recoil';
-import { connect_endpoint, UserDefineStatus } from '@/lib/std';
+import { UserDefineStatus } from '@/lib/std';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
 import {
@@ -36,6 +40,8 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { api } from '@/lib/api';
 import { WsBase } from '@/lib/std/device';
 import { createResolution, DEFAULT_VOCESPACE_CONFIG, VocespaceConfig } from '@/lib/std/conf';
+import { MessageInstance } from 'antd/es/message/interface';
+import { NotificationInstance } from 'antd/es/notification/interface';
 
 const TURN_CREDENTIAL = process.env.TURN_CREDENTIAL ?? '';
 const TURN_USERNAME = process.env.TURN_USERNAME ?? '';
@@ -120,9 +126,21 @@ export function PageClientImpl(props: {
 }) {
   const { t } = useI18n();
   const [uState, setUState] = useRecoilState(userState);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [notApi, notHolder] = notification.useNotification();
+  const [isReload, setIsReload] = useState(false);
+  const router = useRouter();
   const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
     undefined,
   );
+  const { userChoices } = usePersistentUserChoices({
+    defaults: {
+      videoEnabled: false,
+      audioEnabled: false,
+    },
+    preventSave: false,
+    preventLoad: false,
+  });
   const preJoinDefaults = React.useMemo(() => {
     return {
       username: '',
@@ -184,8 +202,33 @@ export function PageClientImpl(props: {
     }
   }, [loadConfig]);
 
+  // 当localStorage中有reload这个标志时，需要重登陆
+  useEffect(() => {
+    const reloadRoom = localStorage.getItem('reload');
+    if (reloadRoom) {
+      setIsReload(true);
+      messageApi.loading(t('settings.general.conf.reloading'));
+      localStorage.removeItem('reload');
+      // 等待5s进行重登陆
+      setTimeout(async () => {
+        const finalUserChoices = {
+          username: userChoices.username,
+          videoEnabled: false,
+          audioEnabled: false,
+          videoDeviceId: '',
+          audioDeviceId: '',
+        } as LocalUserChoices;
+        await handlePreJoinSubmit(finalUserChoices);
+        setIsReload(false);
+        // router.push(`/${reloadRoom}`);
+      }, 5000);
+    }
+  }, []);
+
   return (
     <main data-lk-theme="default" style={{ height: '100%' }}>
+      {contextHolder}
+      {notHolder}
       {connectionDetails === undefined || preJoinChoices === undefined ? (
         <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
           <PreJoin
@@ -204,6 +247,8 @@ export function PageClientImpl(props: {
           userChoices={preJoinChoices}
           options={{ codec: props.codec, hq: props.hq }}
           config={config}
+          messageApi={messageApi}
+          notApi={notApi}
         />
       )}
     </main>
@@ -218,11 +263,12 @@ function VideoConferenceComponent(props: {
     codec: VideoCodec;
   };
   config: VocespaceConfig;
+  messageApi: MessageInstance;
+  notApi: NotificationInstance;
 }) {
   const { t } = useI18n();
   const e2eePassphrase =
     typeof window !== 'undefined' && decodePassphrase(location.hash.substring(1));
-
   const worker =
     typeof window !== 'undefined' &&
     e2eePassphrase &&
@@ -230,8 +276,7 @@ function VideoConferenceComponent(props: {
   const e2eeEnabled = !!(e2eePassphrase && worker);
   const keyProvider = new ExternalE2EEKeyProvider();
   const [e2eeSetupComplete, setE2eeSetupComplete] = React.useState(false);
-  const [messageApi, contextHolder] = message.useMessage();
-  const [notApi, notHolder] = notification.useNotification();
+
   const [permissionOpened, setPermissionOpened] = useState(false);
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [permissionRequested, setPermissionRequested] = useState(false);
@@ -337,37 +382,38 @@ function VideoConferenceComponent(props: {
       receSocketId: '',
     });
     await api.leaveSpace(room.name, room.localParticipant.identity, socket);
-    router.push('/new_space');
+    await videoContainerRef.current?.clearRoom();
     socket.emit('update_user_status', {
       room: room.name,
     } as WsBase);
     socket.disconnect();
+    router.push('/new_space');
   }, [router, room.localParticipant]);
   const handleError = React.useCallback((error: Error) => {
     console.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
     if (error.name === 'ConnectionError') {
-      messageApi.error(t('msg.error.room.network'));
+      props.messageApi.error(t('msg.error.room.network'));
     } else {
       console.error(error);
     }
   }, []);
   const handleEncryptionError = React.useCallback((error: Error) => {
-    messageApi.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
+    props.messageApi.error(`${t('msg.error.room.unexpect')}: ${error.message}`);
   }, []);
 
   const handleMediaDeviceFailure = React.useCallback((fail?: MediaDeviceFailure) => {
     if (fail) {
       switch (fail) {
         case MediaDeviceFailure.DeviceInUse:
-          messageApi.error(t('msg.error.device.in_use'));
+          props.messageApi.error(t('msg.error.device.in_use'));
           break;
         case MediaDeviceFailure.NotFound:
-          messageApi.error(t('msg.error.device.not_found'));
+          props.messageApi.error(t('msg.error.device.not_found'));
           break;
         case MediaDeviceFailure.PermissionDenied:
           if (!permissionOpened) {
             setPermissionOpened(true);
-            notApi.open({
+            props.notApi.open({
               duration: 3,
               message: t('msg.error.device.permission_denied_title'),
               description: t('msg.error.device.permission_denied_desc'),
@@ -387,7 +433,7 @@ function VideoConferenceComponent(props: {
           }
           break;
         case MediaDeviceFailure.Other:
-          messageApi.error(t('msg.error.device.other'));
+          props.messageApi.error(t('msg.error.device.other'));
           break;
       }
     }
@@ -407,7 +453,7 @@ function VideoConferenceComponent(props: {
       });
 
       // 权限已获取，通知用户
-      messageApi.success(t('msg.success.device.granted'));
+      props.messageApi.success(t('msg.success.device.granted'));
 
       // 关闭模态框
       setPermissionModalVisible(false);
@@ -451,8 +497,6 @@ function VideoConferenceComponent(props: {
 
   return (
     <>
-      {contextHolder}
-      {notHolder}
       <LiveKitRoom
         connect={e2eeSetupComplete}
         room={room}
@@ -465,13 +509,16 @@ function VideoConferenceComponent(props: {
         onEncryptionError={handleEncryptionError}
         onError={handleError}
         onMediaDeviceFailure={handleMediaDeviceFailure}
+        onConnected={() => {
+          videoContainerRef.current?.clearRoom();
+        }}
       >
         <VideoContainer
           ref={videoContainerRef}
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={undefined}
-          messageApi={messageApi}
-          noteApi={notApi}
+          messageApi={props.messageApi}
+          noteApi={props.notApi}
           setPermissionDevice={setPermissionDevice}
         ></VideoContainer>
         {/* <DebugMode /> */}

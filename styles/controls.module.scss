@@ -393,3 +393,9 @@
 .checkbox_icon {
   font-size: 18px;
 }
+
+.scroll_box {
+  overflow-y: scroll;
+  scrollbar-width: none;
+  height: 100%;
+}

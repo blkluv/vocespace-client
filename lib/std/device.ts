@@ -3,6 +3,7 @@ import { SizeNum } from '.';
 import { TrackReferenceOrPlaceholder } from '@livekit/components-react';
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDebounce, useThrottle } from './debounce';
+import { ChildRoom } from './space';
 export interface Device {
   value: string;
   label: string;
@@ -32,6 +33,14 @@ export interface WsTo extends WsSender {
   socketId: string;
 }
 
+export interface WsWave extends WsTo {
+  childRoom?: ChildRoom;
+  /**
+   * 发送的用户在主空间中
+   */
+  inSpace?: boolean;
+}
+
 export interface WsJoinRoom extends WsTo {
   childRoom: string;
   confirm?: boolean; // 是否确认加入
@@ -45,6 +54,7 @@ export enum ControlType {
   ChangeName = 'change_name',
   MuteAudio = 'mute_audio',
   MuteVideo = 'mute_video',
+  MuteScreen = 'mute_screen',
   Volume = 'volume',
   BlurVideo = 'blur_video',
   BlurScreen = 'blur_screen',

@@ -26,7 +26,7 @@ envFiles.forEach((file) => {
 });
 
 export const getRedisConfig = () => {
-  try{
+  try {
     const configPath = path.join(__cfg, 'vocespace.conf.json');
     const configContent = fs.readFileSync(configPath, 'utf-8');
     const config = JSON.parse(configContent);
@@ -37,8 +37,8 @@ export const getRedisConfig = () => {
       REDIS_PORT: config.redis.port || '6379',
       REDIS_PASSWORD: config.redis.password || 'vocespace',
       REDIS_DB: config.redis.db || '0',
-    }
-  }catch (error) {
+    };
+  } catch (error) {
     return {
       REDIS_ENABLED: 'false',
       REDIS_HOST: 'localhost',
@@ -47,20 +47,14 @@ export const getRedisConfig = () => {
       REDIS_DB: '0',
     };
   }
-}
+};
 
 // [args] ---------------------------------------------------------------------------------------------------------------
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOST || 'localhost';
 const port = process.env.PORT || 3000;
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-const {
-  REDIS_ENABLED,
-  REDIS_HOST,
-  REDIS_PORT,
-  REDIS_PASSWORD,
-  REDIS_DB,
-} = getRedisConfig();
+const { REDIS_ENABLED, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB } = getRedisConfig();
 
 console.log(`env: {
     REDIS_ENABLED: ${REDIS_ENABLED}
@@ -375,11 +369,17 @@ app.prepare().then(() => {
         socket.to(socketId).emit('removed_from_privacy_room_response', msg);
       });
     });
+    // [socket: reload env conf] -----------------------------------------------------------------------------------------
+    // 重新加载环境配置, 通知所有用户重载
+    socket.on('reload_env', (msg) => {
+      // 广播给所有用户包括自己
+      io.emit('reload_env_response', msg);
+    });
     // [socket: re init participant] --------------------------------------------------------------------------------
     // 由服务器端触发，重新初始化某个用户的状态，依靠msg中的room进行判断，无法使用socket.id
     // - msg: WsParticipant
-    socket.on("re_init", (msg) => {
-      io.emit("re_init_response", msg);
+    socket.on('re_init', (msg) => {
+      io.emit('re_init_response', msg);
     });
     // [socket: del user] ----------------------------------------------------------------------------------------------------
     socket.on('disconnect', async (_reason) => {

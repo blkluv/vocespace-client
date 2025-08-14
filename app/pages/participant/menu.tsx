@@ -159,6 +159,16 @@ export function useControlRKeyMenu({
             disabled: !isCamDisabled,
           },
           {
+            key: 'control.mute_screen',
+            label: (
+              <span style={{ marginLeft: '8px' }}>
+                {t('more.participant.set.control.mute.screen')}
+              </span>
+            ),
+            icon: <SvgResource type="screen_close" svgSize={16} />,
+            disabled: !isScreenShareDisabled,
+          },
+          {
             key: 'control.volume',
             label: (
               <div>
@@ -436,6 +446,16 @@ export function useControlRKeyMenu({
                 icon: <SvgResource type="video_close" svgSize={16} />,
                 disabled: !isOwner ? true : !isCamDisabled,
               },
+              {
+                key: 'control.mute_screen',
+                label: (
+                  <span style={{ marginLeft: '8px' }}>
+                    {t('more.participant.set.control.mute.screen')}
+                  </span>
+                ),
+                icon: <SvgResource type="screen_close" svgSize={16} />,
+                disabled: !isOwner ? true : !isScreenShareDisabled,
+              },
               ...controlItems,
             ],
           },
@@ -529,6 +549,10 @@ export function useControlRKeyMenu({
           room.localParticipant.setCameraEnabled(false);
           break;
         }
+        case 'control.mute_screen': {
+          room.localParticipant.setScreenShareEnabled(false);
+          break;
+        }
         default:
           break;
       }
@@ -612,6 +636,13 @@ export function useControlRKeyMenu({
           socket.emit('control_participant', {
             ...wsTo,
             type: ControlType.MuteVideo,
+          } as WsControlParticipant);
+          break;
+        }
+        case 'control.mute_screen': {
+          socket.emit('control_participant', {
+            ...wsTo,
+            type: ControlType.MuteScreen,
           } as WsControlParticipant);
           break;
         }
