@@ -719,6 +719,11 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       ];
     }, [mainContext, subChildren, childRooms, subActiveKey, mainJoinVis]);
 
+    useImperativeHandle(ref, () => ({
+      join: joinChildRoom,
+      joinMain: joinMainRoom
+    }));
+
     if (collapsed) {
       return (
         <div
@@ -742,11 +747,6 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         </div>
       );
     }
-
-    useImperativeHandle(ref, () => ({
-      join: joinChildRoom,
-      joinMain: joinMainRoom
-    }));
 
     return (
       <>
