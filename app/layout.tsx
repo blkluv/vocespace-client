@@ -119,6 +119,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             cellBgDisabled: '#1E1E1E',
             colorTextDisabled: '#8c8c8c',
           },
+          Slider: {
+            railHoverBg: '#888',
+          },
           Select: {
             selectorBg: '#1E1E1E',
             activeBorderColor: '#1E1E1E',
