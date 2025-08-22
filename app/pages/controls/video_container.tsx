@@ -1,4 +1,4 @@
-import { getServerIp, is_web, src, UserDefineStatus, UserStatus } from '@/lib/std';
+import { getServerIp, is_web, isMobile, src, UserDefineStatus, UserStatus } from '@/lib/std';
 import {
   CarouselLayout,
   ConnectionStateToast,
@@ -93,7 +93,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [uState, setUState] = useRecoilState(userState);
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(isMobile());
     const [uLicenseState, setULicenseState] = useRecoilState(licenseState);
     const controlsRef = React.useRef<ControlBarExport>(null);
     const waveAudioRef = React.useRef<HTMLAudioElement>(null);
@@ -854,18 +854,26 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       setInit(true);
     };
 
+    const showFlot = useMemo(() => {
+      return !isMobile() ? true : collapsed;
+    }, [collapsed]);
+
     useImperativeHandle(ref, () => ({
       clearRoom: () => clearRoom(),
     }));
 
     return (
       <div className="video_container_wrapper" style={{ position: 'relative' }}>
-        <FlotLayout
-          style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1111 }}
-          messageApi={messageApi}
-          openApp={openApp}
-          spaceInfo={settings}
-        ></FlotLayout>
+        {/* 右侧应用浮窗，悬浮态 */}
+        {showFlot && (
+          <FlotLayout
+            style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1111 }}
+            messageApi={messageApi}
+            openApp={openApp}
+            spaceInfo={settings}
+          ></FlotLayout>
+        )}
+        {/* 左侧侧边栏 */}
         {room && (
           <Channel
             ref={channelRef}
@@ -888,6 +896,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             setUserStatus={setUserStatus}
           ></Channel>
         )}
+        {/* 主视口 */}
         <div
           className="lk-video-conference"
           {...props}

@@ -9,7 +9,7 @@ import {
   useMaybeRoomContext,
   usePersistentUserChoices,
 } from '@livekit/components-react';
-import { Drawer, Input, message, Modal } from 'antd';
+import { Drawer, Input, message, Modal, theme } from 'antd';
 import { Participant, Track } from 'livekit-client';
 import * as React from 'react';
 import styles from '@/styles/controls.module.scss';
@@ -22,7 +22,7 @@ import {
   virtualMaskState,
 } from '@/app/[spaceName]/PageClientImpl';
 import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
-import { UserStatus } from '@/lib/std';
+import { isMobile as is_moblie, UserStatus } from '@/lib/std';
 import { EnhancedChat, EnhancedChatExports } from '@/app/pages/chat/chat';
 import { ChatToggle } from './toggles/chat_toggle';
 import { MoreButton } from './toggles/more_button';
@@ -31,6 +31,8 @@ import { DEFAULT_DRAWER_PROP, DrawerCloser } from './drawer_tools';
 import { AppDrawer } from '../apps/app_drawer';
 import { ParticipantManage } from '../participant/manage';
 import { api } from '@/lib/api';
+import { count } from 'console';
+import { SizeType } from 'antd/es/config-provider/SizeContext';
 
 /** @public */
 export type ControlBarControls = {
@@ -120,7 +122,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     const [controlWidth, setControlWidth] = React.useState(
       controlLeftRef.current ? controlLeftRef.current.clientWidth : window.innerWidth,
     );
+    const isMobile = React.useMemo(() => {
+      return is_moblie();
+    }, []);
 
+    const controlSize = React.useMemo(() => {
+      return (isMobile ? 'small' : 'middle') as SizeType;
+    }, [isMobile]);
     // 当controlLeftRef的大小发生变化时，更新controlWidth
     React.useEffect(() => {
       const resizeObserver = new ResizeObserver(() => {
@@ -402,13 +410,17 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       setOpenApp(true);
     };
 
+    // 当是手机的情况下需要适当增加marginBottom，因为手机端自带的Tabbar会遮挡
     return (
-      <div {...htmlProps} className={styles.controls}>
+      <div {...htmlProps} className={styles.controls} style={{
+        marginBottom: isMobile ? '46px' : "auto",
+      }}>
         {contextHolder}
         <div className={styles.controls_left} ref={controlLeftRef}>
           {visibleControls.microphone && (
             <div className="lk-button-group">
               <TrackToggle
+                style={{ height: 46, padding: controlSize === 'small' ? 7 : 15 }}
                 source={Track.Source.Microphone}
                 showIcon={showIcon}
                 onChange={microphoneOnChange}
@@ -421,6 +433,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               </TrackToggle>
               <div className="lk-button-group-menu">
                 <MediaDeviceMenu
+                  style={{ height: 46, padding: controlSize === 'small' ? 7 : 15 }}
                   kind="audioinput"
                   onActiveDeviceChange={(_kind, deviceId) =>
                     saveAudioInputDeviceId(deviceId ?? 'default')
@@ -432,6 +445,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           {visibleControls.camera && (
             <div className="lk-button-group">
               <TrackToggle
+                style={{ height: 46, padding: controlSize === 'small' ? 7 : 15 }}
                 source={Track.Source.Camera}
                 showIcon={showIcon}
                 onChange={cameraOnChange}
@@ -444,6 +458,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               </TrackToggle>
               <div className="lk-button-group-menu">
                 <MediaDeviceMenu
+                  style={{ height: 46, padding: controlSize === 'small' ? 7 : 15 }}
                   kind="videoinput"
                   onActiveDeviceChange={(_kind, deviceId) =>
                     saveVideoInputDeviceId(deviceId ?? 'default')
@@ -454,7 +469,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           {visibleControls.screenShare && browserSupportsScreenSharing && (
             <TrackToggle
-              style={{ height: '46px' }}
+              style={{ height: 46, padding: 15 }}
               source={Track.Source.ScreenShare}
               captureOptions={{ audio: uState.openShareAudio, selfBrowserSurface: 'include' }}
               showIcon={showIcon}
@@ -468,7 +483,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 (isScreenShareEnabled ? t('common.stop_share') : t('common.share_screen'))}
             </TrackToggle>
           )}
-          {visibleControls.chat && (
+          {visibleControls.chat && !isMobile && (
             <ChatToggle
               controlWidth={controlWidth}
               enabled={chatOpen}
@@ -480,6 +495,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           )}
           {room && spaceInfo.participants && visibleControls.microphone && (
             <MoreButton
+              size={controlSize}
               controlWidth={controlWidth}
               setOpenMore={setOpenMore}
               setMoreType={setMoreType}
@@ -490,6 +506,18 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               onClickManage={fetchSettings}
               onClickApp={onClickApp}
               isRecording={isRecording}
+              chat={
+                isMobile
+                  ? {
+                      visible: visibleControls.chat || false,
+                      enabled: chatOpen,
+                      count: chatMsg.unhandled,
+                      onClicked: () => {
+                        setChatOpen(!chatOpen);
+                      },
+                    }
+                  : undefined
+              }
             ></MoreButton>
           )}
         </div>
