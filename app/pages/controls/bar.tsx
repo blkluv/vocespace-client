@@ -409,14 +409,15 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       // 打开Notion应用
       setOpenApp(true);
     };
-
     // 当是手机的情况下需要适当增加marginBottom，因为手机端自带的Tabbar会遮挡
     return (
       <div {...htmlProps} className={styles.controls} style={{
         marginBottom: isMobile ? '46px' : "auto",
       }}>
         {contextHolder}
-        <div className={styles.controls_left} ref={controlLeftRef}>
+        <div className={styles.controls_left} ref={controlLeftRef} style={{
+          width: isMobile ? "calc(100% - 64px)" : "calc(100% - 100px)"
+        }}>
           {visibleControls.microphone && (
             <div className="lk-button-group">
               <TrackToggle
@@ -523,7 +524,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         </div>
 
         {visibleControls.leave && (
-          <DisconnectButton>
+          <DisconnectButton style={{height: 46}}>
             {showIcon && <LeaveIcon />}
             {showText && t('common.leave')}
           </DisconnectButton>

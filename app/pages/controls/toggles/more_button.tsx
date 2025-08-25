@@ -3,6 +3,7 @@ import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { useMemo, useState } from 'react';
 import { SizeType } from 'antd/es/config-provider/SizeContext';
+import { ViewAdjusts } from '@/lib/std/window';
 
 export interface MoreButtonProps {
   showText?: boolean;
@@ -46,13 +47,9 @@ export function MoreButtonInner({
   const { t } = useI18n();
 
   const showTextOrHide = useMemo(() => {
-    // 判断窗口的宽度是否大于720px, 如果小于则需要隐藏文字
-    if (controlWidth < 700) {
-      return false;
-    } else {
-      return showText;
-    }
+    return ViewAdjusts(controlWidth).w720 ? false : showText;
   }, [controlWidth]);
+
   const onClickChatMsg = () => {
     if (chat && chat.visible) {
       chat.onClicked();
@@ -177,7 +174,7 @@ export function MoreButton(props: MoreButtonProps) {
       size="small"
       offset={[-4, 4]}
       dot={isDot}
-      style={{ zIndex: 1111 }}
+      style={{ zIndex: 1000 }}
     >
       <MoreButtonInner {...props} isDot={isDot} setIsDot={setIsDot}></MoreButtonInner>
     </Badge>
