@@ -132,19 +132,28 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     useEffect(() => {
       // 设置默认展开的子房间的Collapse body基于subRoomsTmp
       let currentRooms = settings.children.map((room) => room.name);
-      let isSameAsSubTmp = subRoomsTmp.every((room) => currentRooms.includes(room));
+      let isSameAsSubTmp =
+        subRoomsTmp.length > 0 ? subRoomsTmp.every((room) => currentRooms.includes(room)) : false;
       if (settings.children.length > 0 && !isSameAsSubTmp) {
         let newRooms: string[] = [];
-        settings.children.forEach((child) => {
+        // 同时如果子房间是公开的，默认展开
+        for (const child of settings.children) {
           newRooms.push(child.name);
+          if (!child.isPrivate) {
+            console.warn('public room auto expand', child.name);
+            setSubActiveKey((prev) => [...prev, child.name]);
+            continue;
+          }
           if (!subRoomsTmp.includes(child.name)) {
             setSubActiveKey((prev) => [...prev, child.name]);
+            continue;
           }
           // 如果当前这个本地用户在子房间中，需要展开这个子房间
           if (child.participants.includes(localParticipantId)) {
             setSubActiveKey((prev) => [...prev, child.name]);
+            continue;
           }
-        });
+        }
         setSubRoomsTmp(newRooms);
       }
     }, [settings.children, localParticipantId, subRoomsTmp]);
