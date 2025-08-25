@@ -215,3 +215,19 @@ export const leaveSpace = async (spaceName: string, removeId: string, socket: So
     }
   }
 };
+
+export interface PersistentSpaceBody {
+  spaceName: string;
+  persistence: boolean;
+}
+
+export const persistentSpace = async (spaceName: string, persistence: boolean) => {
+  const url = new URL(SPACE_API, window.location.origin);
+  url.searchParams.append('space', 'true');
+  url.searchParams.append('persistence', 'update');
+  return await fetch(url.toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ spaceName, persistence } as PersistentSpaceBody),
+  });
+};

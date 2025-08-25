@@ -21,7 +21,7 @@ export interface EnhancedChatProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   onClose: () => void;
-  room: Room;
+  space: Room;
   sendFileConfirm: (onOk: () => Promise<void>) => void;
   messageApi: MessageInstance;
 }
@@ -29,7 +29,7 @@ export interface EnhancedChatProps {
 export interface EnhancedChatExports {}
 
 export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatProps>(
-  ({ open, setOpen, onClose, room, sendFileConfirm, messageApi }: EnhancedChatProps, ref) => {
+  ({ open, setOpen, onClose, space, sendFileConfirm, messageApi }: EnhancedChatProps, ref) => {
     const { t } = useI18n();
     const ulRef = React.useRef<HTMLUListElement>(null);
     const bottomRef = React.useRef<HTMLDivElement>(null);
@@ -66,12 +66,12 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
 
       const newMsg: ChatMsgItem = {
         sender: {
-          id: room.localParticipant.identity,
-          name: room.localParticipant.name || room.localParticipant.identity,
+          id: space.localParticipant.identity,
+          name: space.localParticipant.name || space.localParticipant.identity,
         },
         message: msg,
         type: 'text',
-        roomName: room.name,
+        roomName: space.name,
         file: null,
         timestamp: Date.now(),
       };
@@ -99,7 +99,7 @@ export const EnhancedChat = React.forwardRef<EnhancedChatExports, EnhancedChatPr
               },
               message: null,
               type: 'file',
-              roomName: room.name,
+              roomName: space.name,
               file: {
                 name: file.name,
                 size: file.size,

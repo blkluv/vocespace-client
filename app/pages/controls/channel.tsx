@@ -172,7 +172,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       ) {
         const senderName = settings.participants[localParticipantId].name;
         return {
-          room: space.name,
+          space: space.name,
           senderName,
           senderId: localParticipantId,
         } as WsSender;
@@ -201,7 +201,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
     useEffect(() => {
       // 监听加入私密房间的socket事件 --------------------------------------------------------------------------
       socket.on('join_privacy_room_response', (msg: WsJoinRoom) => {
-        if (msg.room === space.name && msg.receiverId === localParticipantId) {
+        if (msg.space === space.name && msg.receiverId === localParticipantId) {
           if (!joinModalOpen) {
             if (msg.confirm === false) {
               // 说明对方拒绝了加入请求
@@ -225,7 +225,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
       });
       // 监听从私密房间移除的socket事件 -----------------------------------------------------------------------
       socket.on('removed_from_privacy_room_response', (msg: WsRemove) => {
-        if (msg.room === space.name && msg.participants.includes(localParticipantId)) {
+        if (msg.space === space.name && msg.participants.includes(localParticipantId)) {
           messageApi.info({
             content: `${t('channel.modal.remove.before')}${msg.childRoom}${t(
               'channel.modal.remove.after',
@@ -298,7 +298,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
 
         // socket通知用户移除
         socket.emit('removed_from_privacy_room', {
-          room: space.name,
+          space: space.name,
           participants: selectedRoom.participants,
           socketIds,
           childRoom: selectedRoom.name,
@@ -548,7 +548,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
         <GLayout tracks={mainTracks} style={{ height: '120px', position: 'relative' }}>
           <ParticipantTileMini
             settings={settings}
-            room={space}
+            space={space}
             updateSettings={updateSettings}
             toRenameSettings={toRenameSettings}
             setUserStatus={setUserStatus}
@@ -581,7 +581,7 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           <GLayout tracks={subTracks} style={{ height: '120px', position: 'relative' }}>
             <ParticipantTileMini
               settings={settings}
-              room={space}
+              space={space}
               updateSettings={updateSettings}
               toRenameSettings={toRenameSettings}
               setUserStatus={setUserStatus}

@@ -89,7 +89,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     }: VideoContainerProps,
     ref,
   ) => {
-    const room = useMaybeRoomContext();
+    const space = useMaybeRoomContext();
     const [init, setInit] = useState(true);
     const { t } = useI18n();
     const [uState, setUState] = useRecoilState(userState);
@@ -107,14 +107,14 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const router = useRouter();
     const { settings, updateSettings, fetchSettings, clearSettings, updateOwnerId, updateRecord } =
       useSpaceInfo(
-        room?.name || '', // 房间 ID
-        room?.localParticipant?.identity || '', // 参与者 ID
+        space?.name || '', // 房间 ID
+        space?.localParticipant?.identity || '', // 参与者 ID
       );
     const [openApp, setOpenApp] = useState<boolean>(false);
     const isActive = true;
 
     useEffect(() => {
-      if (!room) return;
+      if (!space) return;
       if (!socket.id) {
         messageApi.warning(t('common.socket_reconnect'));
         setTimeout(() => {
@@ -122,12 +122,12 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }, 200);
       }
       if (
-        room.state === ConnectionState.Connecting ||
-        room.state === ConnectionState.Reconnecting
+        space.state === ConnectionState.Connecting ||
+        space.state === ConnectionState.Reconnecting
       ) {
         setInit(true);
         return;
-      } else if (room.state !== ConnectionState.Connected) {
+      } else if (space.state !== ConnectionState.Connected) {
         return;
       }
       // 当socket需要重连时 ------------------------------------------------------------------------
@@ -139,7 +139,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       const syncSettings = async () => {
         // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
         await updateSettings({
-          name: room.localParticipant.name || room.localParticipant.identity,
+          name: space.localParticipant.name || space.localParticipant.identity,
           blur: uState.blur,
           screenBlur: uState.screenBlur,
           volume: uState.volume,
@@ -154,14 +154,14 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           openShareAudio: uState.openShareAudio,
           openPromptSound: uState.openPromptSound,
         });
-        const roomName = `${room.localParticipant.name}'s room`;
+        const roomName = `${space.localParticipant.name}'s room`;
 
         // 为新加入的参与者创建一个自己的私人房间
         if (!settings.children.some((child) => child.name === roomName)) {
           const response = await api.createRoom({
-            spaceName: room.name,
+            spaceName: space.name,
             roomName,
-            ownerId: room.localParticipant.identity,
+            ownerId: space.localParticipant.identity,
             isPrivate: true,
           });
 
@@ -177,11 +177,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 获取历史聊天记录 ---------------------------------------------------------------------------
       const fetchChatMsg = async () => {
-        const response = await api.getChatMsg(room.name);
+        const response = await api.getChatMsg(space.name);
         if (response.ok) {
           const { msgs }: { msgs: ChatMsgItem[] } = await response.json();
           let othersMsgLength = msgs.filter(
-            (msg) => msg.id !== room.localParticipant.identity,
+            (msg) => msg.id !== space.localParticipant.identity,
           ).length;
           setChatMsg((prev) => ({
             unhandled: prev.unhandled + othersMsgLength,
@@ -198,7 +198,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         syncSettings().then(() => {
           // 新的用户更新到服务器之后，需要给每个参与者发送一个websocket事件，通知他们更新用户状态
           socket.emit('update_user_status', {
-            room: room.name,
+            space: space.name,
           } as WsBase);
         });
         setInit(false);
@@ -206,7 +206,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 重写初始化用户 -----------------------------------------------------------------------------
       socket.on('re_init_response', async (msg: WsParticipant) => {
-        if (msg.room === room.name && msg.participantId === room.localParticipant.identity) {
+        if (msg.space === space.name && msg.participantId === space.localParticipant.identity) {
           // 只有在用户没有正常初始化时才会触发
           setInit(true);
         }
@@ -247,7 +247,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // 监听服务器的提醒事件的响应 -------------------------------------------------------------------
       socket.on('wave_response', (msg: WsWave) => {
-        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+        if (msg.receiverId === space.localParticipant.identity && msg.space === space.name) {
           console.warn(msg);
           waveAudioRef.current?.play();
           let actions = undefined;
@@ -262,7 +262,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                     await channelRef.current?.joinMain();
                   } else {
                     // 加入子房间
-                    await channelRef.current?.join(msg.childRoom!, room.localParticipant.identity);
+                    await channelRef.current?.join(msg.childRoom!, space.localParticipant.identity);
                   }
                   noteApi.destroy();
                 }}
@@ -283,7 +283,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       socket.on('user_status_updated', async (msg: WsBase) => {
         // 调用fetchSettings
         // 另一个环境是没有参数的，可能导致错误，所以这里强制判断msg
-        if (msg && msg.room && msg.room === room.name) {
+        if (msg && msg.space && msg.space === space.name) {
           await fetchSettings();
         }
       });
@@ -298,13 +298,13 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           }
         }
 
-        if (room.remoteParticipants.size > user_limit) {
-          if (room.localParticipant.identity === participant.identity) {
+        if (space.remoteParticipants.size > user_limit) {
+          if (space.localParticipant.identity === participant.identity) {
             messageApi.error({
               content: t('common.full_user'),
               duration: 3,
             });
-            room.disconnect(true);
+            space.disconnect(true);
           }
           return;
         }
@@ -315,25 +315,25 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
       const onParticipantDisConnected = async (participant: Participant) => {
         socket.emit('mouse_remove', {
-          room: room.name,
+          space: space.name,
           senderName: participant.name || participant.identity,
           senderId: participant.identity,
           receiverId: '',
-          receSocketId: '',
-        });
+          socketId: '',
+        } as WsTo);
         // do clearSettings but use leave participant
         await clearSettings(participant.identity);
       };
       // 监听远程参与者连接事件 --------------------------------------------------------------------------
-      room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
-      // room.on(RoomEvent.TrackSub)
+      space.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+      // space.on(RoomEvent.TrackSub)
       // 监听本地用户开关摄像头事件 ----------------------------------------------------------------------
       const onTrackHandler = (track: TrackPublication) => {
         if (track.source === Track.Source.Camera) {
           // 需要判断虚拟形象是否开启，若开启则需要关闭
           if (
             uState.virtual.enabled ||
-            settings.participants[room.localParticipant.identity]?.virtual.enabled
+            settings.participants[space.localParticipant.identity]?.virtual.enabled
           ) {
             updateSettings({
               virtual: {
@@ -342,7 +342,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
               },
             }).then(() => {
               socket.emit('update_user_status', {
-                room: room.name,
+                space: space.name,
               } as WsBase);
             });
           }
@@ -350,32 +350,35 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
 
       // [用户定义新状态] ----------------------------------------------------------------------
-      socket.on('new_user_status_response', (msg: { status: UserDefineStatus[]; room: string }) => {
-        if (room.name === msg.room) {
-          setURoomStatusState(msg.status);
-        }
-      });
+      socket.on(
+        'new_user_status_response',
+        (msg: { status: UserDefineStatus[]; space: string }) => {
+          if (space.name === msg.space) {
+            setURoomStatusState(msg.status);
+          }
+        },
+      );
 
-      room.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
-      room.on(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
+      space.localParticipant.on(ParticipantEvent.TrackMuted, onTrackHandler);
+      space.on(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
 
       // [用户邀请事件] -------------------------------------------------------------------------
       socket.on('invite_device_response', (msg: WsInviteDevice) => {
-        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+        if (msg.receiverId === space.localParticipant.identity && msg.space === space.name) {
           let device_str;
           let open: () => Promise<LocalTrackPublication | undefined>;
           switch (msg.device) {
             case Track.Source.Camera:
               device_str = '摄像头';
-              open = () => room.localParticipant.setCameraEnabled(true);
+              open = () => space.localParticipant.setCameraEnabled(true);
               break;
             case Track.Source.Microphone:
               device_str = '麦克风';
-              open = () => room.localParticipant.setMicrophoneEnabled(true);
+              open = () => space.localParticipant.setMicrophoneEnabled(true);
               break;
             case Track.Source.ScreenShare:
               device_str = '屏幕共享';
-              open = () => room.localParticipant.setScreenShareEnabled(true);
+              open = () => space.localParticipant.setScreenShareEnabled(true);
               break;
             default:
               return;
@@ -403,54 +406,54 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       });
       // [用户被移除出房间] ----------------------------------------------------------------
       socket.on('remove_participant_response', async (msg: WsTo) => {
-        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
-          let participant = room.localParticipant;
+        if (msg.receiverId === space.localParticipant.identity && msg.space === space.name) {
+          let participant = space.localParticipant;
           messageApi.error({
             content: t('msg.info.remove_participant'),
             duration: 3,
           });
-          room.disconnect(true);
+          space.disconnect(true);
           await onParticipantDisConnected(participant);
         }
       });
       // [用户控制事件] -------------------------------------------------------------------
       socket.on('control_participant_response', async (msg: WsControlParticipant) => {
-        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+        if (msg.receiverId === space.localParticipant.identity && msg.space === space.name) {
           switch (msg.type) {
             case ControlType.ChangeName: {
-              await room.localParticipant?.setMetadata(JSON.stringify({ name: msg.username! }));
-              await room.localParticipant.setName(msg.username!);
+              await space.localParticipant?.setMetadata(JSON.stringify({ name: msg.username! }));
+              await space.localParticipant.setName(msg.username!);
               await updateSettings({
                 name: msg.username!,
               });
               messageApi.success(t('msg.success.user.username.change'));
               socket.emit('update_user_status', {
-                room: room.name,
+                space: space.name,
               } as WsBase);
               break;
             }
             case ControlType.MuteAudio: {
-              await room.localParticipant.setMicrophoneEnabled(false);
+              await space.localParticipant.setMicrophoneEnabled(false);
               messageApi.success(t('msg.success.device.mute.audio'));
               break;
             }
             case ControlType.MuteVideo: {
-              await room.localParticipant.setCameraEnabled(false);
+              await space.localParticipant.setCameraEnabled(false);
               messageApi.success(t('msg.success.device.mute.video'));
               break;
             }
             case ControlType.MuteScreen: {
-              await room.localParticipant.setScreenShareEnabled(false);
+              await space.localParticipant.setScreenShareEnabled(false);
               messageApi.success(t('msg.success.device.mute.screen'));
               break;
             }
             case ControlType.Transfer: {
-              const success = await updateOwnerId(room.localParticipant.identity);
+              const success = await updateOwnerId(space.localParticipant.identity);
               if (success) {
                 messageApi.success(t('msg.success.user.transfer'));
               }
               socket.emit('update_user_status', {
-                room: room.name,
+                space: space.name,
               } as WsBase);
               break;
             }
@@ -459,7 +462,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 volume: msg.volume!,
               });
               socket.emit('update_user_status', {
-                room: room.name,
+                space: space.name,
               } as WsBase);
               break;
             }
@@ -468,7 +471,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 blur: msg.blur!,
               });
               socket.emit('update_user_status', {
-                room: room.name,
+                space: space.name,
               } as WsBase);
               break;
             }
@@ -477,7 +480,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 screenBlur: msg.blur!,
               });
               socket.emit('update_user_status', {
-                room: room.name,
+                space: space.name,
               } as WsBase);
               break;
             }
@@ -486,7 +489,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       });
       // [参与者请求主持人录屏] ---------------------------------------------------
       socket.on('req_record_response', (msg: WsTo) => {
-        if (msg.receiverId === room.localParticipant.identity && msg.room === room.name) {
+        if (msg.receiverId === space.localParticipant.identity && msg.space === space.name) {
           noteApi.info({
             message: `${msg.senderName} ${t('msg.info.req_record')}`,
             duration: 5,
@@ -494,8 +497,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
       });
       // [主持人进行了录屏，询问参会者是否还要呆在房间] -----------------------------------
-      socket.on('recording_response', (msg: { room: string }) => {
-        if (msg.room === room.name) {
+      socket.on('recording_response', (msg: WsBase) => {
+        if (msg.space === space.name) {
           noteApi.warning({
             message: t('msg.info.recording'),
             actions: (
@@ -503,7 +506,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 color="danger"
                 size="small"
                 onClick={async () => {
-                  room.disconnect(true);
+                  space.disconnect(true);
                 }}
               >
                 {t('common.leave')}
@@ -516,24 +519,24 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       socket.on(
         'refetch_room_response',
         async (msg: {
-          room: string;
+          space: string;
           reocrd: {
             active: boolean;
             egressId: string;
             filePath: string;
           };
         }) => {
-          if (msg.room === room.name) {
-            await updateSettings(settings.participants[room.localParticipant.identity], msg.reocrd);
+          if (msg.space === space.name) {
+            await updateSettings(settings.participants[space.localParticipant.identity], msg.reocrd);
             socket.emit('update_user_status', {
-              room: room.name,
+              space: space.name,
             } as WsBase);
           }
         },
       );
       // [用户获取到其他参与者聊天信息事件] ------------------------------------------------
       socket.on('chat_msg_response', (msg: ChatMsgItem) => {
-        if (msg.roomName === room.name) {
+        if (msg.roomName === space.name) {
           setChatMsg((prev) => {
             return {
               unhandled: prev.unhandled + 1,
@@ -544,12 +547,12 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       });
 
       socket.on('chat_file_response', (msg: ChatMsgItem) => {
-        if (msg.roomName === room.name) {
+        if (msg.roomName === space.name) {
           setChatMsg((prev) => {
             // 使用函数式更新来获取最新的 messages 状态
             const existingFile = prev.msgs.find((m) => m.id === msg.id);
             if (!existingFile) {
-              let isOthers = msg.id !== room.localParticipant.identity;
+              let isOthers = msg.id !== space.localParticipant.identity;
               return {
                 unhandled: prev.unhandled + (isOthers ? 1 : 0),
                 msgs: [...prev.msgs, msg],
@@ -562,11 +565,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // [重载/更新配置] -----------------------------------------------------------------------
       socket.on('reload_env_response', (msg: WsBase) => {
-        if (msg.room === room.name) {
+        if (msg.space === space.name) {
           messageApi.success(t('settings.general.conf.reload_env'));
           // 在localstorage中添加一个reload标记，这样退出之后如果有这个标记就可以自动重载
-          localStorage.setItem('reload', room.name);
-          room.disconnect(true);
+          localStorage.setItem('reload', space.name);
+          space.disconnect(true);
         }
       });
 
@@ -587,17 +590,17 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         socket.off('re_init_response');
         socket.off('connect');
         socket.off('reload_env_response');
-        room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
-        room.off(ParticipantEvent.TrackMuted, onTrackHandler);
-        room.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
+        space.off(RoomEvent.ParticipantConnected, onParticipantConnected);
+        space.off(ParticipantEvent.TrackMuted, onTrackHandler);
+        space.off(RoomEvent.ParticipantDisconnected, onParticipantDisConnected);
       };
-    }, [room?.state, room?.localParticipant, uState, init, uLicenseState, IP, chatMsg, socket]);
+    }, [space?.state, space?.localParticipant, uState, init, uLicenseState, IP, chatMsg, socket]);
 
     const selfRoom = useMemo(() => {
-      if (!room || room.state !== ConnectionState.Connected) return;
+      if (!space || space.state !== ConnectionState.Connected) return;
 
       let selfRoom = settings.children.find((child) => {
-        return child.participants.includes(room.localParticipant.identity);
+        return child.participants.includes(space.localParticipant.identity);
       });
 
       let allChildParticipants = settings.children.reduce((acc, room) => {
@@ -607,7 +610,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       if (!selfRoom) {
         // 这里还需要过滤掉进入子房间的参与者
         selfRoom = {
-          name: room.name,
+          name: space.name,
           participants: Object.keys(settings.participants).filter((pid) => {
             return !allChildParticipants.includes(pid);
           }),
@@ -616,18 +619,18 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         };
       }
       return selfRoom;
-    }, [settings.children, room]);
+    }, [settings.children, space]);
 
     useLayoutEffect(() => {
-      if (!settings || !room || room.state !== ConnectionState.Connected) return;
+      if (!settings || !space || space.state !== ConnectionState.Connected) return;
       if (!freshPermission) return;
       console.warn('freshPermission', freshPermission);
       // 发送一次fetchSettings请求，确保settings是最新的
       fetchSettings();
-    }, [settings, room, freshPermission]);
+    }, [settings, space, freshPermission]);
 
     useEffect(() => {
-      if (!room || room.state !== ConnectionState.Connected || !selfRoom) return;
+      if (!space || space.state !== ConnectionState.Connected || !selfRoom) return;
 
       // 判断当前自己在哪个房间中，在不同的房间中设置不同用户的订阅权限
       // 订阅规则:
@@ -635,9 +638,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       // 2. 当用户在子房间时，可以订阅该子房间内的所有参与者的视频和音频轨道，包括主房间的参与者的视频轨道，但不能订阅主房间参与者的音频轨道
       let auth = [] as ParticipantTrackPermission[];
       // 远程参与者不在同一房间内，只订阅视频轨道
-      let videoTrackSid = room.localParticipant.getTrackPublication(Track.Source.Camera)?.trackSid;
+      let videoTrackSid = space.localParticipant.getTrackPublication(Track.Source.Camera)?.trackSid;
 
-      let shareTackSid = room.localParticipant.getTrackPublication(
+      let shareTackSid = space.localParticipant.getTrackPublication(
         Track.Source.ScreenShare,
       )?.trackSid;
 
@@ -649,7 +652,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         allowedTrackSids.push(shareTackSid);
       }
       // 遍历所有的远程参与者，根据规则进行处理
-      room.remoteParticipants.forEach((rp) => {
+      space.remoteParticipants.forEach((rp) => {
         // 由于我们已经可以从selfRoom中获取当前用户所在的房间信息，所以通过selfRoom进行判断
         if (selfRoom.participants.includes(rp.identity)) {
           auth.push({
@@ -671,25 +674,25 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       });
 
       // 设置房间订阅权限 ------------------------------------------------
-      room.localParticipant.setTrackSubscriptionPermissions(false, auth);
+      space.localParticipant.setTrackSubscriptionPermissions(false, auth);
       if (freshPermission) {
         fetchSettings().then(() => {
           setFreshPermission(false);
         });
         socket.emit('update_user_status', {
-          room: room.name,
+          space: space.name,
         } as WsBase);
       }
-    }, [room, settings, selfRoom, freshPermission]);
+    }, [space, settings, selfRoom, freshPermission]);
 
     useEffect(() => {
-      if (!room || room.state !== ConnectionState.Connected || !settings) return;
+      if (!space || space.state !== ConnectionState.Connected || !settings) return;
       // 同步settings中当前参与者的数据到uState中 -----------------------------------------------------
-      if (settings.participants[room.localParticipant.identity]) {
+      if (settings.participants[space.localParticipant.identity]) {
         setUState((prev) => {
           let newState = {
             ...prev,
-            ...settings.participants[room.localParticipant.identity],
+            ...settings.participants[space.localParticipant.identity],
           };
           // 同步后还需要设置到localStorage中
           localStorage.setItem(PARTICIPANT_SETTINGS_KEY, JSON.stringify(newState));
@@ -706,7 +709,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           return newState;
         });
       }
-    }, [room, settings, uRoomStatusState]);
+    }, [space, settings, uRoomStatusState]);
 
     const [widgetState, setWidgetState] = React.useState<WidgetState>({
       showChat: false,
@@ -800,10 +803,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       };
       switch (status) {
         case UserStatus.Online: {
-          if (room) {
-            room.localParticipant.setMicrophoneEnabled(true);
-            room.localParticipant.setCameraEnabled(true);
-            room.localParticipant.setScreenShareEnabled(false);
+          if (space) {
+            space.localParticipant.setMicrophoneEnabled(true);
+            space.localParticipant.setCameraEnabled(true);
+            space.localParticipant.setScreenShareEnabled(false);
             if (uState.volume == 0) {
               const newVolume = 80;
               Object.assign(newStatus, { volume: newVolume });
@@ -820,15 +823,15 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           break;
         }
         case UserStatus.Offline: {
-          if (room) {
-            room.localParticipant.setMicrophoneEnabled(false);
-            room.localParticipant.setCameraEnabled(false);
-            room.localParticipant.setScreenShareEnabled(false);
+          if (space) {
+            space.localParticipant.setMicrophoneEnabled(false);
+            space.localParticipant.setCameraEnabled(false);
+            space.localParticipant.setScreenShareEnabled(false);
           }
           break;
         }
         default: {
-          if (room) {
+          if (space) {
             const statusSettings = uRoomStatusState.find((item) => item.id === status);
             if (statusSettings) {
               Object.assign(newStatus, {
@@ -842,9 +845,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         }
       }
       await updateSettings(newStatus);
-      if (room) {
+      if (space) {
         socket.emit('update_user_status', {
-          room: room.name,
+          space: space.name,
         } as WsBase);
       }
     };
@@ -874,16 +877,16 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           ></FlotLayout>
         )}
         {/* 左侧侧边栏 */}
-        {room && (
+        {space && (
           <Channel
             ref={channelRef}
-            space={room}
-            localParticipantId={room.localParticipant.identity}
+            space={space}
+            localParticipantId={space.localParticipant.identity}
             settings={settings}
             onUpdate={async () => {
               await fetchSettings();
               socket.emit('update_user_status', {
-                room: room.name,
+                space: space.name,
               } as WsBase);
             }}
             tracks={originTracks}
@@ -906,7 +909,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             width: collapsed ? (isActive ? 'calc(100vw - 28px)' : '100vw') : 'calc(100vw - 280px)',
           }}
         >
-          {is_web() && room && (
+          {is_web() && space && (
             <LayoutContextProvider
               value={layoutContext}
               // onPinChange={handleFocusStateChange}
@@ -917,7 +920,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                   <div className="lk-grid-layout-wrapper">
                     <GridLayout tracks={tracks}>
                       <ParticipantItem
-                        room={room}
+                        space={space}
                         settings={settings}
                         toSettings={toSettingGeneral}
                         messageApi={messageApi}
@@ -932,7 +935,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                     <FocusLayoutContainer>
                       <CarouselLayout tracks={carouselTracks}>
                         <ParticipantItem
-                          room={room}
+                          space={space}
                           settings={settings}
                           toSettings={toSettingGeneral}
                           messageApi={messageApi}
@@ -943,7 +946,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                       </CarouselLayout>
                       {focusTrack && (
                         <ParticipantItem
-                          room={room}
+                          space={space}
                           setUserStatus={setUserStatus}
                           settings={settings}
                           toSettings={toSettingGeneral}

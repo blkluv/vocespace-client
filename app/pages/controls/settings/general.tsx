@@ -5,15 +5,14 @@ import { StatusSelect } from '../selects/status_select';
 import { SvgResource } from '@/app/resources/svg';
 import { BuildUserStatus } from './user_status';
 import { useI18n } from '@/lib/i18n/i18n';
-import { LocalParticipant, Room } from 'livekit-client';
+import { LocalParticipant } from 'livekit-client';
 import { MessageInstance } from 'antd/es/message/interface';
 import { isUndefinedNumber, isUndefinedString, UserStatus } from '@/lib/std';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import equal from 'fast-deep-equal';
 import { api } from '@/lib/api';
 import {
   countLevelByConf,
-  numberToRTCLevel,
   RTCConf,
   rtcLevelToNumber,
   rtcNumberToConf,
@@ -21,8 +20,9 @@ import {
 } from '@/lib/std/conf';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsBase } from '@/lib/std/device';
+import { SpaceInfo } from '@/lib/std/space';
 export interface GeneralSettingsProps {
-  room: string;
+  space: string;
   localParticipant: LocalParticipant;
   messageApi: MessageInstance;
   appendStatus: boolean;
@@ -32,10 +32,12 @@ export interface GeneralSettingsProps {
   setUsername: (username: string) => void;
   openPromptSound: boolean;
   setOpenPromptSound: (open: boolean) => void;
+  spaceInfo: SpaceInfo;
 }
 
 export function GeneralSettings({
-  room,
+  space,
+  spaceInfo,
   localParticipant,
   messageApi,
   appendStatus,
@@ -47,7 +49,7 @@ export function GeneralSettings({
   setOpenPromptSound,
 }: GeneralSettingsProps) {
   const { t } = useI18n();
-
+  const [isOwner, setIsOwner] = useState<boolean>(false);
   const [reload, setReload] = useState(false);
   const [conf, setConf] = useState<RTCConf | null>(null);
   const originConf = useRef<RTCConf | null>(null);
@@ -55,6 +57,11 @@ export function GeneralSettings({
   const originRtcLevel = useRef(rtcLevel);
   const [define, setDefine] = useState(false);
   const [update, setUpdate] = useState(true);
+  const [persistence, setPersistence] = useState(false);
+
+  useEffect(() => {
+    setIsOwner(localParticipant.identity === spaceInfo.ownerId);
+  }, [localParticipant.identity, spaceInfo.ownerId]);
 
   const unifiedSliderText = (label: string) => ({
     style: {
@@ -102,12 +109,21 @@ export function GeneralSettings({
     }
   };
 
+  const setRoomPersistence = async (persistence: boolean) => {
+    const response = await api.persistentSpace(space, persistence);
+    if (response.ok) {
+      messageApi.success(t('settings.general.persistence.success'));
+    } else {
+      messageApi.error(t('settings.general.persistence.error'));
+    }
+  };
+
   useEffect(() => {
-    if (update) {
+    if (update && isOwner) {
       getConf();
       setUpdate(false);
     }
-  }, [update]);
+  }, [update, isOwner]);
 
   useEffect(() => {
     if (equal(conf, originConf.current)) {
@@ -145,7 +161,7 @@ export function GeneralSettings({
         setUpdate(true);
         // socket 通知所有其他设备需要重新加载(包括自己)
         socket.emit('reload_env', {
-          room,
+          space,
         } as WsBase);
       } else {
         const { error } = await response.json();
@@ -187,12 +203,13 @@ export function GeneralSettings({
       {appendStatus && (
         <BuildUserStatus
           messageApi={messageApi}
-          room={room}
+          space={space}
           localParticipant={localParticipant}
         ></BuildUserStatus>
       )}
       <div className={styles.common_space}>{t('settings.general.prompt_sound')}:</div>
       <Radio.Group
+        size="large"
         block
         value={openPromptSound}
         onChange={(e) => {
@@ -202,7 +219,7 @@ export function GeneralSettings({
         <Radio.Button value={true}>{t('common.open')}</Radio.Button>
         <Radio.Button value={false}>{t('common.close')}</Radio.Button>
       </Radio.Group>
-      {conf ? (
+      {isOwner && conf ? (
         <>
           <div className={styles.common_space}>{t('settings.general.conf.quality.title')}:</div>
           <div className={styles.setting_box_line}>
@@ -214,7 +231,7 @@ export function GeneralSettings({
               value={rtcLevel}
               dots
               range={false}
-              style={{ width: '100%', marginLeft: '8px', marginRight: '16px' }}
+              style={{ width: '100%', marginLeft: '16px', marginRight: '16px' }}
               onChange={(value) => {
                 setRtcLevel(value);
                 setReload(value !== originRtcLevel.current);
@@ -294,6 +311,23 @@ export function GeneralSettings({
         </>
       ) : (
         <span></span>
+      )}
+      {/* 设置是否需要持久化房间 */}
+      {isOwner && (
+        <>
+          <div className={styles.common_space}>{t('settings.general.persistence.title')}:</div>
+          <Radio.Group
+            size="large"
+            block
+            value={persistence}
+            onChange={(e) => {
+              setPersistence(e.target.value);
+            }}
+          >
+            <Radio.Button value={true}>{t('common.open')}</Radio.Button>
+            <Radio.Button value={false}>{t('common.close')}</Radio.Button>
+          </Radio.Group>
+        </>
       )}
     </div>
   );

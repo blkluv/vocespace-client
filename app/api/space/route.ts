@@ -949,6 +949,7 @@ export async function POST(request: NextRequest) {
     const isUpdateParticipant = request.nextUrl.searchParams.get('participant') === 'update';
     const isSpace = request.nextUrl.searchParams.get('space') === 'true';
     const isUpdateSpaceApps = request.nextUrl.searchParams.get('apps') === 'update';
+    const isUpdateSpacePersistence = request.nextUrl.searchParams.get('persistence') === 'update';
     // 更新Space的Apps ----------------------------------------------------------------------
     if (isUpdateSpaceApps) {
       const { spaceName, appKey, enabled }: UpdateSpaceAppsBody = await request.json();
@@ -1319,7 +1320,7 @@ const userHeartbeat = async () => {
     if (inLKNotInRedis.length > 0) {
       for (const participant of inLKNotInRedis) {
         socket.emit('re_init', {
-          room: room.name,
+          space: room.name,
           participantId: participant.identity,
         } as WsParticipant);
       }

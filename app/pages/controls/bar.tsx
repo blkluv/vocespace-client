@@ -9,7 +9,7 @@ import {
   useMaybeRoomContext,
   usePersistentUserChoices,
 } from '@livekit/components-react';
-import { Drawer, Input, message, Modal, theme } from 'antd';
+import { Drawer, Input, message, Modal } from 'antd';
 import { Participant, Track } from 'livekit-client';
 import * as React from 'react';
 import styles from '@/styles/controls.module.scss';
@@ -31,7 +31,6 @@ import { DEFAULT_DRAWER_PROP, DrawerCloser } from './drawer_tools';
 import { AppDrawer } from '../apps/app_drawer';
 import { ParticipantManage } from '../participant/manage';
 import { api } from '@/lib/api';
-import { count } from 'console';
 import { SizeType } from 'antd/es/config-provider/SizeContext';
 
 /** @public */
@@ -51,7 +50,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
   controls?: ControlBarControls;
   /**
    * If `true`, the user's device choices will be persisted.
-   * This will enable the user to have the same device choices when they rejoin the room.
+   * This will enable the user to have the same device choices when they rejoin the space.
    * @defaultValue true
    * @alpha
    */
@@ -75,7 +74,7 @@ export interface ControlBarExport {
 
 /**
  * The `ControlBar` prefab gives the user the basic user interface to control their
- * media devices (camera, microphone and screen share), open the `Chat` and leave the room.
+ * media devices (camera, microphone and screen share), open the `Chat` and leave the space.
  *
  * @remarks
  * This component is build with other LiveKit components like `TrackToggle`,
@@ -217,26 +216,26 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     );
 
     // settings ------------------------------------------------------------------------------------------
-    const room = useMaybeRoomContext();
+    const space = useMaybeRoomContext();
     const [key, setKey] = React.useState<TabKey>('general');
     const settingsRef = React.useRef<SettingsExports>(null);
     const [messageApi, contextHolder] = message.useMessage();
     const [uState, setUState] = useRecoilState(userState);
     const [virtualMask, setVirtualMask] = useRecoilState(virtualMaskState);
     const closeSetting = async () => {
-      if (settingsRef.current && room) {
+      if (settingsRef.current && space) {
         settingsRef.current.removeVideo();
         // 更新用户名 ------------------------------------------------------
         const newName = settingsRef.current.username;
         if (
           newName !== '' &&
-          newName !== (room.localParticipant?.name || room.localParticipant.identity)
+          newName !== (space.localParticipant?.name || space.localParticipant.identity)
         ) {
           saveUsername(newName);
-          await room.localParticipant?.setMetadata(JSON.stringify({ name: newName }));
-          await room.localParticipant.setName(newName);
+          await space.localParticipant?.setMetadata(JSON.stringify({ name: newName }));
+          await space.localParticipant.setName(newName);
           messageApi.success(t('msg.success.user.username.change'));
-        } else if (newName == (room.localParticipant?.name || room.localParticipant.identity)) {
+        } else if (newName == (space.localParticipant?.name || space.localParticipant.identity)) {
         } else {
           messageApi.error(t('msg.error.user.username.change'));
         }
@@ -244,11 +243,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         await updateSettings(settingsRef.current.state);
         // 通知socket，进行状态的更新 -----------------------------------
         socket.emit('update_user_status', {
-          room: room.name,
+          space: space.name,
         } as WsBase);
         socket.emit('reload_virtual', {
-          identity: room.localParticipant.identity,
-          roomId: room.name,
+          identity: space.localParticipant.identity,
+          roomId: space.name,
           reloading: false,
         });
       }
@@ -297,8 +296,8 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
       return Object.entries(spaceInfo.participants);
     }, [spaceInfo]);
     const isOwner = React.useMemo(() => {
-      return spaceInfo.ownerId === room?.localParticipant.identity;
-    }, [spaceInfo.ownerId, room?.localParticipant.identity]);
+      return spaceInfo.ownerId === space?.localParticipant.identity;
+    }, [spaceInfo.ownerId, space?.localParticipant.identity]);
 
     // [record] -----------------------------------------------------------------------------------------------------
     const [openRecordModal, setOpenRecordModal] = React.useState(false);
@@ -308,7 +307,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     }, [spaceInfo.record]);
 
     const onClickRecord = async () => {
-      if (!room && isOwner) return;
+      if (!space && isOwner) return;
 
       if (!isRecording) {
         setOpenRecordModal(true);
@@ -316,7 +315,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         // 停止录制
         if (spaceInfo.record.egressId && spaceInfo.record.egressId !== '') {
           const response = await api.sendRecordRequest({
-            spaceName: room!.name,
+            spaceName: space!.name,
             type: 'stop',
             egressId: spaceInfo.record.egressId,
           });
@@ -335,12 +334,12 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
 
     const startRecord = async () => {
-      if (isRecording || !room) return;
+      if (isRecording || !space) return;
 
       if (isOwner) {
         // host request to start recording
         const response = await api.sendRecordRequest({
-          spaceName: room.name,
+          spaceName: space.name,
           type: 'start',
         });
         if (!response.ok) {
@@ -354,7 +353,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           if (!res) {
             console.error('Failed to update record settings');
             socket.emit('refetch_room', {
-              room: room.name,
+              space: space.name,
               record: {
                 active: true,
                 egressId,
@@ -363,16 +362,16 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             });
           }
           socket.emit('recording', {
-            room: room.name,
+            space: space.name,
           });
         }
         console.warn(spaceInfo);
       } else {
         // participant request to start recording
         socket.emit('req_record', {
-          room: room.name,
-          senderName: room.localParticipant.name,
-          senderId: room.localParticipant.identity,
+          space: space.name,
+          senderName: space.localParticipant.name,
+          senderId: space.localParticipant.identity,
           receiverId: spaceInfo.ownerId,
           socketId: spaceInfo.participants[spaceInfo.ownerId].socketId,
         } as WsTo);
@@ -380,13 +379,13 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
 
     const recordModalOnOk = async () => {
-      if (!room) return;
+      if (!space) return;
 
       if (isDownload) {
         // copy link to clipboard
         // 创建一个新recording页面，相当于点击了a标签的href
         window.open(
-          `${window.location.origin}/recording?room=${encodeURIComponent(room.name)}`,
+          `${window.location.origin}/recording?room=${encodeURIComponent(space.name)}`,
           '_blank',
         );
         setIsDownload(false);
@@ -404,20 +403,28 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
     };
 
     const onClickApp = async () => {
-      if (!room) return;
+      if (!space) return;
 
       // 打开Notion应用
       setOpenApp(true);
     };
     // 当是手机的情况下需要适当增加marginBottom，因为手机端自带的Tabbar会遮挡
     return (
-      <div {...htmlProps} className={styles.controls} style={{
-        marginBottom: isMobile ? '46px' : "auto",
-      }}>
+      <div
+        {...htmlProps}
+        className={styles.controls}
+        style={{
+          marginBottom: isMobile ? '46px' : 'auto',
+        }}
+      >
         {contextHolder}
-        <div className={styles.controls_left} ref={controlLeftRef} style={{
-          width: isMobile ? "calc(100% - 64px)" : "calc(100% - 100px)"
-        }}>
+        <div
+          className={styles.controls_left}
+          ref={controlLeftRef}
+          style={{
+            width: isMobile ? 'calc(100% - 64px)' : 'calc(100% - 100px)',
+          }}
+        >
           {visibleControls.microphone && (
             <div className="lk-button-group">
               <TrackToggle
@@ -494,7 +501,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
               count={chatMsg.unhandled}
             ></ChatToggle>
           )}
-          {room && spaceInfo.participants && visibleControls.microphone && (
+          {space && spaceInfo.participants && visibleControls.microphone && (
             <MoreButton
               size={controlSize}
               controlWidth={controlWidth}
@@ -524,20 +531,20 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         </div>
 
         {visibleControls.leave && (
-          <DisconnectButton style={{height: 46}}>
+          <DisconnectButton style={{ height: 46 }}>
             {showIcon && <LeaveIcon />}
             {showText && t('common.leave')}
           </DisconnectButton>
         )}
         {/* <StartMediaButton /> */}
-        {room && (
+        {space && (
           <EnhancedChat
             ref={enhanceChatRef}
             messageApi={messageApi}
             open={chatOpen}
             setOpen={setChatOpen}
             onClose={onChatClose}
-            room={room}
+            space={space}
             sendFileConfirm={sendFileConfirm}
           ></EnhancedChat>
         )}
@@ -558,17 +565,17 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           })}
         >
           <div className={styles.setting_container}>
-            {room && (
+            {space && (
               <Settings
                 ref={settingsRef}
                 close={settingVis}
                 messageApi={messageApi}
-                room={room.name}
+                space={space.name}
                 username={userChoices.username}
                 tab={{ key, setKey }}
                 // saveChanges={saveChanges}
                 setUserStatus={setUserStatus}
-                localParticipant={room.localParticipant}
+                localParticipant={space.localParticipant}
                 spaceInfo={spaceInfo}
               ></Settings>
             )}
@@ -577,7 +584,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         <ParticipantManage
           open={openMore}
           setOpen={setOpenMore}
-          room={room}
+          space={space}
           participantList={participantList}
           setOpenShareModal={setOpenShareModal}
           spaceInfo={spaceInfo}
@@ -588,7 +595,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           updateSettings={updateSettings}
           toRenameSettings={toRenameSettings}
         ></ParticipantManage>
-        {/* ------------- share room modal -------------------------------------------------------- */}
+        {/* ------------- share space modal -------------------------------------------------------- */}
         <Modal
           open={openShareModal}
           onCancel={() => setOpenShareModal(false)}
@@ -605,7 +612,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
         >
           <div className={styles.invite_container} ref={inviteTextRef}>
             <div className={styles.invite_container_item}>
-              {room?.localParticipant.name} &nbsp;
+              {space?.localParticipant.name} &nbsp;
               {t('more.participant.invite.texts.0')}
             </div>
             <div className={styles.invite_container_item}>
@@ -625,7 +632,7 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
                 {t('more.participant.invite.add')}
               </div>
               <div>
-                {t('more.participant.invite.room')}: {room?.name}
+                {t('more.participant.invite.room')}: {space?.name}
               </div>
             </div>
           </div>
@@ -640,11 +647,11 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
             setOpenNameModal(false);
           }}
           onOk={() => {
-            if (room && selectedParticipant) {
+            if (space && selectedParticipant) {
               socket.emit('control_participant', {
-                room: room.name,
-                senderName: room.localParticipant.name,
-                senderId: room.localParticipant.identity,
+                space: space.name,
+                senderName: space.localParticipant.name,
+                senderId: space.localParticipant.identity,
                 receiverId: selectedParticipant.identity,
                 socketId: spaceInfo.participants[selectedParticipant.identity].socketId,
                 type: ControlType.ChangeName,
