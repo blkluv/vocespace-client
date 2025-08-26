@@ -109,7 +109,7 @@ export function GeneralSettings({
     }
   };
 
-  const setRoomPersistence = async (persistence: boolean) => {
+  const setSpacePersistence = async (persistence: boolean) => {
     const response = await api.persistentSpace(space, persistence);
     if (response.ok) {
       messageApi.success(t('settings.general.persistence.success'));
@@ -320,8 +320,9 @@ export function GeneralSettings({
             size="large"
             block
             value={persistence}
-            onChange={(e) => {
+            onChange={async (e) => {
               setPersistence(e.target.value);
+              await setSpacePersistence(e.target.value);
             }}
           >
             <Radio.Button value={true}>{t('common.open')}</Radio.Button>

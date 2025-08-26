@@ -12,6 +12,7 @@ import {
   DefineUserStatusBody,
   DefineUserStatusResponse,
   DeleteSpaceParticipantBody,
+  PersistentSpaceBody,
   UpdateOwnerIdBody,
   UpdateSpaceAppsBody,
   UpdateSpaceParticipantBody,
@@ -603,7 +604,7 @@ class SpaceManager {
     }
   }
   // 删除房间 -----------------------------------------------------------------------
-  static async deleteRoom(room: string, start: number): Promise<boolean> {
+  static async deleteSpace(room: string, start: number): Promise<boolean> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
@@ -712,7 +713,9 @@ class SpaceManager {
       await this.setSpaceInfo(room, spaceInfo);
       // 判断这个参与者是否是主持人，如果是则进行转让，转给第一个参与者， 如果没有参与者直接删除房间
       if (Object.keys(spaceInfo.participants).length === 0) {
-        await this.deleteRoom(room, spaceInfo.startAt);
+        if (!spaceInfo.persistence) {
+          await this.deleteSpace(room, spaceInfo.startAt);
+        }
         return {
           success: true,
           clearAll: true,
@@ -950,6 +953,21 @@ export async function POST(request: NextRequest) {
     const isSpace = request.nextUrl.searchParams.get('space') === 'true';
     const isUpdateSpaceApps = request.nextUrl.searchParams.get('apps') === 'update';
     const isUpdateSpacePersistence = request.nextUrl.searchParams.get('persistence') === 'update';
+    // 更新Space的持久化设置 ------------------------------------------------------------------
+    if (isUpdateSpacePersistence && isSpace) {
+      const { spaceName, persistence }: PersistentSpaceBody = await request.json();
+      const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
+      if (!spaceInfo) {
+        return NextResponse.json({ error: 'Space not found' }, { status: 404 });
+      }
+      spaceInfo.persistence = persistence;
+      const success = await SpaceManager.setSpaceInfo(spaceName, spaceInfo);
+      if (!success) {
+        return NextResponse.json({ error: 'Failed to update space persistence' }, { status: 500 });
+      }
+      return NextResponse.json({ success: true }, { status: 200 });
+    }
+
     // 更新Space的Apps ----------------------------------------------------------------------
     if (isUpdateSpaceApps) {
       const { spaceName, appKey, enabled }: UpdateSpaceAppsBody = await request.json();
