@@ -58,7 +58,8 @@ export interface VocespaceConfig {
    * 例如: vocespace.com
    * **无需加上 http:// 或 https:// 前缀，也无需端口号**
    */
-  server_url: string;
+  serverUrl: string;
+  hostToken: string;
 }
 
 // 2k, 30fps, 3Mbps
@@ -80,7 +81,8 @@ export const DEFAULT_VOCESPACE_CONFIG: VocespaceConfig = {
     password: 'vocespace',
     db: 0,
   },
-  server_url: 'localhost',
+  serverUrl: 'localhost',
+  hostToken: "vocespace_privoce"
 };
 
 export const createResolution = (options: {

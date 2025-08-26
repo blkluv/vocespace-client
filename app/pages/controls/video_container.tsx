@@ -527,7 +527,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           };
         }) => {
           if (msg.space === space.name) {
-            await updateSettings(settings.participants[space.localParticipant.identity], msg.reocrd);
+            await updateSettings(
+              settings.participants[space.localParticipant.identity],
+              msg.reocrd,
+            );
             socket.emit('update_user_status', {
               space: space.name,
             } as WsBase);
@@ -565,12 +568,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
 
       // [重载/更新配置] -----------------------------------------------------------------------
       socket.on('reload_env_response', (msg: WsBase) => {
-        if (msg.space === space.name) {
-          messageApi.success(t('settings.general.conf.reload_env'));
-          // 在localstorage中添加一个reload标记，这样退出之后如果有这个标记就可以自动重载
-          localStorage.setItem('reload', space.name);
-          space.disconnect(true);
-        }
+        messageApi.success(t('settings.general.conf.reload_env'));
+        // 在localstorage中添加一个reload标记，这样退出之后如果有这个标记就可以自动重载
+        localStorage.setItem('reload', space.name);
+        space.disconnect(true);
       });
 
       return () => {

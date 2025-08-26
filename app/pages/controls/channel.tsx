@@ -828,9 +828,6 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           <p>{t('channel.modal.desc.1')}</p>
           <Input
             placeholder={t('channel.modal.placeholder')}
-            style={{
-              outline: '1px solid #22CCEE',
-            }}
             value={childRoomName}
             onChange={(e) => {
               setChildRoomName(e.target.value);
@@ -886,9 +883,6 @@ export const Channel = forwardRef<ChannelExports, ChannelProps>(
           <p>{t('channel.modal.rename.desc')}</p>
           <Input
             placeholder={t('channel.modal.rename.placeholder')}
-            style={{
-              outline: '1px solid #22CCEE',
-            }}
             value={renameRoomName}
             onChange={(e) => {
               setRenameRoomName(e.target.value);

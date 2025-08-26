@@ -1280,7 +1280,8 @@ export async function DELETE(request: NextRequest) {
 
 /// 通过livekit服务端API确定用户是否真的离开了房间
 const reallyLeaveSpace = async (spaceName: string, participantId: string): Promise<boolean> => {
-  const roomServer = new RoomServiceClient(LIVEKIT_URL!, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
+  let hostname = LIVEKIT_URL!.replace("wss", "https").replace("ws", "http");
+  const roomServer = new RoomServiceClient(hostname, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
   // 列出所有房间
   // const targetParticipant = await roomServer.getParticipant(spaceName, participantId);
   const participants = await roomServer.listParticipants(spaceName);
@@ -1303,8 +1304,8 @@ const userHeartbeat = async () => {
     console.warn('LiveKit API credentials are not set, skipping user heartbeat check.');
     return;
   }
-
-  const roomServer = new RoomServiceClient(LIVEKIT_URL!, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
+  let hostname = LIVEKIT_URL!.replace("wss", "https").replace("ws", "http");
+  const roomServer = new RoomServiceClient(hostname, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
   // 列出所有房间
   const currentRooms = await roomServer.listRooms();
   for (const room of currentRooms) {

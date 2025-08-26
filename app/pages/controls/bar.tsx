@@ -664,9 +664,6 @@ export const Controls = React.forwardRef<ControlBarExport, ControlBarProps>(
           <Input
             placeholder={t('settings.general.username')}
             value={username}
-            style={{
-              outline: '1px solid #22CCEE',
-            }}
             onChange={(e) => {
               setUsername(e.target.value);
             }}
