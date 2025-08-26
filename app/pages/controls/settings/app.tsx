@@ -62,7 +62,7 @@ export function AppSettings({
     setLoading(false);
     if (response.ok) {
       socket.emit('update_user_status', {
-        room: spaceName,
+        space: spaceName,
       } as WsBase);
       messageApi.success(t('more.app.settings.update.success'));
     } else {

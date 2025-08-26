@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Table,
   Card,
@@ -13,11 +13,15 @@ import {
   Row,
   Col,
   message,
+  Modal,
+  Input,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SvgResource } from '../resources/svg';
 import styles from '@/styles/dashboard.module.scss';
 import { api } from '@/lib/api';
+import { ConfQulity, useRTCConf, useVoceSpaceConf } from '../pages/controls/settings/conf';
+import { RTCConf } from '@/lib/std/conf';
 
 const { Title } = Typography;
 
@@ -70,7 +74,10 @@ export default function Dashboard() {
   const [totalParticipants, setTotalParticipants] = useState(0);
   const [activeRecordings, setActiveRecordings] = useState(0);
   const [messageApi, contextHolder] = message.useMessage();
-
+  const [openConf, setOpenConf] = useState(false);
+  const [isHostManager, setIsHostManager] = useState(false);
+  const [hostToken, setHostToken] = useState('');
+  const { conf, getConf } = useVoceSpaceConf();
   // 获取当前空间信息
   const fetchCurrentSpaces = async () => {
     setLoading(true);
@@ -169,14 +176,15 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    getConf();
     fetchCurrentSpaces();
     fetchHistorySpaces();
 
-    // 每60秒刷新一次数据
+    // 每120秒刷新一次数据
     const interval = setInterval(() => {
       fetchCurrentSpaces();
       fetchHistorySpaces();
-    }, 60000);
+    }, 120000);
 
     return () => clearInterval(interval);
   }, []);
@@ -323,9 +331,28 @@ export default function Dashboard() {
     },
   ];
 
+  const confirmConfHandle = () => {
+    if (!isHostManager) {
+      // 验证hostToken
+      console.warn(conf?.hostToken, hostToken);
+      if (conf) {
+        if (hostToken === conf.hostToken) {
+          setIsHostManager(true);
+        }
+      } else {
+        messageApi.error('配置未加载完成或无法获得配置，请稍后再试');
+      }
+    } else {
+      // 当修改后
+      setOpenConf(false);
+      setIsHostManager(false);
+      setHostToken('');
+    }
+  };
+
   return (
     <div className={styles.container}>
-    {contextHolder}
+      {contextHolder}
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>VoceSpace Dashboard</Title>
         <Row gutter={16} style={{ marginBottom: 24 }}>
@@ -356,9 +383,20 @@ export default function Dashboard() {
           <Col span={6}>
             <Card>
               <div style={{ marginBottom: '9px' }}>操作</div>
-              <Button type="primary" onClick={fetchCurrentSpaces} loading={loading}>
-                刷新数据
-              </Button>
+              <div style={{ display: 'inline-flex', gap: '8px' }}>
+                <Button type="primary" onClick={fetchCurrentSpaces} loading={loading}>
+                  刷新数据
+                </Button>
+                <Button
+                  color="danger"
+                  variant="solid"
+                  onClick={() => {
+                    setOpenConf(true);
+                  }}
+                >
+                  配置画质(全局)
+                </Button>
+              </div>
             </Card>
           </Col>
         </Row>
@@ -401,6 +439,37 @@ export default function Dashboard() {
           }}
         />
       </Card>
+      <Modal
+        title="配置全局画质"
+        open={openConf}
+        onCancel={() => {
+          setOpenConf(false);
+        }}
+        footer={
+          <Button type="primary" onClick={confirmConfHandle}>
+            {!isHostManager ? '验证' : '关闭'}
+          </Button>
+        }
+      >
+        {isHostManager ? (
+          <ConfQulity space="" isOwner={isHostManager} messageApi={messageApi} onReload={
+            ()=> {
+              setHostToken('');
+              setOpenConf(false);
+              setIsHostManager(false);
+              messageApi.success('配置已更新');
+            }
+          }></ConfQulity>
+        ) : (
+          <Input
+            placeholder="请输入管理员令牌"
+            value={hostToken}
+            onChange={(e) => {
+              setHostToken(e.target.value);
+            }}
+          ></Input>
+        )}
+      </Modal>
     </div>
   );
 }

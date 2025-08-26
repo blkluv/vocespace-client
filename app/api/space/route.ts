@@ -12,6 +12,7 @@ import {
   DefineUserStatusBody,
   DefineUserStatusResponse,
   DeleteSpaceParticipantBody,
+  PersistentSpaceBody,
   UpdateOwnerIdBody,
   UpdateSpaceAppsBody,
   UpdateSpaceParticipantBody,
@@ -603,7 +604,7 @@ class SpaceManager {
     }
   }
   // 删除房间 -----------------------------------------------------------------------
-  static async deleteRoom(room: string, start: number): Promise<boolean> {
+  static async deleteSpace(room: string, start: number): Promise<boolean> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
@@ -712,7 +713,9 @@ class SpaceManager {
       await this.setSpaceInfo(room, spaceInfo);
       // 判断这个参与者是否是主持人，如果是则进行转让，转给第一个参与者， 如果没有参与者直接删除房间
       if (Object.keys(spaceInfo.participants).length === 0) {
-        await this.deleteRoom(room, spaceInfo.startAt);
+        if (!spaceInfo.persistence) {
+          await this.deleteSpace(room, spaceInfo.startAt);
+        }
         return {
           success: true,
           clearAll: true,
@@ -949,6 +952,22 @@ export async function POST(request: NextRequest) {
     const isUpdateParticipant = request.nextUrl.searchParams.get('participant') === 'update';
     const isSpace = request.nextUrl.searchParams.get('space') === 'true';
     const isUpdateSpaceApps = request.nextUrl.searchParams.get('apps') === 'update';
+    const isUpdateSpacePersistence = request.nextUrl.searchParams.get('persistence') === 'update';
+    // 更新Space的持久化设置 ------------------------------------------------------------------
+    if (isUpdateSpacePersistence && isSpace) {
+      const { spaceName, persistence }: PersistentSpaceBody = await request.json();
+      const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
+      if (!spaceInfo) {
+        return NextResponse.json({ error: 'Space not found' }, { status: 404 });
+      }
+      spaceInfo.persistence = persistence;
+      const success = await SpaceManager.setSpaceInfo(spaceName, spaceInfo);
+      if (!success) {
+        return NextResponse.json({ error: 'Failed to update space persistence' }, { status: 500 });
+      }
+      return NextResponse.json({ success: true }, { status: 200 });
+    }
+
     // 更新Space的Apps ----------------------------------------------------------------------
     if (isUpdateSpaceApps) {
       const { spaceName, appKey, enabled }: UpdateSpaceAppsBody = await request.json();
@@ -1261,7 +1280,8 @@ export async function DELETE(request: NextRequest) {
 
 /// 通过livekit服务端API确定用户是否真的离开了房间
 const reallyLeaveSpace = async (spaceName: string, participantId: string): Promise<boolean> => {
-  const roomServer = new RoomServiceClient(LIVEKIT_URL!, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
+  let hostname = LIVEKIT_URL!.replace("wss", "https").replace("ws", "http");
+  const roomServer = new RoomServiceClient(hostname, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
   // 列出所有房间
   // const targetParticipant = await roomServer.getParticipant(spaceName, participantId);
   const participants = await roomServer.listParticipants(spaceName);
@@ -1284,8 +1304,8 @@ const userHeartbeat = async () => {
     console.warn('LiveKit API credentials are not set, skipping user heartbeat check.');
     return;
   }
-
-  const roomServer = new RoomServiceClient(LIVEKIT_URL!, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
+  let hostname = LIVEKIT_URL!.replace("wss", "https").replace("ws", "http");
+  const roomServer = new RoomServiceClient(hostname, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
   // 列出所有房间
   const currentRooms = await roomServer.listRooms();
   for (const room of currentRooms) {
@@ -1319,7 +1339,7 @@ const userHeartbeat = async () => {
     if (inLKNotInRedis.length > 0) {
       for (const participant of inLKNotInRedis) {
         socket.emit('re_init', {
-          room: room.name,
+          space: room.name,
           participantId: participant.identity,
         } as WsParticipant);
       }

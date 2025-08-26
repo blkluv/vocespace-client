@@ -9,8 +9,23 @@ export interface Device {
   label: string;
 }
 
+export interface MouseMove {
+  space: string;
+  x: number;
+  y: number;
+  name: string;
+  color: string;
+  timestamp: number;
+  realVideoRect: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  };
+}
+
 export interface WsBase {
-  room: string; // 房间名
+  space: string; // 房间名
 }
 
 export interface WsParticipant extends WsBase {
@@ -40,6 +55,8 @@ export interface WsWave extends WsTo {
    */
   inSpace?: boolean;
 }
+
+export interface WsMouseMove extends MouseMove, WsTo {}
 
 export interface WsJoinRoom extends WsTo {
   childRoom: string;

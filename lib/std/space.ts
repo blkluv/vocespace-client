@@ -47,11 +47,13 @@ export interface SpaceInfo {
   children: ChildRoom[];
   // 应用列表，由主持人设置参与者可以使用的应用
   apps: AppKey[];
+  persistence: boolean;
 }
 
 export const DEFAULT_SPACE_INFO = (startAt: number): SpaceInfo => ({
   participants: {},
   ownerId: '',
+  persistence: false,
   record: { active: false },
   startAt,
   children: [],

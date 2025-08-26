@@ -38,7 +38,7 @@ export interface ParticipantTileMiniProps extends ParticipantTileProps {
   /**
    * host room name
    */
-  room: Room;
+  space: Room;
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
   toRenameSettings: () => void;
   setUserStatus: (status: UserStatus | string) => Promise<void>;
@@ -49,7 +49,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
     {
       trackRef,
       settings,
-      room,
+      space,
       updateSettings,
       toRenameSettings,
       setUserStatus,
@@ -87,21 +87,21 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
 
     const wsTo = useMemo(() => {
       return {
-        room: room.name,
+        space: space.name,
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
         receiverId: trackReference.participant.identity,
         socketId: settings.participants[trackReference.participant.identity]?.socketId,
       } as WsTo;
-    }, [room, localParticipant, trackReference, settings.participants]);
+    }, [space, localParticipant, trackReference, settings.participants]);
 
     const wsBase = useMemo(() => {
       return {
-        room: room.name,
+        space: space.name,
         senderName: localParticipant.name,
         senderId: localParticipant.identity,
       } as WsBase;
-    }, [room, localParticipant]);
+    }, [space, localParticipant]);
 
     const videoFilter = useMemo(() => {
       return settings.participants[trackReference.participant.identity]?.virtual?.enabled ?? false
@@ -129,7 +129,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
     const [username, setUsername] = useState<string>('');
     const { optItems, handleOptClick, optOpen, optSelfItems, handleSelfOptClick } =
       useControlRKeyMenu({
-        room,
+        space,
         spaceInfo: settings,
         selectedParticipant,
         setSelectedParticipant,
@@ -194,7 +194,7 @@ export const ParticipantTileMini = forwardRef<HTMLDivElement, ParticipantTileMin
               }
         }
         onOpenChange={(open) => {
-          optOpen(open, room.getParticipantByIdentity(trackReference.participant.identity)!);
+          optOpen(open, space.getParticipantByIdentity(trackReference.participant.identity)!);
         }}
         isRKey={true}
         children={

@@ -244,6 +244,11 @@ export default {
       lang: '语言',
       share_audio: '共享音频',
       prompt_sound: '进入提示音',
+      persistence: {
+        title: '持久化空间',
+        success: '设置当前空间持久化成功',
+        error: '设置当前空间持久化失败',
+      },
       conf: {
         load_error: '配置加载失败，请检查vocespace.conf.json文件是否存在',
         reload_env_error: '重新加载配置失败',

@@ -1,12 +1,11 @@
 import {
-  FieldTimeOutlined,
   FlagOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
 import { Card, Col, Row, Space, Statistic } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import { TimeRecords } from './time_records';
 import styles from '@/styles/apps.module.scss';
 import { CardSize } from 'antd/es/card/Card';

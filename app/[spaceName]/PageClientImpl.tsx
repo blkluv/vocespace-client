@@ -38,7 +38,7 @@ import {
 import { TodoItem } from '../pages/apps/todo_list';
 import dayjs, { type Dayjs } from 'dayjs';
 import { api } from '@/lib/api';
-import { WsBase } from '@/lib/std/device';
+import { WsBase, WsMouseMove, WsTo } from '@/lib/std/device';
 import { createResolution, DEFAULT_VOCESPACE_CONFIG, VocespaceConfig } from '@/lib/std/conf';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
@@ -375,16 +375,16 @@ function VideoConferenceComponent(props: {
   const router = useRouter();
   const handleOnLeave = React.useCallback(async () => {
     socket.emit('mouse_remove', {
-      room: room.name,
+      space: room.name,
       senderName: room.localParticipant.name || room.localParticipant.identity,
       senderId: room.localParticipant.identity,
       receiverId: '',
-      receSocketId: '',
-    });
+      socketId: '',
+    } as WsTo);
     await api.leaveSpace(room.name, room.localParticipant.identity, socket);
     await videoContainerRef.current?.clearRoom();
     socket.emit('update_user_status', {
-      room: room.name,
+      space: room.name,
     } as WsBase);
     socket.disconnect();
     router.push('/new_space');

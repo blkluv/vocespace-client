@@ -30,7 +30,7 @@ export interface SettingsProps {
   };
   messageApi: MessageInstance;
   setUserStatus?: (status: UserStatus | string) => Promise<void>;
-  room: string;
+  space: string;
   localParticipant: LocalParticipant;
   spaceInfo: SpaceInfo;
 }
@@ -72,7 +72,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
       // saveChanges,
       messageApi,
       setUserStatus,
-      room,
+      space,
       localParticipant,
       spaceInfo,
     }: SettingsProps,
@@ -97,7 +97,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
     const [firstOpen, setFirstOpen] = useState(true);
 
     const searchRoomRecords = async () => {
-      const response = await fetch(`${env?.server_host}/api/s3/${room}`);
+      const response = await fetch(`${env?.server_host}/api/s3/${space}`);
       if (response.ok) {
         const { records, success }: RecordResponse = await response.json();
         if (success && records.length > 0) {
@@ -135,7 +135,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
         label: <TabItem type="setting" label={t('settings.general.title')}></TabItem>,
         children: (
           <GeneralSettings
-            room={room}
+            space={space}
             localParticipant={localParticipant}
             messageApi={messageApi}
             appendStatus={appendStatus}
@@ -145,6 +145,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             setUsername={setUsername}
             openPromptSound={openPromptSound}
             setOpenPromptSound={setOpenPromptSound}
+            spaceInfo={spaceInfo}
           ></GeneralSettings>
         ),
       },
@@ -177,7 +178,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
               setEnabled: setVirtualEnabled,
               compare,
               setCompare,
-              room,
+              space,
               localParticipant,
             }}
           ></VideoSettings>
@@ -190,7 +191,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
           <AppSettings
             spaceInfo={spaceInfo}
             localParticipant={localParticipant}
-            spaceName={room}
+            spaceName={space}
             messageApi={messageApi}
           ></AppSettings>
         ),
@@ -219,7 +220,7 @@ export const Settings = forwardRef<SettingsExports, SettingsProps>(
             <RecordingTable
               messageApi={messageApi}
               env={env}
-              currentRoom={room}
+              currentRoom={space}
               recordsData={recordsData}
               setRecordsData={setRecordsData}
               expandable={true}
