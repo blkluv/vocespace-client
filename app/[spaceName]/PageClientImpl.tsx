@@ -39,7 +39,7 @@ import { TodoItem } from '../pages/apps/todo_list';
 import dayjs, { type Dayjs } from 'dayjs';
 import { api } from '@/lib/api';
 import { WsBase, WsMouseMove, WsTo } from '@/lib/std/device';
-import { createResolution, DEFAULT_VOCESPACE_CONFIG, VocespaceConfig } from '@/lib/std/conf';
+import { createRTCQulity, DEFAULT_VOCESPACE_CONFIG, VocespaceConfig } from '@/lib/std/conf';
 import { MessageInstance } from 'antd/es/message/interface';
 import { NotificationInstance } from 'antd/es/notification/interface';
 
@@ -284,12 +284,15 @@ function VideoConferenceComponent(props: {
   const [permissionDevice, setPermissionDevice] = useState<Track.Source | null>(null);
   const videoContainerRef = React.useRef<VideoContainerExports>(null);
 
-  const resolutions = createResolution({
-    resolution: props.config.resolution,
-    maxBitrate: props.config.maxBitrate,
-    maxFramerate: props.config.maxFramerate,
-    priority: props.config.priority,
-  });
+  const resolutions = createRTCQulity(
+    {
+      resolution: props.config.resolution,
+      maxBitrate: props.config.maxBitrate,
+      maxFramerate: props.config.maxFramerate,
+      priority: props.config.priority,
+    },
+    3,
+  );
 
   const roomOptions = React.useMemo((): RoomOptions => {
     console.warn(props.config);
@@ -300,11 +303,11 @@ function VideoConferenceComponent(props: {
     return {
       videoCaptureDefaults: {
         deviceId: props.userChoices.videoDeviceId ?? undefined,
-        resolution: props.options.hq ? resolutions.h : resolutions.l,
+        resolution: props.options.hq ? resolutions[0] : resolutions[1],
       },
       publishDefaults: {
         dtx: false,
-        videoSimulcastLayers: props.options.hq ? [resolutions.h, resolutions.l] : [resolutions.l],
+        videoSimulcastLayers: props.options.hq ? resolutions : [resolutions[1], resolutions[2]],
         red: !e2eeEnabled,
         videoCodec,
         screenShareEncoding: {
@@ -312,7 +315,9 @@ function VideoConferenceComponent(props: {
           maxFramerate: props.config.maxFramerate ?? 30, // 30fps
           priority: 'medium',
         },
-        screenShareSimulcastLayers: [props.options.hq ? resolutions.h : resolutions.l],
+        screenShareSimulcastLayers: props.options.hq
+          ? [resolutions[0], resolutions[1]]
+          : [resolutions[1], resolutions[2]],
       },
       audioCaptureDefaults: {
         deviceId: props.userChoices.audioDeviceId ?? undefined,

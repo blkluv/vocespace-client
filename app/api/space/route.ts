@@ -3,7 +3,7 @@ import { isUndefinedString, UserDefineStatus } from '@/lib/std';
 import { NextRequest, NextResponse } from 'next/server';
 import Redis from 'ioredis';
 import { ChatMsgItem } from '@/lib/std/chat';
-import { ChildRoom, DEFAULT_SPACE_INFO, ParticipantSettings, SpaceInfo } from '@/lib/std/space';
+import { ChildRoom, DEFAULT_SPACE_INFO, ParticipantSettings, SpaceInfo, SpaceInfoMap } from '@/lib/std/space';
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsParticipant } from '@/lib/std/device';
@@ -27,10 +27,6 @@ import {
   UpdateRoomBody,
 } from '@/lib/api/channel';
 import { getConfig } from '../conf/conf';
-
-interface SpaceInfoMap {
-  [spaceId: string]: SpaceInfo;
-}
 
 interface SpaceTimeRecord {
   start: number; // 记录开始时间戳

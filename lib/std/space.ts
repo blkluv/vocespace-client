@@ -36,6 +36,10 @@ export interface RecordSettings {
 
 export type AppKey = 'timer' | 'countdown' | 'todo';
 
+export interface SpaceInfoMap {
+  [spaceId: string]: SpaceInfo;
+}
+
 export interface SpaceInfo {
   participants: {
     [participantId: string]: ParticipantSettings;

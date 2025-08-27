@@ -15,6 +15,7 @@ import {
   message,
   Modal,
   Input,
+  Tabs,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { SvgResource } from '../resources/svg';
@@ -22,6 +23,7 @@ import styles from '@/styles/dashboard.module.scss';
 import { api } from '@/lib/api';
 import { ConfQulity, useRTCConf, useVoceSpaceConf } from '../pages/controls/settings/conf';
 import { RTCConf } from '@/lib/std/conf';
+import { SpaceInfo, SpaceInfoMap } from '@/lib/std/space';
 
 const { Title } = Typography;
 
@@ -78,27 +80,39 @@ export default function Dashboard() {
   const [isHostManager, setIsHostManager] = useState(false);
   const [hostToken, setHostToken] = useState('');
   const { conf, getConf } = useVoceSpaceConf();
+
+  // 根据 Space 分组数据
+  const groupedSpacesData = useMemo(() => {
+    const grouped: { [spaceId: string]: ParticipantTableData[] } = {};
+    currentSpacesData.forEach((participant) => {
+      if (!grouped[participant.spaceId]) {
+        grouped[participant.spaceId] = [];
+      }
+      grouped[participant.spaceId].push(participant);
+    });
+    return grouped;
+  }, [currentSpacesData]);
   // 获取当前空间信息
   const fetchCurrentSpaces = async () => {
     setLoading(true);
     try {
       const response = await api.allSpaceInfos();
       if (response.ok) {
-        const roomSettings = await response.json();
+        const spaceInfoMap: SpaceInfoMap = await response.json();
 
         const participantsData: ParticipantTableData[] = [];
         let roomCount = 0;
         let participantCount = 0;
         let recordingCount = 0;
 
-        Object.entries(roomSettings).forEach(([spaceId, roomData]: [string, any]) => {
-          if (roomData.participants && Object.keys(roomData.participants).length > 0) {
+        Object.entries(spaceInfoMap).forEach(([spaceId, spaceInfo]: [string, any]) => {
+          if (spaceInfo.participants && Object.keys(spaceInfo.participants).length > 0) {
             roomCount++;
-            if (roomData.record?.active) {
+            if (spaceInfo.record?.active) {
               recordingCount++;
             }
 
-            Object.entries(roomData.participants).forEach(
+            Object.entries(spaceInfo.participants).forEach(
               ([participantId, participant]: [string, any]) => {
                 participantCount++;
                 participantsData.push({
@@ -110,8 +124,8 @@ export default function Dashboard() {
                   blur: participant.blur,
                   screenBlur: participant.screenBlur,
                   status: participant.status,
-                  isOwner: roomData.ownerId === participantId,
-                  isRecording: roomData.record?.active || false,
+                  isOwner: spaceInfo.ownerId === participantId,
+                  isRecording: spaceInfo.record?.active || false,
                   virtualEnabled: participant.virtual?.enabled || false,
                   during: countDuring(participant.startAt),
                 });
@@ -189,22 +203,8 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // 当前房间参与者表格列定义
+  // 当前房间参与者表格列定义（去掉房间列，因为现在按Space分组显示）
   const currentSpacesColumns: ColumnsType<ParticipantTableData> = [
-    {
-      title: '房间',
-      dataIndex: 'spaceId',
-      key: 'spaceId',
-      width: 120,
-      render: (spaceId: string, record) => (
-        <Space>
-          <span>{spaceId}</span>
-          {record.isRecording && (
-            <SvgResource type="record" svgSize={16} color="#ffffff"></SvgResource>
-          )}
-        </Space>
-      ),
-    },
     {
       title: '参与者',
       dataIndex: 'name',
@@ -214,6 +214,9 @@ export default function Dashboard() {
         <Space align="center">
           <span>{name}</span>
           {record.isOwner && '(host)'}
+          {record.isRecording && (
+            <SvgResource type="record" svgSize={16} color="#ffffff"></SvgResource>
+          )}
         </Space>
       ),
     },
@@ -402,28 +405,54 @@ export default function Dashboard() {
         </Row>
       </div>
 
-      {/* 当前房间用户数据 */}
-      <Card
-        title="当前活跃房间用户"
-        style={{ marginBottom: 24 }}
-        extra={
-          <Badge count={totalParticipants} showZero>
-            <SvgResource type="user" svgSize={16} color="#ffffff" />
-          </Badge>
-        }
-      >
-        <Table
-          columns={currentSpacesColumns}
-          dataSource={currentSpacesData}
-          loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-          }}
-          scroll={{ x: 1200 }}
-        />
+      {/* 当前房间用户数据 - 按Space分组 */}
+      <Card style={{ marginBottom: 24,}} styles={{body: {
+        paddingLeft: 0
+      }}}>
+        {Object.keys(groupedSpacesData).length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>暂无活跃房间</div>
+        ) : (
+          <Tabs
+            tabPosition="left"
+            items={['当前活跃用户', "日榜", "周榜", "月榜"].map((title) => {
+              return {
+                key: title,
+                label: <Typography.Title level={5}>{title}</Typography.Title>,
+                children: (
+                  <Tabs
+                    items={Object.entries(groupedSpacesData).map(([spaceId, participants]) => ({
+                      key: spaceId,
+                      label: (
+                        <Space>
+                          <span>{spaceId}</span>
+                          <Badge count={participants.length} size="small" />
+                          {participants.some((p) => p.isRecording) && (
+                            <SvgResource type="record" svgSize={14} color="#ff4d4f" />
+                          )}
+                        </Space>
+                      ),
+                      children: (
+                        <Table
+                          columns={currentSpacesColumns}
+                          dataSource={participants}
+                          loading={loading}
+                          pagination={{
+                            pageSize: 10,
+                            showSizeChanger: true,
+                            showQuickJumper: true,
+                            showTotal: (total, range) =>
+                              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+                          }}
+                          scroll={{ x: 1000 }}
+                        />
+                      ),
+                    }))}
+                  />
+                ),
+              };
+            })}
+          ></Tabs>
+        )}
       </Card>
 
       {/* 历史房间数据 */}
@@ -452,14 +481,17 @@ export default function Dashboard() {
         }
       >
         {isHostManager ? (
-          <ConfQulity space="" isOwner={isHostManager} messageApi={messageApi} onReload={
-            ()=> {
+          <ConfQulity
+            space=""
+            isOwner={isHostManager}
+            messageApi={messageApi}
+            onReload={() => {
               setHostToken('');
               setOpenConf(false);
               setIsHostManager(false);
               messageApi.success('配置已更新');
-            }
-          }></ConfQulity>
+            }}
+          ></ConfQulity>
         ) : (
           <Input
             placeholder="请输入管理员令牌"
