@@ -3,7 +3,16 @@ import { isUndefinedString, UserDefineStatus } from '@/lib/std';
 import { NextRequest, NextResponse } from 'next/server';
 import Redis from 'ioredis';
 import { ChatMsgItem } from '@/lib/std/chat';
-import { ChildRoom, DEFAULT_SPACE_INFO, ParticipantSettings, SpaceInfo, SpaceInfoMap } from '@/lib/std/space';
+import {
+  ChildRoom,
+  DEFAULT_SPACE_INFO,
+  ParticipantSettings,
+  SpaceInfo,
+  SpaceInfoMap,
+  SpaceDateRecords,
+  SpaceTimeRecord,
+  SpaceDateRecord,
+} from '@/lib/std/space';
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsParticipant } from '@/lib/std/device';
@@ -27,16 +36,6 @@ import {
   UpdateRoomBody,
 } from '@/lib/api/channel';
 import { getConfig } from '../conf/conf';
-
-interface SpaceTimeRecord {
-  start: number; // 记录开始时间戳
-  end?: number; // 记录结束时间戳
-}
-
-// 记录空间的使用情况
-interface SpaceDateRecords {
-  [spaceId: string]: SpaceTimeRecord[];
-}
 
 const { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL } = process.env;
 
@@ -413,9 +412,9 @@ class SpaceManager {
   // 设置空间的使用情况 --------------------------------------------------------------------
   static async setSpaceDateRecords(
     space: string,
-    time: {
-      start: number;
-      end?: number;
+    timeRecord: SpaceTimeRecord,
+    participants?: {
+      [name: string]: SpaceTimeRecord[];
     },
   ): Promise<boolean> {
     try {
@@ -423,18 +422,55 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
       // 获取空间的使用情况，如果没有则创建一个新的记录，如果有则需要进行判断更新
-      let record = await this.getSpaceDateRecords(space);
-      // 通过start时间戳判断是否已经存在记录，如果有则更新结束时间戳，没有则添加新的记录
-      let startRecord = record.find((r) => r.start === time.start);
-      if (startRecord) {
-        // 如果已经存在记录，则更新结束时间戳
-        startRecord.end = time.end || Date.now();
+      let record = await this.getSpaceDateRecord(space);
+      if (!record) {
+        // 没有记录，表示房间第一次创建，需要创建一个新的纪录
+        record = {
+          space: [
+            {
+              start: timeRecord.start,
+              end: timeRecord.end,
+            },
+          ],
+          participants,
+        } as SpaceDateRecord;
       } else {
-        // 如果不存在记录，则添加新的记录
-        record.push({
-          start: time.start,
-          end: time.end,
-        });
+        if (!participants) {
+          // 如果有记录，需要根据timeRecord进行判断，如果传入的start和记录的start相同，表示删除房间，那么更新end
+          let startRecord = record.space.find((r) => r.start === timeRecord.start);
+          if (startRecord) {
+            // 如果已经存在记录，则更新结束时间戳
+            startRecord.end = timeRecord.end || Date.now();
+            // 接下来还需要遍历所有的用户，如果发现没有end时间戳的记录也进行更新
+            let participants = Object.keys(record.participants);
+            participants.forEach((p) => {
+              let userRecord = record?.participants[p];
+              if (userRecord) {
+                userRecord.forEach((r) => {
+                  if (!r.end) {
+                    r.end = timeRecord.end || Date.now();
+                  }
+                });
+              }
+            });
+          } else {
+            // 如果不存在记录，则添加新的记录
+            record.space.push({
+              start: timeRecord.start,
+              end: timeRecord.end,
+            });
+          }
+        } else {
+          // 有用户记录，这里即使有也是只有1条，更新用户的结束时间戳
+          let userRecord = record?.participants[Object.keys(record.participants)[0]];
+          if (userRecord) {
+            userRecord.forEach((r) => {
+              if (!r.end) {
+                r.end = timeRecord.end || Date.now();
+              }
+            });
+          }
+        }
       }
 
       // 设置回存储
@@ -448,7 +484,7 @@ class SpaceManager {
   }
 
   // 获取空间的使用情况 --------------------------------------------------------------------
-  static async getSpaceDateRecords(space: string): Promise<SpaceTimeRecord[]> {
+  static async getSpaceDateRecord(space: string): Promise<SpaceDateRecord | null> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
@@ -456,17 +492,17 @@ class SpaceManager {
       const key = `${this.SPACE_DATE_RECORDS_KEY_PREFIX}${space}`;
       const dataStr = await redisClient.get(key);
       if (dataStr) {
-        return JSON.parse(dataStr) as SpaceTimeRecord[];
+        return JSON.parse(dataStr) as SpaceDateRecord;
       }
-      return [];
+      return null;
     } catch (error) {
       console.error('Error getting room date records:', error);
-      return [];
+      return null;
     }
   }
 
   // 获取所有空间的使用情况 -----------------------------------------------------------------
-  static async getAllSpaceDateRecords(): Promise<SpaceDateRecords> {
+  static async getAllSpaceDateRecords(): Promise<SpaceDateRecords | null> {
     try {
       if (!redisClient) {
         throw new Error('Redis client is not initialized or disabled.');
@@ -474,18 +510,22 @@ class SpaceManager {
       const keys = await redisClient.keys(`${this.SPACE_DATE_RECORDS_KEY_PREFIX}*`);
       const records: SpaceDateRecords = {};
 
-      for (const key of keys) {
-        const spaceId = key.replace(this.SPACE_DATE_RECORDS_KEY_PREFIX, '');
-        const dataStr = await redisClient.get(key);
-        if (dataStr) {
-          records[spaceId] = JSON.parse(dataStr);
+      if (keys.length > 0) {
+        for (const key of keys) {
+          const spaceId = key.replace(this.SPACE_DATE_RECORDS_KEY_PREFIX, '');
+          const dataStr = await redisClient.get(key);
+          if (dataStr) {
+            records[spaceId] = JSON.parse(dataStr);
+          }
         }
-      }
 
-      return records;
+        return records;
+      } else {
+        return null;
+      }
     } catch (error) {
       console.error('Error getting room date records:', error);
-      return {};
+      return null;
     }
   }
 
@@ -576,14 +616,32 @@ class SpaceManager {
       }
       let spaceInfo = await this.getSpaceInfo(room);
       // 房间不存在说明是第一次创建
+      let startAt = Date.now();
       if (!spaceInfo) {
-        let startAt = Date.now();
         spaceInfo = {
           ...DEFAULT_SPACE_INFO(startAt),
           ownerId: participantId,
         };
         // 这里还需要设置到房间的使用记录中
-        await this.setSpaceDateRecords(room, { start: startAt });
+        await this.setSpaceDateRecords(
+          room,
+          { start: startAt },
+          {
+            [pData.name]: [{ start: startAt }],
+          },
+        );
+      } else {
+        // 房间存在，这个用户可能是新加入的，我们可以查找房间中是否有这个用户，如果没有则需要将用户记录添加到使用记录中
+        let participant = spaceInfo.participants[participantId];
+        if (!participant) {
+          await this.setSpaceDateRecords(
+            room,
+            { start: spaceInfo.startAt },
+            {
+              [pData.name]: [{ start: startAt }],
+            },
+          );
+        }
       }
 
       // 更新参与者数据
@@ -702,11 +760,21 @@ class SpaceManager {
           }),
         );
       }
-
+      let participantName = spaceInfo.participants[participantId].name;
+      let participantStartAt = spaceInfo.participants[participantId].startAt;
       // 删除参与者
       delete spaceInfo.participants[participantId];
       // 先设置回去, 以防transferOwner读取脏数据
       await this.setSpaceInfo(room, spaceInfo);
+      // 用户离开需要更新用户的end记录
+      await this.setSpaceDateRecords(
+        room,
+        { start: spaceInfo.startAt },
+        {
+          [participantName]: [{ start: participantStartAt, end: Date.now() }],
+        },
+      );
+
       // 判断这个参与者是否是主持人，如果是则进行转让，转给第一个参与者， 如果没有参与者直接删除房间
       if (Object.keys(spaceInfo.participants).length === 0) {
         if (!spaceInfo.persistence) {
@@ -789,8 +857,8 @@ class SpaceManager {
         throw new Error('Redis client is not initialized or disabled.');
       }
       let spaceInfo = await this.getSpaceInfo(room);
+      let startAt = Date.now();
       if (!spaceInfo) {
-        let startAt = Date.now();
         // spaceInfo = {
         //   participants: {},
         //   ownerId: '',
@@ -799,8 +867,6 @@ class SpaceManager {
         //   children: [],
         // };
         spaceInfo = DEFAULT_SPACE_INFO(startAt);
-        // 这里还需要设置到房间的使用记录中
-        await this.setSpaceDateRecords(room, { start: startAt });
       }
 
       // 获取所有参与者的名字
@@ -830,6 +896,15 @@ class SpaceManager {
       }
 
       const availableUserName = `User ${suffix_str}`;
+
+      // 这里还需要设置到房间的使用记录中
+      await this.setSpaceDateRecords(
+        room,
+        { start: startAt },
+        {
+          [availableUserName]: [{ start: startAt }],
+        },
+      );
 
       return availableUserName;
     } catch (error) {
@@ -1276,7 +1351,7 @@ export async function DELETE(request: NextRequest) {
 
 /// 通过livekit服务端API确定用户是否真的离开了房间
 const reallyLeaveSpace = async (spaceName: string, participantId: string): Promise<boolean> => {
-  let hostname = LIVEKIT_URL!.replace("wss", "https").replace("ws", "http");
+  let hostname = LIVEKIT_URL!.replace('wss', 'https').replace('ws', 'http');
   const roomServer = new RoomServiceClient(hostname, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
   // 列出所有房间
   // const targetParticipant = await roomServer.getParticipant(spaceName, participantId);
@@ -1300,7 +1375,7 @@ const userHeartbeat = async () => {
     console.warn('LiveKit API credentials are not set, skipping user heartbeat check.');
     return;
   }
-  let hostname = LIVEKIT_URL!.replace("wss", "https").replace("ws", "http");
+  let hostname = LIVEKIT_URL!.replace('wss', 'https').replace('ws', 'http');
   const roomServer = new RoomServiceClient(hostname, LIVEKIT_API_KEY!, LIVEKIT_API_SECRET!);
   // 列出所有房间
   const currentRooms = await roomServer.listRooms();
