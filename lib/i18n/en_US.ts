@@ -251,6 +251,11 @@ export default {
       lang: 'Language',
       share_audio: 'Share Screen Audio',
       prompt_sound: 'Enter Prompt Sound',
+      persistence: {
+        title: 'Persistent Space',
+        success: 'Successfully set the current space to persistent',
+        error: 'Failed to set the current space to persistent',
+      },
       conf: {
         load_error:
           'Configuration loading failed, please check if the vocespace.conf.json file exists',

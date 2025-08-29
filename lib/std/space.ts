@@ -1,31 +1,100 @@
 import { UserDefineStatus, UserStatus } from '.';
 import { ModelBg, ModelRole } from './virtual';
 
+/**
+ * Child room information
+ */
 export interface ChildRoom {
-  // room name
+  /**
+   * room name
+   */
   name: string;
-  // 参与者ID
+  /**
+   * 参与者ID
+   * participantId
+   */
   participants: string[];
+  /**
+   * room owner ID
+   */
   ownerId: string;
-  // is private room
+  /**
+   * is private room or not
+   */
   isPrivate: boolean;
 }
 
+/**
+ * Participant settings in Space
+ */
 export interface ParticipantSettings {
+  /**
+   * 参与者名称
+   */
   name: string;
+  /**
+   * 音量
+   */
   volume: number;
+  /**
+   * 视频模糊度
+   */
   blur: number;
+  /**
+   * 屏幕分享模糊度
+   */
   screenBlur: number;
+  /**
+   * 用户状态：系统状态/用户自定义状态
+   */
   status: UserStatus | string;
   socketId: string;
+  /**
+   * 参与者开始时间
+   */
   startAt: number;
+  /**
+   * 虚拟形象
+   */
   virtual: {
     role: ModelRole;
     bg: ModelBg;
     enabled: boolean;
   };
-  openShareAudio: boolean; // 是否开启屏幕分享音频
-  openPromptSound: boolean; // 是否开启新用户加入时的提示音
+  /**
+   * 是否开启屏幕分享音频
+   */
+  openShareAudio: boolean;
+  /**
+   * 是否开启新用户加入时的提示音
+   */
+  openPromptSound: boolean;
+}
+
+export interface SpaceTimeRecord {
+  start: number; // 记录开始时间戳
+  end?: number; // 记录结束时间戳
+}
+
+export interface SpaceDateRecord {
+  /**
+   * 空间的使用记录
+   */
+  space: SpaceTimeRecord[];
+  /**
+   * 参与者的使用记录
+   */
+  participants: {
+    [name: string]: SpaceTimeRecord[];
+  };
+}
+
+/**
+ * 记录空间的使用情况
+ * 主要应用在空间的使用记录中
+ */
+export interface SpaceDateRecords {
+  [spaceId: string]: SpaceDateRecord;
 }
 
 export interface RecordSettings {
@@ -35,6 +104,10 @@ export interface RecordSettings {
 }
 
 export type AppKey = 'timer' | 'countdown' | 'todo';
+
+export interface SpaceInfoMap {
+  [spaceId: string]: SpaceInfo;
+}
 
 export interface SpaceInfo {
   participants: {
@@ -57,7 +130,7 @@ export const DEFAULT_SPACE_INFO = (startAt: number): SpaceInfo => ({
   record: { active: false },
   startAt,
   children: [],
-  apps: ['todo', "countdown"],
+  apps: ['todo', 'countdown'],
 });
 
 export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
