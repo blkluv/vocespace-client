@@ -205,10 +205,17 @@ export default {
       set: {
         invite: {
           title: 'Participant Invite',
-          video: 'Invite to Enable Camera',
           wave: 'Send a Reminder',
-          audio: 'Invite to Enable Microphone',
-          share: 'Invite to Share Screen',
+          open: {
+            video: 'Invite to Enable Camera',
+            audio: 'Invite to Enable Microphone',
+            share: 'Invite to Share Screen',
+          },
+          close: {
+            video: 'Invite to Disable Camera',
+            audio: 'Invite to Disable Microphone',
+            share: 'Invite to Stop Sharing Screen',
+          },
         },
         control: {
           title: 'Participant Control',

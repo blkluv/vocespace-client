@@ -370,15 +370,15 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           switch (msg.device) {
             case Track.Source.Camera:
               device_str = '摄像头';
-              open = () => space.localParticipant.setCameraEnabled(true);
+              open = () => space.localParticipant.setCameraEnabled(msg.isOpen);
               break;
             case Track.Source.Microphone:
               device_str = '麦克风';
-              open = () => space.localParticipant.setMicrophoneEnabled(true);
+              open = () => space.localParticipant.setMicrophoneEnabled(msg.isOpen);
               break;
             case Track.Source.ScreenShare:
               device_str = '屏幕共享';
-              open = () => space.localParticipant.setScreenShareEnabled(true);
+              open = () => space.localParticipant.setScreenShareEnabled(msg.isOpen);
               break;
             default:
               return;
@@ -393,7 +393,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                 noteApi.destroy();
               }}
             >
-              {t('common.open')}
+              {t(`common.${msg.isOpen ? 'open' : 'close'}`)}
             </Button>
           );
 

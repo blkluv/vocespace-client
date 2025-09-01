@@ -198,10 +198,18 @@ export default {
       set: {
         invite: {
           title: '成员邀请',
-          video: '邀请开启视频',
           wave: '发送一条提醒',
-          audio: '邀请开启音频',
-          share: '邀请共享屏幕',
+          open: {
+            video: '邀请开启视频',
+            audio: '邀请开启音频',
+            share: '邀请共享屏幕',
+          },
+
+          close: {
+            video: '邀请关闭视频',
+            audio: '邀请关闭音频',
+            share: '邀请关闭共享屏幕',
+          },
         },
         control: {
           title: '成员控制',
