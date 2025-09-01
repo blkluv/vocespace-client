@@ -137,6 +137,10 @@ export default {
     channel: 'Channel',
     app: {
       title: 'Application',
+      upload: {
+        success: "Upload application successfully",
+        error: "Failed to upload application, please try again later.",
+      },
       settings: {
         filter: 'Filter required apps',
         desc: 'VoceSpace provides a variety of apps. As the host, you can select the apps that participants can use here.',

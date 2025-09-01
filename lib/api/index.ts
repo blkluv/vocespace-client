@@ -17,6 +17,7 @@ import {
   updateOwnerId,
   updateSpaceApps,
   updateSpaceParticipant,
+  uploadSpaceApp,
 } from './space';
 
 export const api = {
@@ -34,6 +35,7 @@ export const api = {
   updateSpaceApps,
   leaveSpace,
   persistentSpace,
+  uploadSpaceApp,
   // ---- chat api --------
   fetchLinkPreview,
   getChatMsg,

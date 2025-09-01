@@ -1,4 +1,4 @@
-import { Drawer, Tabs, TabsProps } from 'antd';
+import { Button, Drawer, Tabs, TabsProps } from 'antd';
 import { DEFAULT_DRAWER_PROP, DrawerCloser, DrawerHeader } from '../controls/drawer_tools';
 import { useMemo, useState } from 'react';
 import { AppTimer } from './timer';
@@ -6,40 +6,67 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { AppCountdown } from './countdown';
 import { MessageInstance } from 'antd/es/message/interface';
 import { AppTodo } from './todo_list';
-import { AppKey, SpaceInfo } from '@/lib/std/space';
+import { AppKey, SpaceCountdown, SpaceInfo, SpaceTimer, SpaceTodo } from '@/lib/std/space';
+import { AppHistory } from './history';
+import { useLocalParticipant } from '@livekit/components-react';
+import { useRecoilState } from 'recoil';
+import { AppsDataState, socket } from '@/app/[spaceName]/PageClientImpl';
+import { api } from '@/lib/api';
+import { WsBase } from '@/lib/std/device';
 
 export interface AppDrawerProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   messageApi: MessageInstance;
   spaceInfo: SpaceInfo;
+  space: string;
 }
 
-export function AppDrawer({ open, setOpen, messageApi, spaceInfo }: AppDrawerProps) {
-  const [key, setKey] = useState<AppKey>('todo');
-  const {t} = useI18n();
+export function AppDrawer({ open, setOpen, messageApi, spaceInfo, space }: AppDrawerProps) {
+  const [key, setKey] = useState<AppKey | 'history'>('todo');
+  const { t } = useI18n();
 
-  const items: TabsProps['items'] = useMemo(()=> {
+  const items: TabsProps['items'] = useMemo(() => {
     return [
-    {
-      key: 'timer',
-      label: t('more.app.timer.title'),
-      children: <AppTimer></AppTimer>,
-      disabled: !spaceInfo.apps.includes('timer')
-    },
-    {
-      key: 'countdown',
-      label: t('more.app.countdown.title'),
-      children: <AppCountdown messageApi={messageApi}></AppCountdown>,
-      disabled: !spaceInfo.apps.includes('countdown')
-    },
-    {
-      key: 'todo',
-      label: t('more.app.todo.title'),
-      children: <AppTodo messageApi={messageApi}></AppTodo>,
-      disabled: !spaceInfo.apps.includes('todo')
-    },
-  ];
+      {
+        key: 'timer',
+        label: t('more.app.timer.title'),
+        children: (
+          <>
+            <AppTabHeader messageApi={messageApi} ty="timer" space={space}></AppTabHeader>
+            <AppTimer></AppTimer>
+          </>
+        ),
+        disabled: !spaceInfo.apps.includes('timer'),
+      },
+      {
+        key: 'countdown',
+        label: t('more.app.countdown.title'),
+        children: (
+          <>
+            <AppTabHeader messageApi={messageApi} ty="countdown" space={space}></AppTabHeader>
+            <AppCountdown messageApi={messageApi}></AppCountdown>
+          </>
+        ),
+        disabled: !spaceInfo.apps.includes('countdown'),
+      },
+      {
+        key: 'todo',
+        label: t('more.app.todo.title'),
+        children: (
+          <>
+            <AppTabHeader messageApi={messageApi} ty="todo" space={space}></AppTabHeader>
+            <AppTodo messageApi={messageApi}></AppTodo>
+          </>
+        ),
+        disabled: !spaceInfo.apps.includes('todo'),
+      },
+      {
+        key: 'history',
+        label: t('more.app.upload.history'),
+        children: <AppHistory spaceInfo={spaceInfo}></AppHistory>,
+      },
+    ];
   }, [spaceInfo.apps]);
 
   return (
@@ -61,10 +88,91 @@ export function AppDrawer({ open, setOpen, messageApi, spaceInfo }: AppDrawerPro
         centered
         items={items}
         style={{ width: '100%', height: '100%' }}
-        onChange={(k: string) => {
-          setKey(k as AppKey);
+        onChange={async (k: string) => {
+          if (k === 'history') {
+            socket.emit('update_user_status', {
+              space,
+            } as WsBase);
+            setKey(k);
+          } else {
+            setKey(k as AppKey);
+          }
         }}
       />
     </Drawer>
+  );
+}
+
+export interface AppTabHeader {
+  ty: AppKey;
+  space: string;
+  messageApi: MessageInstance;
+}
+
+function AppTabHeader({ ty, space, messageApi }: AppTabHeader) {
+  const { t } = useI18n();
+  const { localParticipant } = useLocalParticipant();
+  const [appData, setAppData] = useRecoilState(AppsDataState);
+  const upload = async () => {
+    let spaceData: SpaceTimer | SpaceCountdown | SpaceTodo | undefined = undefined;
+    const defaultData = {
+      participantId: localParticipant.identity,
+      participantName: localParticipant.name,
+      timestamp: Date.now(),
+    };
+    switch (ty) {
+      case 'timer': {
+        spaceData = {
+          ...defaultData,
+          ...appData.timer,
+        } as SpaceTimer;
+        break;
+      }
+      case 'countdown': {
+        spaceData = {
+          ...defaultData,
+          value: appData.countdown.value,
+          duration: appData.countdown.duration ? appData.countdown.duration.toString() : null,
+          running: appData.countdown.running,
+          stopTimeStamp: appData.countdown.stopTimeStamp,
+        } as SpaceCountdown;
+        break;
+      }
+      case 'todo': {
+        spaceData = {
+          ...defaultData,
+          items: appData.todo,
+        } as SpaceTodo;
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (spaceData) {
+      const response = await api.uploadSpaceApp(space, ty, spaceData);
+      if (response.ok) {
+        messageApi.success(t('more.app.upload.success'));
+      } else {
+        messageApi.error(t('more.app.upload.error'));
+      }
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        gap: '8px',
+        marginBottom: '16px',
+        width: '100%',
+      }}
+    >
+      <Button type="primary" onClick={upload}>
+        {t('more.app.upload.to_space')}
+      </Button>
+      <Button type="default">{t('more.app.upload.history')}</Button>
+    </div>
   );
 }

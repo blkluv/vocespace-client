@@ -6,18 +6,23 @@ import { AppTimer } from './timer';
 import { AppCountdown } from './countdown';
 import { AppTodo } from './todo_list';
 import { MessageInstance } from 'antd/es/message/interface';
-import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { useI18n } from '@/lib/i18n/i18n';
-import { AppKey, SpaceInfo } from '@/lib/std/space';
+import { AppKey, SpaceCountdown, SpaceInfo, SpaceTimer, SpaceTodo } from '@/lib/std/space';
+import { api } from '@/lib/api';
+import { useLocalParticipant } from '@livekit/components-react';
+import { useRecoilState } from 'recoil';
+import { AppsDataState } from '@/app/[spaceName]/PageClientImpl';
 
 export interface FlotLayoutProps {
   style?: React.CSSProperties;
   messageApi: MessageInstance;
   openApp: boolean;
   spaceInfo: SpaceInfo;
+  space: string;
 }
 
-export function FlotLayout({ style, messageApi, openApp, spaceInfo }: FlotLayoutProps) {
+export function FlotLayout({ style, messageApi, openApp, spaceInfo, space }: FlotLayoutProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -31,7 +36,7 @@ export function FlotLayout({ style, messageApi, openApp, spaceInfo }: FlotLayout
       <Popover
         open={open}
         placement="leftTop"
-        content={<FlotAppItem messageApi={messageApi} apps={spaceInfo.apps} />}
+        content={<FlotAppItem messageApi={messageApi} apps={spaceInfo.apps} space={space} />}
         styles={{
           body: {
             background: '#1a1a1a90',
@@ -56,12 +61,15 @@ export function FlotLayout({ style, messageApi, openApp, spaceInfo }: FlotLayout
 interface FlotAppItemProps {
   messageApi: MessageInstance;
   apps: AppKey[];
+  space: string;
 }
 
-function FlotAppItem({ messageApi , apps}: FlotAppItemProps) {
+function FlotAppItem({ messageApi, apps, space }: FlotAppItemProps) {
   const [activeKey, setActiveKey] = useState<string[]>(['timer', 'countdown', 'todo']);
   const { t } = useI18n();
   const { token } = theme.useToken();
+  const { localParticipant } = useLocalParticipant();
+  const [appData, setAppData] = useRecoilState(AppsDataState);
   const itemStyle: React.CSSProperties = {
     marginBottom: 8,
     background: token.colorFillAlter,
@@ -78,23 +86,125 @@ function FlotAppItem({ messageApi , apps}: FlotAppItemProps) {
     });
   };
 
+  const upload = async (key: AppKey) => {
+    let spaceData: SpaceTimer | SpaceCountdown | SpaceTodo | undefined = undefined;
+    const defaultData = {
+      participantId: localParticipant.identity,
+      participantName: localParticipant.name,
+      timestamp: Date.now(),
+    };
+    switch (key) {
+      case 'timer': {
+        spaceData = {
+          ...defaultData,
+          ...appData.timer,
+        } as SpaceTimer;
+        break;
+      }
+      case 'countdown': {
+        spaceData = {
+          ...defaultData,
+          value: appData.countdown.value,
+          duration: appData.countdown.duration ? appData.countdown.duration.toString() : null,
+          running: appData.countdown.running,
+          stopTimeStamp: appData.countdown.stopTimeStamp,
+        } as SpaceCountdown;
+        break;
+      }
+      case 'todo': {
+        spaceData = {
+          ...defaultData,
+          items: appData.todo,
+        } as SpaceTodo;
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (spaceData) {
+      const response = await api.uploadSpaceApp(space, key, spaceData);
+      if (response.ok) {
+        messageApi.success(t('more.app.upload.success'));
+      } else {
+        messageApi.error(t('more.app.upload.error'));
+      }
+    }
+  };
+
   const items: CollapseProps['items'] = [
     {
       key: 'timer',
-      label: activeKey.includes('timer') ? '' : t('more.app.timer.title'),
+      label: (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '22px',
+            width: '100%',
+            gap: 8,
+            paddingLeft: 8,
+          }}
+        >
+          <CloudUploadOutlined
+            onClick={(e) => {
+              e.stopPropagation();
+              upload('timer');
+            }}
+          ></CloudUploadOutlined>
+          {activeKey.includes('timer') ? '' : t('more.app.timer.title')}
+        </div>
+      ),
       children: <AppTimer size="small"></AppTimer>,
       style: itemStyle,
     },
     {
       key: 'countdown',
-      label: activeKey.includes('countdown') ? '' : t('more.app.countdown.title'),
+      label: (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '22px',
+            width: '100%',
+            gap: 8,
+            paddingLeft: 8,
+          }}
+        >
+          <CloudUploadOutlined
+            onClick={(e) => {
+              e.stopPropagation();
+              upload('countdown');
+            }}
+          ></CloudUploadOutlined>
+          {activeKey.includes('countdown') ? '' : t('more.app.countdown.title')}
+        </div>
+      ),
       children: <AppCountdown messageApi={messageApi} size="small"></AppCountdown>,
       style: itemStyle,
-
     },
     {
       key: 'todo',
-      label: activeKey.includes('todo') ? '' : t('more.app.todo.title'),
+      label: (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '22px',
+            width: '100%',
+            gap: 8,
+            paddingLeft: 8,
+          }}
+        >
+          <CloudUploadOutlined
+            onClick={(e) => {
+              e.stopPropagation();
+              upload('todo');
+            }}
+          ></CloudUploadOutlined>
+          {activeKey.includes('todo') ? '' : t('more.app.todo.title')}
+        </div>
+      ),
       children: <AppTodo messageApi={messageApi}></AppTodo>,
       style: itemStyle,
     },
@@ -107,7 +217,7 @@ function FlotAppItem({ messageApi , apps}: FlotAppItemProps) {
       onChange={(keys) => setActiveKey(keys as string[])}
       expandIcon={({ isActive }) => (isActive ? <MinusCircleOutlined /> : <PlusCircleOutlined />)}
       expandIconPosition="end"
-      items={items.filter((item)=> apps.includes(item.key as AppKey))}
+      items={items.filter((item) => apps.includes(item.key as AppKey))}
     />
   );
 }

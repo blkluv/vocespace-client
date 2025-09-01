@@ -12,6 +12,9 @@ import {
   SpaceDateRecords,
   SpaceTimeRecord,
   SpaceDateRecord,
+  SpaceTimer,
+  SpaceCountdown,
+  SpaceTodo,
 } from '@/lib/std/space';
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { socket } from '@/app/[spaceName]/PageClientImpl';
@@ -25,6 +28,7 @@ import {
   UpdateOwnerIdBody,
   UpdateSpaceAppsBody,
   UpdateSpaceParticipantBody,
+  UploadSpaceAppBody,
 } from '@/lib/api/space';
 import { UpdateRecordBody } from '@/lib/api/record';
 import {
@@ -1022,8 +1026,26 @@ export async function POST(request: NextRequest) {
     const isUpdateOwnerId = request.nextUrl.searchParams.get('ownerId') === 'update';
     const isUpdateParticipant = request.nextUrl.searchParams.get('participant') === 'update';
     const isSpace = request.nextUrl.searchParams.get('space') === 'true';
-    const isUpdateSpaceApps = request.nextUrl.searchParams.get('apps') === 'update';
+    const spaceAppsAPIType = request.nextUrl.searchParams.get('apps');
     const isUpdateSpacePersistence = request.nextUrl.searchParams.get('persistence') === 'update';
+    // 用户上传App到Space中 ------------------------------------------------------------------
+    if (spaceAppsAPIType === 'upload') {
+      const { spaceName, data, ty }: UploadSpaceAppBody = await request.json();
+      const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
+      if (!spaceInfo) {
+        return NextResponse.json({ error: 'Space not found' }, { status: 404 });
+      }
+      if (ty === 'timer') {
+        spaceInfo.appsDatas.timer.push(data as SpaceTimer);
+      } else if (ty === 'countdown') {
+        spaceInfo.appsDatas.countdown.push(data as SpaceCountdown);
+      } else {
+        spaceInfo.appsDatas.todo.push(data as SpaceTodo);
+      }
+      const success = await SpaceManager.setSpaceInfo(spaceName, spaceInfo);
+      return NextResponse.json({ success }, { status: 200 });
+    }
+
     // 更新Space的持久化设置 ------------------------------------------------------------------
     if (isUpdateSpacePersistence && isSpace) {
       const { spaceName, persistence }: PersistentSpaceBody = await request.json();
@@ -1040,7 +1062,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 更新Space的Apps ----------------------------------------------------------------------
-    if (isUpdateSpaceApps) {
+    if (spaceAppsAPIType === 'update') {
       const { spaceName, appKey, enabled }: UpdateSpaceAppsBody = await request.json();
       const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
       if (!spaceInfo) {

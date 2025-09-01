@@ -1,6 +1,13 @@
 import { Socket } from 'socket.io-client';
 import { connect_endpoint, UserDefineStatus } from '../std';
-import { AppKey, ParticipantSettings, RecordSettings } from '../std/space';
+import {
+  AppKey,
+  ParticipantSettings,
+  RecordSettings,
+  SpaceCountdown,
+  SpaceTimer,
+  SpaceTodo,
+} from '../std/space';
 
 const SPACE_API = connect_endpoint('/api/space');
 
@@ -229,5 +236,29 @@ export const persistentSpace = async (spaceName: string, persistence: boolean) =
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ spaceName, persistence } as PersistentSpaceBody),
+  });
+};
+
+export interface UploadSpaceAppBody {
+  spaceName: string;
+  data: SpaceTimer | SpaceCountdown | SpaceTodo;
+  ty: AppKey;
+}
+
+export const uploadSpaceApp = async (
+  spaceName: string,
+  ty: AppKey,
+  data: SpaceTimer | SpaceCountdown | SpaceTodo,
+) => {
+  const url = new URL(SPACE_API, window.location.origin);
+  url.searchParams.append('apps', 'upload');
+  return await fetch(url.toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      spaceName,
+      data,
+      ty,
+    } as UploadSpaceAppBody),
   });
 };

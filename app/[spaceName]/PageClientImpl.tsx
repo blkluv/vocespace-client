@@ -31,12 +31,13 @@ import { UserDefineStatus } from '@/lib/std';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
 import {
+  DEFAULT_COUNTDOWN,
   DEFAULT_PARTICIPANT_SETTINGS,
+  DEFAULT_TIMER,
   PARTICIPANT_SETTINGS_KEY,
   ParticipantSettings,
+  TodoItem,
 } from '@/lib/std/space';
-import { TodoItem } from '../pages/apps/todo_list';
-import dayjs, { type Dayjs } from 'dayjs';
 import { api } from '@/lib/api';
 import { WsBase, WsMouseMove, WsTo } from '@/lib/std/device';
 import { createRTCQulity, DEFAULT_VOCESPACE_CONFIG, VocespaceConfig } from '@/lib/std/conf';
@@ -103,18 +104,8 @@ export const AppsDataState = atom({
   key: 'AppsDataState',
   default: {
     todo: [] as TodoItem[],
-    timer: {
-      value: null as number | null,
-      running: false,
-      stopTimeStamp: null as number | null,
-      records: [] as string[],
-    },
-    countdown: {
-      value: null as number | null,
-      duration: dayjs().hour(0).minute(5).second(0) as Dayjs | null,
-      running: false,
-      stopTimeStamp: null as number | null,
-    },
+    timer: DEFAULT_TIMER,
+    countdown: DEFAULT_COUNTDOWN,
   },
 });
 

@@ -369,15 +369,15 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           let open: () => Promise<LocalTrackPublication | undefined>;
           switch (msg.device) {
             case Track.Source.Camera:
-              device_str = '摄像头';
+              device_str = 'common.device.camera';
               open = () => space.localParticipant.setCameraEnabled(msg.isOpen);
               break;
             case Track.Source.Microphone:
-              device_str = '麦克风';
+              device_str = 'common.device.microphone';
               open = () => space.localParticipant.setMicrophoneEnabled(msg.isOpen);
               break;
             case Track.Source.ScreenShare:
-              device_str = '屏幕共享';
+              device_str = 'common.device.screen';
               open = () => space.localParticipant.setScreenShareEnabled(msg.isOpen);
               break;
             default:
@@ -869,8 +869,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     return (
       <div className="video_container_wrapper" style={{ position: 'relative' }}>
         {/* 右侧应用浮窗，悬浮态 */}
-        {showFlot && (
+        {showFlot && space && (
           <FlotLayout
+            space={space.name}
             style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1111 }}
             messageApi={messageApi}
             openApp={openApp}

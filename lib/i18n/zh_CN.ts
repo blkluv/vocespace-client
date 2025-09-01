@@ -135,6 +135,12 @@ export default {
     channel: '频道',
     app: {
       title: '应用',
+      upload: {
+        to_space: "上传应用到空间",
+        history: "上传历史",
+        success: "上传应用成功",
+        error: "上传应用失败，请稍后再试。",
+      },
       settings: {
         filter: '筛选需要的应用',
         desc: 'VoceSpace 提供了多种应用，作为主持人，您可以在此处选择参与者们可以使用的应用。',

@@ -1,3 +1,4 @@
+import dayjs, { Dayjs } from 'dayjs';
 import { UserDefineStatus, UserStatus } from '.';
 import { ModelBg, ModelRole } from './virtual';
 
@@ -120,8 +121,80 @@ export interface SpaceInfo {
   children: ChildRoom[];
   // 应用列表，由主持人设置参与者可以使用的应用
   apps: AppKey[];
+  // 应用数据，用户可使用应用模块中的上传按钮，上传用户的数据到空间中
+  appsDatas: {
+    todo: SpaceTodo[];
+    timer: SpaceTimer[];
+    countdown: SpaceCountdown[];
+  };
   persistence: boolean;
 }
+
+export interface TodoItem {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+export interface Timer {
+  value: number | null;
+  running: boolean;
+  stopTimeStamp: number | null;
+  records: string[];
+}
+
+/**
+ * 倒计时App的数据结构
+ */
+export interface Countdown {
+  value: number | null;
+  duration: Dayjs | null;
+  running: boolean;
+  stopTimeStamp: number | null;
+}
+
+export interface CountdownDurStr {
+  value: number | null;
+  duration: string | null;
+  running: boolean;
+  stopTimeStamp: number | null;
+}
+
+export interface SpaceTodo {
+  participantId: string;
+  participantName: string;
+  items: TodoItem[];
+  /**
+   * 上传时间戳，表示用户上传到空间的时间
+   */
+  timestamp: number;
+}
+
+export interface SpaceTimer extends Timer {
+  participantId: string;
+  participantName: string;
+  timestamp: number;
+}
+
+export interface SpaceCountdown extends CountdownDurStr {
+  participantId: string;
+  participantName: string;
+  timestamp: number;
+}
+
+export const DEFAULT_TIMER: Timer = {
+  value: null as number | null,
+  running: false,
+  stopTimeStamp: null as number | null,
+  records: [] as string[],
+};
+
+export const DEFAULT_COUNTDOWN: Countdown = {
+  value: null as number | null,
+  duration: dayjs().hour(0).minute(5).second(0) as Dayjs | null,
+  running: false,
+  stopTimeStamp: null as number | null,
+};
 
 export const DEFAULT_SPACE_INFO = (startAt: number): SpaceInfo => ({
   participants: {},
@@ -131,6 +204,11 @@ export const DEFAULT_SPACE_INFO = (startAt: number): SpaceInfo => ({
   startAt,
   children: [],
   apps: ['todo', 'countdown'],
+  appsDatas: {
+    todo: [],
+    timer: [],
+    countdown: [],
+  },
 });
 
 export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {

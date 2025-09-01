@@ -7,15 +7,10 @@ import { MessageInstance } from 'antd/es/message/interface';
 import { useRecoilState } from 'recoil';
 import { AppsDataState } from '@/app/[spaceName]/PageClientImpl';
 import equal from 'fast-deep-equal';
+import { TodoItem } from '@/lib/std/space';
 
 export interface AppTodoProps {
   messageApi: MessageInstance;
-}
-
-export interface TodoItem {
-  id: string;
-  title: string;
-  done: boolean;
 }
 
 export function AppTodo({ messageApi }: AppTodoProps) {
