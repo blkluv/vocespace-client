@@ -1,37 +1,28 @@
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
-import { Button, Card, Checkbox, Input, List, message } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { Button, Card, Checkbox, Input, List } from 'antd';
+import { useState } from 'react';
 import styles from '@/styles/apps.module.scss';
 import { MessageInstance } from 'antd/es/message/interface';
-import { useRecoilState } from 'recoil';
-import { AppsDataState } from '@/app/[spaceName]/PageClientImpl';
-import equal from 'fast-deep-equal';
 import { TodoItem } from '@/lib/std/space';
 
 export interface AppTodoProps {
   messageApi: MessageInstance;
+  appData: TodoItem[];
+  setAppData: (data: TodoItem[]) => Promise<void>;
 }
 
-export function AppTodo({ messageApi }: AppTodoProps) {
+export function AppTodo({ messageApi, appData, setAppData }: AppTodoProps) {
   const { t } = useI18n();
   const [newTodo, setNewTodo] = useState<string>('');
-  // const [todos, setTodos] = useState<TodoItem[]>([]);
-  const [appData, setAppData] = useRecoilState(AppsDataState);
-  const [todos, setTodos] = useState<TodoItem[]>(appData.todo);
+  const toggleTodo = async (id: string) => {
+    let data = appData.map((item) => {
+      return item.id === id ? { ...item, done: !item.done } : item;
+    });
 
-  useEffect(() => {
-    if (equal(todos, appData.todo)) return;
-    setAppData((prev) => ({
-      ...prev,
-      todo: todos,
-    }));
-  }, [todos, appData.todo]);
-
-  const toggleTodo = (id: string) => {
-    setTodos((prev) => prev.map((item) => (item.id === id ? { ...item, done: !item.done } : item)));
+    await setAppData(data);
   };
-  const addTodo = () => {
+  const addTodo = async () => {
     if (!newTodo || newTodo.trim() === '') {
       messageApi.error(t('more.app.todo.empty_value'));
       return;
@@ -43,7 +34,8 @@ export function AppTodo({ messageApi }: AppTodoProps) {
       done: false,
     };
 
-    setTodos((prev) => [...prev, newTodoItem]);
+    let data = [...appData, newTodoItem];
+    await setAppData(data);
     setNewTodo('');
   };
   return (
@@ -70,7 +62,8 @@ export function AppTodo({ messageApi }: AppTodoProps) {
               </p>
             ),
           }}
-          dataSource={todos}
+          // dataSource={todos}
+          dataSource={appData}
           renderItem={(item, index) => (
             <List.Item>
               <div className={styles.todo_item}>
@@ -85,8 +78,8 @@ export function AppTodo({ messageApi }: AppTodoProps) {
                 </Checkbox>
                 <Button
                   type="text"
-                  onClick={() => {
-                    setTodos((prev) => prev.filter((todo) => todo.id !== item.id));
+                  onClick={async () => {
+                    await setAppData(appData.filter((todo) => todo.id !== item.id));
                     messageApi.success(t('more.app.todo.delete'));
                   }}
                 >

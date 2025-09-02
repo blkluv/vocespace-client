@@ -153,6 +153,9 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           },
           openShareAudio: uState.openShareAudio,
           openPromptSound: uState.openPromptSound,
+          sync: uState.sync,
+          auth: uState.auth,
+          appDatas: {}
         });
         const roomName = `${space.localParticipant.name}'s room`;
 
@@ -398,7 +401,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           );
 
           noteApi.info({
-            message: `${msg.senderName} ${t('msg.info.invite_device')} ${device_str}`,
+            message: `${msg.senderName} ${t('msg.info.invite_device')} ${t(device_str)}`,
             duration: 5,
             actions,
           });

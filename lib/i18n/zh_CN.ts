@@ -136,10 +136,14 @@ export default {
     app: {
       title: '应用',
       upload: {
-        to_space: "上传应用到空间",
-        history: "上传历史",
-        success: "上传应用成功",
-        error: "上传应用失败，请稍后再试。",
+        to_space: '上传应用到空间',
+        history: '上传历史',
+        success: '上传应用成功',
+        error: '上传应用失败，请稍后再试。',
+      },
+      tab: {
+        self: "自己",
+        no_auth: "该用户没有开启可读/可读写权限"
       },
       settings: {
         filter: '筛选需要的应用',
@@ -148,6 +152,19 @@ export default {
         update: {
           success: '应用设置更新成功',
           error: '应用设置更新失败，请稍后再试。',
+        },
+        sync: {
+          title: '同步应用数据',
+          auth: '应用权限',
+          auth_desc: '其他参与者对您的应用数据的权限',
+          desc: '将当前应用数据同步到VoceSpace，所有的参与者可获得您的应用数据',
+          read: '可读',
+          write: '可读写',
+          none: '无权限',
+          update: {
+            success: '应用设置更新成功',
+            error: '应用设置更新失败，请稍后再试。',
+          },
         },
       },
       timer: {

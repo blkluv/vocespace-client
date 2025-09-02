@@ -26,7 +26,9 @@ import {
   DeleteSpaceParticipantBody,
   PersistentSpaceBody,
   UpdateOwnerIdBody,
+  UpdateSpaceAppAuthBody,
   UpdateSpaceAppsBody,
+  UpdateSpaceAppSyncBody,
   UpdateSpaceParticipantBody,
   UploadSpaceAppBody,
 } from '@/lib/api/space';
@@ -1028,19 +1030,48 @@ export async function POST(request: NextRequest) {
     const isSpace = request.nextUrl.searchParams.get('space') === 'true';
     const spaceAppsAPIType = request.nextUrl.searchParams.get('apps');
     const isUpdateSpacePersistence = request.nextUrl.searchParams.get('persistence') === 'update';
+    // 用户应用是否同步 -----------------------------------------------------------------------
+    if (spaceAppsAPIType === 'sync') {
+      const { spaceName, participantId, isSync }: UpdateSpaceAppSyncBody = await request.json();
+      const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
+      if (!spaceInfo) {
+        return NextResponse.json({ error: 'Space not found' }, { status: 404 });
+      }
+      spaceInfo.participants[participantId].sync = isSync;
+
+      const success = await SpaceManager.setSpaceInfo(spaceName, spaceInfo);
+      if (!success) {
+        return NextResponse.json({ error: 'Failed to update app sync' }, { status: 500 });
+      }
+      return NextResponse.json({ success: true }, { status: 200 });
+    }
+    // 用户应用权限 --------------------------------------------------------------------------
+    if (spaceAppsAPIType === 'auth') {
+      const { spaceName, participantId, appAuth }: UpdateSpaceAppAuthBody = await request.json();
+      const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
+      if (!spaceInfo) {
+        return NextResponse.json({ error: 'Space not found' }, { status: 404 });
+      }
+      spaceInfo.participants[participantId].auth = appAuth;
+      const success = await SpaceManager.setSpaceInfo(spaceName, spaceInfo);
+      if (!success) {
+        return NextResponse.json({ error: 'Failed to update app auth' }, { status: 500 });
+      }
+      return NextResponse.json({ success: true }, { status: 200 });
+    }
     // 用户上传App到Space中 ------------------------------------------------------------------
     if (spaceAppsAPIType === 'upload') {
-      const { spaceName, data, ty }: UploadSpaceAppBody = await request.json();
+      const { spaceName, data, ty, participantId }: UploadSpaceAppBody = await request.json();
       const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
       if (!spaceInfo) {
         return NextResponse.json({ error: 'Space not found' }, { status: 404 });
       }
       if (ty === 'timer') {
-        spaceInfo.appsDatas.timer.push(data as SpaceTimer);
+        spaceInfo.participants[participantId].appDatas.timer = data as SpaceTimer;
       } else if (ty === 'countdown') {
-        spaceInfo.appsDatas.countdown.push(data as SpaceCountdown);
+        spaceInfo.participants[participantId].appDatas.countdown = data as SpaceCountdown;
       } else {
-        spaceInfo.appsDatas.todo.push(data as SpaceTodo);
+        spaceInfo.participants[participantId].appDatas.todo = data as SpaceTodo;
       }
       const success = await SpaceManager.setSpaceInfo(spaceName, spaceInfo);
       return NextResponse.json({ success }, { status: 200 });

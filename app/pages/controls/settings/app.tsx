@@ -1,7 +1,7 @@
 import { useI18n } from '@/lib/i18n/i18n';
-import { AppKey, SpaceInfo } from '@/lib/std/space';
+import { AppAuth, AppKey, SpaceInfo } from '@/lib/std/space';
 import { CarryOutOutlined, ClockCircleOutlined, HistoryOutlined } from '@ant-design/icons';
-import { Checkbox, CheckboxChangeEvent, CheckboxProps, Tooltip } from 'antd';
+import { Checkbox, CheckboxChangeEvent, CheckboxProps, Radio, Tooltip } from 'antd';
 import styles from '@/styles/controls.module.scss';
 import { useEffect, useMemo, useState } from 'react';
 import { LocalParticipant } from 'livekit-client';
@@ -26,6 +26,8 @@ export function AppSettings({
   const { t } = useI18n();
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [syncApp, setSyncApp] = useState<boolean>(false);
+  const [auth, setAuth] = useState<AppAuth>('read');
 
   useEffect(() => {
     setIsOwner(localParticipant.identity === spaceInfo.ownerId);
@@ -70,9 +72,33 @@ export function AppSettings({
     }
   };
 
+  const updateSpaceAppSync = async (isSync: boolean) => {
+    const response = await api.updateSpaceAppSync(spaceName, localParticipant.identity, isSync);
+    if (response.ok) {
+      socket.emit('update_user_status', {
+        space: spaceName,
+      } as WsBase);
+      messageApi.success(t('more.app.settings.sync.update.success'));
+    } else {
+      messageApi.error(t('more.app.settings.sync.update.error'));
+    }
+  };
+
+  const updateSpaceAppAuth = async (appAuth: AppAuth) => {
+    const response = await api.updateSpaceAppAuth(spaceName, localParticipant.identity, appAuth);
+    if (response.ok) {
+      socket.emit('update_user_status', {
+        space: spaceName,
+      } as WsBase);
+      messageApi.success(t('more.app.settings.sync.update.success'));
+    } else {
+      messageApi.error(t('more.app.settings.sync.update.error'));
+    }
+  };
+
   return (
     <div className={styles.setting_box}>
-      {isOwner ? (
+      {isOwner && (
         <>
           <Tooltip title={t('more.app.settings.desc')} placement="right">
             <div className={styles.common_space}>{t('more.app.settings.filter')}:</div>
@@ -93,9 +119,40 @@ export function AppSettings({
             </div>
           ))}
         </>
-      ) : (
-        <div>{t('more.app.settings.no_permission')}</div>
       )}
+      <Tooltip title={t('more.app.settings.sync.desc')} placement="right">
+        <div className={styles.common_space}>{t('more.app.settings.sync.title')}:</div>
+      </Tooltip>
+
+      <Radio.Group
+        size="large"
+        block
+        value={syncApp}
+        onChange={async (e) => {
+          setSyncApp(e.target.value);
+          await updateSpaceAppSync(e.target.value);
+        }}
+      >
+        <Radio.Button value={true}>{t('common.open')}</Radio.Button>
+        <Radio.Button value={false}>{t('common.close')}</Radio.Button>
+      </Radio.Group>
+
+      <Tooltip title={t('more.app.settings.sync.auth_desc')} placement="right">
+        <div className={styles.common_space}>{t('more.app.settings.sync.auth')}:</div>
+      </Tooltip>
+      <Radio.Group
+        size="large"
+        block
+        value={auth}
+        onChange={async (e) => {
+          setAuth(e.target.value);
+          await updateSpaceAppAuth(e.target.value);
+        }}
+      >
+        <Radio.Button value="read">{t('more.app.settings.sync.read')}</Radio.Button>
+        <Radio.Button value="write">{t('more.app.settings.sync.write')}</Radio.Button>
+        <Radio.Button value="none">{t('more.app.settings.sync.none')}</Radio.Button>
+      </Radio.Group>
     </div>
   );
 }

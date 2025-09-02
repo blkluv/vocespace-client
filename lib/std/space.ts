@@ -70,6 +70,19 @@ export interface ParticipantSettings {
    * 是否开启新用户加入时的提示音
    */
   openPromptSound: boolean;
+  /**
+   * 用户应用同步
+   */
+  sync: boolean;
+  /**
+   * 用户应用权限
+   */
+  auth: AppAuth;
+  appDatas: {
+    todo?: SpaceTodo;
+    timer?: SpaceTimer;
+    countdown?: SpaceCountdown;
+  };
 }
 
 export interface SpaceTimeRecord {
@@ -105,6 +118,7 @@ export interface RecordSettings {
 }
 
 export type AppKey = 'timer' | 'countdown' | 'todo';
+export type AppAuth = 'read' | 'write' | 'none';
 
 export interface SpaceInfoMap {
   [spaceId: string]: SpaceInfo;
@@ -121,12 +135,6 @@ export interface SpaceInfo {
   children: ChildRoom[];
   // 应用列表，由主持人设置参与者可以使用的应用
   apps: AppKey[];
-  // 应用数据，用户可使用应用模块中的上传按钮，上传用户的数据到空间中
-  appsDatas: {
-    todo: SpaceTodo[];
-    timer: SpaceTimer[];
-    countdown: SpaceCountdown[];
-  };
   persistence: boolean;
 }
 
@@ -161,8 +169,6 @@ export interface CountdownDurStr {
 }
 
 export interface SpaceTodo {
-  participantId: string;
-  participantName: string;
   items: TodoItem[];
   /**
    * 上传时间戳，表示用户上传到空间的时间
@@ -171,16 +177,41 @@ export interface SpaceTodo {
 }
 
 export interface SpaceTimer extends Timer {
-  participantId: string;
-  participantName: string;
   timestamp: number;
 }
 
 export interface SpaceCountdown extends CountdownDurStr {
-  participantId: string;
-  participantName: string;
   timestamp: number;
 }
+
+export const castTimer = (timer?: SpaceTimer): Timer|undefined => {
+  if (!timer) return undefined;
+  return {
+    value: timer.value,
+    running: timer.running,
+    stopTimeStamp: timer.stopTimeStamp,
+    records: timer.records,
+  };
+};
+
+export const castCountdown = (countdown?: SpaceCountdown): Countdown|undefined => {
+  if (!countdown) return undefined;
+  return {
+    value: countdown.value,
+    duration: dayjs(countdown.duration) as Dayjs | null,
+    running: countdown.running,
+    stopTimeStamp: countdown.stopTimeStamp,
+  };
+};
+
+export const castTodo = (todo?: SpaceTodo): TodoItem[] => {
+  if (!todo) return [];
+  return todo.items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    done: item.done,
+  }));
+};
 
 export const DEFAULT_TIMER: Timer = {
   value: null as number | null,
@@ -204,11 +235,6 @@ export const DEFAULT_SPACE_INFO = (startAt: number): SpaceInfo => ({
   startAt,
   children: [],
   apps: ['todo', 'countdown'],
-  appsDatas: {
-    todo: [],
-    timer: [],
-    countdown: [],
-  },
 });
 
 export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
@@ -226,6 +252,9 @@ export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
   },
   openPromptSound: true,
   openShareAudio: false,
+  sync: false,
+  auth: 'read',
+  appDatas: {},
 };
 
 /**

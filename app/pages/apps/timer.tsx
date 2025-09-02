@@ -9,97 +9,77 @@ import { useMemo } from 'react';
 import { TimeRecords } from './time_records';
 import styles from '@/styles/apps.module.scss';
 import { CardSize } from 'antd/es/card/Card';
-import { useRecoilState } from 'recoil';
-import { AppsDataState } from '@/app/[spaceName]/PageClientImpl';
+import { Timer as TimerData } from '@/lib/std/space';
 const { Timer } = Statistic;
 
 export interface AppTimerProps {
   size?: CardSize;
+  appData: TimerData;
+  setAppData: (data: TimerData) => Promise<void>;
 }
 
-export function AppTimer({ size = 'default' }: AppTimerProps) {
-  // 计时相关状态
-  const [appData, setAppData] = useRecoilState(AppsDataState);
-
+export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProps) {
   // 开始计时
-  const startCountup = () => {
-    if (appData.timer.value === null) {
+  const startCountup = async () => {
+    if (appData.value === null) {
       const startTime = Date.now();
-      setAppData((prev) => ({
-        ...prev,
-        timer: {
-          ...prev.timer,
-          value: startTime,
-          running: true,
-        },
-      }));
+      await setAppData({
+        ...appData,
+        value: startTime,
+        running: true,
+      });
     } else {
       // 继续计时
-      setAppData((prev) => ({
-        ...prev,
-        timer: {
-          ...prev.timer,
-          value: prev.timer.value! + Date.now() - prev.timer.stopTimeStamp!,
-          running: true,
-        },
-      }));
+      await setAppData({
+        ...appData,
+        value: appData.value! + Date.now() - appData.stopTimeStamp!,
+        running: true,
+      });
     }
   };
 
   // 停止计时
-  const stopCountup = () => {
-    setAppData((prev) => ({
-      ...prev,
-      timer: {
-        ...prev.timer,
-        running: false,
-        stopTimeStamp: Date.now(),
-      },
-    }));
-  };
-
-  // 重置计时
-  const resetCountup = () => {
-    setAppData((prev) => ({
-      ...prev,
-      timer: {
-        ...prev.timer,
-        running: false,
-        value: null,
-        stopTimeStamp: null,
-        records: [],
-      },
-    }));
-  };
-
-  // 记录计时
-  const recordCountup = () => {
-    setAppData((prev) => {
-      if (prev.timer.records.length >= 5) {
-        return {
-          ...prev,
-          timer: {
-            ...prev.timer,
-            records: [...prev.timer.records.slice(1), timestampToSecond()],
-          },
-        };
-      } else {
-        return {
-          ...prev,
-          timer: {
-            ...prev.timer,
-            records: [...prev.timer.records, timestampToSecond()],
-          },
-        };
-      }
+  const stopCountup = async () => {
+    await setAppData({
+      ...appData,
+      running: false,
+      stopTimeStamp: Date.now(),
     });
   };
 
-  const timestampToSecond = () => {
-    if (appData.timer.value === null) return '00:00:00';
+  // 重置计时
+  const resetCountup = async () => {
+    await setAppData({
+      ...appData,
+      running: false,
+      value: null,
+      stopTimeStamp: null,
+      records: [],
+    });
+  };
 
-    const currentTime = appData.timer.running ? Date.now() : appData.timer.stopTimeStamp!;
-    const elapsedTime = currentTime - appData.timer.value;
+  // 记录计时
+  const recordCountup = async () => {
+    let data = appData;
+    if (appData.records.length >= 5) {
+      data = {
+        ...appData,
+        records: [...data.records.slice(1), timestampToSecond()],
+      };
+    } else {
+      data = {
+        ...appData,
+        records: [...data.records, timestampToSecond()],
+      };
+    }
+    await setAppData(data);
+  };
+
+  const timestampToSecond = () => {
+    if (appData.value === null) return '00:00:00';
+
+    const currentTime = appData.running ? Date.now() : appData.stopTimeStamp!;
+    const elapsedTime = currentTime - appData.value;
     let seconds = Math.floor(elapsedTime / 1000);
     // 处理seconds，保证不为负数，同时format为: HH:mm:ss
     if (seconds < 0) {
@@ -167,12 +147,12 @@ export function AppTimer({ size = 'default' }: AppTimerProps) {
           style={{ width: '100%' }}
         >
           <div style={{ textAlign: 'center', marginTop: 24 }}>
-            {appData.timer.running ? (
+            {appData.running ? (
               <>
-                {appData.timer.value && (
+                {appData.value && (
                   <Timer
                     type="countup"
-                    value={appData.timer.value}
+                    value={appData.value}
                     format="HH:mm:ss"
                     valueStyle={timerStyle.text}
                   />
@@ -184,21 +164,15 @@ export function AppTimer({ size = 'default' }: AppTimerProps) {
           </div>
           <TimeRecords
             size={size}
-            data={appData.timer.records}
-            clear={() => {
-              setAppData((prev) => ({
-                ...prev,
-                timer: {
-                  ...prev.timer,
-                  records: [],
-                },
-              }));
+            data={appData.records}
+            clear={async () => {
+              await setAppData({ ...appData, records: [] });
             }}
           ></TimeRecords>
           <Row justify="center">
             <Col>
               <Space size="large"></Space>
-              {appData.timer.running ? (
+              {appData.running ? (
                 <Space size="large">
                   <button
                     className={styles.circle_btn}
@@ -217,7 +191,7 @@ export function AppTimer({ size = 'default' }: AppTimerProps) {
                 </Space>
               ) : (
                 <Space size={'large'}>
-                  {appData.timer.value === null ? (
+                  {appData.value === null ? (
                     <button
                       onClick={startCountup}
                       className={styles.start_btn}
