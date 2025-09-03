@@ -1,5 +1,8 @@
 import {
+  CarryOutOutlined,
+  ClockCircleOutlined,
   FlagOutlined,
+  HistoryOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
@@ -9,7 +12,7 @@ import { useMemo } from 'react';
 import { TimeRecords } from './time_records';
 import styles from '@/styles/apps.module.scss';
 import { CardSize } from 'antd/es/card/Card';
-import { Timer as TimerData } from '@/lib/std/space';
+import { AppKey, Timer as TimerData } from '@/lib/std/space';
 const { Timer } = Statistic;
 
 export interface AppTimerProps {
@@ -226,3 +229,4 @@ export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProp
     </>
   );
 }
+

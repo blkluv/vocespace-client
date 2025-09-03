@@ -214,13 +214,13 @@ export const updateSpaceApps = async (spaceName: string, appKey: AppKey, enabled
 export interface UpdateSpaceAppSyncBody {
   spaceName: string;
   participantId: string;
-  isSync: boolean;
+  sync: AppKey;
 }
 
 export const updateSpaceAppSync = async (
   spaceName: string,
   participantId: string,
-  isSync: boolean,
+  sync: AppKey
 ) => {
   const url = new URL(SPACE_API, window.location.origin);
   url.searchParams.append('apps', 'sync');
@@ -230,7 +230,7 @@ export const updateSpaceAppSync = async (
     body: JSON.stringify({
       spaceName,
       participantId,
-      isSync,
+      sync,
     } as UpdateSpaceAppSyncBody),
   });
 };

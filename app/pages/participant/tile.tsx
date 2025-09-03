@@ -39,6 +39,7 @@ import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
 import { WaveHand } from '../controls/widgets/wave';
 import { StatusInfo, useStatusInfo } from './status_info';
 import { ControlRKeyMenu, useControlRKeyMenu, UseControlRKeyMenuProps } from './menu';
+import { AppFlotIcon } from '../apps/app_pin';
 
 export interface ParticipantItemProps extends ParticipantTileProps {
   settings: SpaceInfo;
@@ -638,6 +639,11 @@ export const ParticipantItem: (
             {trackReference.participant.identity != localParticipant.identity && (
               <WaveHand wsWave={{ ...wsTo }} />
             )}
+            <div className="lk-focus-toggle-button" style={{ right: '32px', backgroundColor: 'transparent', padding: 0 }}>
+              <AppFlotIcon appKey="timer" pin={() => {}}></AppFlotIcon>
+              <AppFlotIcon appKey="countdown" pin={() => {}}></AppFlotIcon>
+              <AppFlotIcon appKey="todo" pin={() => {}}></AppFlotIcon>
+            </div>
           </ParticipantTile>
         }
       ></ControlRKeyMenu>

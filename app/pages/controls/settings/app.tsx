@@ -72,18 +72,6 @@ export function AppSettings({
     }
   };
 
-  const updateSpaceAppSync = async (isSync: boolean) => {
-    const response = await api.updateSpaceAppSync(spaceName, localParticipant.identity, isSync);
-    if (response.ok) {
-      socket.emit('update_user_status', {
-        space: spaceName,
-      } as WsBase);
-      messageApi.success(t('more.app.settings.sync.update.success'));
-    } else {
-      messageApi.error(t('more.app.settings.sync.update.error'));
-    }
-  };
-
   const updateSpaceAppAuth = async (appAuth: AppAuth) => {
     const response = await api.updateSpaceAppAuth(spaceName, localParticipant.identity, appAuth);
     if (response.ok) {
@@ -120,22 +108,6 @@ export function AppSettings({
           ))}
         </>
       )}
-      <Tooltip title={t('more.app.settings.sync.desc')} placement="right">
-        <div className={styles.common_space}>{t('more.app.settings.sync.title')}:</div>
-      </Tooltip>
-
-      <Radio.Group
-        size="large"
-        block
-        value={syncApp}
-        onChange={async (e) => {
-          setSyncApp(e.target.value);
-          await updateSpaceAppSync(e.target.value);
-        }}
-      >
-        <Radio.Button value={true}>{t('common.open')}</Radio.Button>
-        <Radio.Button value={false}>{t('common.close')}</Radio.Button>
-      </Radio.Group>
 
       <Tooltip title={t('more.app.settings.sync.auth_desc')} placement="right">
         <div className={styles.common_space}>{t('more.app.settings.sync.auth')}:</div>

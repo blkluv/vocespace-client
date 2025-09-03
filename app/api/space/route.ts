@@ -1032,12 +1032,21 @@ export async function POST(request: NextRequest) {
     const isUpdateSpacePersistence = request.nextUrl.searchParams.get('persistence') === 'update';
     // 用户应用是否同步 -----------------------------------------------------------------------
     if (spaceAppsAPIType === 'sync') {
-      const { spaceName, participantId, isSync }: UpdateSpaceAppSyncBody = await request.json();
+      const { spaceName, participantId, sync }: UpdateSpaceAppSyncBody = await request.json();
       const spaceInfo = await SpaceManager.getSpaceInfo(spaceName);
       if (!spaceInfo) {
         return NextResponse.json({ error: 'Space not found' }, { status: 404 });
       }
-      spaceInfo.participants[participantId].sync = isSync;
+      if (spaceInfo.participants[participantId].sync) {
+        // 有则去除无则添加
+        if (spaceInfo.participants[participantId].sync.includes(sync)) {
+          spaceInfo.participants[participantId].sync = spaceInfo.participants[
+            participantId
+          ].sync.filter((s) => s !== sync);
+        } else {
+          spaceInfo.participants[participantId].sync.push(sync);
+        }
+      }
 
       const success = await SpaceManager.setSpaceInfo(spaceName, spaceInfo);
       if (!success) {

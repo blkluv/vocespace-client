@@ -73,7 +73,7 @@ export interface ParticipantSettings {
   /**
    * 用户应用同步
    */
-  sync: boolean;
+  sync: AppKey[];
   /**
    * 用户应用权限
    */
@@ -204,8 +204,8 @@ export const castCountdown = (countdown?: SpaceCountdown): Countdown|undefined =
   };
 };
 
-export const castTodo = (todo?: SpaceTodo): TodoItem[] => {
-  if (!todo) return [];
+export const castTodo = (todo?: SpaceTodo): TodoItem[] | undefined => {
+  if (!todo) return undefined;
   return todo.items.map((item) => ({
     id: item.id,
     title: item.title,
@@ -252,7 +252,7 @@ export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
   },
   openPromptSound: true,
   openShareAudio: false,
-  sync: false,
+  sync: [],
   auth: 'read',
   appDatas: {},
 };

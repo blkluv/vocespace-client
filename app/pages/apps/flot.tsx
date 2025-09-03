@@ -6,7 +6,13 @@ import { AppTimer } from './timer';
 import { AppCountdown } from './countdown';
 import { AppTodo } from './todo_list';
 import { MessageInstance } from 'antd/es/message/interface';
-import { CloudUploadOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import {
+  CloudUploadOutlined,
+  MinusCircleOutlined,
+  PlusCircleOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { useI18n } from '@/lib/i18n/i18n';
 import {
   AppAuth,
@@ -86,16 +92,16 @@ interface FlotAppItemProps {
   spaceInfo: SpaceInfo;
 }
 
-interface TimerProp {
+export interface TimerProp {
   data: Timer;
   setData: (data: Timer) => Promise<void>;
 }
 
-interface CountdownProp {
+export interface CountdownProp {
   data: Countdown;
   setData: (data: Countdown) => Promise<void>;
-}
-interface TodoProp {
+}  
+export interface TodoProp {
   data: TodoItem[];
   setData: (data: TodoItem[]) => Promise<void>;
 }
@@ -131,40 +137,7 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
   };
 
   const upload = async (key: AppKey, data: SpaceTimer | SpaceCountdown | SpaceTodo) => {
-    // let spaceData: SpaceTimer | SpaceCountdown | SpaceTodo | undefined = undefined;
     let participantId = localParticipant.identity;
-    // const defaultData = {
-
-    //   timestamp: Date.now(),
-    // };
-    // switch (key) {
-    //   case 'timer': {
-    //     spaceData = {
-    //       ...defaultData,
-    //       ...appData.timer,
-    //     } as SpaceTimer;
-    //     break;
-    //   }
-    //   case 'countdown': {
-    //     spaceData = {
-    //       ...defaultData,
-    //       value: appData.countdown.value,
-    //       duration: appData.countdown.duration ? appData.countdown.duration.toString() : null,
-    //       running: appData.countdown.running,
-    //       stopTimeStamp: appData.countdown.stopTimeStamp,
-    //     } as SpaceCountdown;
-    //     break;
-    //   }
-    //   case 'todo': {
-    //     spaceData = {
-    //       ...defaultData,
-    //       items: appData.todo,
-    //     } as SpaceTodo;
-    //     break;
-    //   }
-    //   default:
-    //     break;
-    // }
     if (selfAuth === 'none') return;
     const response = await api.uploadSpaceApp(space, participantId, key, data);
     if (response.ok) {
@@ -216,16 +189,54 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
     } as SpaceTodo);
   };
 
+  const updateAppSync = async (key: AppKey) => {
+    const response = await api.updateSpaceAppSync(space, localParticipant.identity, key);
+    if (response.ok) {
+      socket.emit('update_user_status', {
+        space,
+      } as WsBase);
+      messageApi.success(t('more.app.settings.sync.update.success'));
+    } else {
+      messageApi.error(t('more.app.settings.sync.update.error'));
+    }
+  };
+
+  const showSyncIcon = (isRemote: boolean, key: AppKey) => {
+    return isRemote ? (
+      <span></span>
+    ) : spaceInfo.participants[localParticipant.identity].sync.includes(key) ? (
+      <TeamOutlined
+        onClick={(e) => {
+          e.stopPropagation();
+          updateAppSync(key);
+        }}
+      />
+    ) : (
+      <UserOutlined
+        onClick={(e) => {
+          e.stopPropagation();
+          updateAppSync(key);
+        }}
+      />
+    );
+  };
+
   const createItems = (
     timer?: TimerProp,
     countdown?: CountdownProp,
     todo?: TodoProp,
+    isRemote = false,
   ): CollapseProps['items'] => {
     let items: CollapseProps['items'] = [];
     timer &&
       items.push({
         key: 'timer',
-        label: activeKey.includes('timer') ? '' : t('more.app.timer.title'),
+        label: (
+          <div style={{ height: 22, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            {showSyncIcon(isRemote, 'timer')}
+            {activeKey.includes('timer') ? '' : t('more.app.timer.title')}
+          </div>
+        ),
         children: (
           <AppTimer size="small" appData={timer.data} setAppData={timer.setData}></AppTimer>
         ),
@@ -235,7 +246,12 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
     countdown &&
       items.push({
         key: 'countdown',
-        label: activeKey.includes('countdown') ? '' : t('more.app.countdown.title'),
+        label: (
+          <div style={{ height: 22, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            {showSyncIcon(isRemote, 'countdown')}
+            {activeKey.includes('countdown') ? '' : t('more.app.countdown.title')}
+          </div>
+        ),
         children: (
           <AppCountdown
             messageApi={messageApi}
@@ -250,7 +266,12 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
     todo &&
       items.push({
         key: 'todo',
-        label: activeKey.includes('todo') ? '' : t('more.app.todo.title'),
+        label: (
+          <div style={{ height: 22, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            {showSyncIcon(isRemote, 'todo')}
+            {activeKey.includes('todo') ? '' : t('more.app.todo.title')}
+          </div>
+        ),
         children: <AppTodo messageApi={messageApi} appData={todo.data} setAppData={todo.setData} />,
         style: itemStyle,
       });
@@ -360,7 +381,7 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
             };
           }
 
-          let remoteItems = createItems(timer, countdown, todo);
+          let remoteItems = createItems(timer, countdown, todo, true);
 
           res.push({
             key: v.id,

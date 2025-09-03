@@ -61,9 +61,10 @@ import {
 import { Button } from 'antd';
 import { ChatMsgItem } from '@/lib/std/chat';
 import { Channel, ChannelExports } from './channel';
-import { PARTICIPANT_SETTINGS_KEY } from '@/lib/std/space';
+import { AppKey, PARTICIPANT_SETTINGS_KEY } from '@/lib/std/space';
 import { FlotLayout } from '../apps/flot';
 import { api } from '@/lib/api';
+import { SingleFlotLayout } from '../apps/single_flot';
 
 export interface VideoContainerProps extends VideoConferenceProps {
   messageApi: MessageInstance;
@@ -111,6 +112,8 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         space?.localParticipant?.identity || '', // 参与者 ID
       );
     const [openApp, setOpenApp] = useState<boolean>(false);
+    const [targetAppKey, setTargetAppKey] = useState<AppKey | undefined>(undefined);
+    const [openSingleApp, setOpenSingleApp] = useState<boolean>(false);
     const isActive = true;
 
     useEffect(() => {
@@ -155,7 +158,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
           openPromptSound: uState.openPromptSound,
           sync: uState.sync,
           auth: uState.auth,
-          appDatas: {}
+          appDatas: {},
         });
         const roomName = `${space.localParticipant.name}'s room`;
 
@@ -880,6 +883,17 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             openApp={openApp}
             spaceInfo={settings}
           ></FlotLayout>
+        )}
+        {/* 右侧单应用浮窗，悬浮态，用于当用户点击自己视图头上角图标进行显示 */}
+        {space && (
+          <SingleFlotLayout
+            space={space.name}
+            style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1001}}
+            messageApi={messageApi}
+            openApp={openSingleApp}
+            spaceInfo={settings}
+            appKey={targetAppKey}
+          ></SingleFlotLayout>
         )}
         {/* 左侧侧边栏 */}
         {space && (

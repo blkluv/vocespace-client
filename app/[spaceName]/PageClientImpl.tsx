@@ -31,11 +31,13 @@ import { UserDefineStatus } from '@/lib/std';
 import io from 'socket.io-client';
 import { ChatMsgItem } from '@/lib/std/chat';
 import {
+  Countdown,
   DEFAULT_COUNTDOWN,
   DEFAULT_PARTICIPANT_SETTINGS,
   DEFAULT_TIMER,
   PARTICIPANT_SETTINGS_KEY,
   ParticipantSettings,
+  Timer,
   TodoItem,
 } from '@/lib/std/space';
 import { api } from '@/lib/api';
@@ -106,6 +108,13 @@ export const AppsDataState = atom({
     todo: [] as TodoItem[],
     timer: DEFAULT_TIMER,
     countdown: DEFAULT_COUNTDOWN,
+  },
+});
+
+export const SingleAppDataState = atom({
+  key: 'SingleAppDataState',
+  default: {
+    targetApp: undefined as Timer | Countdown | TodoItem[] | undefined,
   },
 });
 
