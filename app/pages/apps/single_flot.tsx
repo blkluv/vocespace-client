@@ -22,18 +22,10 @@ export function SingleFlotLayout({
   space,
   appKey,
 }: SingleFlotLayoutProps) {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (openApp && open) {
-      setOpen(false);
-    }
-  }, [open, openApp]);
-
   return (
     <div style={style} className={styles.flot_layout}>
       <Popover
-        open={open}
+        open={openApp}
         placement="leftTop"
         content={<SingleFlotAppItem appKey={appKey} messageApi={messageApi}></SingleFlotAppItem>}
         styles={{
@@ -43,15 +35,6 @@ export function SingleFlotLayout({
           },
         }}
       >
-        {/* <Button
-          onClick={() => {
-            if (openApp) return;
-            setOpen(!open);
-          }}
-          type="text"
-          style={{ height: '100%', width: '100%' }}
-          icon={<SvgResource type="app" svgSize={16}></SvgResource>}
-        ></Button> */}
       </Popover>
     </div>
   );
@@ -64,12 +47,14 @@ export interface SingleFlotAppItemProps {
 
 export function SingleFlotAppItem({ appKey, messageApi }: SingleFlotAppItemProps) {
   const [appData, setAppData] = useRecoilState(SingleAppDataState);
-
+  
   const setTimerAppData = async (data: Timer) => {};
 
   const setCountdownAppData = async (data: Countdown) => {};
 
-  const setTodoAppData = async (data: TodoItem[]) => {};
+  const setTodoAppData = async (data: TodoItem[]) => {
+
+  };
 
   if (appKey === 'timer') {
     return (
@@ -80,19 +65,19 @@ export function SingleFlotAppItem({ appKey, messageApi }: SingleFlotAppItemProps
       ></AppTimer>
     );
   } else if (appKey === 'countdown') {
-    <AppCountdown
+    return <AppCountdown
       messageApi={messageApi}
       size="small"
       appData={appData.targetApp as Countdown}
       setAppData={setCountdownAppData}
     />;
   } else if (appKey === 'todo') {
-    <AppTodo
+    return <AppTodo
       messageApi={messageApi}
       appData={appData.targetApp as TodoItem[]}
       setAppData={setTodoAppData}
     />;
   }else{
-    <div></div>
+    return <div>无</div>
   }
 }

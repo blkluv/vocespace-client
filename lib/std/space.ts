@@ -118,7 +118,7 @@ export interface RecordSettings {
 }
 
 export type AppKey = 'timer' | 'countdown' | 'todo';
-export type AppAuth = 'read' | 'write' | 'none';
+export type AppAuth = 'read' | 'write' ;
 
 export interface SpaceInfoMap {
   [spaceId: string]: SpaceInfo;

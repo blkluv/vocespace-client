@@ -116,6 +116,11 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
     const [openSingleApp, setOpenSingleApp] = useState<boolean>(false);
     const isActive = true;
 
+    const showSingleFlotApp = (appKey: AppKey) => {
+      setTargetAppKey(appKey);
+      setOpenSingleApp(!openSingleApp);
+    };
+
     useEffect(() => {
       if (!space) return;
       if (!socket.id) {
@@ -888,7 +893,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         {space && (
           <SingleFlotLayout
             space={space.name}
-            style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1001}}
+            style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1001 }}
             messageApi={messageApi}
             openApp={openSingleApp}
             spaceInfo={settings}
@@ -946,6 +951,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                         setUserStatus={setUserStatus}
                         updateSettings={updateSettings}
                         toRenameSettings={toSettingGeneral}
+                        showSingleFlotApp={showSingleFlotApp}
                       ></ParticipantItem>
                     </GridLayout>
                   </div>
@@ -961,6 +967,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                           setUserStatus={setUserStatus}
                           updateSettings={updateSettings}
                           toRenameSettings={toSettingGeneral}
+                          showSingleFlotApp={showSingleFlotApp}
                         ></ParticipantItem>
                       </CarouselLayout>
                       {focusTrack && (
@@ -974,6 +981,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                           isFocus={isFocus}
                           updateSettings={updateSettings}
                           toRenameSettings={toSettingGeneral}
+                          showSingleFlotApp={showSingleFlotApp}
                         ></ParticipantItem>
                       )}
                     </FocusLayoutContainer>

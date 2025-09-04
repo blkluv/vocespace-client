@@ -26,7 +26,6 @@ export function AppSettings({
   const { t } = useI18n();
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const [syncApp, setSyncApp] = useState<boolean>(false);
   const [auth, setAuth] = useState<AppAuth>('read');
 
   useEffect(() => {
@@ -123,7 +122,6 @@ export function AppSettings({
       >
         <Radio.Button value="read">{t('more.app.settings.sync.read')}</Radio.Button>
         <Radio.Button value="write">{t('more.app.settings.sync.write')}</Radio.Button>
-        <Radio.Button value="none">{t('more.app.settings.sync.none')}</Radio.Button>
       </Radio.Group>
     </div>
   );

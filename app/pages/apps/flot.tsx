@@ -100,7 +100,7 @@ export interface TimerProp {
 export interface CountdownProp {
   data: Countdown;
   setData: (data: Countdown) => Promise<void>;
-}  
+}
 export interface TodoProp {
   data: TodoItem[];
   setData: (data: TodoItem[]) => Promise<void>;
@@ -386,20 +386,17 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
           res.push({
             key: v.id,
             label: v.name,
-            children:
-              v.auth === 'none' ? (
-                <div>{t('more.app.tab.no_auth')}</div>
-              ) : (
-                <Collapse
-                  bordered={false}
-                  onChange={(keys) => setActiveKey(keys as string[])}
-                  expandIcon={({ isActive }) =>
-                    isActive ? <MinusCircleOutlined /> : <PlusCircleOutlined />
-                  }
-                  expandIconPosition="end"
-                  items={remoteItems}
-                />
-              ),
+            children: (
+              <Collapse
+                bordered={false}
+                onChange={(keys) => setActiveKey(keys as string[])}
+                expandIcon={({ isActive }) =>
+                  isActive ? <MinusCircleOutlined /> : <PlusCircleOutlined />
+                }
+                expandIconPosition="end"
+                items={remoteItems}
+              />
+            ),
           });
         }
       });

@@ -25,7 +25,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import VirtualRoleCanvas from '../virtual_role/live2d';
 import { useRecoilState } from 'recoil';
 import {
+  AppsDataState,
   roomStatusState,
+  SingleAppDataState,
   socket,
   userState,
   virtualMaskState,
@@ -35,7 +37,14 @@ import { SvgResource, SvgType } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { randomColor, UserStatus } from '@/lib/std';
 import { MessageInstance } from 'antd/es/message/interface';
-import { ParticipantSettings, SpaceInfo } from '@/lib/std/space';
+import {
+  AppKey,
+  castCountdown,
+  castTimer,
+  castTodo,
+  ParticipantSettings,
+  SpaceInfo,
+} from '@/lib/std/space';
 import { WaveHand } from '../controls/widgets/wave';
 import { StatusInfo, useStatusInfo } from './status_info';
 import { ControlRKeyMenu, useControlRKeyMenu, UseControlRKeyMenuProps } from './menu';
@@ -50,6 +59,7 @@ export interface ParticipantItemProps extends ParticipantTileProps {
   space: Room;
   updateSettings: (newSettings: Partial<ParticipantSettings>) => Promise<boolean | undefined>;
   toRenameSettings: () => void;
+  showSingleFlotApp: (appKey: AppKey) => void;
 }
 
 export const ParticipantItem: (
@@ -66,6 +76,7 @@ export const ParticipantItem: (
       space,
       updateSettings,
       toRenameSettings,
+      showSingleFlotApp,
     }: ParticipantItemProps,
     ref,
   ) {
@@ -73,7 +84,8 @@ export const ParticipantItem: (
     const { localParticipant } = useLocalParticipant();
     const videoRef = React.useRef<HTMLVideoElement>(null);
     const [uState, setUState] = useRecoilState(userState);
-    const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
+    // const [uRoomStatusState, setURoomStatusState] = useRecoilState(roomStatusState);
+    const [appsData, setAppsData] = useRecoilState(SingleAppDataState);
     const trackReference = useEnsureTrackRef(trackRef);
     const isEncrypted = useIsEncrypted(trackReference.participant);
     const layoutContext = useMaybeLayoutContext();
@@ -178,6 +190,10 @@ export const ParticipantItem: (
         ? `none`
         : `blur(${blurValue}px)`;
     }, [settings.participants, trackReference.participant.identity, blurValue]);
+
+    const currentParticipant: ParticipantSettings | undefined = useMemo(() => {
+      return settings.participants[trackReference.participant.identity];
+    }, [settings.participants, trackReference.participant.identity]);
 
     const deviceTrack = React.useMemo(() => {
       if (isTrackReference(trackReference) && !loading) {
@@ -563,6 +579,31 @@ export const ParticipantItem: (
         trackReference.source === Track.Source.ScreenShare
       );
     }, [trackReference, localParticipant.identity]);
+
+    const showApp = (appKey: AppKey) => {
+      showSingleFlotApp(appKey);
+      if (appKey === 'timer') {
+        const castedTimer = castTimer(currentParticipant.appDatas.timer);
+        if (castedTimer) {
+          setAppsData({
+            targetApp: castedTimer,
+          });
+        }
+      } else if (appKey === 'countdown') {
+        const castedCountdown = castCountdown(currentParticipant.appDatas.countdown);
+        if (castedCountdown) {
+          setAppsData({
+            targetApp: castedCountdown,
+          });
+        }
+      } else if (appKey === 'todo') {
+        const castedTodo = castTodo(currentParticipant.appDatas.todo);
+        setAppsData({
+          targetApp: castedTodo || [],
+        });
+      }
+    };
+
     return (
       <ControlRKeyMenu
         menu={
@@ -639,10 +680,19 @@ export const ParticipantItem: (
             {trackReference.participant.identity != localParticipant.identity && (
               <WaveHand wsWave={{ ...wsTo }} />
             )}
-            <div className="lk-focus-toggle-button" style={{ right: '32px', backgroundColor: 'transparent', padding: 0 }}>
-              <AppFlotIcon appKey="timer" pin={() => {}}></AppFlotIcon>
-              <AppFlotIcon appKey="countdown" pin={() => {}}></AppFlotIcon>
-              <AppFlotIcon appKey="todo" pin={() => {}}></AppFlotIcon>
+            <div
+              className="lk-focus-toggle-button"
+              style={{ right: '32px', backgroundColor: 'transparent', padding: 0 }}
+            >
+              {currentParticipant?.sync.includes('timer') && (
+                <AppFlotIcon appKey="timer" pin={() => showApp('timer')}></AppFlotIcon>
+              )}
+              {currentParticipant?.sync.includes('countdown') && (
+                <AppFlotIcon appKey="countdown" pin={() => showApp('countdown')}></AppFlotIcon>
+              )}
+              {currentParticipant?.sync.includes('todo') && (
+                <AppFlotIcon appKey="todo" pin={() => showApp('todo')}></AppFlotIcon>
+              )}
             </div>
           </ParticipantTile>
         }
