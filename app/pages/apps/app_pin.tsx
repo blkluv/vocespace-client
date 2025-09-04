@@ -61,7 +61,7 @@ export function AppFlotIconCollect({
   contextUndefined,
   style = { right: '32px', backgroundColor: 'transparent', padding: 0 },
 }: AppFlotIconCollectProps) {
-  return participant ? (
+  return participant && participant.sync ? (
     <div className="lk-focus-toggle-button" style={style}>
       {participant.sync.includes('timer') && (
         <AppFlotIcon
