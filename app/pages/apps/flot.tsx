@@ -21,6 +21,8 @@ import {
   castTimer,
   castTodo,
   Countdown,
+  DEFAULT_COUNTDOWN,
+  DEFAULT_TIMER,
   SpaceCountdown,
   SpaceInfo,
   SpaceTimer,
@@ -30,8 +32,7 @@ import {
 } from '@/lib/std/space';
 import { api } from '@/lib/api';
 import { useLocalParticipant } from '@livekit/components-react';
-import { useRecoilState } from 'recoil';
-import { AppsDataState, socket } from '@/app/[spaceName]/PageClientImpl';
+import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { WsBase } from '@/lib/std/device';
 
 export interface FlotLayoutProps {
@@ -95,15 +96,18 @@ interface FlotAppItemProps {
 export interface TimerProp {
   data: Timer;
   setData: (data: Timer) => Promise<void>;
+  auth: AppAuth;
 }
 
 export interface CountdownProp {
   data: Countdown;
   setData: (data: Countdown) => Promise<void>;
+  auth: AppAuth;
 }
 export interface TodoProp {
   data: TodoItem[];
   setData: (data: TodoItem[]) => Promise<void>;
+  auth: AppAuth;
 }
 
 function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
@@ -111,7 +115,6 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
   const { t } = useI18n();
   const { token } = theme.useToken();
   const { localParticipant } = useLocalParticipant();
-  const [appData, setAppData] = useRecoilState(AppsDataState);
 
   const itemStyle: React.CSSProperties = {
     marginBottom: 8,
@@ -120,11 +123,15 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
     border: 'none',
   };
 
+  const appData = useMemo(() => {
+    return spaceInfo.participants[localParticipant.identity]?.appDatas || {};
+  }, [spaceInfo, localParticipant]);
+
   const selfAuth = useMemo(() => {
     if (spaceInfo.participants[localParticipant.identity]) {
       return spaceInfo.participants[localParticipant.identity].auth;
     }
-    return 'none';
+    return 'read';
   }, [spaceInfo.participants]);
 
   const toggleCollapse = (key: 'timer' | 'countdown' | 'todo') => {
@@ -138,7 +145,6 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
 
   const upload = async (key: AppKey, data: SpaceTimer | SpaceCountdown | SpaceTodo) => {
     let participantId = localParticipant.identity;
-    if (selfAuth === 'none') return;
     const response = await api.uploadSpaceApp(space, participantId, key, data);
     if (response.ok) {
       socket.emit('update_user_status', {
@@ -151,10 +157,6 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
   };
 
   const setSelfTimerData = async (timer: Timer) => {
-    setAppData((prev) => ({
-      ...prev,
-      timer,
-    }));
     await upload('timer', {
       ...timer,
       timestamp: Date.now(),
@@ -168,10 +170,6 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
   };
 
   const setSelfCountdownData = async (countdown: Countdown) => {
-    setAppData((prev) => ({
-      ...prev,
-      countdown,
-    }));
     await upload('countdown', {
       ...countdown,
       timestamp: Date.now(),
@@ -179,10 +177,6 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
   };
 
   const setSelfTodoData = async (todo: TodoItem[]) => {
-    setAppData((prev) => ({
-      ...prev,
-      todo,
-    }));
     await upload('todo', {
       items: todo,
       timestamp: Date.now(),
@@ -238,7 +232,12 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
           </div>
         ),
         children: (
-          <AppTimer size="small" appData={timer.data} setAppData={timer.setData}></AppTimer>
+          <AppTimer
+            size="small"
+            appData={timer.data}
+            setAppData={timer.setData}
+            auth={timer.auth}
+          ></AppTimer>
         ),
         style: itemStyle,
       });
@@ -258,6 +257,7 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
             size="small"
             appData={countdown.data}
             setAppData={countdown.setData}
+            auth={countdown.auth}
           />
         ),
         style: itemStyle,
@@ -272,7 +272,14 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
             {activeKey.includes('todo') ? '' : t('more.app.todo.title')}
           </div>
         ),
-        children: <AppTodo messageApi={messageApi} appData={todo.data} setAppData={todo.setData} />,
+        children: (
+          <AppTodo
+            messageApi={messageApi}
+            appData={todo.data}
+            setAppData={todo.setData}
+            auth={todo.auth}
+          />
+        ),
         style: itemStyle,
       });
     return items;
@@ -283,22 +290,25 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
     let timer: TimerProp | undefined = undefined;
     if (apps.includes('timer')) {
       timer = {
-        data: appData.timer,
+        data: castTimer(appData.timer) || DEFAULT_TIMER,
         setData: setSelfTimerData,
+        auth: 'write',
       };
     }
     let countdown: CountdownProp | undefined = undefined;
     if (apps.includes('countdown')) {
       countdown = {
-        data: appData.countdown,
+        data: castCountdown(appData.countdown) || DEFAULT_COUNTDOWN,
         setData: setSelfCountdownData,
+        auth: 'write',
       };
     }
     let todo: TodoProp | undefined = undefined;
     if (apps.includes('todo')) {
       todo = {
-        data: appData.todo,
+        data: castTodo(appData.todo) || [],
         setData: setSelfTodoData,
+        auth: 'write',
       };
     }
 
@@ -359,6 +369,7 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
                 // update the timer data
                 await setRemoteTimerData(v.auth, v.id, data);
               },
+              auth: v.auth,
             };
           }
           let countdown: CountdownProp | undefined = undefined;
@@ -368,6 +379,7 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
               setData: async (data) => {
                 // update the countdown data
               },
+              auth: v.auth,
             };
           }
           let todo: TodoProp | undefined = undefined;
@@ -378,6 +390,7 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
                 // update the todo data
                 console.warn(data);
               },
+              auth: v.auth,
             };
           }
 

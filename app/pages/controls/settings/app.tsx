@@ -121,7 +121,7 @@ export function AppSettings({
         }}
       >
         <Radio.Button value="read">{t('more.app.settings.sync.read')}</Radio.Button>
-        <Radio.Button value="write">{t('more.app.settings.sync.write')}</Radio.Button>
+        <Radio.Button value="write" disabled>{t('more.app.settings.sync.write')}</Radio.Button>
       </Radio.Group>
     </div>
   );

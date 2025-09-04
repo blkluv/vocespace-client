@@ -12,16 +12,21 @@ import { useMemo } from 'react';
 import { TimeRecords } from './time_records';
 import styles from '@/styles/apps.module.scss';
 import { CardSize } from 'antd/es/card/Card';
-import { AppKey, Timer as TimerData } from '@/lib/std/space';
+import { AppAuth, AppKey, Timer as TimerData } from '@/lib/std/space';
 const { Timer } = Statistic;
 
 export interface AppTimerProps {
   size?: CardSize;
   appData: TimerData;
   setAppData: (data: TimerData) => Promise<void>;
+  auth: AppAuth;
 }
 
-export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProps) {
+export function AppTimer({ size = 'default', appData, setAppData, auth }: AppTimerProps) {
+  const disabled = useMemo(() => {
+    return auth !== 'write';
+  }, [auth]);
+
   // 开始计时
   const startCountup = async () => {
     if (appData.value === null) {
@@ -178,6 +183,7 @@ export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProp
               {appData.running ? (
                 <Space size="large">
                   <button
+                    disabled={disabled}
                     className={styles.circle_btn}
                     onClick={recordCountup}
                     style={timerStyle.icon_btn}
@@ -185,6 +191,7 @@ export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProp
                     <FlagOutlined style={timerStyle.icon} />
                   </button>
                   <button
+                    disabled={disabled}
                     className={styles.circle_btn}
                     onClick={stopCountup}
                     style={timerStyle.icon_btn}
@@ -196,6 +203,7 @@ export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProp
                 <Space size={'large'}>
                   {appData.value === null ? (
                     <button
+                      disabled={disabled}
                       onClick={startCountup}
                       className={styles.start_btn}
                       style={timerStyle.start_btn}
@@ -205,6 +213,7 @@ export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProp
                   ) : (
                     <>
                       <button
+                        disabled={disabled}
                         className={styles.circle_btn}
                         onClick={resetCountup}
                         style={timerStyle.icon_btn}
@@ -212,6 +221,7 @@ export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProp
                         <ReloadOutlined style={timerStyle.icon} />
                       </button>
                       <button
+                        disabled={disabled}
                         className={styles.circle_btn}
                         onClick={startCountup}
                         style={timerStyle.icon_btn}
@@ -229,4 +239,3 @@ export function AppTimer({ size = 'default', appData, setAppData }: AppTimerProp
     </>
   );
 }
-

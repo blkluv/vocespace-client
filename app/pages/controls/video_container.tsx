@@ -893,9 +893,10 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
         {space && (
           <SingleFlotLayout
             space={space.name}
-            style={{ position: 'absolute', top: '50px', right: '0px', zIndex: 1001 }}
+            style={{ position: 'absolute', top: '100px', right: '0px', zIndex: 1001 }}
             messageApi={messageApi}
             openApp={openSingleApp}
+            setOpen={setOpenSingleApp}
             spaceInfo={settings}
             appKey={targetAppKey}
           ></SingleFlotLayout>
@@ -921,6 +922,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
             updateSettings={updateSettings}
             toRenameSettings={toSettingGeneral}
             setUserStatus={setUserStatus}
+            showSingleFlotApp={showSingleFlotApp}
           ></Channel>
         )}
         {/* 主视口 */}

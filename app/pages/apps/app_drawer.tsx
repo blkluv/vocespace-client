@@ -6,11 +6,22 @@ import { useI18n } from '@/lib/i18n/i18n';
 import { AppCountdown } from './countdown';
 import { MessageInstance } from 'antd/es/message/interface';
 import { AppTodo } from './todo_list';
-import { AppKey, SpaceCountdown, SpaceInfo, SpaceTimer, SpaceTodo } from '@/lib/std/space';
+import {
+  AppKey,
+  castCountdown,
+  castTimer,
+  castTodo,
+  DEFAULT_COUNTDOWN,
+  DEFAULT_TIMER,
+  SpaceCountdown,
+  SpaceInfo,
+  SpaceTimer,
+  SpaceTodo,
+} from '@/lib/std/space';
 // import { AppHistory } from './history';
 import { useLocalParticipant } from '@livekit/components-react';
 import { useRecoilState } from 'recoil';
-import { AppsDataState, socket } from '@/app/[spaceName]/PageClientImpl';
+import { socket } from '@/app/[spaceName]/PageClientImpl';
 import { api } from '@/lib/api';
 import { WsBase } from '@/lib/std/device';
 
@@ -24,8 +35,25 @@ export interface AppDrawerProps {
 
 export function AppDrawer({ open, setOpen, messageApi, spaceInfo, space }: AppDrawerProps) {
   const [key, setKey] = useState<AppKey | 'history'>('todo');
-  const [appData, setAppData] = useRecoilState(AppsDataState);
+  const { localParticipant } = useLocalParticipant();
   const { t } = useI18n();
+
+  const appData = useMemo(() => {
+    return spaceInfo.participants[localParticipant.identity]?.appDatas || {};
+  }, [spaceInfo, localParticipant]);
+
+  const upload = async (key: AppKey, data: SpaceTimer | SpaceCountdown | SpaceTodo) => {
+    let participantId = localParticipant.identity;
+    const response = await api.uploadSpaceApp(space, participantId, key, data);
+    if (response.ok) {
+      socket.emit('update_user_status', {
+        space,
+      } as WsBase);
+      messageApi.success(t('more.app.upload.success'));
+    } else {
+      messageApi.error(t('more.app.upload.error'));
+    }
+  };
 
   const items: TabsProps['items'] = useMemo(() => {
     return [
@@ -34,10 +62,11 @@ export function AppDrawer({ open, setOpen, messageApi, spaceInfo, space }: AppDr
         label: t('more.app.timer.title'),
         children: (
           <AppTimer
-            appData={appData.timer}
+            appData={castTimer(appData.timer) || DEFAULT_TIMER}
             setAppData={async (data) => {
-              setAppData({ ...appData, timer: data });
+              await upload('timer', { ...data, timestamp: Date.now() } as SpaceTimer);
             }}
+            auth={'write'}
           ></AppTimer>
         ),
         disabled: !spaceInfo.apps.includes('timer'),
@@ -48,8 +77,11 @@ export function AppDrawer({ open, setOpen, messageApi, spaceInfo, space }: AppDr
         children: (
           <AppCountdown
             messageApi={messageApi}
-            appData={appData.countdown}
-            setAppData={async (data) => setAppData({ ...appData, countdown: data })}
+            appData={castCountdown(appData.countdown) || DEFAULT_COUNTDOWN}
+            setAppData={async (data) => {
+              await upload('countdown', { ...data, timestamp: Date.now() } as SpaceCountdown);
+            }}
+            auth={'write'}
           ></AppCountdown>
         ),
         disabled: !spaceInfo.apps.includes('countdown'),
@@ -60,8 +92,11 @@ export function AppDrawer({ open, setOpen, messageApi, spaceInfo, space }: AppDr
         children: (
           <AppTodo
             messageApi={messageApi}
-            appData={appData.todo}
-            setAppData={async (data) => setAppData({ ...appData, todo: data })}
+            appData={castTodo(appData.todo) || []}
+            setAppData={async (data) => {
+              await upload('todo', { items: data, timestamp: Date.now() } as SpaceTodo);
+            }}
+            auth={'write'}
           />
         ),
         disabled: !spaceInfo.apps.includes('todo'),

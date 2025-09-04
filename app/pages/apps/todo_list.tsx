@@ -1,19 +1,23 @@
 import { SvgResource } from '@/app/resources/svg';
 import { useI18n } from '@/lib/i18n/i18n';
 import { Button, Card, Checkbox, Input, List } from 'antd';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import styles from '@/styles/apps.module.scss';
 import { MessageInstance } from 'antd/es/message/interface';
-import { TodoItem } from '@/lib/std/space';
+import { AppAuth, TodoItem } from '@/lib/std/space';
 
 export interface AppTodoProps {
   messageApi: MessageInstance;
   appData: TodoItem[];
   setAppData: (data: TodoItem[]) => Promise<void>;
+  auth: AppAuth;
 }
 
-export function AppTodo({ messageApi, appData, setAppData }: AppTodoProps) {
+export function AppTodo({ messageApi, appData, setAppData, auth }: AppTodoProps) {
   const { t } = useI18n();
+  const disabled = useMemo(() => {
+    return auth !== 'write';
+  }, [auth]);
   const [newTodo, setNewTodo] = useState<string>('');
   const toggleTodo = async (id: string) => {
     let data = appData.map((item) => {
@@ -67,7 +71,11 @@ export function AppTodo({ messageApi, appData, setAppData }: AppTodoProps) {
           renderItem={(item, index) => (
             <List.Item>
               <div className={styles.todo_item}>
-                <Checkbox onChange={() => toggleTodo(item.id)} checked={item.done}>
+                <Checkbox
+                  onChange={() => toggleTodo(item.id)}
+                  checked={item.done}
+                  disabled={disabled}
+                >
                   <span
                     style={{
                       textDecoration: item.done ? 'line-through' : 'none',
@@ -77,6 +85,7 @@ export function AppTodo({ messageApi, appData, setAppData }: AppTodoProps) {
                   </span>
                 </Checkbox>
                 <Button
+                  disabled={disabled}
                   type="text"
                   onClick={async () => {
                     await setAppData(appData.filter((todo) => todo.id !== item.id));
@@ -92,10 +101,11 @@ export function AppTodo({ messageApi, appData, setAppData }: AppTodoProps) {
       </div>
 
       <div className={styles.todo_add_wrapper}>
-        <Button style={{ padding: 0 }} type="text" onClick={addTodo}>
+        <Button style={{ padding: 0 }} type="text" onClick={addTodo} disabled={disabled}>
           <SvgResource type="add" svgSize={16}></SvgResource>
         </Button>
         <Input
+          disabled={disabled}
           placeholder={t('more.app.todo.add')}
           width={'100%'}
           value={newTodo}

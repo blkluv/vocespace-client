@@ -8,13 +8,14 @@ import dayjs from 'dayjs';
 import { src } from '@/lib/std';
 import styles from '@/styles/apps.module.scss';
 import { CardSize } from 'antd/es/card/Card';
-import { Countdown } from '@/lib/std/space';
+import { AppAuth, Countdown } from '@/lib/std/space';
 
 export interface CountdownProps {
   messageApi: MessageInstance;
   size?: CardSize;
   appData: Countdown;
   setAppData: (data: Countdown) => Promise<void>;
+  auth: AppAuth;
 }
 
 export function AppCountdown({
@@ -22,8 +23,12 @@ export function AppCountdown({
   size = 'default',
   appData,
   setAppData,
+  auth,
 }: CountdownProps) {
   const { t } = useI18n();
+  const disabled = useMemo(() => {
+    return auth !== 'write';
+  }, [auth]);
   // 开始倒计时
   const startCountdown = async () => {
     if (!appData.duration) {
@@ -205,6 +210,7 @@ export function AppCountdown({
           <Space size={'large'}>
             {appData.running ? (
               <button
+                disabled={disabled}
                 className={styles.circle_btn}
                 onClick={stopCountdown}
                 style={timerStyle.icon_btn}
@@ -214,6 +220,7 @@ export function AppCountdown({
             ) : appData.stopTimeStamp && appData.stopTimeStamp > 0 ? (
               <>
                 <button
+                  disabled={disabled}
                   onClick={resetCountdown}
                   className={styles.circle_btn}
                   style={timerStyle.icon_btn}
@@ -221,6 +228,7 @@ export function AppCountdown({
                   <ReloadOutlined style={timerStyle.icon} />
                 </button>
                 <button
+                  disabled={disabled}
                   className={styles.circle_btn}
                   style={timerStyle.icon_btn}
                   onClick={startCountdown}
@@ -230,6 +238,7 @@ export function AppCountdown({
               </>
             ) : (
               <button
+                disabled={disabled}
                 onClick={startCountdown}
                 className={styles.start_btn}
                 style={timerStyle.start_btn}
