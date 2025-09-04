@@ -1,3 +1,4 @@
+import dayjs, { Dayjs } from 'dayjs';
 import { UserDefineStatus, UserStatus } from '.';
 import { ModelBg, ModelRole } from './virtual';
 
@@ -69,6 +70,19 @@ export interface ParticipantSettings {
    * 是否开启新用户加入时的提示音
    */
   openPromptSound: boolean;
+  /**
+   * 用户应用同步
+   */
+  sync: AppKey[];
+  /**
+   * 用户应用权限
+   */
+  auth: AppAuth;
+  appDatas: {
+    todo?: SpaceTodo;
+    timer?: SpaceTimer;
+    countdown?: SpaceCountdown;
+  };
 }
 
 export interface SpaceTimeRecord {
@@ -104,6 +118,7 @@ export interface RecordSettings {
 }
 
 export type AppKey = 'timer' | 'countdown' | 'todo';
+export type AppAuth = 'read' | 'write' ;
 
 export interface SpaceInfoMap {
   [spaceId: string]: SpaceInfo;
@@ -122,6 +137,95 @@ export interface SpaceInfo {
   apps: AppKey[];
   persistence: boolean;
 }
+
+export interface TodoItem {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+export interface Timer {
+  value: number | null;
+  running: boolean;
+  stopTimeStamp: number | null;
+  records: string[];
+}
+
+/**
+ * 倒计时App的数据结构
+ */
+export interface Countdown {
+  value: number | null;
+  duration: Dayjs | null;
+  running: boolean;
+  stopTimeStamp: number | null;
+}
+
+export interface CountdownDurStr {
+  value: number | null;
+  duration: string | null;
+  running: boolean;
+  stopTimeStamp: number | null;
+}
+
+export interface SpaceTodo {
+  items: TodoItem[];
+  /**
+   * 上传时间戳，表示用户上传到空间的时间
+   */
+  timestamp: number;
+}
+
+export interface SpaceTimer extends Timer {
+  timestamp: number;
+}
+
+export interface SpaceCountdown extends CountdownDurStr {
+  timestamp: number;
+}
+
+export const castTimer = (timer?: SpaceTimer): Timer|undefined => {
+  if (!timer) return undefined;
+  return {
+    value: timer.value,
+    running: timer.running,
+    stopTimeStamp: timer.stopTimeStamp,
+    records: timer.records,
+  };
+};
+
+export const castCountdown = (countdown?: SpaceCountdown): Countdown|undefined => {
+  if (!countdown) return undefined;
+  return {
+    value: countdown.value,
+    duration: dayjs(countdown.duration) as Dayjs | null,
+    running: countdown.running,
+    stopTimeStamp: countdown.stopTimeStamp,
+  };
+};
+
+export const castTodo = (todo?: SpaceTodo): TodoItem[] | undefined => {
+  if (!todo) return undefined;
+  return todo.items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    done: item.done,
+  }));
+};
+
+export const DEFAULT_TIMER: Timer = {
+  value: null as number | null,
+  running: false,
+  stopTimeStamp: null as number | null,
+  records: [] as string[],
+};
+
+export const DEFAULT_COUNTDOWN: Countdown = {
+  value: null as number | null,
+  duration: dayjs().hour(0).minute(5).second(0) as Dayjs | null,
+  running: false,
+  stopTimeStamp: null as number | null,
+};
 
 export const DEFAULT_SPACE_INFO = (startAt: number): SpaceInfo => ({
   participants: {},
@@ -148,6 +252,9 @@ export const DEFAULT_PARTICIPANT_SETTINGS: ParticipantSettings = {
   },
   openPromptSound: true,
   openShareAudio: false,
+  sync: [],
+  auth: 'read',
+  appDatas: {},
 };
 
 /**

@@ -198,6 +198,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             colorBgContainer: '#1E1E1E',
             colorBorder: '#333',
           },
+          Tree: {
+            colorBgContainer:  "#1e1e1e",
+            colorBorder: "#878787",
+            colorBorderBg: "#1E1E1E",
+            nodeSelectedBg: "#1E1E1E",
+          }
         },
       }}
     >
