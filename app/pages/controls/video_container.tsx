@@ -954,6 +954,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                         updateSettings={updateSettings}
                         toRenameSettings={toSettingGeneral}
                         showSingleFlotApp={showSingleFlotApp}
+                        selfRoom={selfRoom}
                       ></ParticipantItem>
                     </GridLayout>
                   </div>
@@ -970,6 +971,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                           updateSettings={updateSettings}
                           toRenameSettings={toSettingGeneral}
                           showSingleFlotApp={showSingleFlotApp}
+                          selfRoom={selfRoom}
                         ></ParticipantItem>
                       </CarouselLayout>
                       {focusTrack && (
@@ -984,6 +986,7 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
                           updateSettings={updateSettings}
                           toRenameSettings={toSettingGeneral}
                           showSingleFlotApp={showSingleFlotApp}
+                          selfRoom={selfRoom}
                         ></ParticipantItem>
                       )}
                     </FocusLayoutContainer>
