@@ -1,5 +1,5 @@
 import { SvgResource } from '@/app/resources/svg';
-import { Button, Collapse, CollapseProps, Popover, Tabs, TabsProps, theme } from 'antd';
+import { Button, Collapse, CollapseProps, Popover, Tabs, TabsProps, theme, Tooltip } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import styles from '@/styles/apps.module.scss';
 import { AppTimer } from './timer';
@@ -198,20 +198,24 @@ function FlotAppItem({ messageApi, apps, space, spaceInfo }: FlotAppItemProps) {
   const showSyncIcon = (isRemote: boolean, key: AppKey) => {
     return isRemote ? (
       <span></span>
-    ) : spaceInfo.participants[localParticipant.identity].sync.includes(key) ? (
-      <TeamOutlined
-        onClick={(e) => {
-          e.stopPropagation();
-          updateAppSync(key);
-        }}
-      />
     ) : (
-      <UserOutlined
-        onClick={(e) => {
-          e.stopPropagation();
-          updateAppSync(key);
-        }}
-      />
+      <Tooltip title={t('more.app.settings.sync.desc')}>
+        {spaceInfo.participants[localParticipant.identity].sync.includes(key) ? (
+          <TeamOutlined
+            onClick={(e) => {
+              e.stopPropagation();
+              updateAppSync(key);
+            }}
+          />
+        ) : (
+          <UserOutlined
+            onClick={(e) => {
+              e.stopPropagation();
+              updateAppSync(key);
+            }}
+          />
+        )}
+      </Tooltip>
     );
   };
 

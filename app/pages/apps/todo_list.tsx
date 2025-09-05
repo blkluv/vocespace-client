@@ -112,6 +112,7 @@ export function AppTodo({ messageApi, appData, setAppData, auth }: AppTodoProps)
           onChange={(e) => {
             setNewTodo(e.target.value);
           }}
+          onPressEnter={addTodo}
         ></Input>
       </div>
     </Card>
