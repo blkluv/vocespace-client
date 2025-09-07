@@ -437,6 +437,9 @@ lk load-test \
 - [x] 调整disabled的配色属性
 - [x] 待办回车事件
 - [x] 完善打包后启动机制
+- [ ] App-Collapse展开时应该传入不同的activeKey
+- [ ] App-Collapse展开更换为默认icon
+- [ ] 默认公开待办事项，展开Collapse
 ---
 
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
