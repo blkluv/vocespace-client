@@ -437,9 +437,13 @@ lk load-test \
 - [x] 调整disabled的配色属性
 - [x] 待办回车事件
 - [x] 完善打包后启动机制
-- [ ] App-Collapse展开时应该传入不同的activeKey
-- [ ] App-Collapse展开更换为默认icon
-- [ ] 默认公开待办事项，展开Collapse
+- [x] App-Collapse展开时应该传入不同的activeKey
+- [x] App-Collapse展开更换为默认icon
+- [x] 默认公开待办事项，展开Collapse
+- [x] 用户信息zindex层级需要低于menu
+- [ ] todo可修改
+- [x] countdown清除后Invalid Date
+- [ ] countdown/timer无需上传完后才能使用，上传只是上传数据
 ---
 
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
