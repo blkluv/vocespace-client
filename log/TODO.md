@@ -441,9 +441,9 @@ lk load-test \
 - [x] App-Collapse展开更换为默认icon
 - [x] 默认公开待办事项，展开Collapse
 - [x] 用户信息zindex层级需要低于menu
-- [ ] todo可修改
+- [x] todo可修改
 - [x] countdown清除后Invalid Date
-- [ ] countdown/timer无需上传完后才能使用，上传只是上传数据
+
 ---
 
 - [ ] 少参与者，多观察者 (Egress 实时传输，站点构建)
