@@ -159,7 +159,8 @@ export default {
           title: 'Synchronize App Data',
           auth: 'App Permissions',
           auth_desc: 'Control other participants permissions on your app data',
-          desc: 'Synchronize current app data to VoceSpace. All participants can access your app data',
+          desc_pub: 'Set visiblility to everyone can view',
+          desc_priv: 'Set visiblility to only me',
           read: 'Read',
           write: 'Read & write',
           none: 'None',
@@ -189,6 +190,9 @@ export default {
         create: 'Create todo',
         empty_value: 'Todo cannot be empty',
         delete: 'Todo deleted successfully',
+        undone: 'Undone',
+        done: 'Done',
+        unexport: "Current todo is empty, cannot export"
       },
     },
     record: {
