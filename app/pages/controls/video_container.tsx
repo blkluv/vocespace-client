@@ -147,24 +147,12 @@ export const VideoContainer = forwardRef<VideoContainerExports, VideoContainerPr
       const syncSettings = async () => {
         // 将当前参与者的基础设置发送到服务器 ----------------------------------------------------------
         await updateSettings({
-          name: space.localParticipant.name || space.localParticipant.identity,
-          blur: uState.blur,
-          screenBlur: uState.screenBlur,
-          volume: uState.volume,
-          status: UserStatus.Online,
+          ...uState,
           socketId: socket.id,
+          name: space.localParticipant.name || space.localParticipant.identity,
           startAt: new Date().getTime(),
-          virtual: {
-            enabled: false,
-            role: ModelRole.None,
-            bg: ModelBg.ClassRoom,
-          },
-          openShareAudio: uState.openShareAudio,
-          openPromptSound: uState.openPromptSound,
-          sync: uState.sync,
-          auth: uState.auth,
-          appDatas: {},
         });
+        console.warn(uState);
         const roomName = `${space.localParticipant.name}'s room`;
 
         // 为新加入的参与者创建一个自己的私人房间
